@@ -69,7 +69,7 @@ function statusBadge(status: RefundEntry['status']) {
   switch (status) {
     case 'initiated':
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-cyan-500/20 text-cyan-300 text-xs font-semibold">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-accent/20 text-accent text-xs font-semibold">
           <Clock size={10} />
           Waiting on merchant
         </span>
@@ -105,8 +105,8 @@ export function IncomingRefunds() {
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
       <GlassCard hover={false} className="p-5">
         <div className="flex items-start gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center shrink-0">
-            <Inbox className="text-cyan-300" size={20} />
+          <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center shrink-0">
+            <Inbox className="text-accent" size={20} />
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-sm font-bold text-white">Refunds</h3>
@@ -134,7 +134,7 @@ export function IncomingRefunds() {
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <RotateCcw size={12} className="text-cyan-400 shrink-0" />
+                        <RotateCcw size={12} className="text-accent shrink-0" />
                         <p className="text-sm font-semibold text-white truncate">
                           Order: {entry.orderId}
                         </p>
@@ -152,7 +152,7 @@ export function IncomingRefunds() {
                       {ttle && (
                         <p
                           className={`text-xs mt-1 ${
-                            ttle === 'Expired' ? 'text-red-300' : 'text-cyan-300'
+                            ttle === 'Expired' ? 'text-red-300' : 'text-accent'
                           }`}
                         >
                           {ttle}

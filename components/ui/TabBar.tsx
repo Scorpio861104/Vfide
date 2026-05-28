@@ -13,7 +13,7 @@ import type { ComponentType, ReactNode } from 'react';
  *     {TAB_IDS.map(id => (
  *       <button key={id} onClick={() => setActiveTab(id)}
  *         className={`flex items-center gap-2 px-4 py-2 rounded-xl ...
- *           ${activeTab === id ? 'bg-cyan-500/20 text-cyan-400 ...' : 'bg-white/5 ...'}`}>
+ *           ${activeTab === id ? 'bg-accent/20 text-accent ...' : 'bg-white/5 ...'}`}>
  *         <tab.icon size={16} />{tab.label}
  *       </button>
  *     ))}
@@ -56,7 +56,7 @@ export interface TabBarProps<TId extends string = string> {
 const SPACING_MAP = { none: '', sm: 'mb-4', md: 'mb-8' };
 
 const ACCENT_ACTIVE: Record<TabBarAccent, string> = {
-  cyan:    'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30',
+  cyan:    'bg-accent/20 text-accent border border-accent/30',
   pink:    'bg-pink-500/20 text-pink-400 border border-pink-500/30',
   emerald: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
   amber:   'bg-amber-500/20 text-amber-400 border border-amber-500/30',

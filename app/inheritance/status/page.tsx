@@ -146,7 +146,7 @@ function StateBanner({
       : state === 1 || state === 2
         ? 'border-amber-500/30 bg-amber-500/5 text-amber-200'
         : state === 3
-          ? 'border-cyan-500/30 bg-cyan-500/5 text-cyan-200'
+          ? 'border-accent/30 bg-accent/5 text-accent'
           : 'border-gray-500/30 bg-gray-500/5 text-gray-400';
   return (
     <div className={`rounded-xl border p-4 ${tone}`}>
@@ -207,8 +207,8 @@ function PendingProposalPanel({
   }
 
   return (
-    <section className="rounded-xl border border-cyan-500/30 bg-cyan-500/5 p-4">
-      <div className="flex items-center gap-2 text-cyan-300">
+    <section className="rounded-xl border border-accent/30 bg-accent/5 p-4">
+      <div className="flex items-center gap-2 text-accent">
         <Clock size={16} />
         <h2 className="text-sm font-semibold uppercase tracking-wider">
           Pending proposal — version {pendingVersion}
@@ -224,7 +224,7 @@ function PendingProposalPanel({
         ) : (
           <>
             The 30-day cooldown is{' '}
-            <span className="font-mono text-cyan-300">{formatRemaining(remaining)}</span>{' '}
+            <span className="font-mono text-accent">{formatRemaining(remaining)}</span>{' '}
             from completion.
           </>
         )}
@@ -307,7 +307,7 @@ function ConfirmedHeirsPanel({
         </p>
         <a
           href="/inheritance/setup"
-          className="mt-3 inline-block rounded-lg bg-cyan-500/20 px-3 py-2 text-sm text-cyan-300 hover:bg-cyan-500/30"
+          className="mt-3 inline-block rounded-lg bg-accent/20 px-3 py-2 text-sm text-accent hover:bg-accent/30"
         >
           Set up inheritance
         </a>
@@ -345,7 +345,7 @@ function ConfirmedHeirsPanel({
               </div>
             </div>
             <div className="text-right">
-              <div className="inline-flex items-center gap-1 rounded-md bg-cyan-500/10 px-2 py-0.5 text-[10px] text-cyan-300">
+              <div className="inline-flex items-center gap-1 rounded-md bg-accent/10 px-2 py-0.5 text-[10px] text-accent">
                 <Eye size={10} /> share hidden
               </div>
             </div>
@@ -474,7 +474,7 @@ function ProofOfLifePanel({
           type="button"
           onClick={() => handleSet(input)}
           disabled={isWritePending || !input}
-          className="rounded-lg bg-cyan-500/20 px-3 py-2 text-xs text-cyan-300 hover:bg-cyan-500/30 disabled:opacity-50"
+          className="rounded-lg bg-accent/20 px-3 py-2 text-xs text-accent hover:bg-accent/30 disabled:opacity-50"
         >
           {hasWallet ? 'Replace' : 'Set'}
         </button>

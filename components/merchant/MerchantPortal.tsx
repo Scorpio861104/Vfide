@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Advanced Merchant Portal Component
  * Payment requests, revenue analytics, bulk payments, and API key management
@@ -869,7 +871,7 @@ function BulkPaymentsSection({
           <label htmlFor="csv-upload" className={`
             block w-full min-h-12 text-base font-semibold rounded-lg
             transition-all active:scale-95 cursor-pointer text-center
-            px-4 py-3 bg-cyan-400 text-zinc-900 hover:bg-cyan-400
+            px-4 py-3 bg-accent text-zinc-900 hover:bg-accent
             ${uploading ? 'opacity-60 cursor-not-allowed' : ''}
           `}>
             {uploading ? '⏳ Uploading...' : '📤 Choose File'}

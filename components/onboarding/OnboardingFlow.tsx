@@ -298,13 +298,13 @@ function RewardModal({ reward, onClose }: RewardModalProps) {
 
   const icons = {
     badge: <Trophy className="w-12 h-12 text-yellow-400" />,
-    points: <Sparkles className="w-12 h-12 text-cyan-400" />,
+    points: <Sparkles className="w-12 h-12 text-accent" />,
     feature: <Gift className="w-12 h-12 text-purple-400" />,
   };
 
   const colors = {
     badge: 'from-yellow-500/20 to-orange-500/20 border-yellow-500/30',
-    points: 'from-cyan-500/20 to-blue-500/20 border-cyan-500/30',
+    points: 'from-accent/20 to-blue-500/20 border-accent/30',
     feature: 'from-purple-500/20 to-pink-500/20 border-purple-500/30',
   };
 
@@ -355,7 +355,7 @@ function RewardModal({ reward, onClose }: RewardModalProps) {
             </h2>
             <p className="text-zinc-400 mb-2">{reward.description}</p>
             {reward.type !== 'points' && (
-              <p className="text-lg font-semibold text-cyan-400">{reward.value}</p>
+              <p className="text-lg font-semibold text-accent">{reward.value}</p>
             )}
           </motion.div>
 
@@ -389,10 +389,10 @@ function OnboardingChecklist() {
     >
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-cyan-500/10 to-purple-500/10 p-4 border-b border-zinc-800">
+        <div className="bg-gradient-to-r from-accent/10 to-purple-500/10 p-4 border-b border-zinc-800">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-bold text-white flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-cyan-400" />
+              <Sparkles className="w-5 h-5 text-accent" />
               Getting Started
             </h3>
             <button
@@ -409,10 +409,10 @@ function OnboardingChecklist() {
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
-                className="h-full bg-gradient-to-r from-cyan-500 to-purple-500"
+                className="h-full bg-gradient-to-r from-accent to-purple-500"
               />
             </div>
-            <span className="text-sm font-medium text-cyan-400">{progress}%</span>
+            <span className="text-sm font-medium text-accent">{progress}%</span>
           </div>
         </div>
 
@@ -450,7 +450,7 @@ function OnboardingChecklist() {
                         step.action.onClick();
                       }
                     }}
-                    className="mt-2 text-xs font-medium text-cyan-400 hover:text-cyan-300 flex items-center gap-1"
+                    className="mt-2 text-xs font-medium text-accent hover:text-accent flex items-center gap-1"
                   >
                     {step.action.label}
                     <ChevronRight className="w-3 h-3" />
@@ -493,7 +493,7 @@ export function OnboardingTrigger() {
       onClick={() => setShowChecklist(!showChecklist)}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
-      className="fixed bottom-4 right-4 z-30 flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-medium rounded-full shadow-lg hover:shadow-cyan-500/25 transition-shadow"
+      className="fixed bottom-4 right-4 z-30 flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-accent to-purple-500 text-white font-medium rounded-full shadow-lg hover:shadow-accent/25 transition-shadow"
     >
       <Sparkles className="w-4 h-4" />
       <span className="text-sm">{progress}% Complete</span>

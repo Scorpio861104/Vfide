@@ -798,6 +798,15 @@ async function main() {
     );
   }
 
+  // CommerceEscrow ↔ Seer (Issue #269: score-tiered lock periods require Seer integration)
+  // setSeer() is onlyDAO. Wired immediately post-deploy — no timelock on this setter.
+  if (book.CommerceEscrow && book.Seer) {
+    const ce = await ethers.getContractAt("CommerceEscrow", book.CommerceEscrow);
+    await call("CommerceEscrow.setSeer → Seer", () =>
+      ce.setSeer(book.Seer),
+    );
+  }
+
   // SubscriptionManager → FraudRegistry (queued — 24h timelock via applyFraudRegistry)
   if (book.SubscriptionManager && book.FraudRegistry) {
     const subMgr = await ethers.getContractAt("SubscriptionManager", book.SubscriptionManager);

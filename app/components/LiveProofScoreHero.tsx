@@ -7,8 +7,8 @@
  *
  *   - Drag the score (0 → 10,000) and watch the burn fee curve move.
  *   - At the same moment a sample $50 payment recalculates: the fee
- *     splits into the five canonical streams (35% burn, 20% Sanctum,
- *     15% DAO payroll, 20% merchant comp, 10% headhunter).
+ *     splits into the five canonical streams (40% burn, 10% Sanctum,
+ *     25% DAO payroll, 15% merchant comp, 10% headhunter).
  *   - The Monument's vertex brightens with the score.
  *   - The tier badge changes label + colour as you cross thresholds.
  *
@@ -88,12 +88,15 @@ function burnFeePercent(score: number): number {
   return (MAX_BPS - ((score - 4000) * (MAX_BPS - MIN_BPS)) / 4000) / 100;
 }
 
-/** Canonical 35 / 20 / 15 / 20 / 10 split (mirrors FeeDistributor.sol). */
+/** Canonical 40 / 10 / 25 / 15 / 10 split.
+ *  Stage 1 (ProofScoreBurnRouter.computeFees): 40% burn, 10% Sanctum, 50% ecosystem.
+ *  Stage 2 (FeeDistributor default): 50% DAO payroll, 30% merchants, 20% headhunters of ecosystem.
+ *  Composite of total fee: 40 / 10 / 25 / 15 / 10. */
 const FEE_SPLITS: { id: string; label: string; pct: number; hex: string; help: string }[] = [
-  { id: 'burn',      label: 'Burn',           pct: 35, hex: '#f97316', help: 'Permanently removed from supply' },
-  { id: 'sanctum',   label: 'Sanctum Fund',   pct: 20, hex: '#ec4899', help: 'Charity + community grants' },
-  { id: 'merchant',  label: 'Merchant pool',  pct: 20, hex: '#10b981', help: 'Volume rewards for top merchants' },
-  { id: 'payroll',   label: 'DAO payroll',    pct: 15, hex: '#06b6d4', help: 'Pays elected council members' },
+  { id: 'burn',      label: 'Burn',           pct: 40, hex: '#f97316', help: 'Permanently removed from supply' },
+  { id: 'sanctum',   label: 'Sanctum Fund',   pct: 10, hex: '#ec4899', help: 'Charity + community grants' },
+  { id: 'payroll',   label: 'DAO payroll',    pct: 25, hex: '#06b6d4', help: 'Pays elected council members' },
+  { id: 'merchant',  label: 'Merchant pool',  pct: 15, hex: '#10b981', help: 'Volume rewards for top merchants' },
   { id: 'headhunt',  label: 'Referral pool',  pct: 10, hex: '#a855f7', help: 'Rewards for inviting active users' },
 ];
 
@@ -215,7 +218,7 @@ export function LiveProofScoreHero() {
           <div className="mb-2 flex items-center justify-between text-xs">
             <span className="text-gray-500">Drag to see how trust changes the fee</span>
             {!interacted && (
-              <span className="rounded-full bg-cyan-500/10 px-2 py-0.5 text-cyan-300">
+              <span className="rounded-full bg-accent/10 px-2 py-0.5 text-accent">
                 {reduce ? '' : 'auto-demo · '}drag to take over
               </span>
             )}
@@ -228,7 +231,7 @@ export function LiveProofScoreHero() {
             value={score}
             onChange={handleScoreChange}
             aria-label="Sample ProofScore"
-            className="w-full cursor-pointer accent-cyan-400"
+            className="w-full cursor-pointer accent-accent"
             style={{
               accentColor: tier.hex,
             }}
@@ -253,7 +256,7 @@ export function LiveProofScoreHero() {
             </div>
             <button
               type="button"
-              className="text-xs text-cyan-300 hover:text-cyan-200"
+              className="text-xs text-accent hover:text-accent"
               onClick={() => {
                 if (typeof window !== 'undefined') {
                   const target = document.getElementById('fee-river');

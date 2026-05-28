@@ -31,7 +31,7 @@ export function VaultRecoveryPanel({ guardianCount, isUserGuardian }: VaultRecov
           <div className="flex items-start justify-between mb-6">
             <div>
               <h2 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
-                <Key className="text-cyan-400" />
+                <Key className="text-accent" />
                 CardBound Guardian Setup
               </h2>
               <p className="text-white/60 text-sm">
@@ -39,8 +39,8 @@ export function VaultRecoveryPanel({ guardianCount, isUserGuardian }: VaultRecov
                 protections for recovery. Configure inheritance heirs in the panel below.
               </p>
             </div>
-            <div className="px-4 py-2 bg-cyan-500/20 border border-cyan-500/30 rounded-xl text-center">
-              <div className="text-cyan-400 text-xs font-bold">CARD BOUND</div>
+            <div className="px-4 py-2 bg-accent/20 border border-accent/30 rounded-xl text-center">
+              <div className="text-accent text-xs font-bold">CARD BOUND</div>
             </div>
           </div>
 
@@ -51,7 +51,7 @@ export function VaultRecoveryPanel({ guardianCount, isUserGuardian }: VaultRecov
                   {guardianCount} guardian{guardianCount !== 1 ? 's' : ''} configured
                 </span>
                 {isUserGuardian && (
-                  <div className="text-cyan-400 mt-2 text-sm">✓ You are a guardian</div>
+                  <div className="text-accent mt-2 text-sm">✓ You are a guardian</div>
                 )}
               </div>
             ) : (
@@ -62,9 +62,9 @@ export function VaultRecoveryPanel({ guardianCount, isUserGuardian }: VaultRecov
             )}
           </div>
 
-          <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 p-4 text-sm text-cyan-100">
+          <div className="rounded-xl border border-accent/30 bg-accent/10 p-4 text-sm text-accent">
             Manage guardian setup and post-setup guardian changes from the{' '}
-            <a href="/guardians" className="underline hover:text-cyan-200">
+            <a href="/guardians" className="underline hover:text-accent">
               Guardians dashboard
             </a>
             , which supports CardBound timelocks and setup completion.

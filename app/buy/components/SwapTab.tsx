@@ -99,7 +99,7 @@ export function SwapTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 size={18} className="text-cyan-400 animate-spin" />
+        <Loader2 size={18} className="text-accent animate-spin" />
       </div>
     );
   }
@@ -142,7 +142,7 @@ export function SwapTab() {
             step="0.0001"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/50"
+            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-accent/50"
           />
         </div>
 
@@ -156,7 +156,7 @@ export function SwapTab() {
 
         <div className="bg-white/5 border border-white/10 rounded-xl p-3">
           <p className="text-xs text-gray-400 mb-1">Estimated Output</p>
-          <p className="text-lg font-semibold text-cyan-400">{estimatedOut.toFixed(4)} {toToken}</p>
+          <p className="text-lg font-semibold text-accent">{estimatedOut.toFixed(4)} {toToken}</p>
           <p className="text-xs text-gray-500 mt-1">
             Pricing based on live protocol feed ({fromToken}/USD and {toToken}/USD)
           </p>
@@ -170,7 +170,7 @@ export function SwapTab() {
           type="button"
           onClick={prepareRoute}
           disabled={!canSubmit}
-          className="w-full py-2.5 rounded-lg bg-cyan-500/20 text-cyan-400 font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-cyan-500/30 transition-colors"
+          className="w-full py-2.5 rounded-lg bg-accent/20 text-accent font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-accent/30 transition-colors"
         >
           Prepare Swap Route
         </button>
@@ -178,7 +178,7 @@ export function SwapTab() {
         {routeSummary && (
           <div
             role="status"
-            className="bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-3 text-xs text-cyan-300"
+            className="bg-accent/10 border border-accent/30 rounded-lg p-3 text-xs text-accent"
           >
             {routeSummary}
           </div>

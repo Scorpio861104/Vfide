@@ -21,7 +21,7 @@ export const EnhancedInput = forwardRef<HTMLInputElement, EnhancedInputProps>(
       default: `
         bg-zinc-900 
         border border-zinc-800
-        focus:border-cyan-400/50 
+        focus:border-accent/50 
         focus:shadow-[0_0_20px_rgba(0,240,255,0.2)]
       `,
       glass: `
@@ -34,9 +34,9 @@ export const EnhancedInput = forwardRef<HTMLInputElement, EnhancedInputProps>(
       `,
       glow: `
         bg-zinc-950 
-        border border-cyan-400/30
+        border border-accent/30
         shadow-[0_0_10px_rgba(0,240,255,0.1),inset_0_0_10px_rgba(0,240,255,0.05)]
-        focus:border-cyan-400/50
+        focus:border-accent/50
         focus:shadow-[0_0_30px_rgba(0,240,255,0.3),inset_0_0_20px_rgba(0,240,255,0.1)]
       `
     };
@@ -108,7 +108,7 @@ export const EnhancedTextarea = forwardRef<HTMLTextAreaElement, EnhancedTextarea
       default: `
         bg-zinc-900 
         border border-zinc-800
-        focus:border-cyan-400/50 
+        focus:border-accent/50 
         focus:shadow-[0_0_20px_rgba(0,240,255,0.2)]
       `,
       glass: `
@@ -121,9 +121,9 @@ export const EnhancedTextarea = forwardRef<HTMLTextAreaElement, EnhancedTextarea
       `,
       glow: `
         bg-zinc-950 
-        border border-cyan-400/30
+        border border-accent/30
         shadow-[0_0_10px_rgba(0,240,255,0.1),inset_0_0_10px_rgba(0,240,255,0.05)]
-        focus:border-cyan-400/50
+        focus:border-accent/50
         focus:shadow-[0_0_30px_rgba(0,240,255,0.3),inset_0_0_20px_rgba(0,240,255,0.1)]
       `
     };
@@ -181,7 +181,7 @@ export const EnhancedSelect = forwardRef<HTMLSelectElement, EnhancedSelectProps>
       default: `
         bg-zinc-900 
         border border-zinc-800
-        focus:border-cyan-400/50 
+        focus:border-accent/50 
         focus:shadow-[0_0_20px_rgba(0,240,255,0.2)]
       `,
       glass: `
@@ -194,9 +194,9 @@ export const EnhancedSelect = forwardRef<HTMLSelectElement, EnhancedSelectProps>
       `,
       glow: `
         bg-zinc-950 
-        border border-cyan-400/30
+        border border-accent/30
         shadow-[0_0_10px_rgba(0,240,255,0.1),inset_0_0_10px_rgba(0,240,255,0.05)]
-        focus:border-cyan-400/50
+        focus:border-accent/50
         focus:shadow-[0_0_30px_rgba(0,240,255,0.3),inset_0_0_20px_rgba(0,240,255,0.1)]
       `
     };

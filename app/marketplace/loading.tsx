@@ -25,7 +25,7 @@ export default function MarketplaceLoading() {
                 <div className="h-4 w-3/4 rounded bg-white/8 animate-pulse mb-2" />
                 <div className="h-3 w-1/2 rounded bg-white/5 animate-pulse mb-3" />
                 <div className="flex items-center justify-between">
-                  <div className="h-5 w-16 rounded bg-cyan-500/15 animate-pulse" />
+                  <div className="h-5 w-16 rounded bg-accent/15 animate-pulse" />
                   <div className="h-8 w-20 rounded-lg bg-white/6 animate-pulse" />
                 </div>
               </div>

@@ -236,7 +236,7 @@ export function PullToRefresh({
               }}
               className={`
                 w-8 h-8 rounded-full border-2 border-t-transparent
-                ${shouldRefresh ? 'border-cyan-400' : 'border-zinc-600'}
+                ${shouldRefresh ? 'border-accent' : 'border-zinc-600'}
               `}
             />
             <span className="text-xs text-zinc-500">
@@ -403,7 +403,7 @@ export function ExpandableCard({
 
         <button
           onClick={toggleExpand}
-          className="mt-3 flex items-center gap-2 text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
+          className="mt-3 flex items-center gap-2 text-sm text-accent hover:text-accent transition-colors"
         >
           {isExpanded ? (
             <>
@@ -509,7 +509,7 @@ export function ReorderableList({ items, onReorder, renderItem }: ReorderableLis
           className={`
             flex items-center gap-3 p-3 bg-zinc-800/50 border rounded-xl
             cursor-grab active:cursor-grabbing transition-colors
-            ${dragOverItem === item.id ? 'border-cyan-500 bg-cyan-500/10' : 'border-zinc-700'}
+            ${dragOverItem === item.id ? 'border-accent bg-accent/10' : 'border-zinc-700'}
             ${draggedItem === item.id ? 'opacity-50' : 'opacity-100'}
           `}
         >

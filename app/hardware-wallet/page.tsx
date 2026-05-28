@@ -39,7 +39,7 @@ export default function HardwareWalletPage() {
                 onClick={() => setActiveTab(id)}
                 className={`rounded-xl border px-4 py-2 text-sm font-bold whitespace-nowrap transition-all ${
                   activeTab === id
-                    ? 'border-cyan-500/30 bg-cyan-500/20 text-cyan-400'
+                    ? 'border-accent/30 bg-accent/20 text-accent'
                     : 'border-white/10 bg-white/5 text-gray-400 hover:text-white'
                 }`}
               >

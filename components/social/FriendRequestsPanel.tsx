@@ -71,7 +71,7 @@ export function FriendRequestsPanel({ onAccept, onReject }: FriendRequestsPanelP
 
   const getTrustLevel = (proofScore?: number) => {
     if (!proofScore) return { label: 'Unknown', color: 'text-zinc-500' };
-    if (proofScore >= 8000) return { label: 'Elite', color: 'text-cyan-400' };
+    if (proofScore >= 8000) return { label: 'Elite', color: 'text-accent' };
     if (proofScore >= 5400) return { label: 'Trusted', color: 'text-emerald-500' };
     if (proofScore >= 4000) return { label: 'Standard', color: 'text-amber-400' };
     return { label: 'Low Trust', color: 'text-pink-400' };
@@ -90,10 +90,10 @@ export function FriendRequestsPanel({ onAccept, onReject }: FriendRequestsPanelP
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-bold text-zinc-100 flex items-center gap-2">
-          <UserPlus className="w-5 h-5 text-cyan-400" />
+          <UserPlus className="w-5 h-5 text-accent" />
           Friend Requests
           {pendingCount > 0 && (
-            <span className="ml-2 px-2 py-0.5 bg-cyan-400/20 text-cyan-400 rounded-full text-xs font-bold">
+            <span className="ml-2 px-2 py-0.5 bg-accent/20 text-accent rounded-full text-xs font-bold">
               {pendingCount}
             </span>
           )}
@@ -111,7 +111,7 @@ export function FriendRequestsPanel({ onAccept, onReject }: FriendRequestsPanelP
               onClick={() => setFilter(tab.key as 'all' | 'pending' | 'history')}
               className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
                 filter === tab.key
-                  ? 'bg-cyan-400 text-zinc-950'
+                  ? 'bg-accent text-zinc-950'
                   : 'text-zinc-400 hover:text-zinc-100'
               }`}
             >
@@ -142,13 +142,13 @@ export function FriendRequestsPanel({ onAccept, onReject }: FriendRequestsPanelP
                   transition={{ delay: idx * 0.05 }}
                   className={`p-4 rounded-lg border transition-all ${
                     isPending
-                      ? 'bg-zinc-800 border-zinc-700 hover:border-cyan-400/50'
+                      ? 'bg-zinc-800 border-zinc-700 hover:border-accent/50'
                       : 'bg-zinc-950 border-zinc-800 opacity-60'
                   }`}
                 >
                   <div className="flex items-start gap-3">
                     {/* Avatar */}
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-zinc-950 font-bold shrink-0">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-accent to-violet-400 flex items-center justify-center text-zinc-950 font-bold shrink-0">
                       {request.fromAlias
                         ? request.fromAlias?.[0]?.toUpperCase()
                         : request.from.slice(2, 4).toUpperCase()}

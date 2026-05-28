@@ -36,7 +36,7 @@ export function SettingsTab() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Settings size={16} className="text-cyan-400" />
+          <Settings size={16} className="text-accent" />
           <h3 className="text-white font-semibold text-sm">SEER Event Pipeline</h3>
         </div>
         <div className="flex gap-1">
@@ -46,7 +46,7 @@ export function SettingsTab() {
               onClick={() => setWindow(opt.value)}
               className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
                 window === opt.value
-                  ? 'bg-cyan-500/20 text-cyan-400'
+                  ? 'bg-accent/20 text-accent'
                   : 'text-gray-500 hover:text-gray-300'
               }`}
             >
@@ -58,7 +58,7 @@ export function SettingsTab() {
 
       {loading ? (
         <div className="flex items-center justify-center py-10">
-          <Loader2 size={20} className="text-cyan-400 animate-spin" />
+          <Loader2 size={20} className="text-accent animate-spin" />
         </div>
       ) : analytics ? (
         <>
@@ -102,7 +102,7 @@ export function SettingsTab() {
                 </div>
                 <div className="w-full bg-white/5 rounded-full h-2">
                   <div
-                    className="h-2 rounded-full bg-gradient-to-r from-green-500 to-cyan-500"
+                    className="h-2 rounded-full bg-gradient-to-r from-green-500 to-accent"
                     style={{ width: `${(analytics.allowed_events / analytics.total_events) * 100}%` }}
                   />
                 </div>

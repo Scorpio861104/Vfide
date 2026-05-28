@@ -25,8 +25,8 @@ export function WelcomeChapter({ onContinue, onSkipAll }: WelcomeChapterProps) {
     >
       {/* Wallet connect prompt — shown only when not connected */}
       {!isConnected && (
-        <div className="mb-4 flex flex-col items-center gap-3 rounded-xl border border-cyan-500/30 bg-cyan-500/8 p-4 text-center">
-          <Wallet className="text-cyan-300" size={28} aria-hidden />
+        <div className="mb-4 flex flex-col items-center gap-3 rounded-xl border border-accent/30 bg-accent/8 p-4 text-center">
+          <Wallet className="text-accent" size={28} aria-hidden />
           <p className="text-sm text-white/80 font-medium">
             Connect your wallet to begin setup
           </p>
@@ -41,7 +41,7 @@ export function WelcomeChapter({ onContinue, onSkipAll }: WelcomeChapterProps) {
         {[
           {
             icon: Shield,
-            color: 'text-cyan-300',
+            color: 'text-accent',
             title: 'Create your vault',
             sub: 'Required — everything else depends on it.',
           },
@@ -71,7 +71,7 @@ export function WelcomeChapter({ onContinue, onSkipAll }: WelcomeChapterProps) {
           },
           {
             icon: Sparkles,
-            color: 'text-cyan-300',
+            color: 'text-accent',
             title: 'You can turn the wizard off',
             sub: 'Toggle it back on later from settings if you change your mind.',
           },

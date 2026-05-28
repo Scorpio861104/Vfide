@@ -5,6 +5,7 @@ pragma solidity 0.8.30;
 // the IVaultHub_COM interface, the COM_* errors, and the MerchantRegistry
 // contract type referenced by `merchants` below.
 import "./MerchantRegistry.sol";
+import "./lib/ScoringConstants.sol";
 
 /// @notice Phase 3d Turn 3 — calling interface for atomic escrow funding on CardBoundVault.
 /// @dev Mirrors the ICardBoundVaultPay pattern in MerchantPortal: declare the calling interface
@@ -80,11 +81,34 @@ contract CommerceEscrow {
         // M-COMMERCE-1 FIX: openedAt timestamp lets unfunded OPEN escrows be cancelled
         // after OPEN_ESCROW_EXPIRY without funder action, preventing storage pollution.
         uint64  openedAt;
+        // Issue #269: timestamp set at funding; used by _lockPeriod() to gate buyer disputes.
+        uint64  fundedAt;
+        // Issue #269: true if amount >= HIGH_VALUE_THRESHOLD at open time; gates ARBITER_TIMELOCK.
+        bool    isHighValue;
     }
 
     // M-COMMERCE-1 FIX: How long an OPEN (unfunded) escrow stays valid before anyone can cancel it.
     /// @notice OPEN_ESCROW_EXPIRY
     uint256 public constant OPEN_ESCROW_EXPIRY = 7 days;
+
+    // ── Issue #269: ProofScore-tiered dispute lock periods ───────────────────────
+    // Mirrors the Seer Constitution: trust earned through behavior reduces settlement friction.
+    // Lock period is measured from `fundedAt`; buyer cannot raise a dispute until it elapses.
+    // Merchant can always dispute immediately (they control delivery confirmation).
+    /// @notice LOCK_TRUSTED — buyer score ≥ 8000 (80%). 3-day hold: confirmed-trust path.
+    uint64 public constant LOCK_TRUSTED   = 3 days;
+    /// @notice LOCK_NEUTRAL — buyer score 4000–7999. 7-day hold: standard path.
+    uint64 public constant LOCK_NEUTRAL   = 7 days;
+    /// @notice LOCK_LOW_TRUST — buyer score < 4000. 14-day hold: extended observation window.
+    uint64 public constant LOCK_LOW_TRUST = 14 days;
+
+    // ── Issue #269: High-value escrow arbiter path ───────────────────────────────
+    /// @notice HIGH_VALUE_THRESHOLD — escrows at or above this amount are flagged high-value.
+    ///         High-value escrows require the DAO to observe ARBITER_TIMELOCK from the moment
+    ///         of dispute before resolving, giving both parties time to present evidence off-chain.
+    uint256 public constant HIGH_VALUE_THRESHOLD = 10_000 * 1e18;  // 10,000 VFIDE
+    /// @notice ARBITER_TIMELOCK — deliberation window enforced on high-value resolve().
+    uint64  public constant ARBITER_TIMELOCK     = 7 days;
 
     /// @notice escrowDeposited
     mapping(uint256 => uint256) public escrowDeposited;
@@ -94,10 +118,20 @@ contract CommerceEscrow {
     /// @notice escrows
     mapping(uint256 => Escrow) public escrows;
 
+    // Issue #269: Seer integration for ProofScore-tiered lock periods.
+    // Settable by DAO after deployment via setSeer(); zero address disables tiering (falls back to LOCK_NEUTRAL).
+    /// @notice seer
+    ISeer public seer;
+
     // N-H14 FIX: Only disputes above this amount increment merchant dispute counters.
     // Prevents griefers from opening tiny-value escrows and forcing auto-suspension.
     /// @notice minDisputeAmountForPenalty
     uint256 public minDisputeAmountForPenalty = 100 * 1e18;
+
+    // Issue #269: Tracks when a dispute was raised on each escrow.
+    // Used by resolve() to enforce ARBITER_TIMELOCK on high-value escrows.
+    /// @notice escrowDisputedAt
+    mapping(uint256 => uint64) public escrowDisputedAt;
 
     // ─── Lifecycle events ────────────────────────────────────────────────────────
     // Added Phase 3d Turn 2 (2026-05-15). The contract previously emitted no events
@@ -151,6 +185,14 @@ contract CommerceEscrow {
     /// @param id id
     /// @param buyerWins buyerWins
     event EscrowResolved(uint256 indexed id, bool buyerWins);
+    /// @notice HighValueEscrowOpened — emitted when an escrow amount meets or exceeds HIGH_VALUE_THRESHOLD.
+    ///         Signals to off-chain arbiters and indexers that ARBITER_TIMELOCK applies to this escrow.
+    /// @param id id
+    /// @param amount amount
+    event HighValueEscrowOpened(uint256 indexed id, uint256 amount);
+    /// @notice SeerSet — emitted when the DAO wires or replaces the Seer integration.
+    /// @param seer seer
+    event SeerSet(address indexed seer);
 
     /// @notice onlyDAO
     modifier onlyDAO() { if (msg.sender != dao) revert COM_NotDAO(); _; }
@@ -170,6 +212,16 @@ contract CommerceEscrow {
     function setMinDisputeAmountForPenalty(uint256 amount) external onlyDAO {
         if (amount == 0) revert COM_BadAmount();
         minDisputeAmountForPenalty = amount;
+    }
+
+    /// @notice Issue #269 — Wire or replace the Seer integration used for score-tiered lock periods.
+    /// @dev    Called by the DAO after deployment (same post-deploy wiring pattern as VFIDETermLoan).
+    ///         Passing address(0) disables tiering — all buyers fall back to LOCK_NEUTRAL.
+    ///         Zero-address is permitted to allow graceful degradation if Seer is migrated.
+    /// @param _seer Address of the Seer contract (must implement ISeer).
+    function setSeer(address _seer) external onlyDAO {
+        seer = ISeer(_seer);
+        emit SeerSet(_seer);
     }
 
     /**
@@ -201,6 +253,7 @@ contract CommerceEscrow {
         address sellerV = vaultHub.vaultOf(merchantOwner);
         if (sellerV == address(0)) revert COM_NotSeller();
         id = ++escrowCount;
+        bool highValue = amount >= HIGH_VALUE_THRESHOLD;
         escrows[id] = Escrow({
             buyerOwner: msg.sender,
             merchantOwner: merchantOwner,
@@ -210,9 +263,13 @@ contract CommerceEscrow {
             state: State.OPEN,
             metaHash: metaHash,
             // M-COMMERCE-1 FIX: stamp creation time so unfunded escrows can be cancelled after expiry
-            openedAt: uint64(block.timestamp)
+            openedAt: uint64(block.timestamp),
+            // Issue #269: lock-period and arbiter-path gating
+            fundedAt: 0,
+            isHighValue: highValue
         });
         emit EscrowOpened(id, msg.sender, merchantOwner, amount, metaHash);
+        if (highValue) emit HighValueEscrowOpened(id, amount);
     }
 
     /// @notice Phase 3d Turn 3 — atomic open+fund via signed intent.
@@ -264,6 +321,7 @@ contract CommerceEscrow {
         // the simulate-then-write pattern used elsewhere in the codebase.
         if (intent.escrowId != id) revert COM_NotAllowed();
 
+        bool highValue = intent.amount >= HIGH_VALUE_THRESHOLD;
         escrows[id] = Escrow({
             buyerOwner: msg.sender,
             merchantOwner: merchantOwner,
@@ -272,7 +330,10 @@ contract CommerceEscrow {
             amount: intent.amount,
             state: State.FUNDED, // directly to FUNDED — atomic path skips OPEN
             metaHash: metaHash,
-            openedAt: uint64(block.timestamp)
+            openedAt: uint64(block.timestamp),
+            // Issue #269: atomic path — funded immediately at open time
+            fundedAt: uint64(block.timestamp),
+            isHighValue: highValue
         });
         escrowDeposited[id] = intent.amount;
 
@@ -283,6 +344,7 @@ contract CommerceEscrow {
 
         emit EscrowOpened(id, msg.sender, merchantOwner, intent.amount, metaHash);
         emit EscrowFunded(id, msg.sender, intent.amount);
+        if (highValue) emit HighValueEscrowOpened(id, intent.amount);
     }
 
     // SLITHER FALSE POSITIVE (arbitrary-send-erc20):
@@ -318,6 +380,8 @@ contract CommerceEscrow {
         if (currentBuyerVault == address(0) || currentBuyerVault != e.buyerVault) revert COM_NotAllowed();
 
         e.state = State.FUNDED;
+        // Issue #269: stamp fundedAt so _lockPeriod() can gate buyer disputes.
+        e.fundedAt = uint64(block.timestamp);
         escrowDeposited[id] = e.amount;
         token.safeTransferFrom(e.buyerVault, address(this), e.amount);
         emit EscrowFunded(id, e.buyerOwner, e.amount);
@@ -424,13 +488,28 @@ contract CommerceEscrow {
     }
 
     /// @notice dispute
+    /// @dev    Issue #269: Buyer disputes are gated by a ProofScore-tiered lock period starting
+    ///         from `fundedAt`. The lock reflects the Seer Constitution principle that trust earned
+    ///         through behavior reduces settlement friction. A trusted buyer (score ≥ 8000) waits
+    ///         3 days; a neutral buyer waits 7; a low-trust buyer waits 14.
+    ///         Merchants have no lock — they control delivery confirmation and may dispute immediately.
     /// @param id id
     /// @param reason reason
     function dispute(uint256 id, string calldata reason) external nonReentrant {
         Escrow storage e = escrows[id];
         if (e.state != State.FUNDED) revert COM_BadState();
         if (msg.sender != e.buyerOwner && msg.sender != e.merchantOwner) revert COM_NotAllowed();
+
+        // Issue #269: Score-tiered lock — only applies to buyer disputes.
+        // Merchant can dispute at any time (delivery is their confirmation to make).
+        if (msg.sender == e.buyerOwner && e.fundedAt != 0) {
+            uint64 lock = _lockPeriod(e.buyerOwner);
+            if (block.timestamp < uint256(e.fundedAt) + lock) revert COM_LockActive();
+        }
+
         e.state = State.DISPUTED;
+        // Issue #269: stamp dispute time for ARBITER_TIMELOCK enforcement in resolve().
+        escrowDisputedAt[id] = uint64(block.timestamp);
         // N-H14 FIX: Ignore low-value disputes for auto-suspension accounting.
         if (e.amount >= minDisputeAmountForPenalty) {
             merchants._noteDispute(e.merchantOwner);
@@ -439,11 +518,24 @@ contract CommerceEscrow {
     }
 
     /// @notice resolve
+    /// @dev    Issue #269: High-value escrows (amount >= HIGH_VALUE_THRESHOLD) require the DAO
+    ///         to wait ARBITER_TIMELOCK (7 days) from the moment of dispute before resolving.
+    ///         This gives both parties time to present evidence off-chain before the DAO votes.
+    ///         Standard-value escrows may be resolved by the DAO immediately after dispute.
     /// @param id id
     /// @param buyerWins buyerWins
     function resolve(uint256 id, bool buyerWins) external nonReentrant onlyDAO {
         Escrow storage e = escrows[id];
         if (e.state != State.DISPUTED) revert COM_BadState();
+
+        // Issue #269: High-value arbiter timelock — DAO must wait before resolving.
+        if (e.isHighValue) {
+            uint64 disputedAt = escrowDisputedAt[id];
+            if (disputedAt == 0 || block.timestamp < uint256(disputedAt) + ARBITER_TIMELOCK) {
+                revert COM_HighValueTimelock();
+            }
+        }
+
         e.state = State.RESOLVED;
         if (buyerWins) {
             address buyerVaultNow = vaultHub.vaultOf(e.buyerOwner);
@@ -458,4 +550,21 @@ contract CommerceEscrow {
         }
         emit EscrowResolved(id, buyerWins);
     }
+    // ── Issue #269: Internal helpers ────────────────────────────────────────────
+
+    /// @notice _lockPeriod
+    /// @dev Returns the score-tiered dispute lock period for a given buyer.
+    ///      Falls back to LOCK_NEUTRAL if Seer is not yet wired (seer == address(0)).
+    ///      Uses getScore() (live score) rather than getCachedScore() so a buyer who
+    ///      rapidly accumulated trust right before disputing cannot game a cached value.
+    /// @param buyer The buyer's owner address (not vault address).
+    /// @return lock The lock duration in seconds.
+    function _lockPeriod(address buyer) internal view returns (uint64 lock) {
+        if (address(seer) == address(0)) return LOCK_NEUTRAL;
+        uint16 score = seer.getScore(buyer);
+        if (score >= ScoringConstants.HIGH_FEE_CEIL) return LOCK_TRUSTED;
+        if (score >= ScoringConstants.LOW_FEE_FLOOR) return LOCK_NEUTRAL;
+        return LOCK_LOW_TRUST;
+    }
+
 }

@@ -51,7 +51,7 @@ export function OverviewTab() {
       {/* Benefits Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {benefits.map((benefit, idx) => (
-          <div key={idx} className="bg-zinc-800 border border-zinc-700 rounded-xl p-6 hover:border-cyan-400/30 transition-colors">
+          <div key={idx} className="bg-zinc-800 border border-zinc-700 rounded-xl p-6 hover:border-accent/30 transition-colors">
             <benefit.icon size={32} style={{ color: benefit.color }} className="mb-4" />
             <h3 className="text-xl font-bold text-zinc-100 mb-2">{benefit.title}</h3>
             <p className="text-zinc-400 text-sm">{benefit.description}</p>
@@ -62,7 +62,7 @@ export function OverviewTab() {
       {/* Protocol Facts — sourced directly from contracts */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6 text-center">
-          <div className="text-3xl font-bold text-cyan-400">7</div>
+          <div className="text-3xl font-bold text-accent">7</div>
           <div className="text-sm text-zinc-400">ProofScore Tiers</div>
         </div>
         <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6 text-center">

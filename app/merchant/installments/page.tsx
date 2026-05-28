@@ -76,25 +76,25 @@ export default function MerchantInstallmentsPage() {
         </div>
         <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         <div className="container mx-auto max-w-4xl px-4 pb-16">
-          <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200">
+          <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-accent hover:text-accent">
             <ArrowLeft size={16} /> Back to Merchant Hub
           </Link>
 
           <div className="badge-live mb-3">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> BNPL
+              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" /> BNPL
             </div>
             <div className="mb-6">
             <h1 className="flex items-center gap-3 text-3xl font-black tracking-tight">
-              <CreditCard className="text-cyan-400" /> Installments & payment plans
+              <CreditCard className="text-accent" /> Installments & payment plans
             </h1>
             <p className="mt-2 text-gray-400">Track pay-over-time orders, overdue accounts, and the next collection date for each customer.</p>
           </div>
 
           {activePlans.length > 0 && (
             <div className="mb-6 grid gap-3 md:grid-cols-3">
-              <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-4 text-center">
+              <div className="rounded-xl border border-accent/20 bg-accent/5 p-4 text-center">
                 <div className="text-xs text-gray-400">Active Plans</div>
-                <div className="text-2xl font-bold text-cyan-300">{activePlans.length}</div>
+                <div className="text-2xl font-bold text-accent">{activePlans.length}</div>
               </div>
               <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-center">
                 <div className="text-xs text-gray-400">Outstanding</div>
@@ -129,7 +129,7 @@ export default function MerchantInstallmentsPage() {
                       <div>
                         <div className="mb-1 flex items-center gap-2">
                           <span className="font-semibold text-white">{shortAddress(plan.customer_address)}</span>
-                          <span className={`text-xs font-bold capitalize ${overdue ? 'text-red-300' : plan.status === 'completed' ? 'text-emerald-300' : 'text-cyan-300'}`}>
+                          <span className={`text-xs font-bold capitalize ${overdue ? 'text-red-300' : plan.status === 'completed' ? 'text-emerald-300' : 'text-accent'}`}>
                             {overdue ? 'overdue' : plan.status}
                           </span>
                         </div>
@@ -142,7 +142,7 @@ export default function MerchantInstallmentsPage() {
                     </button>
 
                     <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10">
-                      <div className="h-full rounded-full bg-cyan-400" style={{ width: `${Math.min(progress, 100)}%` }} />
+                      <div className="h-full rounded-full bg-accent" style={{ width: `${Math.min(progress, 100)}%` }} />
                     </div>
 
                     {expandedPlan === plan.id && (

@@ -91,7 +91,7 @@ export function OverviewTab({
         <GlassCard className="p-6" hover={false}>
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
             <h2 className="flex items-center gap-2 text-xl font-bold text-white">
-              <Sparkles className="text-cyan-300" size={22} />
+              <Sparkles className="text-accent" size={22} />
               Ecosystem Loadout
             </h2>
             <span className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300/80">Fully loaded</span>
@@ -104,7 +104,7 @@ export function OverviewTab({
               <Link key={item.label} href={item.href}>
                 <div className="group h-full rounded-2xl border border-white/10 bg-white/5 p-4 transition-all hover:border-white/25 hover:bg-white/10">
                   <div className="flex items-start gap-3">
-                    <div className="rounded-xl bg-white/10 p-2 text-cyan-200 transition-colors group-hover:text-cyan-100">
+                    <div className="rounded-xl bg-white/10 p-2 text-accent transition-colors group-hover:text-accent">
                       <item.icon size={18} />
                     </div>
                     <div className="flex-1">
@@ -124,7 +124,7 @@ export function OverviewTab({
         <motion.div variants={itemVariants}>
           <GlassCard className="p-6" hover={false}>
             <h2 className="mb-6 flex items-center gap-2 text-xl font-bold text-white">
-              <TrendingUp className="text-cyan-400" size={24} />
+              <TrendingUp className="text-accent" size={24} />
               Your ProofScore
             </h2>
             <div className="flex flex-col items-center py-6">
@@ -171,7 +171,7 @@ export function OverviewTab({
                       transition={{ duration: 1, delay: index * 0.1 }}
                       className={`h-full rounded-full bg-gradient-to-r ${
                         item.color === 'cyan'
-                          ? 'from-cyan-500 to-cyan-400'
+                          ? 'from-accent to-accent-dark'
                           : 'from-emerald-500 to-emerald-400'
                       }`}
                     />
@@ -190,7 +190,7 @@ export function OverviewTab({
             <div className="mt-6 border-t border-white/10 pt-6">
               <div className="flex items-center justify-between">
                 <span className="text-white/60">Total ProofScore</span>
-                <span className="text-2xl font-bold text-cyan-400">{proofscore}</span>
+                <span className="text-2xl font-bold text-accent">{proofscore}</span>
               </div>
             </div>
           </GlassCard>

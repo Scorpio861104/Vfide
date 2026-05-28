@@ -45,7 +45,7 @@ export default function FlashLoansPage() {
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
               <h1 className="text-4xl font-bold mb-2">
-                <span className="bg-gradient-to-r from-amber-400 via-orange-400 to-cyan-400 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-amber-400 via-orange-400 to-accent bg-clip-text text-transparent">
                   Flash Loans
                 </span>
               </h1>
@@ -57,7 +57,7 @@ export default function FlashLoansPage() {
                 <div className="text-xs text-white/40">Collateral</div>
               </div>
               <div className="analytics-card text-center px-5 py-3">
-                <div className="text-xl font-bold text-cyan-400">0.09%</div>
+                <div className="text-xl font-bold text-accent">0.09%</div>
                 <div className="text-xs text-white/40">Flash Fee</div>
               </div>
             </div>

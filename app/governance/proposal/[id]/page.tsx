@@ -202,7 +202,7 @@ export default function ProposalDetailPage() {
       {/* Vote tallies */}
       <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
         <h2 className="text-lg font-bold text-zinc-100 mb-4 flex items-center gap-2">
-          <Vote size={18} className="text-cyan-400" /> Vote tallies
+          <Vote size={18} className="text-accent" /> Vote tallies
         </h2>
         {totalVotes === 0n ? (
           <p className="text-sm text-zinc-500">No votes cast yet.</p>
@@ -233,9 +233,9 @@ export default function ProposalDetailPage() {
               </span>
             ) : votingActive ? (
               <span className="text-zinc-400 inline-flex items-center gap-1">
-                <Sparkles size={14} className="text-cyan-400" /> Voting is open — cast your vote
+                <Sparkles size={14} className="text-accent" /> Voting is open — cast your vote
                 via{' '}
-                <Link href="/governance" className="text-cyan-400 hover:text-cyan-300 underline">
+                <Link href="/governance" className="text-accent hover:text-accent underline">
                   /governance
                 </Link>
               </span>
@@ -249,7 +249,7 @@ export default function ProposalDetailPage() {
       {/* Schedule + targets */}
       <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
         <h2 className="text-lg font-bold text-zinc-100 mb-4 flex items-center gap-2">
-          <Calendar size={18} className="text-cyan-400" /> Schedule
+          <Calendar size={18} className="text-accent" /> Schedule
         </h2>
         <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
           <DetailRow label="Voting starts" value={formatTimestamp(proposal.startTime)} />
@@ -261,7 +261,7 @@ export default function ProposalDetailPage() {
 
       <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
         <h2 className="text-lg font-bold text-zinc-100 mb-4 flex items-center gap-2">
-          <Scale size={18} className="text-cyan-400" /> Target call
+          <Scale size={18} className="text-accent" /> Target call
         </h2>
         <dl className="space-y-3 text-sm">
           <AddressRow label="Proposer" address={proposal.proposer} />
@@ -294,7 +294,7 @@ function DetailFrame({ children }: { children: React.ReactNode }) {
         <div className="max-w-4xl mx-auto px-4 space-y-6">
           <Link
             href="/governance"
-            className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-cyan-400 transition-colors"
+            className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-accent transition-colors"
           >
             <ArrowLeft size={16} /> Back to governance
           </Link>
@@ -320,7 +320,7 @@ function ErrorPanel({ title, body }: { title: string; body: React.ReactNode }) {
 
 function StatusBadge({ status }: { status: ProposalStatus }) {
   const styles: Record<ProposalStatus, { bg: string; text: string; Icon: typeof Clock }> = {
-    [ProposalStatus.Active]: { bg: 'bg-cyan-500/15 border-cyan-500/30', text: 'text-cyan-300', Icon: Sparkles },
+    [ProposalStatus.Active]: { bg: 'bg-accent/15 border-accent/30', text: 'text-accent', Icon: Sparkles },
     [ProposalStatus.Ended]: { bg: 'bg-zinc-500/15 border-zinc-500/30', text: 'text-zinc-300', Icon: Clock },
     [ProposalStatus.Expired]: { bg: 'bg-zinc-500/15 border-zinc-500/30', text: 'text-zinc-300', Icon: Clock },
     [ProposalStatus.Succeeded]: { bg: 'bg-emerald-500/15 border-emerald-500/30', text: 'text-emerald-300', Icon: CheckCircle2 },
@@ -404,7 +404,7 @@ function AddressRow({ label, address }: { label: string; address: Address }) {
             </button>
             <Link
               href={`/explorer/${address}`}
-              className="text-xs text-cyan-400 hover:text-cyan-300 inline-flex items-center gap-1 transition-colors"
+              className="text-xs text-accent hover:text-accent inline-flex items-center gap-1 transition-colors"
             >
               View <ExternalLink size={10} />
             </Link>

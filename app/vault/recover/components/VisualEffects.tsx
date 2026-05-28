@@ -12,7 +12,7 @@ export function AuroraBackground() {
       <motion.div
         animate={{ x: [0, 100, -50, 0], y: [0, -50, 50, 0], scale: [1, 1.2, 0.9, 1] }}
         transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute left-1/4 top-0 h-200 w-200 rounded-full bg-gradient-to-br from-cyan-500/20 via-blue-500/10 to-transparent blur-[150px]"
+        className="absolute left-1/4 top-0 h-200 w-200 rounded-full bg-gradient-to-br from-accent/20 via-blue-500/10 to-transparent blur-[150px]"
       />
       <motion.div
         animate={{ x: [0, -80, 60, 0], y: [0, 60, -40, 0], scale: [1, 0.8, 1.1, 1] }}
@@ -66,7 +66,7 @@ export function FloatingParticles() {
           initial={{ x: `${particle.x}%`, y: '110%', opacity: 0 }}
           animate={{ y: '-10%', opacity: [0, 0.6, 0] }}
           transition={{ duration: particle.duration, repeat: Infinity, delay: particle.delay, ease: 'linear' }}
-          className="absolute h-1 w-1 rounded-full bg-cyan-400/40"
+          className="absolute h-1 w-1 rounded-full bg-accent/40"
         />
       ))}
     </div>
@@ -99,7 +99,7 @@ export function VaultKeyVisualization({ isSearching }: { isSearching: boolean })
         <motion.div
           animate={isSearching ? { rotate: 360 } : { rotate: 0 }}
           transition={{ duration: 3, repeat: isSearching ? Infinity : 0, ease: 'linear' }}
-          className="absolute inset-0 rounded-full border-2 border-cyan-500/30 border-dashed"
+          className="absolute inset-0 rounded-full border-2 border-accent/30 border-dashed"
         />
         <motion.div
           animate={isSearching ? { rotate: -360 } : { rotate: 0 }}
@@ -127,15 +127,15 @@ export function VaultKeyVisualization({ isSearching }: { isSearching: boolean })
                 : '0 0 40px rgba(6, 182, 212, 0.3)',
             }}
             transition={{ duration: 1, repeat: Infinity }}
-            className="flex h-16 w-16 items-center justify-center rounded-2xl border border-cyan-500/50 bg-gradient-to-br from-cyan-500/30 to-blue-600/30 backdrop-blur-xl md:h-20 md:w-20"
+            className="flex h-16 w-16 items-center justify-center rounded-2xl border border-accent/50 bg-gradient-to-br from-accent/30 to-blue-600/30 backdrop-blur-xl md:h-20 md:w-20"
           >
-            <KeyRound className="h-8 w-8 text-cyan-400 md:h-10 md:w-10" />
+            <KeyRound className="h-8 w-8 text-accent md:h-10 md:w-10" />
           </motion.div>
           {isSearching && (
             <motion.div
               animate={{ y: [-40, 40] }}
               transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-              className="absolute inset-x-4 h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent"
+              className="absolute inset-x-4 h-0.5 bg-gradient-to-r from-transparent via-accent to-transparent"
             />
           )}
         </motion.div>

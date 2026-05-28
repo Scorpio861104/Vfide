@@ -220,7 +220,7 @@ export function Avatar({
     if (!name) return 'from-gray-600 to-gray-700';
     const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     const gradients = [
-      'from-cyan-500 to-blue-500',
+      'from-accent to-blue-500',
       'from-purple-500 to-pink-500',
       'from-green-500 to-emerald-500',
       'from-orange-500 to-red-500',
@@ -425,7 +425,7 @@ export function VideoPlayer({
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-            className="w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full"
+            className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full"
           />
         </div>
       )}
@@ -510,10 +510,10 @@ export function VideoPlayer({
                   handleSeek(fakeEvent);
                 }
               }}
-              className="w-full h-1 bg-gray-600 rounded-full cursor-pointer mb-3 focus-visible:outline-2 focus-visible:outline-cyan-400 focus-visible:outline-offset-2"
+              className="w-full h-1 bg-gray-600 rounded-full cursor-pointer mb-3 focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
             >
               <motion.div
-                className="h-full bg-cyan-500 rounded-full"
+                className="h-full bg-accent rounded-full"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -522,7 +522,7 @@ export function VideoPlayer({
             <div className="flex items-center gap-3">
               <button
                 onClick={togglePlay}
-                className="p-2 text-white hover:text-cyan-400 transition-colors"
+                className="p-2 text-white hover:text-accent transition-colors"
                 aria-label={isPlaying ? 'Pause' : 'Play'}
               >
                 {isPlaying ? (
@@ -534,7 +534,7 @@ export function VideoPlayer({
 
               <button
                 onClick={toggleMute}
-                className="p-2 text-white hover:text-cyan-400 transition-colors"
+                className="p-2 text-white hover:text-accent transition-colors"
                 aria-label={isMuted ? 'Unmute' : 'Mute'}
               >
                 {isMuted ? (
@@ -548,7 +548,7 @@ export function VideoPlayer({
 
               <button
                 onClick={handleFullscreen}
-                className="p-2 text-white hover:text-cyan-400 transition-colors"
+                className="p-2 text-white hover:text-accent transition-colors"
                 aria-label="Fullscreen"
               >
                 <Maximize className="w-5 h-5" />
@@ -667,7 +667,7 @@ export function ImageGallery({
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setSelectedIndex(index)}
-            className="relative aspect-square overflow-hidden rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            className="relative aspect-square overflow-hidden rounded-xl focus:outline-none focus:ring-2 focus:ring-accent"
           >
             <OptimizedImage
               src={image.src}

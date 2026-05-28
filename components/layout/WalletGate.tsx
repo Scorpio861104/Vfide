@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * WalletGate — Shared auth guard
  * 
@@ -34,7 +36,7 @@ export function WalletGate({ children }: { children: ReactNode }) {
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-          className="w-8 h-8 border-2 border-cyan-500/20 border-t-cyan-500 rounded-full"
+          className="w-8 h-8 border-2 border-accent/20 border-t-accent rounded-full"
         />
       </div>
     );
@@ -48,8 +50,8 @@ export function WalletGate({ children }: { children: ReactNode }) {
           animate={{ opacity: 1, y: 0 }}
           className="text-center max-w-md"
         >
-          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 flex items-center justify-center">
-            <Wallet className="w-10 h-10 text-cyan-400" />
+          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-accent/20 to-blue-500/20 border border-accent/30 flex items-center justify-center">
+            <Wallet className="w-10 h-10 text-accent" />
           </div>
           <h2 className="text-2xl font-bold text-white mb-3">Connect your wallet</h2>
           <p className="text-zinc-400 mb-6">

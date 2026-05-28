@@ -360,7 +360,7 @@ export function HistoryTab() {
                       href={getTxExplorerUrl(e.txHash, chainId ?? DEFAULT_CHAIN_ID)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-cyan-400 hover:text-cyan-300 text-xs font-mono inline-flex items-center gap-1 transition-colors"
+                      className="text-accent hover:text-accent text-xs font-mono inline-flex items-center gap-1 transition-colors"
                     >
                       {shortHash(e.txHash)}
                       <ExternalLink size={10} />
@@ -412,7 +412,7 @@ function KindBadge({ kind }: { kind: EventKind }) {
     );
   }
   return (
-    <span className="px-2 py-1 rounded text-xs font-bold bg-cyan-500/20 text-cyan-400 inline-flex items-center gap-1">
+    <span className="px-2 py-1 rounded text-xs font-bold bg-accent/20 text-accent inline-flex items-center gap-1">
       <PlusCircle size={10} /> CHARITY ADDED
     </span>
   );
@@ -424,7 +424,7 @@ function DetailsCell({ entry }: { entry: HistoryEntry }) {
       <span>
         To <a
           href={`/sanctum/charities/${entry.charity}`}
-          className="text-cyan-400 hover:text-cyan-300 font-mono text-xs transition-colors"
+          className="text-accent hover:text-accent font-mono text-xs transition-colors"
         >
           {shortAddr(entry.charity ?? '')}
         </a>{' '}
@@ -449,7 +449,7 @@ function DetailsCell({ entry }: { entry: HistoryEntry }) {
       <span className="text-zinc-500 text-xs">· {entry.category || 'uncategorized'}</span>{' '}
       <a
         href={`/sanctum/charities/${entry.charity}`}
-        className="text-cyan-400 hover:text-cyan-300 font-mono text-xs transition-colors"
+        className="text-accent hover:text-accent font-mono text-xs transition-colors"
       >
         {shortAddr(entry.charity ?? '')}
       </a>

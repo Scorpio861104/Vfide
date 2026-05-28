@@ -133,7 +133,7 @@ export function MerchantSelfAdminSection() {
           {!editing && (
             <button
               onClick={() => setEditing(true)}
-              className="text-xs text-cyan-300 hover:text-cyan-200 inline-flex items-center gap-1 shrink-0"
+              className="text-xs text-accent hover:text-accent inline-flex items-center gap-1 shrink-0"
             >
               <Pencil size={12} />
               Edit
@@ -205,7 +205,7 @@ export function MerchantSelfAdminSection() {
               <p className="text-xs text-gray-500">
                 These fields are stored on the MerchantPortal contract. Your off-chain profile
                 (avatar, bio, links) is managed separately from the{' '}
-                <span className="text-cyan-300">Edit profile</span> link.
+                <span className="text-accent">Edit profile</span> link.
               </p>
             </motion.div>
           )}

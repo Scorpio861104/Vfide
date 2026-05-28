@@ -145,7 +145,7 @@ export default function StakingPage() {
           <div className="relative container mx-auto px-4 max-w-3xl py-8">
             <div className="mb-6">
               <span className="badge-live mb-3 inline-flex"><span className="badge-live-dot" />Liquidity Pools</span>
-              <h1 className="text-4xl font-bold"><span className="bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent">Staking</span></h1>
+              <h1 className="text-4xl font-bold"><span className="bg-gradient-to-r from-accent to-emerald-400 bg-clip-text text-transparent">Staking</span></h1>
             </div>
             <div className="glass-card-premium p-8 text-center">
               <Coins className="mx-auto text-zinc-600 mb-3" size={40} aria-hidden="true" />
@@ -169,7 +169,7 @@ export default function StakingPage() {
           <div className="relative container mx-auto px-4 max-w-3xl py-8">
             <div className="mb-6">
               <span className="badge-live mb-3 inline-flex"><span className="badge-live-dot" />Liquidity Pools</span>
-              <h1 className="text-4xl font-bold"><span className="bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent">Staking</span></h1>
+              <h1 className="text-4xl font-bold"><span className="bg-gradient-to-r from-accent to-emerald-400 bg-clip-text text-transparent">Staking</span></h1>
             </div>
             <div className="glass-card-premium p-8 text-center">
               <Wallet className="mx-auto text-zinc-600 mb-3" size={40} aria-hidden="true" />
@@ -239,8 +239,8 @@ export default function StakingPage() {
               <span className="badge-live"><span className="badge-live-dot" />Liquidity Pools</span>
             </div>
             <h1 className="text-4xl font-bold mb-2">
-              <span className="bg-gradient-to-r from-cyan-400 via-emerald-400 to-blue-400 bg-clip-text text-transparent flex items-center gap-3">
-                <Coins size={32} className="text-cyan-400" />Staking
+              <span className="bg-gradient-to-r from-accent via-emerald-400 to-blue-400 bg-clip-text text-transparent flex items-center gap-3">
+                <Coins size={32} className="text-accent" />Staking
               </span>
             </h1>
             <p className="text-white/50">Coordinate liquidity across protocol pools. This is a liquidity coordination pool — no yield or token rewards are distributed (Howey-compliant design).</p>
@@ -248,7 +248,7 @@ export default function StakingPage() {
 
           {poolsLoading && (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="animate-spin text-cyan-400" size={32} aria-hidden="true" />
+              <Loader2 className="animate-spin text-accent" size={32} aria-hidden="true" />
             </div>
           )}
 
@@ -274,7 +274,7 @@ export default function StakingPage() {
                     aria-label="Select staking pool"
                     value={effectiveLp ?? ''}
                     onChange={(e) => setSelectedLp(e.target.value as Address)}
-                    className="w-full appearance-none bg-zinc-900 border border-white/10 rounded-lg px-3 py-2.5 pr-9 text-white text-sm focus:outline-none focus:border-cyan-500/50"
+                    className="w-full appearance-none bg-zinc-900 border border-white/10 rounded-lg px-3 py-2.5 pr-9 text-white text-sm focus:outline-none focus:border-accent/50"
                   >
                     {activePools.map((p) => (
                       <option key={p.lpToken} value={p.lpToken}>
@@ -317,7 +317,7 @@ export default function StakingPage() {
                       void refetchStake();
                       void refetchAllowance();
                     }}
-                    className="text-zinc-400 hover:text-cyan-400 transition-colors"
+                    className="text-zinc-400 hover:text-accent transition-colors"
                   >
                     <RefreshCw size={14} aria-hidden="true" />
                   </button>
@@ -331,7 +331,7 @@ export default function StakingPage() {
                   </div>
                   <div>
                     <div className="text-xs text-zinc-400">Duration</div>
-                    <div className="text-2xl font-bold text-cyan-300 font-mono">
+                    <div className="text-2xl font-bold text-accent font-mono">
                       {userStake ? formatDuration(userStake.stakeDuration) : '—'}
                     </div>
                   </div>
@@ -362,7 +362,7 @@ export default function StakingPage() {
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     placeholder="0.0"
-                    className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-3 text-xl text-white font-mono focus:outline-none focus:border-cyan-500/50"
+                    className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-3 text-xl text-white font-mono focus:outline-none focus:border-accent/50"
                   />
                   {amountError && (
                     <div className="mt-1.5 text-xs text-red-400 flex items-center gap-1">
@@ -376,7 +376,7 @@ export default function StakingPage() {
                         type="button"
                         onClick={() => setAmount(formatUnits(lpBalance, 18))}
                         disabled={lpBalance === 0n}
-                        className="text-cyan-400 hover:text-cyan-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 rounded"
+                        className="text-accent hover:text-accent disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 rounded"
                       >
                         Max
                       </button>
@@ -390,7 +390,7 @@ export default function StakingPage() {
                       type="button"
                       onClick={handleApprove}
                       disabled={approving || amountBn === 0n || !!amountError || amountBn > lpBalance}
-                      className="col-span-2 flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-cyan-500 hover:bg-cyan-400 disabled:opacity-40 disabled:cursor-not-allowed text-zinc-950 font-bold transition-colors"
+                      className="col-span-2 flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-accent hover:bg-accent-light disabled:opacity-40 disabled:cursor-not-allowed text-zinc-950 font-bold transition-colors"
                     >
                       {approving ? <Loader2 className="animate-spin" size={16} aria-hidden="true" /> : null}
                       {amountBn > lpBalance ? 'Insufficient LP balance' : 'Approve LP token'}
@@ -407,7 +407,7 @@ export default function StakingPage() {
                           !selectedPool?.active ||
                           amountBn > lpBalance
                         }
-                        className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-cyan-500 hover:bg-cyan-400 disabled:opacity-40 disabled:cursor-not-allowed text-zinc-950 font-bold transition-colors"
+                        className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-accent hover:bg-accent-light disabled:opacity-40 disabled:cursor-not-allowed text-zinc-950 font-bold transition-colors"
                       >
                         {staking ? <Loader2 className="animate-spin" size={16} aria-hidden="true" /> : null}
                         {amountBn > lpBalance ? 'Insufficient' : 'Stake'}

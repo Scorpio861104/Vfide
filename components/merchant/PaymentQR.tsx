@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * PaymentQR - Generate QR codes for customers to scan and pay
  */
@@ -183,9 +185,9 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-br from-cyan-400/10 to-blue-500/10 border-2 border-cyan-400/30 rounded-xl p-6">
+      <div className="bg-gradient-to-br from-accent/10 to-blue-500/10 border-2 border-accent/30 rounded-xl p-6">
         <div className="flex items-center gap-3 mb-2">
-          <QrCode className="w-8 h-8 text-cyan-400" />
+          <QrCode className="w-8 h-8 text-accent" />
           <div>
             <h2 className="text-xl font-bold text-zinc-100">Payment QR Code</h2>
             <p className="text-zinc-400 text-sm">QR scans default to instant settlement</p>
@@ -217,7 +219,7 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
               />
             ) : (
               <div className="w-[200px] h-[200px] flex flex-col items-center justify-center text-xs text-zinc-600 text-center gap-2">
-                <ShieldCheck className="w-8 h-8 text-cyan-500" />
+                <ShieldCheck className="w-8 h-8 text-accent" />
                 <span>Sign payment details to generate a tamper-proof QR</span>
               </div>
             )}
@@ -226,7 +228,7 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
           {/* Amount Display */}
           {amount && (
             <div className="text-center mb-4">
-              <div className="text-3xl font-bold text-cyan-400">
+              <div className="text-3xl font-bold text-accent">
                 {parseFloat(amount).toLocaleString()} VFIDE
               </div>
               <div className="text-zinc-400 text-sm">
@@ -290,7 +292,7 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
               onClick={sharePayment}
               disabled={!securePayloadReady}
               aria-label="Share payment link"
-              className="min-h-[44px] flex items-center justify-center gap-2 px-4 py-3 bg-cyan-400 hover:bg-cyan-300 rounded-lg text-zinc-900 font-bold transition-colors disabled:opacity-60"
+              className="min-h-[44px] flex items-center justify-center gap-2 px-4 py-3 bg-accent hover:bg-accent rounded-lg text-zinc-900 font-bold transition-colors disabled:opacity-60"
             >
               <Share2 size={18} />
               <span>Share</span>
@@ -325,7 +327,7 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
                 step="0.01"
                 min="0"
                 aria-describedby="payment-amount-help"
-                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg pl-10 pr-4 py-3 text-zinc-100  focus:border-cyan-400 focus:outline-none"
+                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg pl-10 pr-4 py-3 text-zinc-100  focus:border-accent focus:outline-none"
               />
             </div>
             <div id="payment-amount-help" className="text-sm text-zinc-300 mt-1">
@@ -342,7 +344,7 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
                 onClick={() => setAmount(preset)}
                 className={`min-h-[44px] px-4 py-2.5 rounded-lg text-sm font-bold transition-colors ${
                   amount === preset
-                    ? 'bg-cyan-400 text-zinc-900'
+                    ? 'bg-accent text-zinc-900'
                     : 'bg-zinc-700 text-zinc-100 hover:bg-zinc-600'
                 }`}
               >
@@ -361,7 +363,7 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
               onChange={(e) => setOrderId(e.target.value)}
              
               aria-describedby="payment-order-help"
-              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-100  focus:border-cyan-400 focus:outline-none"
+              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-100  focus:border-accent focus:outline-none"
             />
             <div id="payment-order-help" className="mt-1 text-sm text-zinc-300">
               Add a customer-facing reference so the payment stays easy to reconcile.

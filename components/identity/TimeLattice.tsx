@@ -36,7 +36,7 @@
  */
 
 import { useEffect, useMemo, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { useTimelocks, type Timelock, formatTimelockRemaining } from '@/hooks/useTimelocks';
 import { usePrefersReducedMotion } from '@/app/components/usePrefersReducedMotion';
 import { TIER_HEX } from '@/lib/animation/visualPrimitives';
@@ -149,7 +149,7 @@ function LatticeRow({ timelock, nowMs, reduce }: LatticeRowProps) {
   const shortLabel = detailLabel.length > 28 ? detailLabel.slice(0, 27) + '…' : detailLabel;
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, height: 0 }}
       animate={{ opacity: 1, height: 'auto' }}
       exit={{ opacity: 0, height: 0 }}
@@ -197,6 +197,6 @@ function LatticeRow({ timelock, nowMs, reduce }: LatticeRowProps) {
       >
         {isReady ? 'ready' : formatTimelockRemaining(timelock.executeAfter)}
       </span>
-    </motion.div>
+    </m.div>
   );
 }

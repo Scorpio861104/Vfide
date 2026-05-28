@@ -68,7 +68,7 @@ module.exports = {
         'glow': 'var(--shadow-glow)',
         'card': 'var(--shadow-card)',
         'elevated': 'var(--shadow-elevated)',
-        'glow-accent': '0 0 60px -12px rgba(0, 240, 255, 0.5)',
+        'glow-accent': 'var(--shadow-glow, 0 0 60px -12px rgba(0, 240, 255, 0.5))',
         'glow-green': '0 0 60px -12px rgba(0, 255, 136, 0.5)',
         'glow-purple': '0 0 60px -12px rgba(167, 139, 250, 0.5)',
       },
@@ -102,8 +102,8 @@ module.exports = {
           '50%': { backgroundPosition: '100% 50%' },
         },
         'pulse-glow': {
-          '0%, 100%': { boxShadow: '0 0 20px -5px rgba(0, 240, 255, 0.4)' },
-          '50%': { boxShadow: '0 0 40px -5px rgba(0, 240, 255, 0.6)' },
+          '0%, 100%': { boxShadow: '0 0 20px -5px var(--accent-glow, rgba(0, 240, 255, 0.4))' },
+          '50%': { boxShadow: '0 0 40px -5px var(--accent-glow, rgba(0, 240, 255, 0.6))' },
         },
         'float': {
           '0%, 100%': { transform: 'translateY(0)' },

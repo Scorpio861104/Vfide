@@ -22,7 +22,7 @@ import { motion } from 'framer-motion';
 
 // ── Named gradient presets ──────────────────────────────────────────────────
 const GRADIENT_MAP = {
-  cyan: 'from-cyan-500/20 to-blue-500/10',
+  cyan: 'from-accent/20 to-blue-500/10',
   gold: 'from-amber-500/20 to-orange-500/10',
   red: 'from-red-500/20 to-red-500/5',
   green: 'from-emerald-500/20 to-emerald-500/5',

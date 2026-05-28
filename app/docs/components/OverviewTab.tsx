@@ -27,7 +27,7 @@ export function OverviewTab() {
           <h3 className="mb-4 text-xl font-bold text-white">{section.title}</h3>
           <div className="space-y-2">
             {section.links.map((link) => (
-              <Link key={link.name} href={link.href} className="block text-cyan-300 hover:text-cyan-200">
+              <Link key={link.name} href={link.href} className="block text-accent hover:text-accent">
                 {link.name}
               </Link>
             ))}

@@ -343,7 +343,7 @@ export function MenuSearch({ value, onChange, resultCount }: MenuSearchProps) {
           value={value}
           onChange={e =>  onChange(e.target.value)}
          
-          className="w-full pl-7 pr-3 py-1.5 bg-white/3 border border-white/5 rounded-lg text-xs text-white  focus:outline-none focus:border-cyan-500/30"
+          className="w-full pl-7 pr-3 py-1.5 bg-white/3 border border-white/5 rounded-lg text-xs text-white  focus:outline-none focus:border-accent/30"
         />
         {value && (
           <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] text-gray-600">

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Home, CreditCard, Shield, Store, MoreHorizontal } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { MoreSheet } from './MoreSheet';
 
@@ -61,16 +61,16 @@ export function BottomTabBar() {
                 className={cn(
                   'flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all min-w-0',
                   isActive
-                    ? 'text-cyan-400'
+                    ? 'text-accent'
                     : 'text-zinc-500 hover:text-zinc-300'
                 )}
               >
                 <div className="relative">
                   <Icon size={22} strokeWidth={isActive ? 2.5 : 1.8} />
                   {isActive && (
-                    <motion.div
+                    <m.div
                       layoutId="tab-indicator"
-                      className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-cyan-400"
+                      className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-accent"
                     />
                   )}
                 </div>

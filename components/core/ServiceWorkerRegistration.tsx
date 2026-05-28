@@ -70,15 +70,15 @@ export function ServiceWorkerRegistration() {
           role="status"
           aria-live="polite"
         >
-          <div className="flex items-center gap-3 bg-zinc-900 border border-cyan-500/30 rounded-2xl px-4 py-3 shadow-2xl shadow-cyan-500/10">
-            <RefreshCcw size={18} className="text-cyan-400 shrink-0" />
+          <div className="flex items-center gap-3 bg-zinc-900 border border-accent/30 rounded-2xl px-4 py-3 shadow-2xl shadow-accent/10">
+            <RefreshCcw size={18} className="text-accent shrink-0" />
             <div className="flex-1 text-sm text-zinc-200">
               A new version is available.
             </div>
             <button
               type="button"
               onClick={handleApply}
-              className="px-3 py-1.5 rounded-lg bg-cyan-500 text-zinc-900 text-xs font-semibold hover:bg-cyan-400 transition-colors"
+              className="px-3 py-1.5 rounded-lg bg-accent text-zinc-900 text-xs font-semibold hover:bg-accent-light transition-colors"
             >
               Reload
             </button>

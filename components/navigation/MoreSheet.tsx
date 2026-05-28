@@ -28,7 +28,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Search, X, ArrowUpRight } from 'lucide-react';
 
 import {
@@ -128,7 +128,7 @@ export function MoreSheet({ open, onClose, variant = 'bottom' }: MoreSheetProps)
       {open && (
         <>
           {/* Backdrop — click to close. */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -139,7 +139,7 @@ export function MoreSheet({ open, onClose, variant = 'bottom' }: MoreSheetProps)
           />
 
           {/* The sheet. */}
-          <motion.div
+          <m.div
             initial={motionInitial}
             animate={motionAnimate}
             exit={motionExit}
@@ -206,12 +206,12 @@ export function MoreSheet({ open, onClose, variant = 'bottom' }: MoreSheetProps)
               <Link
                 href="/me"
                 onClick={onClose}
-                className="inline-flex items-center gap-1 text-xs text-cyan-300 hover:text-cyan-200"
+                className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent"
               >
                 Open full hub <ArrowUpRight size={11} />
               </Link>
             </div>
-          </motion.div>
+          </m.div>
         </>
       )}
     </AnimatePresence>
@@ -337,7 +337,7 @@ function ItemRow({
       onClick={onPick}
       className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition ${
         active
-          ? 'bg-cyan-500/10 text-cyan-200'
+          ? 'bg-accent/10 text-accent'
           : 'text-gray-300 hover:bg-white/5 hover:text-white'
       }`}
     >

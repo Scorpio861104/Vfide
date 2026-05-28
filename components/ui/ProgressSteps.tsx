@@ -39,13 +39,13 @@ export function ProgressSteps({ steps, currentStep, className = '' }: ProgressSt
                 className={`
                   w-10 h-10 rounded-full flex items-center justify-center
                   border-2 transition-colors
-                  ${isCompleted ? 'border-cyan-400' : isCurrent ? 'border-cyan-400' : 'border-zinc-700'}
+                  ${isCompleted ? 'border-accent' : isCurrent ? 'border-accent' : 'border-zinc-700'}
                 `}
               >
                 {isCompleted ? (
                   <Check className="text-zinc-900" size={20} />
                 ) : (
-                  <span className={`font-bold ${isCurrent ? 'text-cyan-400' : 'text-zinc-400'}`}>
+                  <span className={`font-bold ${isCurrent ? 'text-accent' : 'text-zinc-400'}`}>
                     {index + 1}
                   </span>
                 )}
@@ -53,7 +53,7 @@ export function ProgressSteps({ steps, currentStep, className = '' }: ProgressSt
               
               {/* Step label */}
               <div className="mt-2 text-center">
-                <div className={`text-sm font-medium ${isCurrent ? 'text-zinc-100' : isCompleted ? 'text-cyan-400' : 'text-zinc-400'}`}>
+                <div className={`text-sm font-medium ${isCurrent ? 'text-zinc-100' : isCompleted ? 'text-accent' : 'text-zinc-400'}`}>
                   {step.title}
                 </div>
                 {step.description && (
@@ -69,7 +69,7 @@ export function ProgressSteps({ steps, currentStep, className = '' }: ProgressSt
               <div className="flex-1 h-0.5 mx-2 -mt-6">
                 <div
                   className={`h-full transition-colors ${
-                    isCompleted ? 'bg-cyan-400' : 'bg-zinc-700'
+                    isCompleted ? 'bg-accent' : 'bg-zinc-700'
                   }`}
                 />
               </div>

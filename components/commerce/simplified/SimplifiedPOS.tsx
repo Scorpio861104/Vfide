@@ -202,7 +202,7 @@ export default function SimplifiedPOS() {
           </div>
 
           {deviceStatus ? (
-            <div role="status" className="rounded-md border border-cyan-500/20 bg-cyan-500/5 px-3 py-2 text-sm text-cyan-100">
+            <div role="status" className="rounded-md border border-accent/20 bg-accent/5 px-3 py-2 text-sm text-accent">
               {deviceStatus}
             </div>
           ) : null}

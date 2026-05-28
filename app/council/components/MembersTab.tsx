@@ -108,7 +108,7 @@ export function MembersTab() {
                     ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
                     : member.role === 'Open'
                     ? 'bg-white/5 text-gray-400 border-white/10'
-                    : 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30'
+                    : 'bg-accent/20 text-accent border-accent/30'
                 }`}>
                   {member.role}
                 </span>
@@ -137,8 +137,8 @@ export function MembersTab() {
         className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-6"
       >
         <div className="flex items-center gap-4 mb-4">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 border border-cyan-500/20">
-            <TrendingUp className="text-cyan-400" size={20} />
+          <div className="p-2 rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/20">
+            <TrendingUp className="text-accent" size={20} />
           </div>
           <div>
             <h3 className="text-xl font-bold text-white">Daily Score Verification</h3>
@@ -156,7 +156,7 @@ export function MembersTab() {
           </div>
           <div className="flex items-center justify-between">
             <span className="text-gray-400">Minimum Required Score</span>
-            <span className="text-cyan-400 font-semibold">7000 (70%)</span>
+            <span className="text-accent font-semibold">7000 (70%)</span>
           </div>
         </div>
       </motion.div>

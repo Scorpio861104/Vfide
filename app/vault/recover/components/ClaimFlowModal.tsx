@@ -138,12 +138,12 @@ export function ClaimFlowModal({
         className="relative w-full max-w-xl overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 to-slate-800 border-2 border-white/20 shadow-2xl"
       >
         {/* Header with animated gradient */}
-        <div className="relative p-8 bg-gradient-to-br from-cyan-500/20 via-blue-500/15 to-purple-500/10 border-b border-white/10 overflow-hidden">
+        <div className="relative p-8 bg-gradient-to-br from-accent/20 via-blue-500/15 to-purple-500/10 border-b border-white/10 overflow-hidden">
           {/* Animated background orbs */}
           <motion.div
             animate={{ x: [0, 20, 0], y: [0, -10, 0] }}
             transition={{ duration: 5, repeat: Infinity }}
-            className="absolute top-0 right-0 w-40 h-40 bg-cyan-500/20 rounded-full blur-3xl"
+            className="absolute top-0 right-0 w-40 h-40 bg-accent/20 rounded-full blur-3xl"
           />
 
           <div className="relative flex items-center justify-between">
@@ -151,7 +151,7 @@ export function ClaimFlowModal({
               <motion.div
                 animate={{ rotate: [0, 5, -5, 0] }}
                 transition={{ duration: 3, repeat: Infinity }}
-                className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30"
+                className="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent to-blue-600 flex items-center justify-center shadow-lg shadow-accent/30"
               >
                 <Key className="h-8 w-8 text-white" />
               </motion.div>
@@ -177,7 +177,7 @@ export function ClaimFlowModal({
                   initial={{ width: 0 }}
                   animate={{ width: s <= step ? '100%' : '0%' }}
                   transition={{ duration: 0.5, delay: s * 0.1 }}
-                  className="h-full bg-gradient-to-r from-cyan-500 to-blue-500"
+                  className="h-full bg-gradient-to-r from-accent to-blue-500"
                 />
               </div>
             ))}
@@ -197,10 +197,10 @@ export function ClaimFlowModal({
               >
                 <div className="p-5 rounded-2xl bg-white/5 border border-white/10">
                   <p className="text-xs text-gray-500 mb-2 flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-cyan-400" />
+                    <Shield className="h-4 w-4 text-accent" />
                     Vault to Recover
                   </p>
-                  <p className="font-mono text-cyan-400 text-lg break-all">{vault.address}</p>
+                  <p className="font-mono text-accent text-lg break-all">{vault.address}</p>
                 </div>
 
                 <div className="p-5 rounded-2xl bg-white/5 border border-white/10">
@@ -248,7 +248,7 @@ export function ClaimFlowModal({
                     onChange={(e) => setRecoveryId(e.target.value)}
                     placeholder="The recovery ID you set when creating your vault"
                     disabled={isWritePending}
-                    className="w-full px-5 py-4 rounded-xl bg-white/5 border-2 border-white/10 text-white placeholder:text-gray-600 focus:outline-none focus:border-cyan-500/50 transition-colors text-lg disabled:opacity-50"
+                    className="w-full px-5 py-4 rounded-xl bg-white/5 border-2 border-white/10 text-white placeholder:text-gray-600 focus:outline-none focus:border-accent/50 transition-colors text-lg disabled:opacity-50"
                   />
                   <p className="text-xs text-gray-500 mt-2 ml-1">
                     The secret phrase you set when creating your vault
@@ -267,7 +267,7 @@ export function ClaimFlowModal({
                     rows={3}
                     maxLength={500}
                     disabled={isWritePending}
-                    className="w-full px-5 py-4 rounded-xl bg-white/5 border-2 border-white/10 text-white placeholder:text-gray-600 focus:outline-none focus:border-cyan-500/50 transition-colors resize-none disabled:opacity-50"
+                    className="w-full px-5 py-4 rounded-xl bg-white/5 border-2 border-white/10 text-white placeholder:text-gray-600 focus:outline-none focus:border-accent/50 transition-colors resize-none disabled:opacity-50"
                   />
                   <p className="text-xs text-gray-500 mt-2 ml-1">
                     Stored on-chain. Be honest — this becomes a permanent record.
@@ -304,7 +304,7 @@ export function ClaimFlowModal({
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: 'spring' as const, stiffness: 200, delay: 0.2 }}
-                  className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-cyan-500 to-emerald-500 flex items-center justify-center mb-6 shadow-lg shadow-cyan-500/30"
+                  className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-accent to-emerald-500 flex items-center justify-center mb-6 shadow-lg shadow-accent/30"
                 >
                   <CheckCircle2 className="h-12 w-12 text-white" />
                 </motion.div>
@@ -353,7 +353,7 @@ export function ClaimFlowModal({
                       <div
                         className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                           item.color === 'cyan'
-                            ? 'bg-cyan-500/20'
+                            ? 'bg-accent/20'
                             : item.color === 'amber'
                               ? 'bg-amber-500/20'
                               : 'bg-emerald-500/20'
@@ -362,7 +362,7 @@ export function ClaimFlowModal({
                         <item.icon
                           className={`h-5 w-5 ${
                             item.color === 'cyan'
-                              ? 'text-cyan-400'
+                              ? 'text-accent'
                               : item.color === 'amber'
                                 ? 'text-amber-400'
                                 : 'text-emerald-400'
@@ -395,7 +395,7 @@ export function ClaimFlowModal({
                     href={`/vault/recover/status?vault=${vault.address}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-cyan-300 hover:text-cyan-200 underline"
+                    className="text-accent hover:text-accent underline"
                   >
                     your recovery status page
                   </a>{' '}
@@ -439,7 +439,7 @@ export function ClaimFlowModal({
                 }
               }}
               disabled={isWritePending || (step === 2 && (!recoveryId || !reason))}
-              className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-bold text-white flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-cyan-500/30 relative overflow-hidden group"
+              className="px-8 py-3 bg-gradient-to-r from-accent to-blue-500 rounded-xl font-bold text-white flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-accent/30 relative overflow-hidden group"
             >
               <span className="relative z-10 flex items-center gap-2">
                 {isWritePending ? (

@@ -58,7 +58,7 @@ export default function StealthPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="analytics-card p-4">
               <div className="flex items-center gap-2 mb-1">
-                <Shield size={14} className="text-cyan-400" />
+                <Shield size={14} className="text-accent" />
                 <p className="text-xs text-gray-400">Privacy Engine</p>
               </div>
               <p className="text-white font-semibold">EIP-5564 Validation</p>
@@ -99,7 +99,7 @@ export default function StealthPage() {
               type="text"
               value={testAddress}
               onChange={(e) => setTestAddress(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/50"
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-accent/50"
             />
           </div>
 
@@ -114,7 +114,7 @@ export default function StealthPage() {
             <button
               type="button"
               onClick={() => navigator.clipboard?.writeText('EIP-5564 readiness snapshot captured')}
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-cyan-500/20 text-cyan-400 text-xs font-semibold hover:bg-cyan-500/30"
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-accent/20 text-accent text-xs font-semibold hover:bg-accent/30"
             >
               <Copy size={12} /> Copy Readiness Snapshot
             </button>

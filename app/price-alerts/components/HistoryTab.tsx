@@ -52,7 +52,7 @@ export function HistoryTab() {
     <div className="space-y-4">
       <div className="bg-white/3 border border-white/10 rounded-2xl p-5">
         <div className="flex items-center gap-2 mb-4">
-          <History size={16} className="text-cyan-400" />
+          <History size={16} className="text-accent" />
           <h3 className="text-white font-semibold text-sm">Alert History</h3>
           {alerts.length > 0 && (
             <button onClick={clearAll} className="ml-auto text-xs text-red-400/70 hover:text-red-400 transition-colors">

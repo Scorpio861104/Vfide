@@ -50,7 +50,7 @@ export default function EscrowPage() {
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
               <h1 className="text-4xl font-bold text-white mb-2">
-                <span className="bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-accent via-teal-400 to-emerald-400 bg-clip-text text-transparent">
                   Escrow
                 </span>
               </h1>
@@ -58,7 +58,7 @@ export default function EscrowPage() {
             </div>
             <div className="flex items-center gap-2">
               <div className="analytics-card text-center px-5 py-3">
-                <div className="text-xl font-bold text-cyan-400">$2.4M</div>
+                <div className="text-xl font-bold text-accent">$2.4M</div>
                 <div className="text-xs text-white/40">Locked</div>
               </div>
               <div className="analytics-card text-center px-5 py-3">

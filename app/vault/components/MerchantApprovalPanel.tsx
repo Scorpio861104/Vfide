@@ -181,7 +181,7 @@ export function MerchantApprovalPanel({ vaultAddress }: MerchantApprovalPanelPro
 
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white/70">
               <div>MerchantPortal spender</div>
-              <div className="mt-1 break-all font-mono text-xs text-cyan-300">
+              <div className="mt-1 break-all font-mono text-xs text-accent">
                 {merchantPortalReady ? merchantPortalAddress : 'Not configured'}
               </div>
             </div>
@@ -219,7 +219,7 @@ export function MerchantApprovalPanel({ vaultAddress }: MerchantApprovalPanelPro
                 value={stablecoinAddress}
                 onChange={(event) => setStablecoinAddress(event.target.value.trim())}
                
-                className="mt-4 w-full rounded-xl border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-400"
+                className="mt-4 w-full rounded-xl border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-white outline-none transition focus:border-accent"
               />
               <p className="mt-3 text-sm text-white/70">
                 Current allowance: {currentStablecoinAllowance > 0n ? currentStablecoinAllowance.toString() : '0'} base units
@@ -228,7 +228,7 @@ export function MerchantApprovalPanel({ vaultAddress }: MerchantApprovalPanelPro
                 type="button"
                 onClick={handleApproveStablecoin}
                 disabled={!merchantPortalReady || !stablecoinReady || isApprovingStablecoin}
-                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-cyan-400 px-4 py-2 text-sm font-semibold text-zinc-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/40"
+                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-zinc-950 transition hover:bg-accent disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/40"
               >
                 {isApprovingStablecoin ? <Loader2 className="animate-spin" size={16} /> : null}
                 Approve Stablecoin

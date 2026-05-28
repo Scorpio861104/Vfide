@@ -94,9 +94,9 @@ export function CustomerManager({ customers = [], customerOrders = {}, isLoading
     <div className="space-y-6">
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-cyan-500/5 border border-cyan-500/15 rounded-xl p-4">
+        <div className="bg-accent/5 border border-accent/15 rounded-xl p-4">
           <div className="text-gray-400 text-xs mb-1">Customers</div>
-          <div className="text-cyan-400 font-bold text-lg">{stats.total}</div>
+          <div className="text-accent font-bold text-lg">{stats.total}</div>
         </div>
         <div className="bg-emerald-500/5 border border-emerald-500/15 rounded-xl p-4">
           <div className="text-gray-400 text-xs mb-1">Total Revenue</div>
@@ -117,7 +117,7 @@ export function CustomerManager({ customers = [], customerOrders = {}, isLoading
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
           <input type="text" value={search} onChange={e =>  setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm  focus:border-cyan-500/50 focus:outline-none" />
+            className="w-full pl-9 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm  focus:border-accent/50 focus:outline-none" />
         </div>
         <select value={sortBy} onChange={e =>  setSortBy(e.target.value as any)}
           className="px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-gray-400 text-sm">
@@ -128,7 +128,7 @@ export function CustomerManager({ customers = [], customerOrders = {}, isLoading
           <div className="flex gap-1.5 overflow-x-auto">
             {allTags.map(tag => (
               <button key={tag} onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap ${selectedTag === tag ? 'bg-cyan-500/20 text-cyan-400' : 'bg-white/5 text-gray-400'}`}>
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap ${selectedTag === tag ? 'bg-accent/20 text-accent' : 'bg-white/5 text-gray-400'}`}>
                 {tag}
               </button>
             ))}
@@ -144,10 +144,10 @@ export function CustomerManager({ customers = [], customerOrders = {}, isLoading
             onSelectCustomer?.(customer.id);
           }}
             className={`w-full flex items-center justify-between p-4 bg-white/3 border rounded-xl text-left transition-colors ${
-              selectedCustomer === customer.id ? 'border-cyan-500/30' : 'border-white/5 hover:border-white/10'
+              selectedCustomer === customer.id ? 'border-accent/30' : 'border-white/5 hover:border-white/10'
             }`}>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center text-white font-bold text-sm">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/20 to-blue-500/20 flex items-center justify-center text-white font-bold text-sm">
                 {customer.name?.[0]?.toUpperCase() || customer.walletAddress.slice(2, 4).toUpperCase()}
               </div>
               <div>
@@ -162,7 +162,7 @@ export function CustomerManager({ customers = [], customerOrders = {}, isLoading
               </div>
             </div>
             <div className="text-right">
-              <div className="text-cyan-400 font-mono font-bold text-sm">{formatCurrency(customer.totalSpent)}</div>
+              <div className="text-accent font-mono font-bold text-sm">{formatCurrency(customer.totalSpent)}</div>
               <div className="flex gap-1 mt-0.5">
                 {customer.tags.slice(0, 2).map(t => (
                   <span key={t} className="px-1.5 py-0.5 bg-white/5 rounded text-[10px] text-gray-500">{t}</span>
@@ -209,9 +209,9 @@ export function CustomerManager({ customers = [], customerOrders = {}, isLoading
                 <div className="mb-1 flex items-center gap-2 text-xs text-gray-400"><DollarSign size={12} /> Lifetime spend</div>
                 <div className="font-mono text-lg font-bold text-emerald-400">{formatCurrency(detail.totalSpent)}</div>
               </div>
-              <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3">
+              <div className="rounded-xl border border-accent/20 bg-accent/5 p-3">
                 <div className="mb-1 flex items-center gap-2 text-xs text-gray-400"><TrendingUp size={12} /> Order count</div>
-                <div className="text-lg font-bold text-cyan-400">{detail.orderCount}</div>
+                <div className="text-lg font-bold text-accent">{detail.orderCount}</div>
               </div>
               <div className="rounded-xl border border-purple-500/20 bg-purple-500/5 p-3">
                 <div className="mb-1 flex items-center gap-2 text-xs text-gray-400"><Clock size={12} /> Last order</div>
@@ -229,7 +229,7 @@ export function CustomerManager({ customers = [], customerOrders = {}, isLoading
                 {detail.tags.length === 0 ? (
                   <span className="text-xs text-gray-500">No tags yet.</span>
                 ) : detail.tags.map(tag => (
-                  <span key={tag} className="rounded-lg bg-white/5 px-2.5 py-1 text-xs text-cyan-300">{tag}</span>
+                  <span key={tag} className="rounded-lg bg-white/5 px-2.5 py-1 text-xs text-accent">{tag}</span>
                 ))}
                 <button
                   type="button"
@@ -248,12 +248,12 @@ export function CustomerManager({ customers = [], customerOrders = {}, isLoading
                 onChange={e =>  setNoteDraft(e.target.value)}
                 rows={4}
                
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white  focus:border-cyan-500/50 focus:outline-none"
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white  focus:border-accent/50 focus:outline-none"
               />
               <button
                 type="button"
                 onClick={() => onAddNote?.(detail.id, noteDraft)}
-                className="mt-3 rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-black"
+                className="mt-3 rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-black"
               >
                 Save note
               </button>

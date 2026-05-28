@@ -73,7 +73,7 @@ export function RecentActivitySection() {
   return (
     <GlassCard className="p-6" hover={false}>
       <h2 className="mb-6 flex items-center gap-2 text-xl font-bold text-white">
-        <Activity className="text-cyan-400" size={24} />
+        <Activity className="text-accent" size={24} />
         Recent Activity
       </h2>
       {isLoading ? (
@@ -103,7 +103,7 @@ export function RecentActivitySection() {
               <div
                 className={`shrink-0 rounded-xl p-2 ${
                   activity.color === 'cyan'
-                    ? 'bg-cyan-500/20 text-cyan-400'
+                    ? 'bg-accent/20 text-accent'
                     : activity.color === 'emerald'
                       ? 'bg-emerald-500/20 text-emerald-400'
                       : activity.color === 'amber'
@@ -123,7 +123,7 @@ export function RecentActivitySection() {
         </div>
       )}
       <div className="mt-4 text-center">
-        <Link href="/explorer" className="inline-flex items-center gap-1 text-sm font-medium text-cyan-400 hover:text-cyan-300">
+        <Link href="/explorer" className="inline-flex items-center gap-1 text-sm font-medium text-accent hover:text-accent">
           View All Activity <ChevronRight size={14} />
         </Link>
       </div>

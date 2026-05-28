@@ -64,14 +64,14 @@ export function GenerateTab() {
 
       <div className="bg-white/3 border border-white/10 rounded-2xl p-6">
         <div className="flex items-center gap-2 mb-5">
-          <FileText size={16} className="text-cyan-400" />
+          <FileText size={16} className="text-accent" />
           <h3 className="text-white font-semibold">Generate New Wallet</h3>
         </div>
 
         {!wallet ? (
           <button
             onClick={generate}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 text-sm font-semibold transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-accent/20 hover:bg-accent/30 text-accent text-sm font-semibold transition-colors"
           >
             <RefreshCw size={16} /> Generate Wallet
           </button>
@@ -82,7 +82,7 @@ export function GenerateTab() {
               <p className="text-xs text-gray-400 mb-1.5">Public Address</p>
               <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-2.5">
                 <p className="text-sm text-white font-mono flex-1 break-all">{wallet.address}</p>
-                <button onClick={() => copy(wallet.address, 'address')} className="flex-shrink-0 text-gray-400 hover:text-cyan-400 transition-colors">
+                <button onClick={() => copy(wallet.address, 'address')} className="flex-shrink-0 text-gray-400 hover:text-accent transition-colors">
                   <Copy size={13} />
                 </button>
               </div>
@@ -100,7 +100,7 @@ export function GenerateTab() {
                 <p className="text-sm font-mono flex-1 break-all text-red-300/80">
                   {showKey ? wallet.privateKey : '•'.repeat(20)}
                 </p>
-                <button onClick={() => setShowKey((v) => !v)} className="flex-shrink-0 text-gray-400 hover:text-cyan-400">
+                <button onClick={() => setShowKey((v) => !v)} className="flex-shrink-0 text-gray-400 hover:text-accent">
                   {showKey ? <EyeOff size={13} /> : <Eye size={13} />}
                 </button>
               </div>
@@ -127,7 +127,7 @@ export function GenerateTab() {
                   )}
                   <button
                     onClick={() => setShowMnemonic((v) => !v)}
-                    className="mt-2 text-xs text-gray-400 hover:text-cyan-400 flex items-center gap-1"
+                    className="mt-2 text-xs text-gray-400 hover:text-accent flex items-center gap-1"
                   >
                     {showMnemonic ? <EyeOff size={10} /> : <Eye size={10} />}
                     {showMnemonic ? 'Hide' : 'Reveal phrase'}

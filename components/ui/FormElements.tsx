@@ -172,7 +172,7 @@ export function Button({
   type = 'button'
 }: ButtonProps) {
   const variants = {
-    primary: 'bg-gradient-to-r from-cyan-400 to-cyan-600 text-black hover:shadow-lg hover:shadow-cyan-400/25',
+    primary: 'bg-gradient-to-r from-accent to-accent-dark text-zinc-900 hover:shadow-lg hover:shadow-accent/25',
     secondary: 'bg-white/10 text-zinc-100 hover:bg-white/20 border border-white/10',
     ghost: 'bg-transparent text-zinc-400 hover:text-zinc-100 hover:bg-white/5',
     danger: 'bg-gradient-to-r from-red-500 to-[#CC3333] text-white hover:shadow-lg hover:shadow-red-500/25',
@@ -268,7 +268,7 @@ export function Input({
             w-full px-4 py-3 ${icon ? 'pl-12' : ''}
             bg-white/5 border rounded-xl
             text-zinc-100 
-            focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/50
+            focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50
             transition-all duration-300
             ${error ? 'border-red-500' : 'border-white/10 hover:border-white/20'}
             ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
@@ -328,7 +328,7 @@ export function Select({
           w-full px-4 py-3
           bg-white/5 border border-white/10 rounded-xl
           text-zinc-100
-          focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/50
+          focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50
           transition-all duration-300
           hover:border-white/20
           ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
@@ -376,7 +376,7 @@ export function Badge({
     success: 'bg-emerald-500/20 text-emerald-500',
     warning: 'bg-amber-400/20 text-amber-400',
     danger: 'bg-red-500/20 text-red-500',
-    info: 'bg-cyan-400/20 text-cyan-400',
+    info: 'bg-accent/20 text-accent',
     premium: 'bg-gradient-to-r from-amber-400/20 to-orange-500/20 text-amber-400',
   }
 
@@ -518,7 +518,7 @@ export function Alert({
   className = ''
 }: AlertProps) {
   const variants = {
-    info: 'bg-cyan-400/10 border-cyan-400/30 text-cyan-400',
+    info: 'bg-accent/10 border-accent/30 text-accent',
     success: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500',
     warning: 'bg-amber-400/10 border-amber-400/30 text-amber-400',
     danger: 'bg-red-500/10 border-red-500/30 text-red-500',

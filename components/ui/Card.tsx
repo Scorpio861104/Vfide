@@ -19,7 +19,7 @@ import { cn } from '@/lib/utils';
  *
  * Distinct from:
  *   • `GlassCard` — kept for gradient-backed feature cards with the
- *     `from-cyan-500/10 to-purple-500/5` treatment. Different aesthetic role:
+ *     `from-accent/10 to-purple-500/5` treatment. Different aesthetic role:
  *     marketing emphasis, not data display.
  *
  * Radius convention (locked in Tier 3 P4):

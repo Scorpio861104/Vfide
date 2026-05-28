@@ -59,7 +59,7 @@ export function PageWrapper({
               scale: [1, 1.2, 1] 
             }}
             transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-20 -left-20 w-96 h-96 bg-cyan-400/5 rounded-full blur-3xl"
+            className="absolute top-20 -left-20 w-96 h-96 bg-accent/5 rounded-full blur-3xl"
           />
           <motion.div
             animate={{ 
@@ -115,11 +115,11 @@ interface PageHeaderProps {
 
 export function PageHeader({ 
   icon, 
-  iconGradient = 'from-cyan-400 to-cyan-600',
+  iconGradient = 'from-accent to-accent-dark',
   title, 
   subtitle,
   badge,
-  badgeColor = 'bg-cyan-400/20 text-cyan-400',
+  badgeColor = 'bg-accent/20 text-accent',
   children 
 }: PageHeaderProps) {
   return (
@@ -137,7 +137,7 @@ export function PageHeader({
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-              className={`w-20 h-20 bg-gradient-to-br ${iconGradient} rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-cyan-400/20`}
+              className={`w-20 h-20 bg-gradient-to-br ${iconGradient} rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-accent/20`}
             >
               {icon}
             </motion.div>
@@ -214,7 +214,7 @@ export function StatItem({ label, value, icon, trend, color = '#00F0FF', delay =
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.5 }}
-      className="glass-card p-6 text-center group hover:border-cyan-400/30 transition-all duration-300"
+      className="glass-card p-6 text-center group hover:border-accent/30 transition-all duration-300"
     >
       {icon && (
         <div 
@@ -343,7 +343,7 @@ export function TabNavigation({
             className={`
               flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-300
               ${activeTab === tab.id 
-                ? 'bg-gradient-to-r from-cyan-400 to-cyan-600 text-black shadow-lg shadow-cyan-400/20' 
+                ? 'bg-gradient-to-r from-accent to-accent-dark text-black shadow-lg shadow-accent/20' 
                 : 'glass text-zinc-400 hover:text-zinc-100 hover:bg-white/10'
               }
             `}
@@ -353,7 +353,7 @@ export function TabNavigation({
             {tab.badge !== undefined && tab.badge > 0 && (
               <span className={`
                 px-2 py-0.5 text-xs rounded-full
-                ${activeTab === tab.id ? 'bg-black/20' : 'bg-cyan-400/20 text-cyan-400'}
+                ${activeTab === tab.id ? 'bg-black/20' : 'bg-accent/20 text-accent'}
               `}>
                 {tab.badge}
               </span>
@@ -374,20 +374,20 @@ export function TabNavigation({
               onClick={() => onChange(tab.id)}
               className={`
                 relative flex items-center gap-2 px-6 py-4 font-medium transition-colors
-                ${activeTab === tab.id ? 'text-cyan-400' : 'text-zinc-400 hover:text-zinc-100'}
+                ${activeTab === tab.id ? 'text-accent' : 'text-zinc-400 hover:text-zinc-100'}
               `}
             >
               {tab.icon}
               <span>{tab.label}</span>
               {tab.badge !== undefined && tab.badge > 0 && (
-                <span className="px-2 py-0.5 text-xs rounded-full bg-cyan-400/20 text-cyan-400">
+                <span className="px-2 py-0.5 text-xs rounded-full bg-accent/20 text-accent">
                   {tab.badge}
                 </span>
               )}
               {activeTab === tab.id && (
                 <motion.div
                   layoutId="activeTabUnderline"
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-cyan-400 to-emerald-500"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-accent to-emerald-500"
                 />
               )}
             </button>
@@ -412,7 +412,7 @@ export function TabNavigation({
           {activeTab === tab.id && (
             <motion.div
               layoutId="activeTabPill"
-              className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-emerald-500 rounded-lg"
+              className="absolute inset-0 bg-gradient-to-r from-accent to-emerald-500 rounded-lg"
               transition={{ type: "spring", stiffness: 400, damping: 30 }}
             />
           )}
@@ -516,7 +516,7 @@ export function PageLoading() {
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="w-12 h-12 border-2 border-cyan-400/20 border-t-[#00F0FF] rounded-full mx-auto mb-4"
+          className="w-12 h-12 border-2 border-accent/20 border-t-[#00F0FF] rounded-full mx-auto mb-4"
         />
         <p className="text-zinc-400">Loading...</p>
       </motion.div>

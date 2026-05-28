@@ -66,11 +66,11 @@ export default function LiveDemoPage() {
           className="text-center space-y-2 sm:space-y-4"
         >
           <div className="badge-live mb-4 justify-center">
-            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> Interactive Demo
+            <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" /> Interactive Demo
           </div>
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-zinc-100 tracking-tight">
             Experience{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-500">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-violet-500">
               VFIDE Live
             </span>
           </h1>
@@ -141,7 +141,7 @@ export default function LiveDemoPage() {
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 }}
-              className="bg-zinc-950/50 backdrop-blur-xl rounded-2xl p-4 sm:p-6 md:p-8 border border-cyan-400/20"
+              className="bg-zinc-950/50 backdrop-blur-xl rounded-2xl p-4 sm:p-6 md:p-8 border border-accent/20"
             >
               <FeeSavingsCalculator />
             </motion.div>
@@ -152,7 +152,7 @@ export default function LiveDemoPage() {
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.5 }}
-            className="bg-zinc-950/50 backdrop-blur-xl rounded-2xl p-4 sm:p-6 md:p-8 border border-cyan-400/20"
+            className="bg-zinc-950/50 backdrop-blur-xl rounded-2xl p-4 sm:p-6 md:p-8 border border-accent/20"
           >
             <LiveActivityFeed />
             
@@ -166,7 +166,7 @@ export default function LiveDemoPage() {
               >
                 <button
                   onClick={() => handleDemoTransaction('transfer')}
-                  className="bg-gradient-to-r from-cyan-400 to-blue-500 text-white font-bold py-2 sm:py-3 px-2 sm:px-4 rounded-lg hover:scale-105 transition-transform text-xs sm:text-sm"
+                  className="bg-gradient-to-r from-accent to-blue-500 text-white font-bold py-2 sm:py-3 px-2 sm:px-4 rounded-lg hover:scale-105 transition-transform text-xs sm:text-sm"
                 >
                   Send VFIDE
                 </button>
@@ -188,8 +188,8 @@ export default function LiveDemoPage() {
           transition={{ delay: 0.8 }}
           className="relative"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-[#00FF88] to-amber-400 rounded-2xl blur-2xl opacity-20" />
-          <div className="relative bg-zinc-950/80 backdrop-blur-xl rounded-2xl p-4 sm:p-6 md:p-8 lg:p-12 border-2 border-cyan-400/30 text-center space-y-3 sm:space-y-4 md:space-y-6">
+          <div className="absolute inset-0 bg-gradient-to-r from-accent via-[#00FF88] to-amber-400 rounded-2xl blur-2xl opacity-20" />
+          <div className="relative bg-zinc-950/80 backdrop-blur-xl rounded-2xl p-4 sm:p-6 md:p-8 lg:p-12 border-2 border-accent/30 text-center space-y-3 sm:space-y-4 md:space-y-6">
             <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold text-zinc-100">
               Ready for No Processor Fees?
             </h2>
@@ -199,13 +199,13 @@ export default function LiveDemoPage() {
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 md:gap-4 justify-center items-center">
               <Link
                 href="/vault"
-                className="w-full sm:w-auto bg-gradient-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold py-2 sm:py-3 md:py-4 px-4 sm:px-6 md:px-8 rounded-xl hover:scale-105 transition-transform text-sm sm:text-base md:text-lg text-center"
+                className="w-full sm:w-auto bg-gradient-to-r from-emerald-400 to-accent text-zinc-950 font-bold py-2 sm:py-3 md:py-4 px-4 sm:px-6 md:px-8 rounded-xl hover:scale-105 transition-transform text-sm sm:text-base md:text-lg text-center"
               >
                 Create Your Vault
               </Link>
               <Link
                 href="/docs"
-                className="w-full sm:w-auto bg-zinc-950 border-2 border-cyan-400 text-cyan-400 font-bold py-2 sm:py-3 md:py-4 px-4 sm:px-6 md:px-8 rounded-xl hover:scale-105 transition-transform text-sm sm:text-base md:text-lg text-center"
+                className="w-full sm:w-auto bg-zinc-950 border-2 border-accent text-accent font-bold py-2 sm:py-3 md:py-4 px-4 sm:px-6 md:px-8 rounded-xl hover:scale-105 transition-transform text-sm sm:text-base md:text-lg text-center"
               >
                 Read Docs
               </Link>

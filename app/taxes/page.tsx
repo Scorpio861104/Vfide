@@ -17,7 +17,7 @@ export default function TaxesPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-accent/20 border-t-accent rounded-full animate-spin" />
       </div>
     );
   }
@@ -60,7 +60,7 @@ export default function TaxesPage() {
             <p className="text-white/50 mt-1">Capital gains & losses for tax filing</p>
           </div>
           <select value={year} onChange={e => setYear(Number(e.target.value))}
-            className="px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500/50">
+            className="px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-accent/50">
             <option value={2026}>2026</option>
             <option value={2025}>2025</option>
             <option value={2024}>2024</option>
@@ -108,7 +108,7 @@ export default function TaxesPage() {
           className="glass-card-premium overflow-hidden">
           <div className="p-4 border-b border-white/5 flex items-center justify-between">
             <h3 className="font-semibold text-white flex items-center gap-2">
-              <Calculator size={16} className="text-cyan-400" />Tax Events ({taxEvents.length})
+              <Calculator size={16} className="text-accent" />Tax Events ({taxEvents.length})
             </h3>
             <div className="flex gap-2">
               <button
@@ -148,7 +148,7 @@ export default function TaxesPage() {
                       <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                         event.type === 'capital-gain' ? 'bg-emerald-500/20 text-emerald-400'
                         : event.type === 'capital-loss' ? 'bg-red-500/20 text-red-400'
-                        : event.type === 'income' ? 'bg-cyan-500/20 text-cyan-400'
+                        : event.type === 'income' ? 'bg-accent/20 text-accent'
                         : 'bg-white/10 text-white/40'
                       }`}>{event.type}</span>
                       <span className="font-medium text-white text-sm">{event.token}</span>
@@ -178,7 +178,7 @@ export default function TaxesPage() {
               <button key={method} disabled
                 title={method === 'FIFO' ? undefined : 'Not implemented yet'}
                 className={`px-4 py-2 rounded-xl text-sm font-medium cursor-not-allowed ${
-                  method === 'FIFO' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'bg-white/5 text-white/30'
+                  method === 'FIFO' ? 'bg-accent/20 text-accent border border-accent/30' : 'bg-white/5 text-white/30'
                 }`}>{method}</button>
             ))}
           </div>

@@ -142,7 +142,7 @@ export function GuardianRecoveryClaimCard({ entry }: { entry: WatchedVault }) {
               isPending
                 ? 'bg-amber-500/20 text-amber-300'
                 : isApproved
-                  ? 'bg-cyan-500/20 text-cyan-300'
+                  ? 'bg-accent/20 text-accent'
                   : claim.status === RecoveryClaimStatus.Challenged
                     ? 'bg-red-500/20 text-red-300'
                     : 'bg-gray-500/20 text-gray-300'
@@ -187,7 +187,7 @@ export function GuardianRecoveryClaimCard({ entry }: { entry: WatchedVault }) {
               {claim.guardianApprovals}/{claim.guardianCountSnapshot}
             </span>
             {isApproved && (
-              <span className="text-cyan-300 ml-2">
+              <span className="text-accent ml-2">
                 · Challenge window: {formatTimeRemaining(challengeTimeRemaining)}
               </span>
             )}
@@ -232,7 +232,7 @@ export function GuardianRecoveryClaimCard({ entry }: { entry: WatchedVault }) {
         )}
 
         {isApproved && !hasVoted && (
-          <div className="px-4 py-2.5 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-sm">
+          <div className="px-4 py-2.5 rounded-lg bg-accent/10 border border-accent/30 text-accent text-sm">
             Approvals threshold met. Claim is in the challenge window — your vote is no longer needed.
           </div>
         )}

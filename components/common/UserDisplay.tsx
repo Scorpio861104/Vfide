@@ -67,7 +67,7 @@ export function UserAvatar({ address, username, alias, size = 'md', className = 
   const initials = displayText.slice(0, 2).toUpperCase();
 
   return (
-    <div className={`${sizeClasses[size]} rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center font-bold text-zinc-950 ${className}`}>
+    <div className={`${sizeClasses[size]} rounded-full bg-gradient-to-br from-accent to-violet-400 flex items-center justify-center font-bold text-zinc-950 ${className}`}>
       {initials}
     </div>
   );

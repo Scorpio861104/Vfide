@@ -331,7 +331,7 @@ export function NotificationItem({
 
                 {/* Unread indicator */}
                 {!notification.read && (
-                  <div className="shrink-0 w-2 h-2 rounded-full bg-cyan-400 mt-1" />
+                  <div className="shrink-0 w-2 h-2 rounded-full bg-accent mt-1" />
                 )}
               </div>
 
@@ -457,7 +457,7 @@ export function GroupedNotification({
                 {group.count} {first.category} notifications
               </h4>
               {unreadCount > 0 && (
-                <span className="shrink-0 px-2 py-0.5 bg-cyan-500 rounded-full text-xs font-medium text-white">
+                <span className="shrink-0 px-2 py-0.5 bg-accent rounded-full text-xs font-medium text-white">
                   {unreadCount} new
                 </span>
               )}
@@ -534,7 +534,7 @@ export function NotificationBadge({
         relative ${sizeClasses[size]} rounded-xl 
         bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20
         flex items-center justify-center transition-all
-        focus:outline-none focus:ring-2 focus:ring-cyan-500/50
+        focus:outline-none focus:ring-2 focus:ring-accent/50
       `}
     >
       <Bell size={size === 'sm' ? 16 : size === 'md' ? 18 : 20} className="text-gray-400" />
@@ -543,7 +543,7 @@ export function NotificationBadge({
         <>
           <span className={`
             absolute ${badgeSizeClasses[size]} rounded-full 
-            bg-gradient-to-r from-cyan-500 to-blue-500 
+            bg-gradient-to-r from-accent to-blue-500 
             flex items-center justify-center font-bold text-white
           `}>
             {count > 99 ? '99+' : count}
@@ -553,7 +553,7 @@ export function NotificationBadge({
           {pulse && (
             <span className={`
               absolute ${badgeSizeClasses[size]} rounded-full 
-              bg-cyan-500 animate-ping opacity-50
+              bg-accent animate-ping opacity-50
             `} />
           )}
         </>
@@ -641,10 +641,10 @@ export function NotificationDropdown({ isOpen, onClose }: NotificationDropdownPr
             <div className="p-4 border-b border-white/10">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Bell size={20} className="text-cyan-400" />
+                  <Bell size={20} className="text-accent" />
                   Notifications
                   {unreadCount > 0 && (
-                    <span className="px-2 py-0.5 bg-cyan-500/20 text-cyan-400 rounded-full text-xs font-medium">
+                    <span className="px-2 py-0.5 bg-accent/20 text-accent rounded-full text-xs font-medium">
                       {unreadCount}
                     </span>
                   )}
@@ -653,7 +653,7 @@ export function NotificationDropdown({ isOpen, onClose }: NotificationDropdownPr
                   <button
                     onClick={() => setPreferences(p => ({ ...p, sound: !p.sound }))}
                     className={`p-2 rounded-lg transition-colors ${
-                      preferences.sound ? 'bg-cyan-500/20 text-cyan-400' : 'bg-white/5 text-gray-400'
+                      preferences.sound ? 'bg-accent/20 text-accent' : 'bg-white/5 text-gray-400'
                     }`}
                     title={preferences.sound ? 'Mute sounds' : 'Enable sounds'}
                   >
@@ -699,7 +699,7 @@ export function NotificationDropdown({ isOpen, onClose }: NotificationDropdownPr
                   >
                     Unread
                     {unreadCount > 0 && (
-                      <span className="w-5 h-5 rounded-full bg-cyan-500 text-white text-xs flex items-center justify-center">
+                      <span className="w-5 h-5 rounded-full bg-accent text-white text-xs flex items-center justify-center">
                         {unreadCount}
                       </span>
                     )}
@@ -707,7 +707,7 @@ export function NotificationDropdown({ isOpen, onClose }: NotificationDropdownPr
                   <div className="flex-1" />
                   <button
                     onClick={markAllAsRead}
-                    className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+                    className="text-xs text-accent hover:text-accent transition-colors"
                   >
                     Mark all read
                   </button>
@@ -724,13 +724,13 @@ export function NotificationDropdown({ isOpen, onClose }: NotificationDropdownPr
                       value={searchQuery}
                       onChange={(e) =>  setSearchQuery(e.target.value)}
                      
-                      className="w-full pl-9 pr-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white  focus:outline-none focus:border-cyan-500/50"
+                      className="w-full pl-9 pr-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white  focus:outline-none focus:border-accent/50"
                     />
                   </div>
                   <select
                     value={categoryFilter}
                     onChange={(e) =>  setCategoryFilter(e.target.value as NotificationCategory | 'all')}
-                    className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-cyan-500/50"
+                    className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:border-accent/50"
                   >
                     <option value="all">All</option>
                     <option value="transaction">💰 Transactions</option>
@@ -838,7 +838,7 @@ function NotificationSettings({ preferences, onUpdate }: NotificationSettingsPro
               type="checkbox"
               checked={preferences.enabled}
               onChange={(e) =>  onUpdate({ ...preferences, enabled: e.target.checked })}
-              className="w-5 h-5 rounded bg-white/10 border-white/20 text-cyan-500 focus:ring-cyan-500/50"
+              className="w-5 h-5 rounded bg-white/10 border-white/20 text-accent focus:ring-accent/50"
             />
           </label>
           <label className="flex items-center justify-between">
@@ -847,7 +847,7 @@ function NotificationSettings({ preferences, onUpdate }: NotificationSettingsPro
               type="checkbox"
               checked={preferences.sound}
               onChange={(e) =>  onUpdate({ ...preferences, sound: e.target.checked })}
-              className="w-5 h-5 rounded bg-white/10 border-white/20 text-cyan-500 focus:ring-cyan-500/50"
+              className="w-5 h-5 rounded bg-white/10 border-white/20 text-accent focus:ring-accent/50"
             />
           </label>
           <label className="flex items-center justify-between">
@@ -856,7 +856,7 @@ function NotificationSettings({ preferences, onUpdate }: NotificationSettingsPro
               type="checkbox"
               checked={preferences.desktop}
               onChange={(e) =>  onUpdate({ ...preferences, desktop: e.target.checked })}
-              className="w-5 h-5 rounded bg-white/10 border-white/20 text-cyan-500 focus:ring-cyan-500/50"
+              className="w-5 h-5 rounded bg-white/10 border-white/20 text-accent focus:ring-accent/50"
             />
           </label>
           <label className="flex items-center justify-between">
@@ -865,7 +865,7 @@ function NotificationSettings({ preferences, onUpdate }: NotificationSettingsPro
               type="checkbox"
               checked={preferences.vibrate}
               onChange={(e) =>  onUpdate({ ...preferences, vibrate: e.target.checked })}
-              className="w-5 h-5 rounded bg-white/10 border-white/20 text-cyan-500 focus:ring-cyan-500/50"
+              className="w-5 h-5 rounded bg-white/10 border-white/20 text-accent focus:ring-accent/50"
             />
           </label>
         </div>
@@ -888,7 +888,7 @@ function NotificationSettings({ preferences, onUpdate }: NotificationSettingsPro
                   ...preferences,
                   categories: { ...preferences.categories, [key]: e.target.checked }
                 })}
-                className="w-5 h-5 rounded bg-white/10 border-white/20 text-cyan-500 focus:ring-cyan-500/50"
+                className="w-5 h-5 rounded bg-white/10 border-white/20 text-accent focus:ring-accent/50"
               />
             </label>
           ))}
@@ -907,7 +907,7 @@ function NotificationSettings({ preferences, onUpdate }: NotificationSettingsPro
               ...preferences,
               quietHours: { ...preferences.quietHours, enabled: e.target.checked }
             })}
-            className="w-5 h-5 rounded bg-white/10 border-white/20 text-cyan-500 focus:ring-cyan-500/50"
+            className="w-5 h-5 rounded bg-white/10 border-white/20 text-accent focus:ring-accent/50"
           />
         </label>
         {preferences.quietHours.enabled && (

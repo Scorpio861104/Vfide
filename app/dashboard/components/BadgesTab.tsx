@@ -22,7 +22,7 @@ export function BadgesTab({ address }: { address: `0x${string}` | undefined }) {
               <Trophy className="text-amber-400" size={24} />
               Your Badges
             </h2>
-            <Link href="/badges" className="inline-flex items-center gap-1 text-sm font-medium text-cyan-400 hover:text-cyan-300">
+            <Link href="/badges" className="inline-flex items-center gap-1 text-sm font-medium text-accent hover:text-accent">
               View All <ChevronRight size={14} />
             </Link>
           </div>
@@ -32,7 +32,7 @@ export function BadgesTab({ address }: { address: `0x${string}` | undefined }) {
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                className="h-8 w-8 rounded-full border-2 border-cyan-500/20 border-t-cyan-500"
+                className="h-8 w-8 rounded-full border-2 border-accent/20 border-t-accent"
               />
             </div>
           ) : (

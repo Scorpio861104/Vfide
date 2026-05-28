@@ -75,7 +75,7 @@ export function PageHeader({
     <Wrapper {...animProps} className={`${SPACING_MAP[spacing]} ${layout}`.trim()}>
       <div className={alignment}>
         {eyebrow && (
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/5 px-3 py-1 text-xs uppercase tracking-widest text-cyan-300">
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/5 px-3 py-1 text-xs uppercase tracking-widest text-accent">
             {eyebrow}
           </div>
         )}

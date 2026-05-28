@@ -48,7 +48,7 @@ const PRESETS: SpendLimitPreset[] = [
     maxPerTransferVfide: '50',
     dailyTransferLimitVfide: '200',
     icon: <Lock size={18} />,
-    accent: 'border-cyan-500 text-cyan-400 bg-cyan-500/10',
+    accent: 'border-accent text-accent bg-accent/10',
   },
   {
     id: 'balanced',
@@ -226,7 +226,7 @@ export function SpendLimitsConfigurator({
       {!compact && (
         <div>
           <h3 className="text-2xl font-bold text-white flex items-center gap-2">
-            <Shield className="w-6 h-6 text-cyan-400" />
+            <Shield className="w-6 h-6 text-accent" />
             Spend Limits
           </h3>
           <p className="text-sm text-gray-400 mt-1">
@@ -340,7 +340,7 @@ export function SpendLimitsConfigurator({
       )}
 
       {/* Help block */}
-      <div className="rounded-lg bg-cyan-500/10 border border-cyan-500/30 p-3 text-xs text-cyan-100 flex gap-2">
+      <div className="rounded-lg bg-accent/10 border border-accent/30 p-3 text-xs text-accent flex gap-2">
         <Clock size={14} className="flex-shrink-0 mt-0.5" />
         <span>
           <strong>How the queue works:</strong> a withdrawal at or above your
@@ -366,7 +366,7 @@ export function SpendLimitsConfigurator({
         type="button"
         onClick={handleApply}
         disabled={busy || !!validationError}
-        className="w-full py-3 rounded-lg bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium transition-colors"
+        className="w-full py-3 rounded-lg bg-accent hover:bg-accent-light disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium transition-colors"
       >
         {busy ? 'Submitting…' : 'Save limits'}
       </button>

@@ -69,7 +69,7 @@ export function LanguageSwitcher({ className = '' }: LanguageSwitcherProps) {
                 className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2
                              transition-colors duration-100
                              ${locale === opt.value
-                               ? 'bg-cyan-500/10 text-cyan-400 font-medium'
+                               ? 'bg-accent/10 text-accent font-medium'
                                : 'text-zinc-300 hover:bg-zinc-800'}`}
               >
                 <span>{FLAG[opt.value]}</span>

@@ -92,7 +92,7 @@ export function InvoiceManager({ merchantAddress: _merchantAddress, invoices = [
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
           <input type="text" value={search} onChange={e =>  setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm  focus:border-cyan-500/50 focus:outline-none" />
+            className="w-full pl-9 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm  focus:border-accent/50 focus:outline-none" />
         </div>
         <select value={filter} onChange={e =>  setFilter(e.target.value as any)}
           className="px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-gray-400 text-sm">
@@ -103,7 +103,7 @@ export function InvoiceManager({ merchantAddress: _merchantAddress, invoices = [
           <option value="overdue">Overdue</option>
         </select>
         <button onClick={() => setView('create')}
-          className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold text-sm">
+          className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-accent to-blue-600 text-white rounded-xl font-bold text-sm">
           <Plus size={16} /> New Invoice
         </button>
       </div>
@@ -130,15 +130,15 @@ function InvoiceRow({ invoice, formatCurrency, formatDate, onSend, onCancel: _on
 }) {
   const [_showActions, _setShowActions] = useState(false);
   const statusColors: Record<string, string> = {
-    draft: 'bg-gray-500/20 text-gray-400', sent: 'bg-cyan-500/20 text-cyan-400', viewed: 'bg-blue-500/20 text-blue-400',
+    draft: 'bg-gray-500/20 text-gray-400', sent: 'bg-accent/20 text-accent', viewed: 'bg-blue-500/20 text-blue-400',
     paid: 'bg-emerald-500/20 text-emerald-400', overdue: 'bg-red-500/20 text-red-400', cancelled: 'bg-gray-500/20 text-gray-500',
   };
 
   return (
     <div className="flex items-center justify-between p-4 bg-white/3 border border-white/5 rounded-xl hover:border-white/10 transition-colors">
       <div className="flex items-center gap-4">
-        <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
-          <FileText size={18} className="text-cyan-400" />
+        <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+          <FileText size={18} className="text-accent" />
         </div>
         <div>
           <div className="flex items-center gap-2">
@@ -151,7 +151,7 @@ function InvoiceRow({ invoice, formatCurrency, formatDate, onSend, onCancel: _on
       <div className="flex items-center gap-3">
         <span className="text-white font-mono font-bold">{formatCurrency(invoice.total)}</span>
         {invoice.status === 'draft' && (
-          <button onClick={() => onSend?.(invoice.id, 'link')} className="px-3 py-1.5 bg-cyan-500/20 text-cyan-400 rounded-lg text-xs font-bold">
+          <button onClick={() => onSend?.(invoice.id, 'link')} className="px-3 py-1.5 bg-accent/20 text-accent rounded-lg text-xs font-bold">
             <Send size={12} className="inline mr-1" /> Send
           </button>
         )}
@@ -197,10 +197,10 @@ function CreateInvoiceForm({ onSubmit, onCancel }: {
         <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Customer</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <input type="text" value={customerName} onChange={e =>  setCustomerName(e.target.value)}
-            className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white  focus:border-cyan-500/50 focus:outline-none" />
+            className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white  focus:border-accent/50 focus:outline-none" />
           <input type="tel" value={customerPhone} onChange={e =>  setCustomerPhone(e.target.value)}
             autoComplete="tel" inputMode="tel"
-            className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white  focus:border-cyan-500/50 focus:outline-none" />
+            className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white  focus:border-accent/50 focus:outline-none" />
         </div>
       </div>
 
@@ -210,16 +210,16 @@ function CreateInvoiceForm({ onSubmit, onCancel }: {
         {items.map((item, i) => (
           <div key={i} className="flex items-center gap-3">
             <input type="text" value={item.description} onChange={e =>  updateItem(i, 'description', e.target.value)}
-              className="flex-1 px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm  focus:border-cyan-500/50 focus:outline-none" />
+              className="flex-1 px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm  focus:border-accent/50 focus:outline-none" />
             <input type="number" value={item.quantity || ''} onChange={e =>  updateItem(i, 'quantity', e.target.value)} min="1"
-              className="w-20 px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm text-center focus:border-cyan-500/50 focus:outline-none" />
+              className="w-20 px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm text-center focus:border-accent/50 focus:outline-none" />
             <input type="number" value={item.unitPrice || ''} onChange={e =>  updateItem(i, 'unitPrice', e.target.value)} step="0.01"
-              className="w-28 px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm text-right font-mono focus:border-cyan-500/50 focus:outline-none" />
-            <span className="w-24 text-right text-cyan-400 font-mono text-sm">{formatCurrency(item.quantity * item.unitPrice)}</span>
+              className="w-28 px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm text-right font-mono focus:border-accent/50 focus:outline-none" />
+            <span className="w-24 text-right text-accent font-mono text-sm">{formatCurrency(item.quantity * item.unitPrice)}</span>
             {items.length > 1 && <button onClick={() => removeItem(i)} className="text-gray-500 hover:text-red-400"><X size={16} /></button>}
           </div>
         ))}
-        <button onClick={addItem} className="text-cyan-400 text-sm font-bold hover:text-cyan-300">+ Add item</button>
+        <button onClick={addItem} className="text-accent text-sm font-bold hover:text-accent">+ Add item</button>
       </div>
 
       {/* Totals + settings */}
@@ -228,7 +228,7 @@ function CreateInvoiceForm({ onSubmit, onCancel }: {
           <div>
             <label className="text-xs text-gray-500 mb-1 block">Tax rate (%)</label>
             <input type="number" value={taxRate || ''} onChange={e =>  setTaxRate(parseFloat(e.target.value) || 0)} min="0" max="30" step="0.1"
-              className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:border-cyan-500/50 focus:outline-none" />
+              className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:border-accent/50 focus:outline-none" />
           </div>
           <div>
             <label className="text-xs text-gray-500 mb-1 block">Due in (days)</label>
@@ -240,13 +240,13 @@ function CreateInvoiceForm({ onSubmit, onCancel }: {
           <div>
             <label className="text-xs text-gray-500 mb-1 block">Notes</label>
             <textarea value={notes} onChange={e =>  setNotes(e.target.value)} rows={3}
-              className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm  resize-none focus:border-cyan-500/50 focus:outline-none" />
+              className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm  resize-none focus:border-accent/50 focus:outline-none" />
           </div>
         </div>
         <div className="bg-white/5 border border-white/10 rounded-xl p-5 space-y-3 self-start">
           <div className="flex justify-between text-sm"><span className="text-gray-400">Subtotal</span><span className="text-white">{formatCurrency(subtotal)}</span></div>
           {taxRate > 0 && <div className="flex justify-between text-sm"><span className="text-gray-400">Tax ({taxRate}%)</span><span className="text-white">{formatCurrency(tax)}</span></div>}
-          <div className="border-t border-white/10 pt-3 flex justify-between"><span className="text-white font-bold">Total</span><span className="text-cyan-400 font-bold text-xl font-mono">{formatCurrency(total)}</span></div>
+          <div className="border-t border-white/10 pt-3 flex justify-between"><span className="text-white font-bold">Total</span><span className="text-accent font-bold text-xl font-mono">{formatCurrency(total)}</span></div>
         </div>
       </div>
 
@@ -255,7 +255,7 @@ function CreateInvoiceForm({ onSubmit, onCancel }: {
         <button onClick={onCancel} className="flex-1 py-3 border border-white/10 text-gray-400 rounded-xl font-bold">Cancel</button>
         <button onClick={() => onSubmit({ customerName, customerPhone, items, subtotal, tax, taxRate, total, notes, dueDate: Date.now() + dueInDays * 86400000 })}
           disabled={!customerName || items.every(i => !i.description)}
-          className="flex-1 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2">
+          className="flex-1 py-3 bg-gradient-to-r from-accent to-blue-600 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2">
           <FileText size={18} /> Create Invoice
         </button>
       </div>

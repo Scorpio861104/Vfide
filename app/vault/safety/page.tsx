@@ -29,14 +29,14 @@ export default function VaultSafetyPage() {
         <div className="container mx-auto max-w-3xl px-4 pb-16">
           <Link
             href="/vault"
-            className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200"
+            className="mb-6 inline-flex items-center gap-2 text-accent hover:text-accent"
           >
             <ArrowLeft size={16} /> Back to your vault
           </Link>
 
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-white mb-3 flex items-center gap-3">
-              <Shield className="text-cyan-400" size={28} />
+              <Shield className="text-accent" size={28} />
               How your vault is protected
             </h1>
             <p className="text-gray-400 leading-relaxed">
@@ -75,7 +75,7 @@ export default function VaultSafetyPage() {
 
           {/* ─────────────────────────────────────────────────────────── */}
           <Section
-            icon={<Users className="text-cyan-400" size={20} />}
+            icon={<Users className="text-accent" size={20} />}
             title="Recovery guardians"
           >
             <p>
@@ -151,7 +151,7 @@ export default function VaultSafetyPage() {
 
           {/* ─────────────────────────────────────────────────────────── */}
           <Section
-            icon={<Clock className="text-cyan-400" size={20} />}
+            icon={<Clock className="text-accent" size={20} />}
             title="The veto window"
           >
             <p>
@@ -240,15 +240,17 @@ export default function VaultSafetyPage() {
               VFIDE has a separate system from recovery for the case where
               you&apos;re permanently unavailable, not just temporarily
               unreachable. Inheritance lets you designate heirs who can claim
-              your vault after a period of inactivity, but only with the
-              involvement of your guardians.
+              your vault, but only with the active involvement of your guardians
+              — there is no automatic on-chain inactivity detection.
             </p>
             <p>
               The flow is: you set up heirs and their inheritance shares once.
-              If you go inactive for the configured period (usually 180 days),
-              your guardians can initiate the inheritance claim. The vault
-              then enters a memorial state and the assets are distributed to
-              your heirs based on your configured shares.
+              A guardian must manually call <code className="font-mono text-xs text-zinc-400">initiateInheritanceClaim()</code> to start
+              the process. The vault then enters a 30-day veto window
+              (<code className="font-mono text-xs text-zinc-400">INHERITANCE_VETO_PERIOD</code>) during which
+              you — or any guardian — can cancel the claim. If the window elapses
+              unchallenged, the vault enters a memorial state and assets are
+              distributed to your heirs based on your configured shares.
             </p>
             <SubItem title="Why this is separate from recovery">
               Recovery assumes you&apos;re alive and trying to get your vault back.
@@ -320,7 +322,7 @@ export default function VaultSafetyPage() {
             <p>
               For a complete breakdown of what&apos;s visible to whom and how to
               think about privacy on VFIDE, see the{' '}
-              <Link href="/legal?tab=privacy" className="text-cyan-300 hover:text-cyan-200">
+              <Link href="/legal?tab=privacy" className="text-accent hover:text-accent">
                 full privacy explanation
               </Link>.
             </p>
@@ -337,7 +339,7 @@ export default function VaultSafetyPage() {
             </p>
             <Link
               href="/support"
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-cyan-300 hover:text-cyan-200"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:text-accent"
             >
               Tell us what was unclear
               <ChevronRight size={14} />
@@ -376,7 +378,7 @@ function Section({
 
 function SubItem({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="mt-3 pl-3 border-l-2 border-cyan-500/30">
+    <div className="mt-3 pl-3 border-l-2 border-accent/30">
       <div className="font-semibold text-white text-sm">{title}</div>
       <div className="text-xs text-gray-400 mt-1 leading-relaxed">{children}</div>
     </div>

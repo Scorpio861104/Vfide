@@ -65,7 +65,7 @@ export function ShareStoreSheet({ show, onClose, storeName, slug }: ShareStoreSh
             <div className="bg-white/5 border border-white/10 rounded-xl p-3 mb-4">
               <div className="text-xs text-gray-500 mb-1">Store link</div>
               <div className="flex items-center gap-2">
-                <code className="flex-1 text-cyan-400 text-sm truncate">{storeUrl}</code>
+                <code className="flex-1 text-accent text-sm truncate">{storeUrl}</code>
                 <button onClick={copyLink} className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
                   {copied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} className="text-gray-400" />}
                 </button>
@@ -86,10 +86,10 @@ export function ShareStoreSheet({ show, onClose, storeName, slug }: ShareStoreSh
 
               <button
                 onClick={shareNative}
-                className="flex flex-col items-center gap-2 p-4 bg-cyan-500/10 border border-cyan-500/20 rounded-xl hover:bg-cyan-500/20 transition-colors"
+                className="flex flex-col items-center gap-2 p-4 bg-accent/10 border border-accent/20 rounded-xl hover:bg-accent/20 transition-colors"
               >
-                <Share2 size={24} className="text-cyan-400" />
-                <span className="text-xs text-cyan-400 font-medium">Share</span>
+                <Share2 size={24} className="text-accent" />
+                <span className="text-xs text-accent font-medium">Share</span>
               </button>
 
               <button

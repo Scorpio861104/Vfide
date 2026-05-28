@@ -148,7 +148,7 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
               animate={{ rotate: [0, 5, -5, 0] }}
               transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
             >
-              <Users className="w-5 h-5 text-cyan-400" />
+              <Users className="w-5 h-5 text-accent" />
             </motion.div>
             Friends
             <span className="text-sm font-normal text-zinc-500">({friends.length})</span>
@@ -171,8 +171,8 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
             }}
             className={`p-2 rounded-lg transition-colors ${
               showAddFriend 
-                ? 'bg-cyan-400 text-zinc-950' 
-                : 'bg-cyan-400/10 text-cyan-400 hover:bg-cyan-400/20'
+                ? 'bg-accent text-zinc-950' 
+                : 'bg-accent/10 text-accent hover:bg-accent/20'
             }`}
           >
             {showAddFriend ? <X className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}
@@ -187,7 +187,7 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
            
             value={searchQuery}
             onChange={(e) =>  setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-zinc-950 border border-zinc-700 rounded-xl text-zinc-100 text-sm focus:border-cyan-400 focus:outline-none transition-colors"
+            className="w-full pl-10 pr-4 py-2.5 bg-zinc-950 border border-zinc-700 rounded-xl text-zinc-100 text-sm focus:border-accent focus:outline-none transition-colors"
           />
         </div>
 
@@ -215,7 +215,7 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
               {filter === tab.key && (
                 <motion.div
                   layoutId="activeTab"
-                  className="absolute inset-0 bg-cyan-400 rounded-lg"
+                  className="absolute inset-0 bg-accent rounded-lg"
                   transition={{ type: "spring", stiffness: 400, damping: 30 }}
                 />
               )}
@@ -238,10 +238,10 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className="border-b border-zinc-700 overflow-hidden"
           >
-            <div className="p-4 bg-gradient-to-b from-cyan-400/5 to-transparent">
+            <div className="p-4 bg-gradient-to-b from-accent/5 to-transparent">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-semibold text-zinc-100 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-cyan-400" />
+                  <Sparkles className="w-4 h-4 text-accent" />
                   Add New Friend
                 </h3>
               </div>
@@ -250,21 +250,21 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
                
                 value={newFriendAddress}
                 onChange={(e) =>  setNewFriendAddress(e.target.value)}
-                className="w-full px-3 py-2.5 mb-2 bg-zinc-900 border border-zinc-700 rounded-xl text-zinc-100 text-sm focus:border-cyan-400 focus:outline-none transition-colors"
+                className="w-full px-3 py-2.5 mb-2 bg-zinc-900 border border-zinc-700 rounded-xl text-zinc-100 text-sm focus:border-accent focus:outline-none transition-colors"
               />
               <input
                 type="text"
                
                 value={newFriendAlias}
                 onChange={(e) =>  setNewFriendAlias(e.target.value)}
-                className="w-full px-3 py-2.5 mb-3 bg-zinc-900 border border-zinc-700 rounded-xl text-zinc-100 text-sm focus:border-cyan-400 focus:outline-none transition-colors"
+                className="w-full px-3 py-2.5 mb-3 bg-zinc-900 border border-zinc-700 rounded-xl text-zinc-100 text-sm focus:border-accent focus:outline-none transition-colors"
               />
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handleAddFriend}
                 disabled={!newFriendAddress}
-                className="w-full py-2.5 bg-gradient-to-r from-cyan-400 to-[#00D5E0] text-zinc-950 rounded-xl font-semibold text-sm hover:from-[#00D5E0] hover:to-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                className="w-full py-2.5 bg-gradient-to-r from-accent to-[#00D5E0] text-zinc-950 rounded-xl font-semibold text-sm hover:from-[#00D5E0] hover:to-accent disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
               >
                 <UserPlus className="w-4 h-4" />
                 Add Friend
@@ -323,7 +323,7 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
                     }}
                     className={`p-3 rounded-xl cursor-pointer transition-all group relative overflow-hidden ${
                       selectedFriend?.address === friend.address
-                        ? 'bg-cyan-400/20 border border-cyan-400/50'
+                        ? 'bg-accent/20 border border-accent/50'
                         : 'hover:bg-zinc-800 border border-transparent'
                     }`}
                   >
@@ -353,7 +353,7 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
                       <div className="relative">
                         <motion.div 
                           whileHover={{ scale: 1.1 }}
-                          className="w-11 h-11 rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-zinc-950 font-bold text-sm shadow-lg"
+                          className="w-11 h-11 rounded-full bg-gradient-to-br from-accent to-violet-400 flex items-center justify-center text-zinc-950 font-bold text-sm shadow-lg"
                         >
                           {friend.alias ? friend.alias?.[0]?.toUpperCase() : friend.address.slice(2, 4).toUpperCase()}
                         </motion.div>
@@ -375,7 +375,7 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
                             </motion.div>
                           )}
                           {friend.proofScore && friend.proofScore >= 8000 && (
-                            <Shield className="w-3 h-3 text-cyan-400" />
+                            <Shield className="w-3 h-3 text-accent" />
                           )}
                         </div>
                         <div className="flex items-center gap-2">
@@ -408,7 +408,7 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
                             e.stopPropagation();
                             onSelectFriend(friend);
                           }}
-                          className="p-1.5 rounded-lg hover:bg-zinc-700 text-zinc-400 hover:text-cyan-400 transition-colors"
+                          className="p-1.5 rounded-lg hover:bg-zinc-700 text-zinc-400 hover:text-accent transition-colors"
                         >
                           <MessageCircle className="w-4 h-4" />
                         </motion.button>

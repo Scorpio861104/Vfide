@@ -94,7 +94,7 @@ export function RecoveryActivePanel({
           whileTap={{ scale: 0.98 }}
           onClick={onApprove}
           disabled={isWritePending || !hasVault}
-          className="w-full mt-3 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25 disabled:opacity-50"
+          className="w-full mt-3 py-3 bg-gradient-to-r from-accent to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-accent/25 disabled:opacity-50"
         >
           Approve Rotation (Guardian)
         </motion.button>

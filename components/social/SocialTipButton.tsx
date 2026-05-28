@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Social Tip Button
  * 

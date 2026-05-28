@@ -125,8 +125,8 @@ function LegalDisclaimersTab() {
         </div>
       </div>
 
-      <div className="bg-zinc-800 border border-cyan-400 rounded-xl p-8">
-        <h2 className="text-2xl font-bold text-cyan-400 mb-6">✓ What VFIDE Tokens ARE</h2>
+      <div className="bg-zinc-800 border border-accent rounded-xl p-8">
+        <h2 className="text-2xl font-bold text-accent mb-6">✓ What VFIDE Tokens ARE</h2>
         <ul className="space-y-3 text-zinc-100">
           <li>✓ <strong>Governance Rights:</strong> Vote on protocol proposals and parameter changes</li>
           <li>✓ <strong>Payment Utility:</strong> Use tokens for merchant payments and transactions</li>
@@ -161,8 +161,8 @@ function LegalDisclaimersTab() {
 function PrivacyPolicyTab() {
   return (
     <div className="space-y-8">
-      <div className="bg-cyan-400/10 border-2 border-cyan-400 rounded-xl p-6">
-        <h2 className="text-2xl font-bold text-cyan-400 mb-4">Key Privacy Points</h2>
+      <div className="bg-accent/10 border-2 border-accent rounded-xl p-6">
+        <h2 className="text-2xl font-bold text-accent mb-4">Key Privacy Points</h2>
         <ul className="space-y-3 text-zinc-100">
           <li>✓ <strong>No KYC Required:</strong> We do not collect personal identification documents</li>
           <li>✓ <strong>No Email Collection:</strong> We don&apos;t require email addresses for protocol use</li>
@@ -173,7 +173,7 @@ function PrivacyPolicyTab() {
       </div>
 
       <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
-        <h2 className="text-2xl font-bold text-cyan-400 mb-4">1. Introduction</h2>
+        <h2 className="text-2xl font-bold text-accent mb-4">1. Introduction</h2>
         <p className="text-zinc-100 leading-relaxed">
           VFIDE (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) is committed to protecting your privacy. This Privacy Policy 
           explains how information is collected, used, and disclosed when you interact with our 
@@ -182,7 +182,7 @@ function PrivacyPolicyTab() {
       </div>
 
       <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
-        <h2 className="text-2xl font-bold text-cyan-400 mb-4">2. Information We Collect</h2>
+        <h2 className="text-2xl font-bold text-accent mb-4">2. Information We Collect</h2>
         <div className="space-y-4 text-zinc-100">
           <p><strong>Public Blockchain Data:</strong> Your wallet address and on-chain transactions are publicly visible on the blockchain.</p>
           <p><strong>Website Analytics:</strong> Anonymous usage data may be collected for improving user experience.</p>
@@ -218,14 +218,14 @@ function TermsOfServiceTab() {
       </div>
 
       <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
-        <h2 className="text-2xl font-bold text-cyan-400 mb-4">1. Nature of VFIDE Tokens</h2>
+        <h2 className="text-2xl font-bold text-accent mb-4">1. Nature of VFIDE Tokens</h2>
         <p className="text-zinc-400 leading-relaxed mb-4">
           VFIDE tokens are <strong className="text-zinc-100">utility tokens</strong> providing access to protocol features. They are <strong className="text-red-400">NOT</strong> securities, equity, or investment instruments.
         </p>
       </div>
 
       <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
-        <h2 className="text-2xl font-bold text-cyan-400 mb-4">2. Utility Functions</h2>
+        <h2 className="text-2xl font-bold text-accent mb-4">2. Utility Functions</h2>
         <ul className="list-disc list-inside text-zinc-400 space-y-2 ml-4">
           <li>Governance voting rights on protocol proposals</li>
           <li>Payment utility within the VFIDE ecosystem</li>
@@ -235,7 +235,7 @@ function TermsOfServiceTab() {
       </div>
 
       <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
-        <h2 className="text-2xl font-bold text-cyan-400 mb-4">3. Risk Acknowledgment</h2>
+        <h2 className="text-2xl font-bold text-accent mb-4">3. Risk Acknowledgment</h2>
         <p className="text-zinc-400 leading-relaxed">
           By using VFIDE, you acknowledge and accept all risks associated with blockchain technology, 
           smart contracts, and cryptocurrency, including total loss of funds.
@@ -243,7 +243,7 @@ function TermsOfServiceTab() {
       </div>
 
       <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
-        <h2 className="text-2xl font-bold text-cyan-400 mb-4">4. Self-Custody And Protocol Controls</h2>
+        <h2 className="text-2xl font-bold text-accent mb-4">4. Self-Custody And Protocol Controls</h2>
         <p className="text-zinc-400 leading-relaxed">
           VFIDE is designed around user-controlled wallets and vaults, and VFIDE does not hold your private keys.
           Some protocol actions, including fraud review, queued withdrawals, guardian recovery, and governance-mediated safety controls,

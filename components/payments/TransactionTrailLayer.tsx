@@ -37,7 +37,7 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Check, X, Loader2 } from 'lucide-react';
 import {
   useTransactionTrail,
@@ -119,7 +119,7 @@ function TrailCard({ trail }: { trail: Trail }) {
   const ringColor = isError ? '#ef4444' : trail.tierHex;
 
   return (
-    <motion.div
+    <m.div
       data-trail-card-id={trail.id}
       initial={{ opacity: 0, x: 32 }}
       animate={{ opacity: 1, x: 0 }}
@@ -144,7 +144,7 @@ function TrailCard({ trail }: { trail: Trail }) {
           {isError && (trail.errorMessage || 'Failed')}
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 

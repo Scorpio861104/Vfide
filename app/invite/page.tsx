@@ -80,7 +80,7 @@ export default function InviteFriendsPage() {
       icon: Zap,
       title: 'Boost ProofScore',
       description: 'Increase your ProofScore with every successful invite',
-      color: 'text-cyan-400',
+      color: 'text-accent',
     },
   ]
 
@@ -120,7 +120,7 @@ export default function InviteFriendsPage() {
           <div className="inline-flex items-center justify-center p-3 bg-gradient-to-br from-pink-500/20 to-purple-500/20 rounded-full mb-4">
             <Users className="w-8 h-8 text-pink-400" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-pink-400 via-purple-500 to-cyan-400 bg-clip-text text-transparent mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-pink-400 via-purple-500 to-accent bg-clip-text text-transparent mb-4">
             Invite Friends
           </h1>
           <p className="text-gray-400 text-lg">
@@ -195,7 +195,7 @@ export default function InviteFriendsPage() {
             <QrCode className="w-5 h-5 text-gray-400" />
             <p className="text-sm text-gray-400">
               Visit{' '}
-              <Link href="/profile" className="text-cyan-400 hover:underline">
+              <Link href="/profile" className="text-accent hover:underline">
                 your profile
               </Link>{' '}
               to generate a QR code for this invite link
@@ -252,7 +252,7 @@ export default function InviteFriendsPage() {
               <p className="text-sm text-gray-400 mt-1">Badges</p>
             </div>
             <div className="text-center">
-              <p className="text-3xl font-bold text-cyan-400">0</p>
+              <p className="text-3xl font-bold text-accent">0</p>
               <p className="text-sm text-gray-400 mt-1">Points</p>
             </div>
           </div>

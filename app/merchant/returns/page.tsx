@@ -82,17 +82,17 @@ export default function MerchantReturnsPage() {
         </div>
         <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         <div className="container mx-auto max-w-4xl px-4 pb-16">
-          <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200">
+          <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-accent hover:text-accent">
             <ArrowLeft size={16} /> Back to Merchant Hub
           </Link>
 
           <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <div className="badge-live mb-3">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> Returns & RMA
+              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" /> Returns & RMA
             </div>
             <h1 className="flex items-center gap-3 text-3xl font-black tracking-tight">
-                <RotateCcw className="text-cyan-400" /> Returns & exchanges
+                <RotateCcw className="text-accent" /> Returns & exchanges
                 {pendingCount > 0 && <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-xs font-bold text-amber-300">{pendingCount}</span>}
               </h1>
               <p className="mt-2 text-gray-400">Review requests, approve exchanges, and keep inventory aligned after accepted returns.</p>
@@ -103,7 +103,7 @@ export default function MerchantReturnsPage() {
                   key={value}
                   type="button"
                   onClick={() => setFilter(value)}
-                  className={`rounded-lg border px-3 py-1.5 text-xs font-semibold capitalize ${filter === value ? 'border-cyan-500/40 bg-cyan-500/10 text-cyan-300' : 'border-white/10 bg-white/5 text-gray-400'}`}
+                  className={`rounded-lg border px-3 py-1.5 text-xs font-semibold capitalize ${filter === value ? 'border-accent/40 bg-accent/10 text-accent' : 'border-white/10 bg-white/5 text-gray-400'}`}
                 >
                   {value}
                 </button>
@@ -128,7 +128,7 @@ export default function MerchantReturnsPage() {
                 <div key={entry.id} className="rounded-2xl border border-white/10 bg-white/5 p-4">
                   <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
-                      <span className="rounded-full bg-white/5 px-2 py-1 text-xs font-semibold capitalize text-cyan-200">{entry.status}</span>
+                      <span className="rounded-full bg-white/5 px-2 py-1 text-xs font-semibold capitalize text-accent">{entry.status}</span>
                       <span className="text-xs text-gray-500">Order {entry.order_id}</span>
                     </div>
                     <span className="inline-flex items-center gap-1 text-xs text-gray-500"><Clock size={12} /> {formatDate(entry.created_at, 'medium')}</span>

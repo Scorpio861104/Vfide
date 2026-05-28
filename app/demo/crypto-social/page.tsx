@@ -38,7 +38,7 @@ export default function CryptoSocialDemo() {
             <span className="badge-live"><span className="badge-live-dot" />Interactive Demo</span>
           </div>
           <h1 className="text-4xl font-bold mb-2">
-            <span className="bg-gradient-to-r from-violet-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">Social Commerce Demo</span>
+            <span className="bg-gradient-to-r from-violet-400 via-purple-400 to-accent bg-clip-text text-transparent">Social Commerce Demo</span>
           </h1>
           <p className="text-white/50 text-lg">Try the social commerce features — feed, premium content, subscriptions.</p>
         </motion.div>

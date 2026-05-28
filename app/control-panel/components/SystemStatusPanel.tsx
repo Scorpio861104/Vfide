@@ -72,12 +72,7 @@ export function SystemStatusPanel() {
         <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
           <h3 className="text-xl font-bold text-white mb-4">Quick Actions</h3>
           <div className="space-y-3">
-            <QuickActionButton
-              icon="🛡️"
-              title="Enable All Howey-Safe Mode"
-              description="Protect all contracts"
-              disabledReason="Howey-Safe Mode is enabled per-contract via the DAO. Open /governance to draft a parameter proposal."
-            />
+            {/* Howey-safe mode is a compile-time constant — no runtime toggle exists */}
             <QuickActionButton
               icon="🔄"
               title="Configure Auto-Swap"

@@ -83,7 +83,7 @@ export default function BudgetsPage() {
       <div className="relative container mx-auto px-4 max-w-4xl space-y-6">
         {/* Device-only notice */}
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-3 text-xs text-cyan-200">
+          className="rounded-2xl border border-accent/20 bg-accent/5 p-3 text-xs text-accent">
           Budgets are saved on this device only — they won&apos;t appear on other devices you sign in from.
           Spending totals are still computed from your full transaction history.
         </motion.div>
@@ -170,7 +170,7 @@ export default function BudgetsPage() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
           className="glass-card-premium p-5">
           <h3 className="font-semibold text-white mb-4 flex items-center gap-2">
-            <BarChart3 size={16} className="text-cyan-400" />Spending by Category
+            <BarChart3 size={16} className="text-accent" />Spending by Category
           </h3>
           {spendingByCategory.length === 0 ? (
             <div className="text-center py-8 text-white/40 text-sm">No spending data yet</div>
@@ -180,7 +180,7 @@ export default function BudgetsPage() {
                 <div key={cat.name} className="flex items-center gap-3">
                   <div className="w-24 text-sm text-white/70 truncate">{cat.name}</div>
                   <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-cyan-500 to-emerald-500 rounded-full"
+                    <div className="h-full bg-gradient-to-r from-accent to-emerald-500 rounded-full"
                       style={{ width: `${cat.percentage}%` }} />
                   </div>
                   <div className="w-20 text-right text-sm text-white/70">${cat.amount.toFixed(2)}</div>
@@ -204,7 +204,7 @@ export default function BudgetsPage() {
               <div>
                 <label className="text-xs text-white/50 block mb-1.5 uppercase tracking-wider">Category</label>
                 <select value={newBudget.category} onChange={e => setNewBudget({ ...newBudget, category: e.target.value })}
-                  className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500/50">
+                  className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-accent/50">
                   <option value="">Select category</option>
                   {['DeFi', 'NFT', 'Gaming', 'Transfers', 'Exchange', 'Gas', 'Other'].map(c => (
                     <option key={c} value={c}>{c}</option>
@@ -214,12 +214,12 @@ export default function BudgetsPage() {
               <div>
                 <label className="text-xs text-white/50 block mb-1.5 uppercase tracking-wider">Monthly Limit ($)</label>
                 <input type="number" value={newBudget.limit} onChange={e => setNewBudget({ ...newBudget, limit: e.target.value })}
-                  className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500/50" />
+                  className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-accent/50" />
               </div>
               <div>
                 <label className="text-xs text-white/50 block mb-1.5 uppercase tracking-wider">Period</label>
                 <select value={newBudget.period} onChange={e => setNewBudget({ ...newBudget, period: e.target.value as typeof newBudget.period })}
-                  className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500/50">
+                  className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-accent/50">
                   <option value="daily">Daily</option>
                   <option value="weekly">Weekly</option>
                   <option value="monthly">Monthly</option>

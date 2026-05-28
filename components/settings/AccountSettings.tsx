@@ -125,7 +125,7 @@ export function AccountSettings() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-zinc-100 flex items-center gap-2">
-            <User className="w-6 h-6 text-cyan-400" />
+            <User className="w-6 h-6 text-accent" />
             Account Settings
           </h2>
           <p className="text-sm text-zinc-400 mt-1">
@@ -135,7 +135,7 @@ export function AccountSettings() {
         {!editing ? (
           <button
             onClick={() => setEditing(true)}
-            className="px-4 py-2 bg-cyan-400 text-zinc-950 rounded-lg font-semibold hover:bg-cyan-400 transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-accent text-zinc-950 rounded-lg font-semibold hover:bg-accent transition-colors flex items-center gap-2"
           >
             <Edit2 className="w-4 h-4" />
             Edit Profile
@@ -191,7 +191,7 @@ export function AccountSettings() {
         {/* Username */}
         <div>
           <label className="block text-sm font-semibold text-zinc-100 mb-2 flex items-center gap-2">
-            <AtSign className="w-4 h-4 text-cyan-400" />
+            <AtSign className="w-4 h-4 text-accent" />
             Username
           </label>
           <div className="relative">
@@ -207,7 +207,7 @@ export function AccountSettings() {
                     ? 'border-pink-400 focus:border-pink-400'
                     : usernameAvailable === true
                     ? 'border-emerald-500 focus:border-emerald-500'
-                    : 'border-zinc-700 focus:border-cyan-400'
+                    : 'border-zinc-700 focus:border-accent'
                   : 'border-zinc-800 cursor-not-allowed'
               }`}
             />
@@ -237,7 +237,7 @@ export function AccountSettings() {
           )}
           {!editing && profile?.username && (
             <p className="text-xs text-zinc-400 mt-1">
-              Your username: <span className="text-cyan-400">@{profile.username}</span>
+              Your username: <span className="text-accent">@{profile.username}</span>
             </p>
           )}
         </div>

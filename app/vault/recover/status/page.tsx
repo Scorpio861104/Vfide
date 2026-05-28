@@ -77,7 +77,7 @@ function formatStatus(status: RecoveryClaimStatus): { label: string; color: stri
     case RecoveryClaimStatus.Pending:
       return { label: 'Awaiting guardian votes', color: 'text-amber-300' };
     case RecoveryClaimStatus.GuardianApproved:
-      return { label: 'Guardians approved — challenge window active', color: 'text-cyan-300' };
+      return { label: 'Guardians approved — challenge window active', color: 'text-accent' };
     case RecoveryClaimStatus.Approved:
       return { label: 'Ready to finalize', color: 'text-emerald-300' };
     case RecoveryClaimStatus.Challenged:
@@ -165,14 +165,14 @@ export default function RecoveryStatusPage() {
         <div className="container mx-auto max-w-3xl px-4 pb-16">
           <Link
             href="/vault/recover"
-            className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200"
+            className="mb-6 inline-flex items-center gap-2 text-accent hover:text-accent"
           >
             <ArrowLeft size={16} /> Back to recovery search
           </Link>
 
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-white mb-3 flex items-center gap-3">
-              <Hourglass className="text-cyan-400" size={28} />
+              <Hourglass className="text-accent" size={28} />
               Recovery status
             </h1>
             <p className="text-gray-400 leading-relaxed">
@@ -195,12 +195,12 @@ export default function RecoveryStatusPage() {
                   value={lookupInput}
                   onChange={(e) => setLookupInput(e.target.value)}
                   placeholder="0x... or recovery ID"
-                  className="flex-1 px-4 py-3 rounded-lg bg-black/30 border border-white/20 text-white placeholder:text-gray-600 focus:outline-none focus:border-cyan-500/50 font-mono"
+                  className="flex-1 px-4 py-3 rounded-lg bg-black/30 border border-white/20 text-white placeholder:text-gray-600 focus:outline-none focus:border-accent/50 font-mono"
                 />
                 <button
                   onClick={() => void handleLookup()}
                   disabled={!lookupInput.trim()}
-                  className="px-5 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="px-5 py-3 bg-gradient-to-r from-accent to-blue-500 text-white rounded-lg font-bold flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   <Search size={16} />
                   Look up
@@ -327,7 +327,7 @@ function RecoveryStatusBody({
                 : claimStatus === RecoveryClaimStatus.Approved
                   ? 'bg-emerald-500/20'
                   : claimStatus === RecoveryClaimStatus.GuardianApproved
-                    ? 'bg-cyan-500/20'
+                    ? 'bg-accent/20'
                     : claimStatus === RecoveryClaimStatus.Pending
                       ? 'bg-amber-500/20'
                       : 'bg-red-500/20'
@@ -338,7 +338,7 @@ function RecoveryStatusBody({
             ) : claimStatus === RecoveryClaimStatus.Approved ? (
               <Unlock className="text-emerald-400" size={24} />
             ) : claimStatus === RecoveryClaimStatus.GuardianApproved ? (
-              <Clock className="text-cyan-400" size={24} />
+              <Clock className="text-accent" size={24} />
             ) : claimStatus === RecoveryClaimStatus.Pending ? (
               <Users className="text-amber-400" size={24} />
             ) : (
@@ -427,7 +427,7 @@ function RecoveryStatusBody({
       {/* Waiting state — challenge window */}
       {claimStatus === RecoveryClaimStatus.GuardianApproved && (
         <GlassCard hover={false} className="p-6">
-          <h3 className="text-sm font-bold text-cyan-300 mb-2 flex items-center gap-2">
+          <h3 className="text-sm font-bold text-accent mb-2 flex items-center gap-2">
             <Clock size={16} />
             Challenge window in progress
           </h3>

@@ -31,7 +31,7 @@ export function TicketsTab({ tickets, selectedTicketId, selectedTicket, onSelect
               key={ticket.id}
               type="button"
               onClick={() => onSelectTicket(ticket.id)}
-              className={`w-full text-left rounded-xl border px-3 py-3 ${selectedTicketId === ticket.id ? 'border-cyan-500/30 bg-cyan-500/10' : 'border-white/10 bg-black/20'}`}
+              className={`w-full text-left rounded-xl border px-3 py-3 ${selectedTicketId === ticket.id ? 'border-accent/30 bg-accent/10' : 'border-white/10 bg-black/20'}`}
             >
               <div className="text-white font-semibold">{ticket.id}</div>
               <div className="text-xs text-gray-400 mt-1">Subject • {ticket.subject}</div>

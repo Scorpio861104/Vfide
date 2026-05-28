@@ -131,7 +131,7 @@ export function ProductReel({ reel, isActive, onLike, onBuy, onComment, onShare,
             style={{ borderColor: scoreColor }}>
             {reel.creator.avatar || reel.creator.name[0]}
           </div>
-          <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-cyan-500 flex items-center justify-center text-white text-[10px] font-bold border-2 border-black">+</div>
+          <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-accent flex items-center justify-center text-white text-[10px] font-bold border-2 border-black">+</div>
         </button>
 
         {/* Like */}
@@ -184,12 +184,12 @@ export function ProductReel({ reel, isActive, onLike, onBuy, onComment, onShare,
             onClick={() => onBuy?.(reel.product!.id)}
             className="flex items-center gap-2 px-3 py-2 bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl"
           >
-            <ShoppingCart size={16} className="text-cyan-400" />
+            <ShoppingCart size={16} className="text-accent" />
             <div className="flex-1 text-left">
               <div className="text-white text-xs font-bold">{reel.product.name}</div>
               <div className="text-gray-300 text-[10px]">{reel.product.inStock ? 'In stock' : 'Sold out'}</div>
             </div>
-            <span className="text-cyan-400 font-mono font-bold text-sm">{reel.product.currency}{reel.product.price}</span>
+            <span className="text-accent font-mono font-bold text-sm">{reel.product.currency}{reel.product.price}</span>
           </motion.button>
         )}
 

@@ -148,7 +148,7 @@ export function LiveViewer({
           <motion.button
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowProducts(!showProducts)}
-            className="absolute bottom-4 left-3 flex items-center gap-2 px-3 py-2 bg-cyan-500/80 backdrop-blur rounded-xl"
+            className="absolute bottom-4 left-3 flex items-center gap-2 px-3 py-2 bg-accent/80 backdrop-blur rounded-xl"
           >
             <Package size={16} className="text-white" />
             <span className="text-white text-xs font-bold">{products.length} Products</span>
@@ -169,9 +169,9 @@ export function LiveViewer({
                   {p.imageUrl && <Image src={p.imageUrl} alt="" className="w-full h-20 rounded-lg object-cover mb-2"  width={48} height={48} />}
                   <div className="text-white text-xs font-medium truncate">{p.name}</div>
                   <div className="flex items-center justify-between mt-1">
-                    <span className="text-cyan-400 font-mono text-xs font-bold">{p.currency}{p.price}</span>
+                    <span className="text-accent font-mono text-xs font-bold">{p.currency}{p.price}</span>
                     <button onClick={() => onBuy?.(p.id)}
-                      className="px-2 py-1 bg-cyan-500/20 text-cyan-400 rounded text-[10px] font-bold">Buy</button>
+                      className="px-2 py-1 bg-accent/20 text-accent rounded text-[10px] font-bold">Buy</button>
                   </div>
                 </div>
               ))}
@@ -186,7 +186,7 @@ export function LiveViewer({
         <div className="h-28 overflow-y-auto px-3 py-2 space-y-1.5 scrollbar-hide">
           {comments.map(c => (
             <div key={c.id} className="flex items-start gap-1.5">
-              <span className="text-cyan-400 text-[10px] font-bold shrink-0">{c.user}</span>
+              <span className="text-accent text-[10px] font-bold shrink-0">{c.user}</span>
               <span className="text-white text-xs">{c.text}</span>
             </div>
           ))}
@@ -201,7 +201,7 @@ export function LiveViewer({
            
             className="flex-1 px-3 py-2 bg-white/5 rounded-full text-white text-xs  focus:outline-none"
           />
-          <button onClick={handleSend} className="p-2 text-cyan-400" aria-label="Send"><Send size={18} /></button>
+          <button onClick={handleSend} className="p-2 text-accent" aria-label="Send"><Send size={18} /></button>
           <button onClick={handleLike} className="p-2 text-pink-400" aria-label="Like"><Heart size={18} /></button>
         </div>
       </div>

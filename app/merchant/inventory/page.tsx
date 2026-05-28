@@ -147,7 +147,7 @@ export default function MerchantInventoryPage() {
         <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         <section className="py-12">
           <div className="container mx-auto max-w-6xl px-4">
-            <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200">
+            <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-accent hover:text-accent">
               <ArrowLeft size={16} /> Back to Merchant Hub
             </Link>
 
@@ -161,7 +161,7 @@ export default function MerchantInventoryPage() {
                   Manage your catalog, track stock levels, and get low-stock alerts.
                 </p>
               </div>
-              <button onClick={() => setShowCreate(true)} disabled={!address} className="px-5 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90">
+              <button onClick={() => setShowCreate(true)} disabled={!address} className="px-5 py-3 bg-gradient-to-r from-accent to-blue-500 rounded-xl font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90">
                 <Plus size={18} /> New product
               </button>
             </div>
@@ -197,13 +197,13 @@ export default function MerchantInventoryPage() {
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
                       placeholder="Search by name or SKU…"
-                      className="w-full bg-zinc-900 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-sm focus:border-cyan-500 outline-none"
+                      className="w-full bg-zinc-900 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-sm focus:border-accent outline-none"
                     />
                   </div>
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
-                    className="bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none"
+                    className="bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none"
                   >
                     <option value="all">All</option>
                     <option value="active">Active</option>
@@ -301,7 +301,7 @@ function ProductRow({ product, onArchive, onActivate, onDelete }: { product: Pro
             {product.status}
           </span>
           {product.featured && (
-            <span className="inline-flex items-center px-2 py-0.5 text-xs rounded border border-cyan-500/30 bg-cyan-500/10 text-cyan-300">
+            <span className="inline-flex items-center px-2 py-0.5 text-xs rounded border border-accent/30 bg-accent/10 text-accent">
               Featured
             </span>
           )}
@@ -403,21 +403,21 @@ function CreateProductModal({ onClose, onCreated, onError }: { onClose: () => vo
         <div className="space-y-4">
           <label className="block">
             <span className="text-xs text-zinc-400 mb-1 block">Name *</span>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Haircut – Adult" className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none" />
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Haircut – Adult" className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none" />
           </label>
           <div className="grid grid-cols-2 gap-3">
             <label className="block">
               <span className="text-xs text-zinc-400 mb-1 block">Price (VFIDE) *</span>
-              <input type="number" min={0.01} step={0.01} value={price} onChange={(e) => setPrice(Number(e.target.value))} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none" />
+              <input type="number" min={0.01} step={0.01} value={price} onChange={(e) => setPrice(Number(e.target.value))} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none" />
             </label>
             <label className="block">
               <span className="text-xs text-zinc-400 mb-1 block">SKU (optional)</span>
-              <input type="text" value={sku} onChange={(e) => setSku(e.target.value)} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none" />
+              <input type="text" value={sku} onChange={(e) => setSku(e.target.value)} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none" />
             </label>
           </div>
           <label className="block">
             <span className="text-xs text-zinc-400 mb-1 block">Type</span>
-            <select value={type} onChange={(e) => setType(e.target.value as typeof type)} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none">
+            <select value={type} onChange={(e) => setType(e.target.value as typeof type)} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none">
               <option value="physical">Physical product</option>
               <option value="digital">Digital download</option>
               <option value="service">Service / appointment</option>
@@ -425,30 +425,30 @@ function CreateProductModal({ onClose, onCreated, onError }: { onClose: () => vo
           </label>
           <label className="block">
             <span className="text-xs text-zinc-400 mb-1 block">Description (optional)</span>
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none resize-none" />
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none resize-none" />
           </label>
           {type === 'physical' && (
             <div className="rounded-lg border border-white/10 bg-zinc-900/40 p-3 space-y-3">
               <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={tracking} onChange={(e) => setTracking(e.target.checked)} className="accent-cyan-500" />
+                <input type="checkbox" checked={tracking} onChange={(e) => setTracking(e.target.checked)} className="accent-accent" />
                 <span>Track inventory</span>
               </label>
               {tracking && (
                 <label className="block">
                   <span className="text-xs text-zinc-400 mb-1 block">Initial stock</span>
-                  <input type="number" min={0} step={1} value={stock} onChange={(e) => setStock(Number(e.target.value))} className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none" />
+                  <input type="number" min={0} step={1} value={stock} onChange={(e) => setStock(Number(e.target.value))} className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none" />
                 </label>
               )}
             </div>
           )}
           <label className="block">
             <span className="text-xs text-zinc-400 mb-1 block">Visibility</span>
-            <select value={status} onChange={(e) => setStatus(e.target.value as typeof status)} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none">
+            <select value={status} onChange={(e) => setStatus(e.target.value as typeof status)} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none">
               <option value="active">Active (visible in store)</option>
               <option value="draft">Draft (not visible)</option>
             </select>
           </label>
-          <button onClick={submit} disabled={!canSubmit} className="w-full px-5 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
+          <button onClick={submit} disabled={!canSubmit} className="w-full px-5 py-3 bg-gradient-to-r from-accent to-blue-500 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
             {submitting ? 'Creating…' : 'Create product'}
           </button>
         </div>

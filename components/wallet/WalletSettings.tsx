@@ -144,8 +144,8 @@ export function WalletSettings() {
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-cyan-500/10 rounded-lg">
-              <Link2 className="text-cyan-400" size={24} />
+            <div className="p-3 bg-accent/10 rounded-lg">
+              <Link2 className="text-accent" size={24} />
             </div>
             <div>
               <h3 className="text-lg font-semibold text-white">Stay Connected</h3>
@@ -158,7 +158,7 @@ export function WalletSettings() {
           <button
             onClick={() => handleStayConnectedChange(!stayConnected)}
             className={`relative w-14 h-7 rounded-full transition-colors ${
-              stayConnected ? 'bg-cyan-500' : 'bg-zinc-600'
+              stayConnected ? 'bg-accent' : 'bg-zinc-600'
             }`}
           >
             <motion.div
@@ -173,9 +173,9 @@ export function WalletSettings() {
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
-            className="mt-4 p-3 bg-cyan-500/10 rounded-lg"
+            className="mt-4 p-3 bg-accent/10 rounded-lg"
           >
-            <div className="flex items-center gap-2 text-cyan-400 text-sm">
+            <div className="flex items-center gap-2 text-accent text-sm">
               <Check size={16} />
               <span>Your wallet will stay connected across browser sessions</span>
             </div>

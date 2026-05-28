@@ -126,7 +126,7 @@ export default function ApiCoverageClient() {
           return (
             <article key={key} className="rounded-xl border border-zinc-700 bg-zinc-900/60 p-4 space-y-3">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-md bg-cyan-500/20 px-2 py-1 text-xs font-semibold text-cyan-300">{endpoint.method}</span>
+                <span className="rounded-md bg-accent/20 px-2 py-1 text-xs font-semibold text-accent">{endpoint.method}</span>
                 <span className="font-mono text-sm text-zinc-200">{endpoint.route}</span>
               </div>
 

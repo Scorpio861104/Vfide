@@ -67,7 +67,7 @@ export default function MerchantProfileEditPage() {
         <div className="container mx-auto max-w-4xl px-4 pb-16">
           <Link
             href="/merchant"
-            className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200"
+            className="mb-6 inline-flex items-center gap-2 text-accent hover:text-accent"
           >
             <ArrowLeft size={16} /> Back to Merchant Hub
           </Link>

@@ -123,7 +123,7 @@ export function MarketVibesCapture({ promptTime: _promptTime, onCapture, timeRem
             <input value={caption} onChange={e =>  setCaption(e.target.value)}
               className="flex-1 px-4 py-3 bg-white/10 rounded-xl text-white text-sm  focus:outline-none" />
             <button onClick={() => { if (frontImage && backImage) onCapture(frontImage, backImage, caption); }}
-              className="px-4 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold rounded-xl text-sm flex items-center gap-1">
+              className="px-4 py-3 bg-gradient-to-r from-accent to-blue-500 text-white font-bold rounded-xl text-sm flex items-center gap-1">
               <Check size={16} />Post
             </button>
           </div>
@@ -149,7 +149,7 @@ export function MarketVibeCard({ vibe, onReact }: MarketVibeCardProps) {
         role="button"
         tabIndex={0}
         aria-label={showFront ? 'Show back camera view' : 'Show front camera view'}
-        className="relative aspect-[3/4] bg-zinc-800 cursor-pointer focus-visible:outline-2 focus-visible:outline-cyan-400"
+        className="relative aspect-[3/4] bg-zinc-800 cursor-pointer focus-visible:outline-2 focus-visible:outline-accent"
         onClick={() => setShowFront(!showFront)}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -166,7 +166,7 @@ export function MarketVibeCard({ vibe, onReact }: MarketVibeCardProps) {
           role="button"
           tabIndex={0}
           aria-label="Swap camera view"
-          className="absolute top-3 left-3 w-20 h-28 rounded-xl overflow-hidden border-2 border-white/30 focus-visible:outline-2 focus-visible:outline-cyan-400"
+          className="absolute top-3 left-3 w-20 h-28 rounded-xl overflow-hidden border-2 border-white/30 focus-visible:outline-2 focus-visible:outline-accent"
           onClick={e => { e.stopPropagation(); setShowFront(!showFront); }}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {

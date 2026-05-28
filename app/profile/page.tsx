@@ -25,11 +25,11 @@ export default function ProfilePage() {
           <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
           <div className="relative container mx-auto max-w-3xl px-4 py-20 text-center">
             <div className="badge-live mb-6">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
               Identity Management
             </div>
             <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-6">
-              <User size={28} className="text-cyan-300" />
+              <User size={28} className="text-accent" />
             </div>
             <h1 className="text-4xl font-black text-white mb-4 tracking-tight">Your Profile</h1>
             <p className="text-zinc-400 mb-8 max-w-md mx-auto text-lg">

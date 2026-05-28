@@ -153,7 +153,7 @@ export function CharitiesTab() {
                 </div>
                 <Link
                   href={`/sanctum/charities/${charity.address}`}
-                  className="text-cyan-400 hover:text-cyan-300 text-sm flex items-center gap-1 transition-colors"
+                  className="text-accent hover:text-accent text-sm flex items-center gap-1 transition-colors"
                 >
                   View Details <ExternalLink size={12} />
                 </Link>

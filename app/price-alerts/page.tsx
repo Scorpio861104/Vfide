@@ -38,7 +38,7 @@ export default function PriceAlertsPage() {
             <span className="badge-live"><span className="badge-live-dot" />Price Intelligence</span>
           </div>
           <h1 className="text-4xl font-bold mb-2">
-            <span className="bg-gradient-to-r from-amber-400 via-orange-400 to-cyan-400 bg-clip-text text-transparent">Price Alerts</span>
+            <span className="bg-gradient-to-r from-amber-400 via-orange-400 to-accent bg-clip-text text-transparent">Price Alerts</span>
           </h1>
           <p className="text-white/50 text-lg">Get notified when tokens hit your target prices.</p>
         </motion.div>

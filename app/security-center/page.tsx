@@ -65,8 +65,8 @@ export default function SecurityCenterPage() {
     return (
       <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] flex items-center justify-center px-4">
         <div className="text-center max-w-md">
-          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 flex items-center justify-center">
-            <Shield className="w-10 h-10 text-cyan-400" />
+          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-accent/20 to-blue-500/20 border border-accent/30 flex items-center justify-center">
+            <Shield className="w-10 h-10 text-accent" />
           </div>
           <h2 className="text-2xl font-bold text-white mb-3">Security Center</h2>
           <p className="text-zinc-400 mb-6">Connect your wallet to review your account security posture, active sessions, and signing keys.</p>
@@ -157,7 +157,7 @@ export default function SecurityCenterPage() {
                 {/* Quick actions */}
                 <div className="grid md:grid-cols-3 gap-4 mt-6">
                   {[
-                    { href: '/guardians', icon: Shield, label: 'Manage Guardians', color: '#22d3ee' },
+                    { href: '/guardians', icon: Shield, label: 'Manage Guardians', color: 'var(--accent)' },
                     { href: '/vault/safety', icon: Lock, label: 'Vault Safety Window', color: '#10b981' },
                     { href: '/settings', icon: Smartphone, label: 'Device & Session Settings', color: '#a78bfa' },
                   ].map((action) => {
@@ -192,7 +192,7 @@ export default function SecurityCenterPage() {
                       { device: 'This device', location: 'Current session', lastSeen: 'Now', current: true },
                     ].map((s, i) => (
                       <div key={i} className="flex items-center gap-4 p-3 rounded-xl bg-white/5">
-                        <Globe size={18} className="text-cyan-400 shrink-0" />
+                        <Globe size={18} className="text-accent shrink-0" />
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-medium text-white">{s.device}</div>
                           <div className="text-xs text-zinc-500">{s.location} · {s.lastSeen}</div>

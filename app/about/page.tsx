@@ -16,7 +16,7 @@ const PRINCIPLES = [
   },
   {
     icon: Lock,
-    color: "#22d3ee",
+    color: "var(--accent)",
     title: "You hold the keys",
     body: "Non-custodial by design. Your tokens live in your CardBound Vault, controlled by your wallet. VFIDE never holds, touches, or can freeze your funds.",
   },
@@ -42,7 +42,7 @@ const PRINCIPLES = [
     icon: Flame,
     color: "#f97316",
     title: "The key burn",
-    body: "Six months after mainnet launch, the developer master key is permanently destroyed. No admin backdoor, no upgrade path — the protocol becomes truly ownerless.",
+    body: "Six months after mainnet launch, the developer admin key is zeroed out via SystemHandover. The protocol's devMultisig address is set to address(0) — the deployer cannot issue admin calls from that point forward. DAO governance remains in control: proposals, timelocks, and council elections continue normally. The protocol is not leaderless; it is developer-independent.",
   },
 ];
 
@@ -74,13 +74,13 @@ export default function AboutPage() {
         <section className="relative pt-20 pb-16 px-4">
           <div className="container mx-auto max-w-4xl text-center">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-1.5 text-xs uppercase tracking-widest text-cyan-300 mb-6">
+              <div className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-4 py-1.5 text-xs uppercase tracking-widest text-accent mb-6">
                 <Globe size={12} /> Built for the world&apos;s 1.4 billion unbanked
               </div>
               <h1 className="text-5xl md:text-6xl font-black tracking-tight mb-6">
                 Money should work<br />
                 <span className="text-transparent bg-clip-text" style={{
-                  backgroundImage: "linear-gradient(135deg, #22d3ee 0%, #a78bfa 100%)"
+                  backgroundImage: "linear-gradient(135deg, var(--accent) 0%, #a78bfa 100%)"
                 }}>for everyone.</span>
               </h1>
               <p className="text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed">
@@ -104,7 +104,7 @@ export default function AboutPage() {
                   { stat: "1.4B", label: "Adults without a bank account", sub: "Excluded not by choice — by geography, documentation, or poverty." },
                 ].map((item) => (
                   <div key={item.stat} className="glass-card-premium p-6">
-                    <div className="text-4xl font-black text-cyan-400 mb-2">{item.stat}</div>
+                    <div className="text-4xl font-black text-accent mb-2">{item.stat}</div>
                     <div className="font-semibold text-white mb-1">{item.label}</div>
                     <div className="text-zinc-400">{item.sub}</div>
                   </div>
@@ -171,7 +171,7 @@ export default function AboutPage() {
             <h2 className="text-3xl font-bold mb-4">Ready to see it in action?</h2>
             <p className="text-zinc-400 mb-8">Testnet is live. Connect a wallet and explore the protocol with no real funds.</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/testnet" className="inline-flex items-center gap-2 px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-black font-bold rounded-xl transition-colors">
+              <Link href="/testnet" className="inline-flex items-center gap-2 px-6 py-3 bg-accent hover:bg-accent-light text-zinc-900 font-bold rounded-xl transition-colors">
                 Try testnet <ArrowRight size={16} />
               </Link>
               <Link href="/docs" className="inline-flex items-center gap-2 px-6 py-3 border border-white/10 hover:border-white/20 text-white rounded-xl transition-colors">

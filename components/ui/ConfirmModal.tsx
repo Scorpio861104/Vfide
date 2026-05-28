@@ -30,8 +30,8 @@ const variantStyles = {
     button: 'primary' as const,
   },
   info: {
-    icon: <AlertTriangle className="text-cyan-400" size={32} />,
-    bg: 'bg-cyan-400/20 border-cyan-400',
+    icon: <AlertTriangle className="text-accent" size={32} />,
+    bg: 'bg-accent/20 border-accent',
     button: 'primary' as const,
   },
 };
@@ -109,7 +109,7 @@ export function ConfirmModal({
               <button
                 onClick={onClose}
                 disabled={isLoading}
-                className="flex-1 px-4 py-2.5 bg-zinc-800 border border-zinc-700 text-zinc-100 rounded-lg hover:border-cyan-400 transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-2.5 bg-zinc-800 border border-zinc-700 text-zinc-100 rounded-lg hover:border-accent transition-colors disabled:opacity-50"
               >
                 {cancelText}
               </button>

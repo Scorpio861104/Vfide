@@ -4,7 +4,7 @@
  * SanctumOverviewTab — charity & impact fund overview.
  *
  * The Sanctum is VFIDE's on-chain charity fund (SanctumVault.sol):
- *   - Receives 20% of all protocol burn fees (FeeDistributor.sol: sanctumBps=2000)
+ *   - Receives 10% of all protocol fees (ProofScoreBurnRouter.computeFees: sanctumAmount = totalFee * 10 / 100)
  *   - Accepts voluntary donations from any address
  *   - Disburses ONLY to DAO-approved charitable organisations
  *   - NOT a token reward system; NOT a buyer-fraud reimbursement pool
@@ -42,7 +42,7 @@ export function OverviewTab() {
             {
               step: '1',
               title: 'Fee Collection',
-              desc: '20% of all VFIDE transaction fees flow automatically to The Sanctum (FeeDistributor.sol: sanctumBps = 2000)',
+              desc: '10% of all VFIDE transaction fees flow automatically to The Sanctum (ProofScoreBurnRouter.computeFees: sanctumAmount = totalFee × 10 / 100)',
             },
             {
               step: '2',
@@ -84,7 +84,7 @@ export function OverviewTab() {
         <div className="space-y-4">
           <div className="bg-black/30 rounded-xl p-4 border border-white/5">
             <div className="flex items-center gap-2 mb-2">
-              <Shield className="w-5 h-5 text-cyan-400" />
+              <Shield className="w-5 h-5 text-accent" />
               <span className="text-white font-bold">Multi-Signature Required</span>
             </div>
             <p className="text-sm text-gray-400">
@@ -94,7 +94,7 @@ export function OverviewTab() {
           </div>
           <div className="bg-black/30 rounded-xl p-4 border border-white/5">
             <div className="flex items-center gap-2 mb-2">
-              <Users className="w-5 h-5 text-cyan-400" />
+              <Users className="w-5 h-5 text-accent" />
               <span className="text-white font-bold">DAO Oversight</span>
             </div>
             <p className="text-sm text-gray-400">

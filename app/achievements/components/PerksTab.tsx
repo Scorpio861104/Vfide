@@ -16,7 +16,7 @@ export function PerksTab() {
           <h3 className="mb-2 text-xl font-bold text-zinc-100">Level Perks</h3>
           <p className="text-sm text-zinc-400">
             Every level you earn unlocks real platform benefits — fee discounts, governance voting weight, and feature access.
-            These perks are yours because of <span className="font-semibold text-cyan-400">your own activity</span>, not investment returns.
+            These perks are yours because of <span className="font-semibold text-accent">your own activity</span>, not investment returns.
           </p>
           {progress && (
             <div className="mt-3 flex items-center gap-2 text-sm">
@@ -34,7 +34,7 @@ export function PerksTab() {
             const categoryColors: Record<string, string> = {
               fee: 'border-emerald-500/40 bg-emerald-500/5',
               governance: 'border-violet-500/40 bg-violet-500/5',
-              feature: 'border-cyan-500/40 bg-cyan-500/5',
+              feature: 'border-accent/40 bg-accent/5',
               status: 'border-amber-400/40 bg-amber-400/5',
             };
             const categoryLabels: Record<string, string> = {

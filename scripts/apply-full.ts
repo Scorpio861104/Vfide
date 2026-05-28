@@ -8,6 +8,26 @@
  * confirmations (FeeDistributor → FraudRegistry → FlashLoan → EcosystemVault), applying
  * any other 48-hour token-module and Seer timelocks along the way.
  *
+ * ⚠️  DEPLOYMENT WINDOW — FIRST 48 HOURS (Finding 6 acknowledgement):
+ *
+ *   Between deploy-full.ts and the FIRST successful run of apply-full.ts,
+ *   two time-gated protections are NOT yet active:
+ *
+ *   1. Seer enforcement: applySeerAutonomous() has not yet been called.
+ *      All transfers proceed without Seer restriction checks until applied.
+ *
+ *   2. Burn sustainability floor: applySustainability() has not yet been called.
+ *      dailyBurnCap = 0 (unlimited) and minimumSupplyFloor = 0 (no floor)
+ *      until the pending proposal applies.
+ *
+ *   MITIGATION: On mainnet, deploy-full.ts and apply-full.ts MUST be run
+ *   back-to-back as a coordinated operator sequence with no public announcement
+ *   until AFTER this script completes successfully. The 48h window should not
+ *   be advertised or exposed to public trading activity.
+ *
+ *   This is an architectural consequence of the two-phase timelock design and
+ *   is documented here so it cannot be missed by any operator running this script.
+ *
  * Run:
  *   npx hardhat run scripts/apply-full.ts --network baseSepolia
  *

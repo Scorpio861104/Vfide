@@ -380,7 +380,7 @@ export function EmptyState({
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={action.onClick}
-            className="px-6 py-2.5 bg-cyan-500 hover:bg-cyan-600 text-white font-medium rounded-xl transition-colors"
+            className="px-6 py-2.5 bg-accent hover:bg-accent-dark text-white font-medium rounded-xl transition-colors"
           >
             {action.label}
           </motion.button>

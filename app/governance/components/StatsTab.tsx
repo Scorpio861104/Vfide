@@ -90,7 +90,7 @@ export function StatsTab() {
         {/* Activity panel */}
         <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
           <h3 className="text-lg font-semibold text-zinc-100 mb-4 flex items-center gap-2">
-            <Activity size={16} className="text-cyan-400" />
+            <Activity size={16} className="text-accent" />
             Proposal activity
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -118,7 +118,7 @@ export function StatsTab() {
         {/* Voting cycle */}
         <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
           <h3 className="text-lg font-semibold text-zinc-100 mb-4 flex items-center gap-2">
-            <Clock size={16} className="text-cyan-400" />
+            <Clock size={16} className="text-accent" />
             Voting cycle
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -146,7 +146,7 @@ export function StatsTab() {
         {/* Quorum / thresholds */}
         <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
           <h3 className="text-lg font-semibold text-zinc-100 mb-4 flex items-center gap-2">
-            <ShieldCheck size={16} className="text-cyan-400" />
+            <ShieldCheck size={16} className="text-accent" />
             Thresholds &amp; quorum
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -187,7 +187,7 @@ export function StatsTab() {
         {address && (
           <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
             <h3 className="text-lg font-semibold text-zinc-100 mb-4 flex items-center gap-2">
-              <Vote size={16} className="text-cyan-400" />
+              <Vote size={16} className="text-accent" />
               Your governance status
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

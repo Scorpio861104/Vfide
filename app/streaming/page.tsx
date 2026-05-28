@@ -29,20 +29,20 @@ export default function Page() {
             </div>
             <h1 className="text-3xl font-black text-white mb-3">Payment Streaming</h1>
             <p className="text-zinc-400 mb-2 text-sm font-medium">Continuous per-second USDC flows.</p>
-            <p className="text-zinc-500 text-sm leading-relaxed mb-8">Payment streaming is designed for payroll, vesting, and creator monetisation. It ships after the core payment layer is stable on mainnet.</p>
+            <p className="text-zinc-500 text-sm leading-relaxed mb-8">Payment streaming is designed for payroll, subscriptions, and creator monetisation. It ships after the core payment layer is stable on mainnet.</p>
 
             <div className="text-left bg-zinc-900/50 rounded-xl p-5 mb-8">
               <p className="text-xs text-zinc-500 uppercase tracking-widest mb-3">What to expect</p>
               <ul className="space-y-2">
-                                <li className="flex items-start gap-2 text-sm text-zinc-300"><span className="text-cyan-400 mt-0.5">→</span>Real-time per-second payment streams (à la Sablier)</li>
-                <li className="flex items-start gap-2 text-sm text-zinc-300"><span className="text-cyan-400 mt-0.5">→</span>Vesting streams for contributor payouts</li>
-                <li className="flex items-start gap-2 text-sm text-zinc-300"><span className="text-cyan-400 mt-0.5">→</span>Cancel or top-up a stream at any time</li>
+                                <li className="flex items-start gap-2 text-sm text-zinc-300"><span className="text-accent mt-0.5">→</span>Real-time per-second payment streams (à la Sablier)</li>
+                <li className="flex items-start gap-2 text-sm text-zinc-300"><span className="text-accent mt-0.5">→</span>Time-locked payroll streams for verified council contributors</li>
+                <li className="flex items-start gap-2 text-sm text-zinc-300"><span className="text-accent mt-0.5">→</span>Cancel or top-up a stream at any time</li>
               </ul>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link href="/payroll"
-                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-black font-bold rounded-xl transition-colors text-sm"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-accent hover:bg-accent-light text-zinc-900 font-bold rounded-xl transition-colors text-sm"
               >
                 See Payroll instead <ArrowRight size={14} />
               </Link>

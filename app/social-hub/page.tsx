@@ -182,7 +182,7 @@ export default function SocialHubPage() {
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
               <h1 className="text-4xl font-bold mb-2">
-                <span className="bg-gradient-to-r from-cyan-400 via-violet-400 to-pink-400 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-accent via-violet-400 to-pink-400 bg-clip-text text-transparent">
                   Social
                 </span>
               </h1>
@@ -194,7 +194,7 @@ export default function SocialHubPage() {
                 {postsLoading ? (
                   <div className="h-7 w-10 mx-auto rounded bg-white/10 animate-pulse" />
                 ) : (
-                  <div className="text-xl font-bold text-cyan-400">{posts.length}</div>
+                  <div className="text-xl font-bold text-accent">{posts.length}</div>
                 )}
                 <div className="text-xs text-white/40">Posts</div>
               </div>
@@ -230,8 +230,8 @@ export default function SocialHubPage() {
         {!isConnected ? (
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
             className="glass-card-premium max-w-lg mx-auto text-center py-16 px-8">
-            <div className="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center mx-auto mb-6">
-              <Sparkles className="text-cyan-400" size={28} />
+            <div className="w-16 h-16 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center mx-auto mb-6">
+              <Sparkles className="text-accent" size={28} />
             </div>
             <h2 className="text-2xl font-bold text-white mb-3">Join the Conversation</h2>
             <p className="text-white/50 mb-8">Connect your wallet to unlock the VFIDE social experience.</p>

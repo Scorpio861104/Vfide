@@ -93,16 +93,16 @@ export function PostCard({ post, onLike, onBookmark }: { post: SocialPost; onLik
       {/* Header */}
       <div className="p-4 flex items-start justify-between">
         <div className="flex gap-3">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-xl">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-accent to-violet-400 flex items-center justify-center text-xl">
             {post.author.avatar}
           </div>
           <div>
             <div className="flex items-center gap-2">
               <span className="font-semibold text-zinc-50">{post.author.name}</span>
               {post.author.verified && (
-                <Shield className="w-4 h-4 text-cyan-400" />
+                <Shield className="w-4 h-4 text-accent" />
               )}
-              <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-400/20 text-cyan-400">
+              <span className="text-xs px-2 py-0.5 rounded-full bg-accent/20 text-accent">
                 {post.author.proofScore} PS
               </span>
             </div>
@@ -147,7 +147,7 @@ export function PostCard({ post, onLike, onBookmark }: { post: SocialPost; onLik
         {post.tags && post.tags.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-2">
             {post.tags.map((tag) => (
-              <span key={tag} className="text-cyan-400 text-sm hover:underline cursor-pointer">
+              <span key={tag} className="text-accent text-sm hover:underline cursor-pointer">
                 #{tag}
               </span>
             ))}
@@ -207,7 +207,7 @@ export function PostCard({ post, onLike, onBookmark }: { post: SocialPost; onLik
         <button
           onClick={onBookmark}
           className={`p-2 rounded-lg transition-colors ${
-            post.bookmarked ? 'text-cyan-400 bg-cyan-400/10' : 'text-zinc-400 hover:bg-zinc-700'
+            post.bookmarked ? 'text-accent bg-accent/10' : 'text-zinc-400 hover:bg-zinc-700'
           }`}
         >
           <Bookmark className={`w-5 h-5 ${post.bookmarked ? 'fill-current' : ''}`} />

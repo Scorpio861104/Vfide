@@ -109,7 +109,7 @@ export function Address({
       <button
         type="button"
         onClick={copy}
-        className={`font-mono ${overflowClass} hover:text-cyan-300 cursor-pointer text-left`}
+        className={`font-mono ${overflowClass} hover:text-accent cursor-pointer text-left`}
         aria-label={`Copy address ${label}`}
         title={`Click to copy: ${address}`}
       >
@@ -119,7 +119,7 @@ export function Address({
         <button
           type="button"
           onClick={copy}
-          className="text-zinc-500 hover:text-cyan-300 flex-shrink-0"
+          className="text-zinc-500 hover:text-accent flex-shrink-0"
           aria-label="Copy address"
           title="Copy address"
         >

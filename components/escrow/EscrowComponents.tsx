@@ -195,9 +195,9 @@ export function EscrowStats({
       label: 'Total in Escrow', 
       value: `${totalInEscrow} VFIDE`, 
       icon: <DollarSign className="w-5 h-5" />, 
-      gradient: 'from-cyan-500/20 to-teal-500/10', 
-      border: 'border-cyan-500/20', 
-      text: 'text-cyan-400' 
+      gradient: 'from-accent/20 to-teal-500/10', 
+      border: 'border-accent/20', 
+      text: 'text-accent' 
     },
     { 
       label: 'Active Escrows', 
@@ -262,7 +262,7 @@ export function EmptyState({
       animate={{ opacity: 1, y: 0 }}
       className="text-center py-12 sm:py-16"
     >
-      <div className="p-4 rounded-2xl bg-gradient-to-br from-cyan-500/10 to-emerald-500/5 border border-cyan-500/20 inline-block mb-4">
+      <div className="p-4 rounded-2xl bg-gradient-to-br from-accent/10 to-emerald-500/5 border border-accent/20 inline-block mb-4">
         {icon}
       </div>
       <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">{title}</h3>

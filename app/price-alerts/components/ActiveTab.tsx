@@ -244,7 +244,7 @@ export function ActiveTab() {
             );
             return (
               <div key={a.id} className={`p-4 rounded-xl border ${
-                triggered ? 'bg-cyan-500/10 border-cyan-500/30' : 'bg-white/3 border-white/10'
+                triggered ? 'bg-accent/10 border-accent/30' : 'bg-white/3 border-white/10'
               }`}>
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2">
@@ -264,7 +264,7 @@ export function ActiveTab() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {triggered && <span className="text-xs text-cyan-400 font-semibold">⚡ Triggered</span>}
+                    {triggered && <span className="text-xs text-accent font-semibold">⚡ Triggered</span>}
                     <button onClick={() => toggle(a.id)} className="text-gray-500 hover:text-yellow-400 transition-colors" aria-label="Toggle alert">
                       {a.active ? <Bell size={14} /> : <BellOff size={14} />}
                     </button>

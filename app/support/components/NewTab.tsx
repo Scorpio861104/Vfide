@@ -45,7 +45,7 @@ export function NewTab({
           <button
             type="button"
             onClick={onSubmitTicket}
-            className="px-4 py-2 rounded-xl border border-cyan-500/30 bg-cyan-500/15 text-cyan-300 font-semibold"
+            className="px-4 py-2 rounded-xl border border-accent/30 bg-accent/15 text-accent font-semibold"
           >
             Submit Ticket
           </button>

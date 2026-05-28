@@ -336,7 +336,7 @@ function OverrideContent({
             type="button"
             onClick={handleOverride}
             disabled={isWritePending}
-            className="mt-4 w-full rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 py-3 text-white font-bold disabled:opacity-50"
+            className="mt-4 w-full rounded-xl bg-gradient-to-r from-emerald-500 to-accent py-3 text-white font-bold disabled:opacity-50"
           >
             {isWritePending ? (
               <span className="inline-flex items-center justify-center gap-2">
@@ -452,7 +452,7 @@ function NoticeCard({
 }) {
   const toneClass = {
     amber: 'border-amber-500/30 bg-amber-500/5 text-amber-200',
-    cyan: 'border-cyan-500/30 bg-cyan-500/5 text-cyan-200',
+    cyan: 'border-accent/30 bg-accent/5 text-accent',
     emerald: 'border-emerald-500/30 bg-emerald-500/5 text-emerald-200',
     gray: 'border-gray-500/30 bg-gray-500/5 text-gray-300',
     red: 'border-red-500/30 bg-red-500/5 text-red-300',

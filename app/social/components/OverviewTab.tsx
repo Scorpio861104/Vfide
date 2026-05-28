@@ -42,7 +42,7 @@ export function OverviewTab() {
   const topType = Object.entries(byType).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'none';
 
   const stats = [
-    { label: 'Total Activities', value: activities.length, icon: <Activity size={16} className="text-cyan-400" /> },
+    { label: 'Total Activities', value: activities.length, icon: <Activity size={16} className="text-accent" /> },
     { label: 'Community Posts', value: posts, icon: <MessageSquare size={16} className="text-purple-400" /> },
     { label: 'Endorsements', value: byType['endorsement'] ?? 0, icon: <Star size={16} className="text-yellow-400" /> },
     { label: 'Top Activity', value: topType, icon: <Users size={16} className="text-green-400" /> },
@@ -65,7 +65,7 @@ export function OverviewTab() {
       <div className="grid grid-cols-2 gap-3">
         {loading ? (
           <div className="col-span-2 flex items-center justify-center py-10">
-            <Loader2 size={22} className="text-cyan-400 animate-spin" />
+            <Loader2 size={22} className="text-accent animate-spin" />
           </div>
         ) : stats.map((s) => (
           <div key={s.label} className="bg-white/3 border border-white/10 rounded-xl p-4">
@@ -84,7 +84,7 @@ export function OverviewTab() {
                 <p className="text-xs text-gray-400 w-28 capitalize">{type}</p>
                 <div className="flex-1 bg-white/5 rounded-full h-1.5">
                   <div
-                    className="h-1.5 rounded-full bg-cyan-500"
+                    className="h-1.5 rounded-full bg-accent"
                     style={{ width: `${(count / activities.length) * 100}%` }}
                   />
                 </div>

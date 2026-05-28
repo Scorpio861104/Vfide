@@ -587,7 +587,7 @@ export function VaultInheritancePanel({ vaultAddress, userAddress }: VaultInheri
           {heirCount > 0 && (
             <div className="mb-6">
               <h3 className="text-sm font-semibold text-white/80 mb-3 flex items-center gap-2">
-                <ShieldCheck size={16} className="text-cyan-400" />
+                <ShieldCheck size={16} className="text-accent" />
                 Configured Heirs ({heirCount})
               </h3>
               <div className="space-y-2">
@@ -670,7 +670,7 @@ export function VaultInheritancePanel({ vaultAddress, userAddress }: VaultInheri
               <div>
                 <button
                   onClick={() => setShowProposeForm(v => !v)}
-                  className="flex items-center gap-2 text-sm font-bold text-cyan-400 hover:text-cyan-300 transition-colors"
+                  className="flex items-center gap-2 text-sm font-bold text-accent hover:text-accent transition-colors"
                 >
                   <UserPlus size={16} />
                   {heirCount > 0 ? 'Update Heir Configuration' : 'Configure Heirs'}
@@ -709,13 +709,13 @@ export function VaultInheritancePanel({ vaultAddress, userAddress }: VaultInheri
                             </div>
                             <div className="grid grid-cols-3 gap-2">
                               <input
-                                className="col-span-2 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 focus:border-cyan-500/50 outline-none font-mono"
+                                className="col-span-2 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 focus:border-accent/50 outline-none font-mono"
                                 placeholder="Guardian address (0x…)"
                                 value={row.guardianAddress}
                                 onChange={e => updateRow(row.id, { guardianAddress: e.target.value, commitment: null, secret: null })}
                               />
                               <input
-                                className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 focus:border-cyan-500/50 outline-none text-right"
+                                className="bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 focus:border-accent/50 outline-none text-right"
                                 placeholder="Basis pts"
                                 value={row.basisPoints}
                                 type="number"
@@ -770,7 +770,7 @@ export function VaultInheritancePanel({ vaultAddress, userAddress }: VaultInheri
                         <button
                           onClick={handleProposeConfig}
                           disabled={!secretsDownloaded || !isBasisPointsValid || txStatus === 'signing' || txStatus === 'submitted'}
-                          className="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-sm transition-colors disabled:opacity-40"
+                          className="px-4 py-2 rounded-lg bg-accent-dark hover:bg-accent text-white font-bold text-sm transition-colors disabled:opacity-40"
                         >
                           {txStatus === 'signing' ? <Loader2 size={14} className="animate-spin inline mr-1" /> : null}
                           Propose Config

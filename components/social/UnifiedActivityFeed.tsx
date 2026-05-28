@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Unified Activity Feed
  * 
@@ -289,7 +291,7 @@ export function UnifiedActivityFeed({
       case 'post':
       case 'product_share':
       case 'comment':
-        return 'from-blue-500 to-cyan-500';
+        return 'from-blue-500 to-accent';
       case 'purchase_proof':
         return 'from-emerald-500 to-teal-500';
       case 'like':

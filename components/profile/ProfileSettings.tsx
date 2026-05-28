@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Profile Settings Component
  * 
@@ -89,7 +91,7 @@ export function ProfileSettings() {
     return (
       <div className="flex items-center justify-center p-12">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-zinc-400">Loading profile...</p>
         </div>
       </div>
@@ -123,7 +125,7 @@ export function ProfileSettings() {
               Wallet Address
             </label>
             <div className="flex items-center gap-2 px-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg">
-              <Shield className="w-4 h-4 text-cyan-400" />
+              <Shield className="w-4 h-4 text-accent" />
               <span className="text-sm text-zinc-100 font-mono">{address}</span>
             </div>
             <p className="text-xs text-zinc-500 mt-1">Your wallet address cannot be changed</p>
@@ -142,7 +144,7 @@ export function ProfileSettings() {
                 onChange={(e) =>  handleInputChange('alias', e.target.value)}
                
                 maxLength={50}
-                className="w-full pl-10 pr-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100  focus:border-cyan-400 focus:outline-none transition-colors"
+                className="w-full pl-10 pr-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100  focus:border-accent focus:outline-none transition-colors"
               />
             </div>
             <p className="text-xs text-zinc-500 mt-1">
@@ -161,7 +163,7 @@ export function ProfileSettings() {
              
               maxLength={200}
               rows={4}
-              className="w-full px-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100  focus:border-cyan-400 focus:outline-none transition-colors resize-none"
+              className="w-full px-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100  focus:border-accent focus:outline-none transition-colors resize-none"
             />
             <p className="text-xs text-zinc-500 mt-1">
               {formData.bio.length}/200 characters
@@ -182,7 +184,7 @@ export function ProfileSettings() {
                 value={formData.email}
                 onChange={(e) =>  handleInputChange('email', e.target.value)}
                
-                className="w-full pl-10 pr-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100  focus:border-cyan-400 focus:outline-none transition-colors"
+                className="w-full pl-10 pr-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100  focus:border-accent focus:outline-none transition-colors"
               />
             </div>
             <p className="text-xs text-zinc-500 mt-1">
@@ -203,7 +205,7 @@ export function ProfileSettings() {
                 onChange={(e) =>  handleInputChange('location', e.target.value)}
                
                 maxLength={50}
-                className="w-full pl-10 pr-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100  focus:border-cyan-400 focus:outline-none transition-colors"
+                className="w-full pl-10 pr-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100  focus:border-accent focus:outline-none transition-colors"
               />
             </div>
           </div>
@@ -220,7 +222,7 @@ export function ProfileSettings() {
                 value={formData.website}
                 onChange={(e) =>  handleInputChange('website', e.target.value)}
                
-                className="w-full pl-10 pr-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100  focus:border-cyan-400 focus:outline-none transition-colors"
+                className="w-full pl-10 pr-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100  focus:border-accent focus:outline-none transition-colors"
               />
             </div>
           </div>
@@ -276,7 +278,7 @@ export function ProfileSettings() {
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="px-6 py-3 bg-cyan-400 text-zinc-950 rounded-lg font-semibold hover:bg-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+              className="px-6 py-3 bg-accent text-zinc-950 rounded-lg font-semibold hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
             >
               {isSaving ? (
                 <>
@@ -298,8 +300,8 @@ export function ProfileSettings() {
       <div className="mt-6">
         <div className="bg-zinc-900 rounded-xl border border-zinc-700 p-8">
           <div className="mb-6 flex items-center gap-3">
-            <div className="p-2 bg-cyan-500/20 rounded-lg">
-              <Wallet className="w-5 h-5 text-cyan-400" />
+            <div className="p-2 bg-accent/20 rounded-lg">
+              <Wallet className="w-5 h-5 text-accent" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-zinc-100">Wallet Settings</h2>

@@ -22,8 +22,8 @@ export function RewardsTab({ isConnected: _isConnected = false }: { isConnected?
     },
     {
       icon: '🔬',
-      color: 'border-cyan-500/40 bg-cyan-500/5',
-      labelColor: 'text-cyan-400',
+      color: 'border-accent/40 bg-accent/5',
+      labelColor: 'text-accent',
       title: 'Early Feature Access',
       description: 'Reach Level 10 to opt in to beta features and new platform capabilities before public release.',
       cta: { label: 'View Perks', href: '/achievements' },
@@ -59,7 +59,7 @@ export function RewardsTab({ isConnected: _isConnected = false }: { isConnected?
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-zinc-100 mb-2">Available Rewards</h2>
         <p className="text-zinc-400 max-w-2xl mx-auto">
-          All rewards are <span className="text-cyan-400 font-semibold">platform utility benefits</span> earned 
+          All rewards are <span className="text-accent font-semibold">platform utility benefits</span> earned 
           through your own activity — not investment returns. Level up, streak up, and compete to unlock them.
         </p>
       </div>
@@ -72,7 +72,7 @@ export function RewardsTab({ isConnected: _isConnected = false }: { isConnected?
             <p className="text-zinc-400 text-sm mb-4">{cat.description}</p>
             <a
               href={cat.cta.href}
-              className="text-xs font-semibold text-cyan-400 hover:text-cyan-300 underline underline-offset-2 transition-colors"
+              className="text-xs font-semibold text-accent hover:text-accent underline underline-offset-2 transition-colors"
             >
               {cat.cta.label} →
             </a>

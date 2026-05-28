@@ -59,7 +59,7 @@ export function ChapterShell({
       className="flex flex-col gap-5"
     >
       <header className="space-y-2">
-        <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-cyan-300/70">
+        <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-accent/70">
           <span>Chapter {chapterIndex}</span>
           <span aria-hidden>·</span>
           <span>of {totalForBar}</span>
@@ -80,12 +80,12 @@ export function ChapterShell({
           className={`flex items-start gap-3 rounded-xl border p-3 text-sm ${
             notice.tone === 'error'
               ? 'border-red-500/40 bg-red-500/10 text-red-200'
-              : 'border-cyan-500/30 bg-cyan-500/10 text-cyan-100'
+              : 'border-accent/30 bg-accent/10 text-accent'
           }`}
         >
           <AlertTriangle
             size={18}
-            className={notice.tone === 'error' ? 'text-red-300 flex-shrink-0' : 'text-cyan-300 flex-shrink-0'}
+            className={notice.tone === 'error' ? 'text-red-300 flex-shrink-0' : 'text-accent flex-shrink-0'}
             aria-hidden
           />
           <span>{notice.text}</span>
@@ -115,7 +115,7 @@ export function ChapterShell({
           type="button"
           onClick={onPrimary}
           disabled={primaryDisabled || isWorking}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-cyan-500/25 transition-all hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-accent to-blue-600 px-5 py-3 text-sm font-bold text-zinc-950 shadow-lg shadow-accent/25 transition-all hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
         >
           {isWorking && <Loader2 size={16} className="animate-spin" aria-hidden />}
           {primaryLabel}

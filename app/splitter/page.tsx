@@ -213,7 +213,7 @@ export default function SplitterPage() {
             <span className="badge-live"><span className="badge-live-dot" />Revenue Distribution</span>
           </div>
           <h1 className="text-4xl font-bold mb-2">
-            <span className="bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-accent via-teal-400 to-emerald-400 bg-clip-text text-transparent">
               Revenue Splitter
             </span>
           </h1>
@@ -241,7 +241,7 @@ export default function SplitterPage() {
                   placeholder="0x… (the merchant's deployed RevenueSplitter)"
                   value={splitterInput}
                   onChange={(e) => setSplitterInput(e.target.value.trim())}
-                  className="w-full pl-9 pr-4 py-2.5 bg-zinc-900 border border-white/10 rounded-lg text-white text-sm font-mono focus:outline-none focus:border-cyan-500/50"
+                  className="w-full pl-9 pr-4 py-2.5 bg-zinc-900 border border-white/10 rounded-lg text-white text-sm font-mono focus:outline-none focus:border-accent/50"
                 />
               </div>
               {splitterInput && !splitter && (
@@ -269,7 +269,7 @@ export default function SplitterPage() {
                 }
                 value={tokenInput}
                 onChange={(e) => setTokenInput(e.target.value.trim())}
-                className="w-full px-3 py-2.5 bg-zinc-900 border border-white/10 rounded-lg text-white text-sm font-mono focus:outline-none focus:border-cyan-500/50"
+                className="w-full px-3 py-2.5 bg-zinc-900 border border-white/10 rounded-lg text-white text-sm font-mono focus:outline-none focus:border-accent/50"
               />
               {tokenInput && !token && (
                 <div className="text-xs text-amber-400 mt-1 flex items-center gap-1">
@@ -293,7 +293,7 @@ export default function SplitterPage() {
                     void refetchSplitter();
                     void refetchToken();
                   }}
-                  className="text-zinc-400 hover:text-cyan-400 transition-colors"
+                  className="text-zinc-400 hover:text-accent transition-colors"
                 >
                   <RefreshCw size={14} aria-hidden="true" />
                 </button>
@@ -301,7 +301,7 @@ export default function SplitterPage() {
 
               {splitterLoading && (
                 <div className="flex justify-center py-6">
-                  <Loader2 className="animate-spin text-cyan-400" size={24} aria-hidden="true" />
+                  <Loader2 className="animate-spin text-accent" size={24} aria-hidden="true" />
                 </div>
               )}
 
@@ -335,7 +335,7 @@ export default function SplitterPage() {
                         <div className="flex-1 font-mono text-xs text-zinc-300">
                           {shortAddr(p.account)}
                         </div>
-                        <div className="text-sm text-cyan-300 font-mono">
+                        <div className="text-sm text-accent font-mono">
                           {p.shareBps.toString()} bps
                         </div>
                         <div className="text-xs text-zinc-500 w-14 text-right">
@@ -357,7 +357,7 @@ export default function SplitterPage() {
               </h3>
               {tokenLoading ? (
                 <div className="flex justify-center py-4">
-                  <Loader2 className="animate-spin text-cyan-400" size={20} aria-hidden="true" />
+                  <Loader2 className="animate-spin text-accent" size={20} aria-hidden="true" />
                 </div>
               ) : (
                 <div className="text-3xl font-bold text-white font-mono">
@@ -374,7 +374,7 @@ export default function SplitterPage() {
                 onClick={handleDistribute}
                 disabled={!validInputs || balanceZero || submitting || isPending || isConfirming || payees.length === 0}
                 aria-label="Distribute splitter balance to payees"
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-cyan-500 hover:bg-cyan-400 disabled:opacity-40 disabled:cursor-not-allowed text-zinc-950 font-bold transition-colors"
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-accent hover:bg-accent-light disabled:opacity-40 disabled:cursor-not-allowed text-zinc-950 font-bold transition-colors"
               >
                 {submitting || isPending || isConfirming ? (
                   <Loader2 className="animate-spin" size={16} aria-hidden="true" />

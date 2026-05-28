@@ -111,7 +111,7 @@ export function StoryViewer({
       {/* Header */}
       <div className="absolute top-8 left-4 right-4 flex items-center justify-between z-20">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-cyan-400/20 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
             <span className="text-xl">{currentStory.userAvatar || '👤'}</span>
           </div>
           <div>
@@ -140,13 +140,13 @@ export function StoryViewer({
         <button
           type="button"
           aria-label="Previous story"
-          className="absolute left-0 top-0 bottom-0 w-1/3 z-10 cursor-pointer focus-visible:outline-2 focus-visible:outline-cyan-400 focus-visible:outline-offset-[-4px]"
+          className="absolute left-0 top-0 bottom-0 w-1/3 z-10 cursor-pointer focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-[-4px]"
           onClick={goToPrevious}
         />
         <button
           type="button"
           aria-label="Next story"
-          className="absolute right-0 top-0 bottom-0 w-1/3 z-10 cursor-pointer focus-visible:outline-2 focus-visible:outline-cyan-400 focus-visible:outline-offset-[-4px]"
+          className="absolute right-0 top-0 bottom-0 w-1/3 z-10 cursor-pointer focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-[-4px]"
           onClick={goToNext}
         />
 

@@ -72,8 +72,8 @@ export default function EndorsementsPage() {
             <span className="badge-live"><span className="badge-live-dot" />Trust Network</span>
           </div>
           <h1 className="text-4xl font-bold mb-2">
-            <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-amber-400 bg-clip-text text-transparent flex items-center gap-3">
-              <Star size={32} className="text-cyan-400" />Endorsements
+            <span className="bg-gradient-to-r from-accent via-blue-400 to-amber-400 bg-clip-text text-transparent flex items-center gap-3">
+              <Star size={32} className="text-accent" />Endorsements
             </span>
           </h1>
           <p className="text-white/50">Network of trust and reputation through peer endorsements</p>
@@ -89,7 +89,7 @@ export default function EndorsementsPage() {
           ].map((stat, idx) => (
             <motion.div key={stat.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.1 }}
               className="analytics-card p-5">
-              <div className={`text-3xl font-bold ${stat.color === 'cyan' ? 'text-cyan-400' : stat.color === 'emerald' ? 'text-emerald-400' : 'text-amber-400'} mb-1`}>
+              <div className={`text-3xl font-bold ${stat.color === 'cyan' ? 'text-accent' : stat.color === 'emerald' ? 'text-emerald-400' : 'text-amber-400'} mb-1`}>
                 {stat.value}
               </div>
               <div className="text-sm text-white/50">{stat.label}</div>
@@ -100,8 +100,8 @@ export default function EndorsementsPage() {
         {/* Connected notice */}
         {address && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
-            className="mb-6 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-4">
-            <div className="flex items-center gap-2 text-cyan-300 mb-1 text-sm font-medium">
+            className="mb-6 rounded-2xl border border-accent/20 bg-accent/5 p-4">
+            <div className="flex items-center gap-2 text-accent mb-1 text-sm font-medium">
               ✓ Logged in as {address.slice(0, 6)}...{address.slice(-4)}
             </div>
             <p className="text-xs text-white/40">
@@ -131,7 +131,7 @@ export default function EndorsementsPage() {
                   <div>
                     <div className="text-xs text-white/30 mb-1 uppercase tracking-wider">FROM</div>
                     <Link href={`/explorer/${endorsement.endorser}`}
-                      className="font-mono text-sm text-cyan-400 hover:text-cyan-300 hover:underline">
+                      className="font-mono text-sm text-accent hover:text-accent hover:underline">
                       {endorsement.endorser.slice(0, 6)}...
                     </Link>
                     <div className="text-xs text-white/30 font-mono mt-0.5">

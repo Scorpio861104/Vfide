@@ -32,14 +32,14 @@ export function PresetsTab() {
               aria-pressed={isActive}
               aria-label={`Apply ${preset.name} theme`}
               className={[
-                'relative rounded-2xl border p-5 text-left transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400',
+                'relative rounded-2xl border p-5 text-left transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
                 isActive
-                  ? 'border-cyan-500/60 bg-cyan-500/10 ring-1 ring-cyan-500/30'
+                  ? 'border-accent/60 bg-accent/10 ring-1 ring-accent/30'
                   : 'border-white/10 bg-black/20 hover:border-white/20 hover:bg-white/5',
               ].join(' ')}
             >
               {isActive && (
-                <span className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-cyan-500">
+                <span className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-accent">
                   <Check size={13} className="text-black" strokeWidth={3} />
                 </span>
               )}
@@ -55,7 +55,7 @@ export function PresetsTab() {
               <h4 className="mb-1.5 font-semibold text-white">{preset.name}</h4>
               <p className="text-sm text-gray-400 leading-snug">{preset.description}</p>
               {isActive && (
-                <p className="mt-3 text-xs font-medium text-cyan-400">Active</p>
+                <p className="mt-3 text-xs font-medium text-accent">Active</p>
               )}
             </button>
           );

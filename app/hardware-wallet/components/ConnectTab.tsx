@@ -65,7 +65,7 @@ export function ConnectTab() {
               onClick={() => setDeviceType(d)}
               className={`p-4 rounded-xl border text-sm font-semibold capitalize transition-colors ${
                 deviceType === d
-                  ? 'bg-cyan-500/20 border-cyan-500/40 text-cyan-400'
+                  ? 'bg-accent/20 border-accent/40 text-accent'
                   : 'bg-white/3 border-white/10 text-gray-400 hover:border-white/20'
               }`}
             >
@@ -86,7 +86,7 @@ export function ConnectTab() {
               <button
                 onClick={handleConnect}
                 disabled={status === 'connecting' || hidSupported === false}
-                className="flex items-center gap-2 flex-1 justify-center px-4 py-2.5 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 text-sm font-semibold transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 flex-1 justify-center px-4 py-2.5 rounded-lg bg-accent/20 hover:bg-accent/30 text-accent text-sm font-semibold transition-colors disabled:opacity-50"
               >
                 {status === 'connecting' ? (
                   <Loader2 size={14} className="animate-spin" />

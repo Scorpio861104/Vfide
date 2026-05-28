@@ -42,7 +42,7 @@ export function VaultQuickActions({ onTransfer }: VaultQuickActionsProps) {
             onClick={onTransfer}
             whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
-            className="w-full md:max-w-md p-5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2"
+            className="w-full md:max-w-md p-5 bg-gradient-to-r from-accent to-blue-600 text-white rounded-xl font-bold shadow-lg shadow-accent/25 flex items-center justify-center gap-2"
           >
             <RefreshCw size={20} />
             Transfer to Vault

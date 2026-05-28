@@ -485,7 +485,7 @@ export function GroupMessaging() {
           <h3 className="font-bold text-zinc-100">Groups</h3>
           <button
             onClick={() => setShowCreateGroup(true)}
-            className="p-2 bg-cyan-400 text-zinc-950 rounded-lg hover:bg-cyan-400 transition-colors"
+            className="p-2 bg-accent text-zinc-950 rounded-lg hover:bg-accent transition-colors"
           >
             <Plus className="w-4 h-4" />
           </button>
@@ -505,7 +505,7 @@ export function GroupMessaging() {
                 onClick={() => setSelectedGroup(group)}
                 className={`w-full p-3 rounded-lg text-left transition-all ${
                   selectedGroup?.id === group.id
-                    ? 'bg-cyan-400/20 border-2 border-cyan-400'
+                    ? 'bg-accent/20 border-2 border-accent'
                     : 'bg-zinc-900 border-2 border-transparent hover:bg-zinc-800'
                 }`}
               >
@@ -617,7 +617,7 @@ export function GroupMessaging() {
                         <div
                           className={`px-4 py-2 rounded-2xl ${
                             isMe
-                              ? 'bg-cyan-400 text-zinc-950'
+                              ? 'bg-accent text-zinc-950'
                               : 'bg-zinc-800 text-zinc-100'
                           }`}
                         >
@@ -628,7 +628,7 @@ export function GroupMessaging() {
                             {new Date(msg.timestamp).toLocaleTimeString()}
                           </p>
                           {isMe && msg.readBy.length > 1 && (
-                            <CheckCheck className="w-3 h-3 text-cyan-400" />
+                            <CheckCheck className="w-3 h-3 text-accent" />
                           )}
                         </div>
                       </div>
@@ -648,12 +648,12 @@ export function GroupMessaging() {
                   value={newMessage}
                   onChange={(e) =>  setNewMessage(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                  className="flex-1 px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100  focus:border-cyan-400 focus:outline-none"
+                  className="flex-1 px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-zinc-100  focus:border-accent focus:outline-none"
                 />
                 <button
                   onClick={sendMessage}
                   disabled={!newMessage.trim() || encryptionStatus === 'encrypting'}
-                  className="px-4 py-2 bg-cyan-400 text-zinc-950 rounded-lg font-semibold hover:bg-cyan-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Send">
+                  className="px-4 py-2 bg-accent text-zinc-950 rounded-lg font-semibold hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Send">
                   <Send className="w-5 h-5" />
                 </button>
               </div>
@@ -818,7 +818,7 @@ function CreateGroupModal({ onClose, onCreate, userAddress }: CreateGroupModalPr
                     key={i}
                     onClick={() => setIcon(i)}
                     className={`p-3 text-2xl rounded-lg transition-all ${
-                      icon === i ? 'bg-cyan-400/20 border-2 border-cyan-400' : 'bg-zinc-950 border-2 border-transparent hover:bg-zinc-800'
+                      icon === i ? 'bg-accent/20 border-2 border-accent' : 'bg-zinc-950 border-2 border-transparent hover:bg-zinc-800'
                     }`}
                   >
                     {i}
@@ -851,7 +851,7 @@ function CreateGroupModal({ onClose, onCreate, userAddress }: CreateGroupModalPr
               value={name}
               onChange={(e) =>  setName(e.target.value)}
              
-              className="w-full px-4 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 focus:border-cyan-400 focus:outline-none"
+              className="w-full px-4 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 focus:border-accent focus:outline-none"
             />
           </div>
 
@@ -863,7 +863,7 @@ function CreateGroupModal({ onClose, onCreate, userAddress }: CreateGroupModalPr
               onChange={(e) =>  setDescription(e.target.value)}
              
               rows={2}
-              className="w-full px-4 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 focus:border-cyan-400 focus:outline-none resize-none"
+              className="w-full px-4 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 focus:border-accent focus:outline-none resize-none"
             />
           </div>
 
@@ -890,7 +890,7 @@ function CreateGroupModal({ onClose, onCreate, userAddress }: CreateGroupModalPr
                     }}
                     className="w-4 h-4"
                   />
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-xs font-bold">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent to-violet-400 flex items-center justify-center text-xs font-bold">
                     {(friend.alias || friend.address).slice(0, 2).toUpperCase()}
                   </div>
                   <span className="text-zinc-100">
@@ -905,7 +905,7 @@ function CreateGroupModal({ onClose, onCreate, userAddress }: CreateGroupModalPr
           <div className="flex gap-3 pt-4">
             <button
               onClick={handleCreate}
-              className="flex-1 py-3 bg-cyan-400 text-zinc-950 rounded-lg font-bold hover:bg-cyan-400 transition-colors"
+              className="flex-1 py-3 bg-accent text-zinc-950 rounded-lg font-bold hover:bg-accent transition-colors"
             >
               Create Group
             </button>

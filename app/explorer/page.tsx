@@ -83,7 +83,7 @@ export default function ExplorerPage() {
               value={searchQuery}
               onChange={(e) =>  setSearchQuery(e.target.value)}
               placeholder="Search by wallet address (0x...)"
-              className="w-full bg-zinc-900/60 border border-white/10 rounded-xl pl-12 pr-4 py-4 text-white placeholder-zinc-600 focus:outline-none focus:border-cyan-500/50 transition-colors"
+              className="w-full bg-zinc-900/60 border border-white/10 rounded-xl pl-12 pr-4 py-4 text-white placeholder-zinc-600 focus:outline-none focus:border-accent/50 transition-colors"
             />
           </div>
         </motion.form>
@@ -94,16 +94,16 @@ export default function ExplorerPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 rounded-xl p-6"
+            className="bg-gradient-to-br from-accent/10 to-blue-500/10 border border-accent/20 rounded-xl p-6"
           >
             <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-cyan-500/20 rounded-lg">
-                <TrendingUp className="w-6 h-6 text-cyan-400" />
+              <div className="p-2 bg-accent/20 rounded-lg">
+                <TrendingUp className="w-6 h-6 text-accent" />
               </div>
               <h3 className="text-sm font-medium text-gray-400">Total Transactions</h3>
             </div>
             <p className="text-3xl font-bold text-white">-</p>
-            <p className="text-sm text-cyan-400 mt-2">Live indexer data unavailable</p>
+            <p className="text-sm text-accent mt-2">Live indexer data unavailable</p>
           </motion.div>
 
           <motion.div
@@ -147,7 +147,7 @@ export default function ExplorerPage() {
           className="bg-zinc-900/50 border border-zinc-700 rounded-xl p-6 mb-8"
         >
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-            <Activity className="w-6 h-6 text-cyan-400" />
+            <Activity className="w-6 h-6 text-accent" />
             Recent Activity
           </h2>
           <div className="space-y-4">
@@ -168,7 +168,7 @@ export default function ExplorerPage() {
                   <div className="flex items-center gap-2 mb-2">
                     <span className={`px-2 py-1 rounded text-xs font-medium ${
                       activity.type === 'payment' 
-                        ? 'bg-cyan-500/20 text-cyan-400' 
+                        ? 'bg-accent/20 text-accent' 
                         : 'bg-purple-500/20 text-purple-400'
                     }`}>
                       {activity.type}
@@ -178,14 +178,14 @@ export default function ExplorerPage() {
                   <div className="flex flex-col md:flex-row md:items-center gap-2 text-sm">
                     <Link
                       href={`/explorer/${activity.from}`}
-                      className="text-gray-400 hover:text-cyan-400 truncate max-w-[200px]"
+                      className="text-gray-400 hover:text-accent truncate max-w-[200px]"
                     >
                       {activity.from}
                     </Link>
                     <ArrowRight className="w-4 h-4 text-gray-600 hidden md:block" />
                     <Link
                       href={`/explorer/${activity.to}`}
-                      className="text-gray-400 hover:text-cyan-400 truncate max-w-[200px]"
+                      className="text-gray-400 hover:text-accent truncate max-w-[200px]"
                     >
                       {activity.to}
                     </Link>
@@ -211,7 +211,7 @@ export default function ExplorerPage() {
           className="bg-zinc-900/50 border border-zinc-700 rounded-xl p-6"
         >
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-            <TrendingUp className="w-6 h-6 text-cyan-400" />
+            <TrendingUp className="w-6 h-6 text-accent" />
             Top Addresses
           </h2>
           <div className="space-y-4">
@@ -232,7 +232,7 @@ export default function ExplorerPage() {
                   <div className="text-2xl font-bold text-gray-500">#{index + 1}</div>
                   <Link
                     href={`/explorer/${addr.address}`}
-                    className="text-cyan-400 hover:text-cyan-300 truncate max-w-[300px]"
+                    className="text-accent hover:text-accent truncate max-w-[300px]"
                   >
                     {addr.address}
                   </Link>

@@ -20,9 +20,9 @@ export function StatsTab({ isConnected = false, address }: { isConnected?: boole
   return (
     <div className="space-y-8">
       {/* User Summary */}
-      <div className="bg-gradient-to-br from-cyan-900/20 to-blue-900/20 border border-cyan-500/30 rounded-xl p-8">
+      <div className="bg-gradient-to-br from-accent/10 to-blue-900/20 border border-accent/30 rounded-xl p-8">
         <div className="flex flex-col md:flex-row items-center gap-6">
-          <div className="w-20 h-20 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-full flex items-center justify-center text-3xl font-bold text-white">
+          <div className="w-20 h-20 bg-gradient-to-br from-accent to-blue-500 rounded-full flex items-center justify-center text-3xl font-bold text-white">
             G
           </div>
           <div className="text-center md:text-left">
@@ -60,7 +60,7 @@ export function StatsTab({ isConnected = false, address }: { isConnected?: boole
           <div className="text-sm text-zinc-400">Referrals</div>
         </div>
         <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
-          <Clock className="text-cyan-400 mb-3" size={24} />
+          <Clock className="text-accent mb-3" size={24} />
           <div className="text-2xl font-bold text-zinc-100">145</div>
           <div className="text-sm text-zinc-400">Days Active</div>
         </div>
@@ -92,7 +92,7 @@ export function StatsTab({ isConnected = false, address }: { isConnected?: boole
         <div className="mb-4">
           <div className="flex justify-between text-sm mb-2">
             <span className="text-zinc-400">52,450 / 250,000 VFIDE</span>
-            <span className="text-cyan-400">21%</span>
+            <span className="text-accent">21%</span>
           </div>
           <div className="h-3 bg-zinc-900 rounded-full overflow-hidden">
             <div className="h-full bg-gradient-to-r from-yellow-500 to-[#E5E4E2] w-[21%] rounded-full" />

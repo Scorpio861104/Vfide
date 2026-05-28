@@ -81,13 +81,13 @@ export default function MerchantDirectoryPage() {
       <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
 
       {/* Header */}
-      <div className="relative bg-gradient-to-r from-cyan-600/20 to-violet-600/20 border-b border-white/10 py-12 px-4">
+      <div className="relative bg-gradient-to-r from-accent/20 to-violet-600/20 border-b border-white/10 py-12 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="badge-live mb-4">
             <ShoppingBag size={12} /> Merchant Directory
           </div>
           <h1 className="text-3xl md:text-4xl font-black mb-2 tracking-tight">
-            <span className="bg-gradient-to-r from-white to-cyan-300 bg-clip-text text-transparent">Merchant Directory</span>
+            <span className="bg-gradient-to-r from-white to-accent-light bg-clip-text text-transparent">Merchant Directory</span>
           </h1>
           <p className="text-white/60 text-lg mb-6">Discover merchants accepting VFIDE payments</p>
 
@@ -98,7 +98,7 @@ export default function MerchantDirectoryPage() {
                 type="text"
                 value={search}
                 onChange={(e) =>  setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-lg text-white bg-white/5 border border-white/10 focus:ring-2 focus:ring-cyan-500/30 outline-none"
+                className="w-full pl-10 pr-4 py-3 rounded-lg text-white bg-white/5 border border-white/10 focus:ring-2 focus:ring-accent/30 outline-none"
                 maxLength={100}
               />
             </div>

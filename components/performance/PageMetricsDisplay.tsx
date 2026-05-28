@@ -60,7 +60,7 @@ export function PageMetricsDisplay({
           className="bg-slate-900/50 border border-slate-800 rounded-lg p-6"
         >
           <div className="flex items-center gap-2 mb-6">
-            <Activity className="w-5 h-5 text-cyan-400" />
+            <Activity className="w-5 h-5 text-accent" />
             <h3 className="text-lg font-semibold text-white">Page Performance</h3>
           </div>
 

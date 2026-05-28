@@ -100,9 +100,9 @@ export const EnhancedInput = forwardRef<HTMLInputElement, FormFieldProps>(functi
   }, [onBlur]);
 
   const variantClasses = {
-    default: 'bg-zinc-900/50 border-zinc-700 focus:border-cyan-500',
-    filled: 'bg-zinc-800 border-transparent focus:border-cyan-500',
-    outlined: 'bg-transparent border-zinc-600 focus:border-cyan-500',
+    default: 'bg-zinc-900/50 border-zinc-700 focus:border-accent',
+    filled: 'bg-zinc-800 border-transparent focus:border-accent',
+    outlined: 'bg-transparent border-zinc-600 focus:border-accent',
   };
 
   return (
@@ -112,7 +112,7 @@ export const EnhancedInput = forwardRef<HTMLInputElement, FormFieldProps>(functi
         <label
           htmlFor={id}
           className={`text-sm font-medium transition-colors ${
-            isFocused ? 'text-cyan-400' : 'text-zinc-300'
+            isFocused ? 'text-accent' : 'text-zinc-300'
           }`}
         >
           {label}
@@ -166,7 +166,7 @@ export const EnhancedInput = forwardRef<HTMLInputElement, FormFieldProps>(functi
         {/* Right Side Icons */}
         <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
           {isValidating && (
-            <Loader2 className="w-4 h-4 text-cyan-400 animate-spin" />
+            <Loader2 className="w-4 h-4 text-accent animate-spin" />
           )}
 
           {!isValidating && showSuccessIndicator && isSuccess && !hasError && (
@@ -312,9 +312,9 @@ export const EnhancedTextarea = forwardRef<HTMLTextAreaElement, EnhancedTextarea
   }, [onBlur]);
 
   const variantClasses = {
-    default: 'bg-zinc-900/50 border-zinc-700 focus:border-cyan-500',
-    filled: 'bg-zinc-800 border-transparent focus:border-cyan-500',
-    outlined: 'bg-transparent border-zinc-600 focus:border-cyan-500',
+    default: 'bg-zinc-900/50 border-zinc-700 focus:border-accent',
+    filled: 'bg-zinc-800 border-transparent focus:border-accent',
+    outlined: 'bg-transparent border-zinc-600 focus:border-accent',
   };
 
   return (
@@ -323,7 +323,7 @@ export const EnhancedTextarea = forwardRef<HTMLTextAreaElement, EnhancedTextarea
         <label
           htmlFor={id}
           className={`text-sm font-medium transition-colors ${
-            isFocused ? 'text-cyan-400' : 'text-zinc-300'
+            isFocused ? 'text-accent' : 'text-zinc-300'
           }`}
         >
           {label}
@@ -505,7 +505,7 @@ export function MultiStepForm({
         <div className="relative">
           <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
             <motion.div
-              className="h-full bg-gradient-to-r from-cyan-500 to-purple-500"
+              className="h-full bg-gradient-to-r from-accent to-purple-500"
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
               transition={{ duration: 0.3 }}
@@ -527,7 +527,7 @@ export function MultiStepForm({
             className={`
               flex items-center gap-2 px-3 py-1.5 rounded-full text-sm transition-all
               ${index === currentStep
-                ? 'bg-cyan-500/20 text-cyan-400 font-medium'
+                ? 'bg-accent/20 text-accent font-medium'
                 : step.isCompleted
                   ? 'bg-green-500/20 text-green-400 cursor-pointer hover:bg-green-500/30'
                   : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
@@ -600,7 +600,7 @@ export function MultiStepForm({
             type="button"
             onClick={handleNext}
             disabled={isLoading}
-            className="px-6 py-2 bg-cyan-500 hover:bg-cyan-600 text-black font-semibold rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50"
+            className="px-6 py-2 bg-accent hover:bg-accent-dark text-zinc-900 font-semibold rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50"
           >
             {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
             {isLastStep ? 'Complete' : 'Continue'}
@@ -679,7 +679,7 @@ export function TagInput({
       <div
         className={`
           flex flex-wrap gap-2 p-3 bg-zinc-900/50 border-2 rounded-xl
-          transition-colors focus-within:border-cyan-500
+          transition-colors focus-within:border-accent
           ${error ? 'border-red-500' : 'border-zinc-700'}
         `}
         onClick={() => inputRef.current?.focus()}
@@ -690,7 +690,7 @@ export function TagInput({
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0 }}
-            className="inline-flex items-center gap-1 px-2 py-1 bg-cyan-500/20 text-cyan-400 rounded-lg text-sm"
+            className="inline-flex items-center gap-1 px-2 py-1 bg-accent/20 text-accent rounded-lg text-sm"
           >
             {tag}
             <button
@@ -699,7 +699,7 @@ export function TagInput({
                 e.stopPropagation();
                 removeTag(index);
               }}
-              className="hover:text-cyan-200"
+              className="hover:text-accent"
             >
               <X className="w-3 h-3" />
             </button>

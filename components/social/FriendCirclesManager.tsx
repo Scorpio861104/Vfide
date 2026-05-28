@@ -197,7 +197,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-zinc-100 flex items-center gap-2">
-            <Users className="w-6 h-6 text-cyan-400" />
+            <Users className="w-6 h-6 text-accent" />
             Friend Circles
           </h2>
           <p className="text-sm text-zinc-400 mt-1">
@@ -206,7 +206,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
         </div>
         <button
           onClick={() => setShowCreateCircle(true)}
-          className="px-4 py-2 bg-cyan-400 text-zinc-950 rounded-lg font-semibold hover:bg-cyan-400 transition-colors flex items-center gap-2"
+          className="px-4 py-2 bg-accent text-zinc-950 rounded-lg font-semibold hover:bg-accent transition-colors flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
           New Circle
@@ -334,7 +334,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
                 <p>No members yet</p>
                 <button
                   onClick={() => setShowAddMembers(true)}
-                  className="mt-3 text-sm text-cyan-400 hover:underline"
+                  className="mt-3 text-sm text-accent hover:underline"
                 >
                   Add your first member
                 </button>
@@ -433,7 +433,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
                    
                     value={circleName}
                     onChange={(e) =>  setCircleName(e.target.value)}
-                    className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 focus:border-cyan-400 focus:outline-none"
+                    className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 focus:border-accent focus:outline-none"
                   />
                 </div>
                 <div>
@@ -445,7 +445,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
                     value={circleDescription}
                     onChange={(e) =>  setCircleDescription(e.target.value)}
                     rows={2}
-                    className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 focus:border-cyan-400 focus:outline-none resize-none"
+                    className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 focus:border-accent focus:outline-none resize-none"
                   />
                 </div>
                 <div>
@@ -473,7 +473,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
                   <button
                     onClick={handleCreateCircle}
                     disabled={!circleName}
-                    className="flex-1 py-2 bg-cyan-400 text-zinc-950 rounded-lg font-semibold hover:bg-cyan-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 py-2 bg-accent text-zinc-950 rounded-lg font-semibold hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Create Circle
                   </button>
@@ -527,7 +527,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
                         key={friend.address}
                         className={`p-3 rounded-lg border transition-all ${
                           isSelected
-                            ? 'bg-cyan-400/10 border-cyan-400/50'
+                            ? 'bg-accent/10 border-accent/50'
                             : 'bg-zinc-950 border-zinc-800 hover:border-zinc-700'
                         }`}
                       >
@@ -545,7 +545,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
                             }}
                             className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
                               isSelected
-                                ? 'bg-cyan-400 border-cyan-400'
+                                ? 'bg-accent border-accent'
                                 : 'border-zinc-700'
                             }`}
                           >
@@ -570,7 +570,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
                                 [friend.address]: e.target.value,
                               })
                             }
-                            className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 text-sm focus:border-cyan-400 focus:outline-none"
+                            className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 text-sm focus:border-accent focus:outline-none"
                           />
                         )}
                       </div>
@@ -582,7 +582,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
                 <button
                   onClick={handleAddMembers}
                   disabled={selectedFriends.length === 0}
-                  className="flex-1 py-2 bg-cyan-400 text-zinc-950 rounded-lg font-semibold hover:bg-cyan-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 py-2 bg-accent text-zinc-950 rounded-lg font-semibold hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Add {selectedFriends.length} Member{selectedFriends.length !== 1 ? 's' : ''}
                 </button>

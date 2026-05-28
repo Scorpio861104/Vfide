@@ -1506,12 +1506,34 @@ contract OwnerControlPanel {
      * @notice Emergency pause all systems
      * @dev Stage 1 only: proposes emergency flags on VFIDEToken.
      *      Call emergency_confirmPauseAll() after timelock elapses.
+     *
+     *      INTENTIONAL DESIGN — TOKEN TRANSFERS ARE NOT PAUSABLE:
+     *      Per the Seer Constitution and non-custodial mandate, token transfers
+     *      cannot be halted by any party including the developer. VFIDEToken
+     *      removed the circuit-breaker halt mechanism in PR #311 as a deliberate
+     *      architectural commitment to user sovereignty.
+     *
+     *      What this function DOES pause (after confirmPauseAll):
+     *        - Burn fees (setFeeBypass): fee collection suspends for up to 7 days.
+     *          Users transact without burn/ecosystem fees during the pause window.
+     *        - setCircuitBreaker is a no-op in VFIDEToken post-#311 (kept for ABI
+     *          compatibility); confirmCircuitBreaker() always reverts VF_NoPending().
+     *
+     *      What this function CANNOT pause (by design):
+     *        - Token transfers — users retain full custody at all times.
+     *        - Vault withdrawals — users can always exit.
+     *        - ProofScore reads — reputation data remains live.
+     *
+     *      Auditor note: the absence of a transfer-halt is not a missing feature.
+     *      It is a core protocol commitment. See VFIDEToken.sol #311 and
+     *      SEER_CONSTITUTION.md §3 "No entity can freeze, blacklist, or seize."
      */
     function emergency_pauseAll() external onlyOwner {
         _consumeQueuedAction(actionId_emergency_pauseAll());
-        // SecurityHub bypass removed — non-custodial (no third-party locks to bypass)
+        // Suspends burn fees for up to 7 days (48h proposal + 7d max duration).
+        // Does NOT halt token transfers — non-custodial by design (see NatDoc above).
         vfideToken.setFeeBypass(true, 1 days);
-        // Queue circuit breaker activation (requires confirmCircuitBreaker() after 48h)
+        // setCircuitBreaker is a no-op post-PR #311. Kept for ABI backward compatibility.
         vfideToken.setCircuitBreaker(true, 1 days);
 
         emit EmergencyAction("sys_pause_prop", address(this));
@@ -1520,10 +1542,16 @@ contract OwnerControlPanel {
     // slither-disable-next-line reentrancy-events
     /**
      * @notice Confirm emergency pause after timelock elapsed
+     * @dev Applies the feeBypass flag. confirmCircuitBreaker() will revert with
+     *      VF_NoPending() because the circuit-breaker was removed in PR #311 —
+     *      this is expected and harmless; the try/catch below handles it silently.
+     *      Token transfers remain live throughout. See emergency_pauseAll NatDoc.
      */
     function emergency_confirmPauseAll() external onlyOwner {
         IVFIDETokenEmergencyConfirm(address(vfideToken)).confirmFeeBypass();
-        IVFIDETokenEmergencyConfirm(address(vfideToken)).confirmCircuitBreaker();
+        // Circuit-breaker confirm is a no-op / always-reverts post-PR #311.
+        // Wrap in try/catch so the feeBypass confirm above is not rolled back.
+        try IVFIDETokenEmergencyConfirm(address(vfideToken)).confirmCircuitBreaker() {} catch {}
 
         emit EmergencyAction("sys_paused", address(this));
     }

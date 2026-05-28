@@ -161,6 +161,12 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
     uint16 public constant HIGH_SCORE_THRESHOLD = ScoringConstants.HIGH_FEE_CEIL;  // ≥8000 pays min fee (80%)
     /// @notice MIN_TOTAL_FEE_FLOOR_BPS
     uint16 public constant MIN_TOTAL_FEE_FLOOR_BPS = 10; // 0.10% hard floor
+    /// @notice MIN_DAILY_BURN_CAP — hard floor on dailyBurnCap; matches Manual v1.0 §8 commitment.
+    ///         Prevents governance from zeroing the cap and enabling unbounded deflation.
+    uint256 public constant MIN_DAILY_BURN_CAP  = 100_000 * 1e18;  // 100K VFIDE minimum cap
+    /// @notice MIN_SUPPLY_FLOOR — hard floor on minimumSupplyFloor; matches Manual v1.0 §8 commitment.
+    ///         Prevents governance from zeroing the floor and burning past protocol baseline.
+    uint256 public constant MIN_SUPPLY_FLOOR    = 50_000_000 * 1e18; // 50M VFIDE hard floor
     /// @notice BPS_SCALE
     uint16 public constant BPS_SCALE = 10_000; // 100% in basis points
     /// @notice minTotalBps
@@ -302,8 +308,8 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
     
     /**
      * @notice Configure sustainability parameters
-     * @param _dailyBurnCap Maximum tokens to burn per day (0 = unlimited)
-     * @param _minimumSupplyFloor Supply floor below which burns pause (0 = no floor)
+     * @param _dailyBurnCap Maximum tokens to burn per day (must be >= MIN_DAILY_BURN_CAP)
+     * @param _minimumSupplyFloor Supply floor below which burns pause (must be >= MIN_SUPPLY_FLOOR)
      * @param _ecosystemMinBps Minimum ecosystem fee in basis points
      */
     /// @notice TL-348 FIX: Propose sustainability parameter change (24h timelock). (#348)
@@ -313,6 +319,10 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
         uint16 _ecosystemMinBps
     ) external onlyOwner nonReentrant {
         require(_ecosystemMinBps <= 100, "eco min too high");
+        // F-SUSTAIN-1 FIX: Enforce hard floors mandated by Manual v1.0 §8 soul commitments.
+        // Prevents governance from zeroing burn cap or supply floor via proposal.
+        require(_dailyBurnCap     >= MIN_DAILY_BURN_CAP,  "BURN: cap below floor");
+        require(_minimumSupplyFloor >= MIN_SUPPLY_FLOOR,   "BURN: floor below minimum");
         require(!pendingSustainability.pending, "BR: sustainability pending");
         uint64 effectiveAt = uint64(block.timestamp) + SUSTAINABILITY_CHANGE_DELAY;
         pendingSustainability = PendingSustainability({
@@ -328,6 +338,10 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
     /// @notice Apply pending sustainability change after the 24h timelock.
     function applySustainability() external onlyOwner nonReentrant {
         require(pendingSustainability.pending && block.timestamp >= pendingSustainability.effectiveAt, "BR: timelock");
+        // F-SUSTAIN-1 FIX: Defense-in-depth — re-validate floors at apply time in case
+        // MIN_DAILY_BURN_CAP or MIN_SUPPLY_FLOOR constants are ever raised by an upgrade.
+        require(pendingSustainability.dailyBurnCap      >= MIN_DAILY_BURN_CAP,  "BURN: cap below floor");
+        require(pendingSustainability.minimumSupplyFloor >= MIN_SUPPLY_FLOOR,    "BURN: floor below minimum");
         dailyBurnCap = pendingSustainability.dailyBurnCap;
         minimumSupplyFloor = pendingSustainability.minimumSupplyFloor;
         ecosystemMinBps = pendingSustainability.ecosystemMinBps;

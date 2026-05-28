@@ -83,7 +83,7 @@ export function WithdrawModal({
                 value={withdrawRecipient}
                 onChange={(e) => setWithdrawRecipient(e.target.value)}
                 placeholder="0x... destination vault address"
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white font-mono focus:outline-none focus:border-cyan-500/50"
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white font-mono focus:outline-none focus:border-accent/50"
               />
               <div className="text-white/50 text-xs mt-2">
                 Enter the recipient&apos;s vault address (not their wallet address). The destination
@@ -100,7 +100,7 @@ export function WithdrawModal({
                   type="number"
                   value={withdrawAmount}
                   onChange={(e) => setWithdrawAmount(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-cyan-500/50 pr-20"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-accent/50 pr-20"
                 />
                 <button
                   onClick={() => setWithdrawAmount(String(safeParseFloat(vaultBalance, 0)))}
@@ -111,8 +111,8 @@ export function WithdrawModal({
               </div>
             </div>
 
-            <div className="mb-4 p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-xl">
-              <div className="text-cyan-300 text-sm font-bold mb-1">CardBound Signed Transfer</div>
+            <div className="mb-4 p-3 bg-accent/10 border border-accent/30 rounded-xl">
+              <div className="text-accent text-sm font-bold mb-1">CardBound Signed Transfer</div>
               <div className="text-white/70 text-xs">
                 You&apos;ll sign a TransferIntent and execute a vault-to-vault transfer. Funds move
                 directly between the two vaults — no wallet round-trip required.

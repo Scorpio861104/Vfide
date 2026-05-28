@@ -88,8 +88,8 @@ export function DisputesTabContent() {
           <div className="text-3xl font-bold text-white">{loading ? '…' : merchantCases.length}</div>
           <div className="text-sm text-gray-300 mt-1">{loading ? 'Loading…' : `${merchantCases.length} total cases`}</div>
         </div>
-        <div className="analytics-card p-4 border border-cyan-500/20 bg-cyan-500/5">
-          <div className="text-xs uppercase tracking-[0.2em] text-cyan-200 mb-2">Awaiting Review</div>
+        <div className="analytics-card p-4 border border-accent/20 bg-accent/5">
+          <div className="text-xs uppercase tracking-[0.2em] text-accent mb-2">Awaiting Review</div>
           <div className="text-3xl font-bold text-white">{loading ? '…' : awaitingReview}</div>
           <div className="text-sm text-gray-300 mt-1">Can still be resolved directly</div>
         </div>
@@ -112,11 +112,11 @@ export function DisputesTabContent() {
           </Link>
         </div>
         <div className="glass-card-premium p-5">
-          <div className="mb-3 inline-flex rounded-xl bg-white/5 p-2 text-cyan-300"><RotateCcw size={18} /></div>
+          <div className="mb-3 inline-flex rounded-xl bg-white/5 p-2 text-accent"><RotateCcw size={18} /></div>
           <h3 className="text-xl font-semibold text-white">Merchant Returns</h3>
           <p className="mt-2 text-sm text-white/50">Handle returns and exchanges before escalating to formal appeals.</p>
           <Link href="/merchant/returns"
-            className="mt-4 inline-flex items-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-200">
+            className="mt-4 inline-flex items-center gap-2 rounded-xl border border-accent/30 bg-accent/10 px-4 py-2 text-sm font-semibold text-accent">
             Merchant Returns <ArrowRight size={14} />
           </Link>
         </div>
@@ -142,7 +142,7 @@ export function DisputesTabContent() {
               {merchantCases.slice(0, 3).map((entry) => (
                 <div key={entry.id} className="flex items-center justify-between rounded-xl border border-white/10 px-3 py-2 text-sm">
                   <span className="text-white/80">{entry.type ?? 'return'}</span>
-                  <span className="text-cyan-300">{entry.status ?? 'requested'}</span>
+                  <span className="text-accent">{entry.status ?? 'requested'}</span>
                 </div>
               ))}
             </div>

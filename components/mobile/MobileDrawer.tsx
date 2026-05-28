@@ -191,7 +191,7 @@ export function MobileDrawer({ items = [], logo, onNavClick, children, className
                         <Link
                           href={item.href}
                           onClick={() => handleNavClick(item.href)}
-                          className="flex items-center justify-between gap-3 px-4 py-3 text-zinc-400 hover:text-cyan-400 hover:bg-zinc-800 rounded-lg transition-all duration-200 group"
+                          className="flex items-center justify-between gap-3 px-4 py-3 text-zinc-400 hover:text-accent hover:bg-zinc-800 rounded-lg transition-all duration-200 group"
                         >
                           <div className="flex items-center gap-3">
                             {item.icon && <span className="w-5 h-5">{item.icon}</span>}
@@ -217,7 +217,7 @@ export function MobileDrawer({ items = [], logo, onNavClick, children, className
                   aria-hidden
                   tabIndex={-1}
                   role="presentation"
-                  className="w-full px-4 py-2 bg-cyan-400/20 text-cyan-400 rounded-lg text-sm font-medium hover:bg-cyan-400/30 transition-colors"
+                  className="w-full px-4 py-2 bg-accent/20 text-accent rounded-lg text-sm font-medium hover:bg-accent/30 transition-colors"
                   onClick={() => setIsOpen(false)}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}

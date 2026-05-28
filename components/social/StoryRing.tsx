@@ -36,7 +36,7 @@ export function StoryRing({
   };
 
   const ringClasses = hasUnviewed
-    ? 'ring-2 ring-cyan-400 ring-offset-2 ring-offset-[#0A0A0F]'
+    ? 'ring-2 ring-accent ring-offset-2 ring-offset-[#0A0A0F]'
     : 'ring-2 ring-zinc-700 ring-offset-2 ring-offset-[#0A0A0F]';
 
   // Get the latest story thumbnail
@@ -68,7 +68,7 @@ export function StoryRing({
               {latestStory?.content?.slice(0, 15)}...
             </div>
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-cyan-400/20 to-violet-400/20 flex items-center justify-center">
+            <div className="w-full h-full bg-gradient-to-br from-accent/20 to-violet-400/20 flex items-center justify-center">
               <span className="text-2xl">{userAvatar || '👤'}</span>
             </div>
           )}
@@ -76,14 +76,14 @@ export function StoryRing({
 
         {/* Story Count Badge */}
         {activeStories.length > 1 && (
-          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-cyan-400 text-zinc-950 text-xs font-bold rounded-full flex items-center justify-center">
+          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-accent text-zinc-950 text-xs font-bold rounded-full flex items-center justify-center">
             {activeStories.length}
           </div>
         )}
       </div>
 
       {/* Username */}
-      <p className="text-zinc-100 text-sm text-center max-w-20 truncate group-hover:text-cyan-400 transition-colors">
+      <p className="text-zinc-100 text-sm text-center max-w-20 truncate group-hover:text-accent transition-colors">
         {userName}
       </p>
     </motion.div>

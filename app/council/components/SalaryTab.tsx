@@ -31,7 +31,7 @@ export function SalaryTab({ isConnected: _isConnected }: { isConnected: boolean 
           {[
             { value: 'Variable', label: 'Funded by ecosystem fees', gradient: 'from-emerald-500/20 to-emerald-500/5', border: 'border-emerald-500/20', text: 'text-emerald-400' },
             { value: '120 Days', label: 'Distribution Interval', gradient: 'from-white/10 to-white/5', border: 'border-white/10', text: 'text-white' },
-            { value: 'Equal', label: 'Split among eligible', gradient: 'from-cyan-500/20 to-cyan-500/5', border: 'border-cyan-500/20', text: 'text-cyan-400' },
+            { value: 'Equal', label: 'Split among eligible', gradient: 'from-accent/20 to-accent/5', border: 'border-accent/20', text: 'text-accent' },
           ].map((stat) => (
             <div key={stat.label} className={`bg-gradient-to-br ${stat.gradient} border ${stat.border} rounded-xl p-4`}>
               <div className={`text-3xl font-bold ${stat.text}`}>{stat.value}</div>
@@ -87,7 +87,7 @@ export function SalaryTab({ isConnected: _isConnected }: { isConnected: boolean 
         <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-4">
           <div className="flex items-center justify-between">
             <span className="text-gray-400">Next Distribution Available</span>
-            <span className="text-cyan-400 font-bold">January 1, 2026</span>
+            <span className="text-accent font-bold">January 1, 2026</span>
           </div>
         </div>
         <button 

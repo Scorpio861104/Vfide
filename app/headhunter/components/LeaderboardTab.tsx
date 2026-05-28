@@ -26,7 +26,7 @@ export function LeaderboardTab() {
                   <div className="text-white font-semibold">#{entry.rank} {entry.isCurrentUser ? 'You' : entry.address}</div>
                   <div className="text-xs text-gray-400">Users: {entry.userReferrals} • Merchants: {entry.merchantReferrals}</div>
                 </div>
-                <div className="text-cyan-300 font-bold">{entry.points} pts</div>
+                <div className="text-accent font-bold">{entry.points} pts</div>
               </div>
             ))}
           </div>

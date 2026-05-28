@@ -41,7 +41,7 @@ export default function NotFound() {
             <div
               className="text-[7rem] font-black leading-none tracking-tighter select-none"
               style={{
-                background: 'linear-gradient(135deg, #22d3ee 0%, #818cf8 60%, #c084fc 100%)',
+                background: 'linear-gradient(135deg, var(--accent) 0%, #818cf8 60%, #c084fc 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
@@ -75,14 +75,14 @@ export default function NotFound() {
           >
             <Link
               href="/"
-              className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg font-semibold text-sm text-zinc-950 bg-gradient-to-r from-cyan-400 to-cyan-500 hover:from-cyan-300 hover:to-cyan-400 active:scale-[0.98] transition-all shadow-lg shadow-cyan-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
+              className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg font-semibold text-sm text-zinc-950 bg-gradient-to-r from-accent to-accent-dark hover:from-accent-dark hover:to-accent active:scale-[0.98] transition-all shadow-lg shadow-accent/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
             >
               <Home size={16} />
               Go home
             </Link>
             <button
               onClick={() => window.history.back()}
-              className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg font-semibold text-sm text-zinc-300 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 active:scale-[0.98] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
+              className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg font-semibold text-sm text-zinc-300 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 active:scale-[0.98] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
             >
               <ArrowLeft size={16} />
               Go back
@@ -106,7 +106,7 @@ export default function NotFound() {
                 href={href}
                 className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white/[0.03] border border-white/6 hover:bg-white/[0.06] hover:border-white/12 transition-all group"
               >
-                <Icon size={18} className="text-zinc-500 group-hover:text-cyan-400 transition-colors" />
+                <Icon size={18} className="text-zinc-500 group-hover:text-accent transition-colors" />
                 <span className="text-[11px] text-zinc-500 group-hover:text-zinc-300 transition-colors font-medium">
                   {label}
                 </span>

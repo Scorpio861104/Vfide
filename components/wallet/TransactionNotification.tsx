@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Transaction Notifications with Confetti 🎉
  * Beautiful feedback for every blockchain action
@@ -170,7 +172,7 @@ export function TransactionNotification({ notification, onClose }: TransactionNo
                     href={getExplorerLink(chainId, notification.txHash, 'tx')}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs text-cyan-400 hover:text-cyan-400 mt-2 inline-flex items-center gap-1 transition-colors"
+                    className="text-xs text-accent hover:text-accent mt-2 inline-flex items-center gap-1 transition-colors"
                   >
                     View on Explorer →
                   </motion.a>

@@ -42,7 +42,7 @@ export default function ProductDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] flex items-center justify-center">
-        <Loader2 size={32} className="text-cyan-400 animate-spin" />
+        <Loader2 size={32} className="text-accent animate-spin" />
       </div>
     );
   }
@@ -53,7 +53,7 @@ export default function ProductDetailPage() {
         <div className="text-center">
           <Package size={48} className="mx-auto mb-4 text-gray-600" />
           <p className="text-gray-400 text-lg">Product not found</p>
-          <button onClick={() => router.back()} className="mt-4 text-cyan-400 flex items-center gap-2 mx-auto">
+          <button onClick={() => router.back()} className="mt-4 text-accent flex items-center gap-2 mx-auto">
             <ArrowLeft size={16} /> Go back
           </button>
         </div>
@@ -67,9 +67,9 @@ export default function ProductDetailPage() {
         <div className="container mx-auto px-4 max-w-6xl py-8">
           {/* Breadcrumb */}
           <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-            <Link href="/marketplace" className="hover:text-cyan-400">Marketplace</Link>
+            <Link href="/marketplace" className="hover:text-accent">Marketplace</Link>
             <span>/</span>
-            {product.merchant_slug && <Link href={`/store/${product.merchant_slug}`} className="hover:text-cyan-400">{product.merchant_name}</Link>}
+            {product.merchant_slug && <Link href={`/store/${product.merchant_slug}`} className="hover:text-accent">{product.merchant_name}</Link>}
             {product.merchant_slug && <span>/</span>}
             <span className="text-gray-300">{product.name}</span>
           </div>

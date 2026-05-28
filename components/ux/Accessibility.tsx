@@ -145,7 +145,7 @@ export function SkipLink({
       className="
         sr-only focus:not-sr-only
         fixed top-4 left-4 z-9999
-        px-4 py-2 bg-cyan-500 text-white font-medium rounded-lg
+        px-4 py-2 bg-accent text-white font-medium rounded-lg
         focus:outline-none focus:ring-2 focus:ring-white
         transition-transform duration-200
       "
@@ -169,7 +169,7 @@ export function FocusRing({
   return (
     <div className={`
       relative rounded-lg
-      ${!disabled ? 'focus-within:ring-2 focus-within:ring-cyan-500 focus-within:ring-offset-2 focus-within:ring-offset-gray-900' : ''}
+      ${!disabled ? 'focus-within:ring-2 focus-within:ring-accent focus-within:ring-offset-2 focus-within:ring-offset-gray-900' : ''}
       ${className}
     `}>
       {children}
@@ -548,9 +548,9 @@ export function AccessibleTabs({
             }}
             className={`
               relative px-4 py-3 text-sm font-medium transition-colors
-              focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-inset
+              focus:outline-none focus:ring-2 focus:ring-accent focus:ring-inset
               ${activeTab === tab.id 
-                ? 'text-cyan-400' 
+                ? 'text-accent' 
                 : tab.disabled 
                 ? 'text-gray-600 cursor-not-allowed'
                 : 'text-gray-400 hover:text-gray-200'
@@ -561,7 +561,7 @@ export function AccessibleTabs({
             {activeTab === tab.id && (
               <motion.div
                 layoutId="tab-indicator"
-                className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-500"
+                className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent"
               />
             )}
           </button>

@@ -35,7 +35,7 @@ function TokenField({ label, tokenKey, description, type, options, effectiveToke
           <div className="flex items-center gap-2">
             <input
               type="color"
-              value={value.startsWith('#') ? value : '#06b6d4'}
+              value={value.startsWith('#') ? value : '#00f0ff'}
               onChange={(e) => onChange(tokenKey, e.target.value)}
               className="w-10 h-9 rounded-lg border border-white/10 bg-transparent cursor-pointer p-0.5"
               aria-label={`Color picker for ${label}`}
@@ -44,7 +44,7 @@ function TokenField({ label, tokenKey, description, type, options, effectiveToke
               type="text"
               value={value}
               onChange={(e) => onChange(tokenKey, e.target.value)}
-              className="w-28 bg-zinc-900 border border-white/10 rounded-lg px-2 py-1.5 text-xs font-mono text-gray-200 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+              className="w-28 bg-zinc-900 border border-white/10 rounded-lg px-2 py-1.5 text-xs font-mono text-gray-200 focus:outline-none focus:ring-1 focus:ring-accent"
               aria-label={`Hex value for ${label}`}
             />
           </div>
@@ -53,7 +53,7 @@ function TokenField({ label, tokenKey, description, type, options, effectiveToke
           <select
             value={value}
             onChange={(e) => onChange(tokenKey, e.target.value)}
-            className="bg-zinc-900 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+            className="bg-zinc-900 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:ring-1 focus:ring-accent"
             aria-label={`Select ${label}`}
           >
             {options.map((o) => (
@@ -66,7 +66,7 @@ function TokenField({ label, tokenKey, description, type, options, effectiveToke
             type="text"
             value={value}
             onChange={(e) => onChange(tokenKey, e.target.value)}
-            className="w-36 bg-zinc-900 border border-white/10 rounded-lg px-2 py-1.5 text-xs font-mono text-gray-200 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+            className="w-36 bg-zinc-900 border border-white/10 rounded-lg px-2 py-1.5 text-xs font-mono text-gray-200 focus:outline-none focus:ring-1 focus:ring-accent"
             aria-label={`Text value for ${label}`}
           />
         )}
@@ -130,7 +130,7 @@ export function AdvancedTab() {
 
         <TokenField
           label="Border radius" tokenKey="borderRadius" type="select"
-          description="Controls the corner rounding of cards, buttons, and inputs."
+          description="Controls the corner rounding of glass cards and panel sections across the app."
           options={[
             { label: 'Small (0.5 rem)', value: '0.5rem' },
             { label: 'Medium (0.75 rem)', value: '0.75rem' },
@@ -141,7 +141,7 @@ export function AdvancedTab() {
         />
         <TokenField
           label="Font scale" tokenKey="fontScale" type="select"
-          description="Multiplies base font sizes. Useful for low-vision adjustments."
+          description="Multiplies base font sizes in the Preview tab. For system-level font scaling, use your browser's zoom (Ctrl/⌘ +)."
           options={[
             { label: 'Small (0.95×)', value: '0.95' },
             { label: 'Normal (1×)', value: '1' },
@@ -168,9 +168,9 @@ export function AdvancedTab() {
       </div>
 
       {isDirty && (
-        <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-4 flex items-center gap-3">
-          <Save size={16} className="text-cyan-400 shrink-0" />
-          <p className="text-sm text-cyan-300">
+        <div className="rounded-2xl border border-accent/20 bg-accent/5 p-4 flex items-center gap-3">
+          <Save size={16} className="text-accent shrink-0" />
+          <p className="text-sm text-accent">
             Your custom overrides are saved automatically to this device. They persist across page reloads.
             Switch to a different preset to discard them.
           </p>

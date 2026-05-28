@@ -91,7 +91,7 @@ function StrikeIndicator({ label, count, threshold, hint }: StrikeIndicatorProps
                     ? 'bg-red-400'
                     : isWarning
                       ? 'bg-amber-400'
-                      : 'bg-cyan-400'
+                      : 'bg-accent'
                   : 'bg-white/10'
               }`}
             />
@@ -169,8 +169,8 @@ export function MerchantStatusCard() {
       <GlassCard hover={false} className="p-5">
         <div className="flex items-start justify-between gap-4 mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center">
-              <Store className="text-cyan-300" size={20} />
+            <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
+              <Store className="text-accent" size={20} />
             </div>
             <div>
               <h3 className="text-sm font-bold text-white flex items-center gap-2">
@@ -184,7 +184,7 @@ export function MerchantStatusCard() {
           </div>
           <Link
             href="/merchant/profile/edit"
-            className="text-xs text-cyan-300 hover:text-cyan-200 inline-flex items-center gap-1"
+            className="text-xs text-accent hover:text-accent inline-flex items-center gap-1"
           >
             Edit profile
             <ExternalLink size={12} />

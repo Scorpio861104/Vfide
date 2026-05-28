@@ -68,12 +68,12 @@ export function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${stri
               <motion.div
                 animate={isQuarantined ? { scale: [1, 1.1, 1] } : {}}
                 transition={{ duration: 2, repeat: Infinity }}
-                className={`p-4 rounded-2xl flex-shrink-0 ${isQuarantined ? 'bg-red-500/20' : 'bg-cyan-500/20'}`}
+                className={`p-4 rounded-2xl flex-shrink-0 ${isQuarantined ? 'bg-red-500/20' : 'bg-accent/20'}`}
               >
                 {isQuarantined ? (
                   <Lock className="w-8 h-8 text-red-400" />
                 ) : (
-                  <Shield className="w-8 h-8 text-cyan-400" />
+                  <Shield className="w-8 h-8 text-accent" />
                 )}
               </motion.div>
               <div className="min-w-0">

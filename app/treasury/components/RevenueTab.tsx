@@ -14,7 +14,7 @@ import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts
  * deployed FeeDistributor contract.
  *
  * Reads (all batched via useReadContracts → single Multicall round-trip):
- *   • `feeSplit()`              — current BPS split across 5 channels
+ *   • `feeSplit()`              — current BPS split across 3 channels (daoPayrollBps, merchantPoolBps, headhunterPoolBps)
  *   • `burnAddress()`           — destination for burned fees
  *   • `sanctumFund()`           — destination for charity fund
  *   • `daoPayrollPool()`        — destination for DAO payroll
@@ -24,10 +24,9 @@ import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts
  *   • `minDistributionAmount()` — threshold for triggering distribute()
  *
  * Sample-data correspondence:
- *   • Old "Burn Address" 86% → now `feeSplit.burnBps`
- *   • Old "Sanctum Vault" 3% → now `feeSplit.sanctumBps`
- *   • Old "Ecosystem Vault" 11% → split across daoPayrollBps + merchantPoolBps + headhunterPoolBps
- *     (since the contract resolves these to separate destination addresses, not a single Ecosystem destination)
+ *   Note: burnBps and sanctumBps are NOT in FeeDistributor — they are handled upstream by
+ *   ProofScoreBurnRouter.computeFees (40% burn, 10% Sanctum fixed in contract code).
+ *   FeeDistributor only manages the 50% ecosystem share: DAO/merchant/headhunter.
  */
 
 const DEFAULT_CHAIN_ID = 8453;
@@ -96,9 +95,9 @@ export function RevenueTab() {
     if (!entry || entry.status !== 'success') return fallback;
     return (entry.result as T) ?? fallback;
   };
-  const feeSplit = decode<readonly [bigint, bigint, bigint, bigint, bigint]>(
+  const feeSplit = decode<readonly [bigint, bigint, bigint]>(
     0,
-    [0n, 0n, 0n, 0n, 0n] as const,
+    [0n, 0n, 0n] as const,
   );
   const burnAddress = decode<Address>(1, '0x0000000000000000000000000000000000000000');
   const sanctumFund = decode<Address>(2, '0x0000000000000000000000000000000000000000');
@@ -108,9 +107,10 @@ export function RevenueTab() {
   const lastDistributionTime = decode<bigint>(6, 0n);
   const minDistributionAmount = decode<bigint>(7, 0n);
 
-  const [burnBps, sanctumBps, daoPayrollBps, merchantPoolBps, headhunterPoolBps] = feeSplit;
+  const [daoPayrollBps, merchantPoolBps, headhunterPoolBps] = feeSplit;
   // Aggregate BPS for sanity; should sum to 10000 (100%) on a healthy deploy.
-  const totalBps = burnBps + sanctumBps + daoPayrollBps + merchantPoolBps + headhunterPoolBps;
+  // FeeDistributor manages only the ecosystem share; these three must sum to 10000.
+  const totalBps = daoPayrollBps + merchantPoolBps + headhunterPoolBps;
 
   const payees: Array<{
     name: string;
@@ -119,11 +119,11 @@ export function RevenueTab() {
     address: Address;
     color: string;
   }> = [
-    { name: 'Burn Address', description: 'Deflationary burn', bps: burnBps, address: burnAddress, color: 'bg-orange-500' },
-    { name: 'Sanctum Fund', description: 'Charity fund', bps: sanctumBps, address: sanctumFund, color: 'bg-pink-500' },
-    { name: 'DAO Payroll', description: 'Council + operations payroll', bps: daoPayrollBps, address: daoPayrollPool, color: 'bg-purple-500' },
-    { name: 'Merchant Pool', description: 'Merchant rewards channel', bps: merchantPoolBps, address: merchantPool, color: 'bg-cyan-500' },
-    { name: 'Headhunter Pool', description: 'Referral bounties channel', bps: headhunterPoolBps, address: headhunterPool, color: 'bg-emerald-500' },
+    // Note: Burn (40%) and Sanctum (10%) are handled upstream by ProofScoreBurnRouter — not in FeeDistributor.
+    // The split below is of the 50% ecosystem share that reaches FeeDistributor.
+    { name: 'DAO Payroll', description: 'Council + operations payroll (50% of ecosystem share)', bps: daoPayrollBps, address: daoPayrollPool, color: 'bg-purple-500' },
+    { name: 'Merchant Pool', description: 'Merchant rewards channel (30% of ecosystem share)', bps: merchantPoolBps, address: merchantPool, color: 'bg-accent' },
+    { name: 'Headhunter Pool', description: 'Referral bounties channel (20% of ecosystem share)', bps: headhunterPoolBps, address: headhunterPool, color: 'bg-emerald-500' },
   ];
 
   return (
@@ -164,7 +164,7 @@ export function RevenueTab() {
                   {totalBps.toString()} / 10000
                 </span>
               }
-              note={totalBps === 10000n ? 'healthy (100%)' : 'unhealthy — total ≠ 100%'}
+              note={totalBps === 10000n ? 'healthy — sums to 10,000 bps (100% of ecosystem share)' : 'unhealthy — three channels must sum to 10,000 bps'}
             />
           </div>
         )}
@@ -175,9 +175,9 @@ export function RevenueTab() {
         <h3 className="text-xl font-bold text-zinc-100 mb-6">Fee Flow</h3>
         <div className="flex items-center justify-center gap-4 flex-wrap">
           <FlowBox title="Transfer Fees" subtitle="from ProofScoreBurnRouter" />
-          <ArrowRight className="text-cyan-400" />
+          <ArrowRight className="text-accent" />
           <FlowBox title="FeeDistributor" subtitle="splits via feeSplit BPS" />
-          <ArrowRight className="text-cyan-400" />
+          <ArrowRight className="text-accent" />
           <FlowBox title="5 destinations" subtitle="below" />
         </div>
       </div>
@@ -206,14 +206,14 @@ export function RevenueTab() {
                           href={getAddressExplorerUrl(payee.address, chainId ?? DEFAULT_CHAIN_ID)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs text-cyan-400 hover:text-cyan-300 font-mono inline-flex items-center gap-1 mt-1 transition-colors"
+                          className="text-xs text-accent hover:text-accent font-mono inline-flex items-center gap-1 mt-1 transition-colors"
                           title={payee.address}
                         >
                           {shortAddr(payee.address)} <ExternalLink size={10} />
                         </a>
                       )}
                     </div>
-                    <div className="text-2xl font-bold text-cyan-400 tabular-nums">
+                    <div className="text-2xl font-bold text-accent tabular-nums">
                       {pct.toFixed(2)}%
                     </div>
                   </div>

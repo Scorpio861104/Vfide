@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Presence Manager Component
  * 

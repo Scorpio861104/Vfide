@@ -82,7 +82,7 @@ export default function SeerAcademyPage() {
         </div>
         <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         <div className="max-w-6xl mx-auto px-4 md:px-8 space-y-8">
-          <section className="rounded-2xl border border-cyan-400/20 bg-gradient-to-br from-cyan-500/10 via-zinc-900 to-emerald-500/10 p-8">
+          <section className="rounded-2xl border border-accent/20 bg-gradient-to-br from-accent/10 via-zinc-900 to-emerald-500/10 p-8">
             <div className="badge-live mb-4">
               <Compass className="w-4 h-4" /> Seer Academy
             </div>
@@ -96,7 +96,7 @@ export default function SeerAcademyPage() {
           <section className="grid md:grid-cols-2 gap-4">
             {learningPath.map((step) => (
               <div key={step.title} className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-5 space-y-3">
-                <div className="flex items-center gap-2 text-cyan-300 font-semibold">
+                <div className="flex items-center gap-2 text-accent font-semibold">
                   {step.icon}
                   <span>{step.title}</span>
                 </div>
@@ -123,7 +123,7 @@ export default function SeerAcademyPage() {
                 <li>5. Build trust through consistent, legitimate activity over time.</li>
               </ul>
               <div className="mt-5 flex gap-3">
-                <Link href="/appeals" className="px-4 py-2 rounded-lg bg-cyan-500/20 border border-cyan-400/40 text-cyan-200 text-sm">
+                <Link href="/appeals" className="px-4 py-2 rounded-lg bg-accent/20 border border-accent/40 text-accent text-sm">
                   Open Seer Appeals
                 </Link>
                 <Link href="/seer-service" className="px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-400/40 text-purple-200 text-sm">
@@ -140,7 +140,7 @@ export default function SeerAcademyPage() {
               <div className="space-y-3 text-sm">
                 {glossary.map(([term, desc]) => (
                   <div key={term} className="border border-zinc-800 rounded-lg p-3 bg-black/20">
-                    <div className="text-cyan-300 font-medium">{term}</div>
+                    <div className="text-accent font-medium">{term}</div>
                     <div className="text-zinc-400">{desc}</div>
                   </div>
                 ))}

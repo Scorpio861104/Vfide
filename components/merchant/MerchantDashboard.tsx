@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * MerchantDashboard - Complete merchant management interface
  */

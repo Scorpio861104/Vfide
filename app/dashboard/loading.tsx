@@ -9,7 +9,7 @@ export default function DashboardLoading() {
         <div className="container mx-auto px-4 max-w-6xl py-10">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <div className="h-5 w-24 rounded-full bg-cyan-500/10 border border-cyan-500/20 animate-pulse mb-3" />
+              <div className="h-5 w-24 rounded-full bg-accent/10 border border-accent/20 animate-pulse mb-3" />
               <div className="h-10 w-64 rounded-xl bg-white/8 animate-pulse mb-2" />
               <div className="h-4 w-36 rounded-lg bg-white/5 animate-pulse" />
             </div>

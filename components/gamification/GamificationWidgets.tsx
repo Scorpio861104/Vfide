@@ -41,7 +41,7 @@ export function UserStatsWidget({ userAddress, compact = false }: UserStatsWidge
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${xpProgress}%` }}
-            className="h-full bg-gradient-to-r from-cyan-400 to-violet-400"
+            className="h-full bg-gradient-to-r from-accent to-violet-400"
           />
         </div>
       </div>
@@ -80,7 +80,7 @@ export function UserStatsWidget({ userAddress, compact = false }: UserStatsWidge
 
         <div className="text-right">
           <div className="text-xs text-zinc-400 mb-1">Next Level</div>
-          <div className="text-sm font-semibold text-cyan-400">
+          <div className="text-sm font-semibold text-accent">
             {progress.xpToNextLevel > 0 ? `${progress.xpToNextLevel} XP` : 'Max'}
           </div>
         </div>
@@ -108,7 +108,7 @@ export function UserStatsWidget({ userAddress, compact = false }: UserStatsWidge
           initial={{ width: 0 }}
           animate={{ width: `${xpProgress}%` }}
           transition={{ duration: 1, ease: 'easeOut' }}
-          className="absolute inset-y-0 left-0 bg-gradient-to-r from-cyan-400 to-violet-400"
+          className="absolute inset-y-0 left-0 bg-gradient-to-r from-accent to-violet-400"
         />
         <div className="absolute inset-0 flex items-center justify-center">
           <span className="text-xs font-bold text-zinc-100 drop-shadow-lg">
@@ -143,13 +143,13 @@ export function UserStatsWidget({ userAddress, compact = false }: UserStatsWidge
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="mt-3 bg-gradient-to-r from-cyan-500/10 to-violet-500/10 border border-cyan-500/20 rounded-lg p-3"
+            className="mt-3 bg-gradient-to-r from-accent/10 to-violet-500/10 border border-accent/20 rounded-lg p-3"
           >
             <div className="text-xs text-zinc-400 mb-1 uppercase tracking-wider">Unlock at Level {nextPerk.level}</div>
             <div className="flex items-center gap-2">
               <span className="text-lg">{nextPerk.icon}</span>
               <div>
-                <div className="text-sm font-bold text-cyan-400">{nextPerk.title}</div>
+                <div className="text-sm font-bold text-accent">{nextPerk.title}</div>
                 <div className="text-xs text-zinc-400">{nextPerk.description}</div>
               </div>
             </div>
@@ -207,7 +207,7 @@ export function AchievementsList({ userAddress }: { userAddress: string }) {
     switch (rarity) {
       case 'legendary': return 'from-amber-400 to-orange-500';
       case 'epic': return 'from-violet-400 to-violet-600';
-      case 'rare': return 'from-cyan-400 to-[#0891B2]';
+      case 'rare': return 'from-accent to-[#0891B2]';
       default: return 'from-[#6B6B78] to-[#4A4A58]';
     }
   };
@@ -237,7 +237,7 @@ export function AchievementsList({ userAddress }: { userAddress: string }) {
                       <h4 className="font-bold text-zinc-100 mb-1">{achievement.name}</h4>
                       <p className="text-xs text-zinc-400 mb-2">{achievement.description}</p>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-cyan-400 font-semibold">+{achievement.xp} XP</span>
+                        <span className="text-xs text-accent font-semibold">+{achievement.xp} XP</span>
                         <span className="text-xs text-zinc-500">•</span>
                         <span className="text-xs text-amber-400 capitalize">{achievement.rarity}</span>
                       </div>
@@ -317,8 +317,8 @@ export function AchievementUnlockNotification({
               <h4 className="font-bold text-zinc-100 mb-1">{achievement.name}</h4>
               <p className="text-xs text-zinc-400 mb-2">{achievement.description}</p>
               <div className="flex items-center gap-2">
-                <Zap className="w-4 h-4 text-cyan-400" />
-                <span className="text-sm font-bold text-cyan-400">+{achievement.xp} XP</span>
+                <Zap className="w-4 h-4 text-accent" />
+                <span className="text-sm font-bold text-accent">+{achievement.xp} XP</span>
               </div>
             </div>
           </div>

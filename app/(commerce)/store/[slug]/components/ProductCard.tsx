@@ -49,7 +49,7 @@ export function ProductCard({ product, merchantSlug, viewMode, themeColor: _them
   if (viewMode === 'list') {
     return (
       <Link href={`/store/${merchantSlug}?product=${product.slug}`}
-        className="flex items-center gap-4 p-3 bg-white/3 border border-white/5 rounded-xl hover:border-cyan-500/20 transition-colors">
+        className="flex items-center gap-4 p-3 bg-white/3 border border-white/5 rounded-xl hover:border-accent/20 transition-colors">
         <div className="w-16 h-16 rounded-lg bg-white/5 overflow-hidden flex-shrink-0">
           {product.images[0] ? (
             <Image src={getImageUrl(product.images[0])} alt={product.name} className="w-full h-full object-cover"  width={48} height={48} />
@@ -63,10 +63,10 @@ export function ProductCard({ product, merchantSlug, viewMode, themeColor: _them
         </div>
         <div className="flex items-center gap-3">
           <div className="text-right">
-            <div className="text-cyan-400 font-mono font-bold">${parseFloat(product.price).toFixed(2)}</div>
+            <div className="text-accent font-mono font-bold">${parseFloat(product.price).toFixed(2)}</div>
             {hasDiscount && <div className="text-gray-500 text-xs line-through">${parseFloat(product.compare_at_price!).toFixed(2)}</div>}
           </div>
-          <button onClick={handleAddToCart} aria-label={`Add ${product.name} to cart`} className="p-2 bg-cyan-500/20 rounded-lg text-cyan-400 hover:bg-cyan-500/30 transition-colors">
+          <button onClick={handleAddToCart} aria-label={`Add ${product.name} to cart`} className="p-2 bg-accent/20 rounded-lg text-accent hover:bg-accent/30 transition-colors">
             {added ? <Check size={16} /> : <ShoppingCart size={16} />}
           </button>
         </div>
@@ -76,7 +76,7 @@ export function ProductCard({ product, merchantSlug, viewMode, themeColor: _them
 
   return (
     <Link href={`/store/${merchantSlug}?product=${product.slug}`}
-      className="group block bg-white/3 border border-white/5 rounded-xl overflow-hidden hover:border-cyan-500/20 transition-all">
+      className="group block bg-white/3 border border-white/5 rounded-xl overflow-hidden hover:border-accent/20 transition-all">
       <div className="aspect-square bg-white/5 relative overflow-hidden">
         {product.images[0] ? (
           <Image src={getImageUrl(product.images[0])} alt={product.name}
@@ -90,14 +90,14 @@ export function ProductCard({ product, merchantSlug, viewMode, themeColor: _them
           <div className="absolute top-2 left-2 px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded">-{discountPct}%</div>
         )}
         <button onClick={handleAddToCart} aria-label={`Add ${product.name} to cart`}
-          className="absolute bottom-2 right-2 p-2 bg-black/60 backdrop-blur-sm rounded-lg text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-cyan-500/80">
+          className="absolute bottom-2 right-2 p-2 bg-black/60 backdrop-blur-sm rounded-lg text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-accent/80">
           {added ? <Check size={16} /> : <ShoppingCart size={16} />}
         </button>
       </div>
       <div className="p-3">
         <div className="text-white text-sm font-medium truncate">{product.name}</div>
         <div className="flex items-baseline gap-2 mt-1">
-          <span className="text-cyan-400 font-mono font-bold text-sm">${parseFloat(product.price).toFixed(2)}</span>
+          <span className="text-accent font-mono font-bold text-sm">${parseFloat(product.price).toFixed(2)}</span>
           {hasDiscount && <span className="text-gray-500 text-xs line-through">${parseFloat(product.compare_at_price!).toFixed(2)}</span>}
         </div>
       </div>

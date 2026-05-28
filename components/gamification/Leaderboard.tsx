@@ -140,7 +140,7 @@ export function Leaderboard() {
             tabIndex={category === 'xp' ? 0 : -1}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
               category === 'xp'
-                ? 'bg-cyan-400 text-zinc-950'
+                ? 'bg-accent text-zinc-950'
                 : 'bg-zinc-900 text-zinc-500 hover:bg-zinc-800'
             }`}
           >
@@ -156,7 +156,7 @@ export function Leaderboard() {
             tabIndex={category === 'level' ? 0 : -1}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
               category === 'level'
-                ? 'bg-cyan-400 text-zinc-950'
+                ? 'bg-accent text-zinc-950'
                 : 'bg-zinc-900 text-zinc-500 hover:bg-zinc-800'
             }`}
           >
@@ -172,7 +172,7 @@ export function Leaderboard() {
             tabIndex={category === 'achievements' ? 0 : -1}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
               category === 'achievements'
-                ? 'bg-cyan-400 text-zinc-950'
+                ? 'bg-accent text-zinc-950'
                 : 'bg-zinc-900 text-zinc-500 hover:bg-zinc-800'
             }`}
           >
@@ -188,7 +188,7 @@ export function Leaderboard() {
             tabIndex={category === 'friends' ? 0 : -1}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
               category === 'friends'
-                ? 'bg-cyan-400 text-zinc-950'
+                ? 'bg-accent text-zinc-950'
                 : 'bg-zinc-900 text-zinc-500 hover:bg-zinc-800'
             }`}
           >
@@ -200,7 +200,7 @@ export function Leaderboard() {
 
       {/* Your Rank (if logged in) */}
       {currentUserRank && (
-        <div className="p-4 bg-cyan-400/10 border-b border-cyan-400/20">
+        <div className="p-4 bg-accent/10 border-b border-accent/20">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {getRankIcon(currentUserRank.rank)}
@@ -210,7 +210,7 @@ export function Leaderboard() {
               </div>
             </div>
             <div className="text-right">
-              <p className="text-sm font-bold text-cyan-400">{getCategoryValue(currentUserRank)}</p>
+              <p className="text-sm font-bold text-accent">{getCategoryValue(currentUserRank)}</p>
               <p className="text-xs text-zinc-500">Level {currentUserRank.level}</p>
             </div>
           </div>
@@ -252,7 +252,7 @@ export function Leaderboard() {
                   role="listitem"
                   aria-label={rankLabel}
                   className={`flex items-center gap-4 p-4 hover:bg-zinc-900 transition-colors ${
-                    isCurrentUser ? 'bg-cyan-400/5' : ''
+                    isCurrentUser ? 'bg-accent/5' : ''
                   }`}
                 >
                   {/* Rank */}
@@ -264,7 +264,7 @@ export function Leaderboard() {
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold ${
                     entry.rank <= 3
                       ? 'bg-gradient-to-br from-yellow-400 to-orange-500'
-                      : 'bg-gradient-to-br from-cyan-400 to-violet-400'
+                      : 'bg-gradient-to-br from-accent to-violet-400'
                   }`}>
                     {(entry.alias || entry.address).charAt(0).toUpperCase()}
                   </div>
@@ -274,7 +274,7 @@ export function Leaderboard() {
                     <p className="text-sm font-semibold text-zinc-100 truncate">
                       {entry.alias || `${entry.address.slice(0, 6)}...${entry.address.slice(-4)}`}
                       {isCurrentUser && (
-                        <span className="ml-2 text-xs text-cyan-400">(You)</span>
+                        <span className="ml-2 text-xs text-accent">(You)</span>
                       )}
                     </p>
                     <p className="text-xs text-zinc-500">Level {entry.level}</p>

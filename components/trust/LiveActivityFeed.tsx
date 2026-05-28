@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Live Activity Feed - Real-time blockchain events
  * Particle effects for each transaction type
@@ -96,7 +98,7 @@ export function LiveActivityFeed() {
       </div>
       
       {/* Activity List */}
-      <div className="relative h-[250px] sm:h-[300px] md:h-[350px] lg:h-[400px] overflow-hidden rounded-xl bg-zinc-950/50 backdrop-blur-xl border border-cyan-400/20">
+      <div className="relative h-[250px] sm:h-[300px] md:h-[350px] lg:h-[400px] overflow-hidden rounded-xl bg-zinc-950/50 backdrop-blur-xl border border-accent/20">
         <div className="absolute inset-0 overflow-y-auto scrollbar-thin scrollbar-thumb-[#00F0FF]/30 scrollbar-track-transparent p-2 sm:p-3 md:p-4 space-y-1 sm:space-y-2">
           <AnimatePresence initial={false}>
             {visibleActivities.map((activity) => (
@@ -190,7 +192,7 @@ function ActivityCard({ activity }: { activity: ActivityItem }) {
             {activity.from && (
               <div className="flex items-center gap-1 sm:gap-2 mt-1 sm:mt-2 text-[10px] sm:text-xs">
                 <span className="text-zinc-100/50">From:</span>
-                <code className="text-cyan-400 font-mono truncate">
+                <code className="text-accent font-mono truncate">
                   {activity.from.slice(0, 6)}...{activity.from.slice(-4)}
                 </code>
               </div>
@@ -203,7 +205,7 @@ function ActivityCard({ activity }: { activity: ActivityItem }) {
                 href={getExplorerLink(chainId, activity.txHash, 'tx')}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-cyan-400 hover:text-cyan-400 mt-2 inline-flex items-center gap-1 transition-colors"
+                className="text-xs text-accent hover:text-accent mt-2 inline-flex items-center gap-1 transition-colors"
               >
                 View on Explorer →
               </motion.a>
@@ -261,7 +263,7 @@ function ParticleStream() {
             animate={{ top: '-10%', opacity: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 3, ease: 'linear' }}
-            className="absolute w-1 h-1 bg-cyan-400 rounded-full"
+            className="absolute w-1 h-1 bg-accent rounded-full"
             style={{
               left: `${particle.left}%`,
               boxShadow: '0 0 8px #00F0FF',

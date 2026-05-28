@@ -196,7 +196,7 @@ export function ProofScoreVisualizer({
             <div className="flex gap-2 justify-center flex-wrap mt-2">
               {canVote && (
                 <motion.span
-                  className="px-2 py-0.5 rounded bg-cyan-400/20 text-cyan-400 text-xs"
+                  className="px-2 py-0.5 rounded bg-accent/20 text-accent text-xs"
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.4 }}

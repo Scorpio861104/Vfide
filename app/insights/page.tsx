@@ -26,8 +26,8 @@ export default function InsightsPage() {
             <span className="badge-live"><span className="badge-live-dot" />Financial Intelligence</span>
           </div>
           <h1 className="text-4xl font-bold mb-2">
-            <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-violet-400 bg-clip-text text-transparent flex items-center gap-3">
-              <BarChart3 size={32} className="text-cyan-400" />Insight Command
+            <span className="bg-gradient-to-r from-accent via-blue-400 to-violet-400 bg-clip-text text-transparent flex items-center gap-3">
+              <BarChart3 size={32} className="text-accent" />Insight Command
             </span>
           </h1>
           <p className="text-white/50 flex items-center gap-2">

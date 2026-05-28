@@ -108,9 +108,9 @@ export function OverviewTab() {
           label="Total Treasury"
           value={formatVFIDECompact(totalTreasury)}
           sub={`${formatEther(totalTreasury)} VFIDE`}
-          gradient="from-cyan-500/20 to-blue-500/10"
-          border="border-cyan-500/20"
-          text="text-cyan-400"
+          gradient="from-accent/20 to-blue-500/10"
+          border="border-accent/20"
+          text="text-accent"
           live={!loadingAny}
         />
         <StatCard
@@ -188,15 +188,15 @@ export function OverviewTab() {
               percent={bpsToPct(ecosystemBps)}
               label="Ecosystem"
               sub="DAO payroll + merchant + headhunter"
-              color="text-cyan-400"
-              bg="from-cyan-500/10 to-blue-500/5"
-              border="border-cyan-500/20"
+              color="text-accent"
+              bg="from-accent/10 to-blue-500/5"
+              border="border-accent/20"
             />
           </div>
         )}
         <p className="text-xs text-zinc-500 mt-4 text-center">
           For per-destination BPS + destination addresses, see the{' '}
-          <a href="/treasury?tab=revenue" className="text-cyan-400 hover:text-cyan-300 underline">
+          <a href="/treasury?tab=revenue" className="text-accent hover:text-accent underline">
             Revenue
           </a>{' '}
           tab.
@@ -226,16 +226,16 @@ export function OverviewTab() {
                 enterprise.paidTotals.totalHeadhunterPaid +
                 enterprise.paidTotals.totalMerchantBonusesPaid
               }
-              color="text-cyan-400"
+              color="text-accent"
             />
           </div>
           <p className="text-xs text-zinc-500 mt-4">
             Recent per-channel activity is in{' '}
-            <a href="/sanctum?tab=history" className="text-cyan-400 hover:text-cyan-300 underline">
+            <a href="/sanctum?tab=history" className="text-accent hover:text-accent underline">
               /sanctum/history
             </a>{' '}
             (charity flows) and{' '}
-            <a href="/treasury?tab=revenue" className="text-cyan-400 hover:text-cyan-300 underline">
+            <a href="/treasury?tab=revenue" className="text-accent hover:text-accent underline">
               /treasury/revenue
             </a>{' '}
             (fee splits). A unified protocol-wide event timeline is a Tier 3 indexer concern.

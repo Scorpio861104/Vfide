@@ -422,7 +422,7 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
           <h3 className="text-xl font-bold text-amber-400 mb-2">Create Vault First</h3>
           <p className="text-gray-300 mb-4">Guardian management is tied to your vault contract.</p>
           <button onClick={() => void withNotice(() => createVault(), 'Vault creation submitted.', 'Failed to create vault')} disabled={isCreatingVault}
-            className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold disabled:opacity-50">
+            className="px-4 py-2 bg-gradient-to-r from-accent to-blue-500 text-white rounded-xl font-bold disabled:opacity-50">
             {isCreatingVault ? 'Creating Vault...' : 'Create Vault'}
           </button>
         </div>
@@ -476,7 +476,7 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
                 <button
                   onClick={() => void handleCompleteGuardianSetup()}
                   disabled={!canCompleteGuardianSetup || isGuardianSetupPending}
-                  className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold px-4 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-gradient-to-r from-accent to-blue-500 text-white rounded-xl font-bold px-4 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isGuardianSetupPending ? 'Finalizing...' : 'Complete Guardian Setup'}
                 </button>
@@ -492,7 +492,7 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
       )}
 
       {guardianSetupComplete && hasPendingGuardianChange && (
-        <div className="rounded-2xl p-6 border border-cyan-500/30 bg-cyan-500/10">
+        <div className="rounded-2xl p-6 border border-accent/30 bg-accent/10">
           <h3 className="text-lg font-bold text-white mb-2">Pending Guardian Change</h3>
           <p className="text-sm text-gray-200 mb-3">
             {pendingGuardianActive ? 'Add guardian' : 'Remove guardian'} {pendingGuardianAddress}. This proposal can be applied after the 24-hour timelock expires or cancelled before then.
@@ -515,7 +515,7 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
             <button
               onClick={() => void handleApplyGuardianChange()}
               disabled={isGuardianSetupPending}
-              className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold px-4 py-3 disabled:opacity-50"
+              className="bg-gradient-to-r from-accent to-blue-500 text-white rounded-xl font-bold px-4 py-3 disabled:opacity-50"
             >
               Apply Guardian Change
             </button>
@@ -579,7 +579,7 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
       {/* Guardian Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total Guardians', value: guardianList.length, sub: 'Max recommended: 5', icon: Users, iconColor: 'text-cyan-400', textColor: 'text-cyan-400', gradient: 'from-cyan-500/20 to-blue-500/20' },
+          { label: 'Total Guardians', value: guardianList.length, sub: 'Max recommended: 5', icon: Users, iconColor: 'text-accent', textColor: 'text-accent', gradient: 'from-accent/20 to-blue-500/20' },
           { label: 'Trustees', value: trusteeCount, sub: 'Can initiate recovery', icon: Crown, iconColor: 'text-purple-400', textColor: 'text-purple-400', gradient: 'from-purple-500/20 to-pink-500/20' },
           { label: 'Mature Guardians', value: 'On-chain', sub: 'Checked at vote-time', icon: CheckCircle2, iconColor: 'text-green-400', textColor: 'text-green-400', gradient: 'from-green-500/20 to-emerald-500/20' },
           { label: 'Recovery Threshold', value: `${recoveryThreshold}/${guardianList.length || 1}`, sub: 'Approvals needed', icon: Shield, iconColor: 'text-yellow-400', textColor: 'text-yellow-400', gradient: 'from-yellow-500/20 to-amber-500/20' },
@@ -615,7 +615,7 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
                 className="p-4 bg-black/20 border border-white/10 rounded-xl">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
-                    <div className="p-2 rounded-full bg-cyan-500/20"><Users className="text-cyan-400" size={20} /></div>
+                    <div className="p-2 rounded-full bg-accent/20"><Users className="text-accent" size={20} /></div>
                     <div>
                       <div className="text-white font-bold flex items-center gap-2">
                         Guardian {index + 1}
@@ -637,7 +637,7 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
                   <div className="flex items-center gap-3">
                     <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
                       onClick={() => void handleIssueAttestation(guardian as `0x${string}`)} disabled={!isOwner || !hasVault}
-                      className="p-2 border border-cyan-500/50 text-cyan-300 rounded-lg hover:bg-cyan-500/10 transition-colors disabled:opacity-50"
+                      className="p-2 border border-accent/50 text-accent rounded-lg hover:bg-accent/10 transition-colors disabled:opacity-50"
                       title="Issue owner-signed guardian attestation"><FileText size={18} /></motion.button>
                     {/* R-8 trustee promote/demote: toggle role with timelock */}
                     <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}

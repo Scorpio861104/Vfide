@@ -75,7 +75,7 @@ export default function LeaderboardPage() {
             </div>
             <div className="analytics-card p-5">
               <p className="mb-2 text-sm text-white/40">Your Rank</p>
-              <p className="text-3xl font-bold text-cyan-400">#{rank ?? '—'}</p>
+              <p className="text-3xl font-bold text-accent">#{rank ?? '—'}</p>
             </div>
           </div>
 
