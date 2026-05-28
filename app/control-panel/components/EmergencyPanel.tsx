@@ -12,13 +12,17 @@ import {
   NumberInput,
 } from './SecurityComponents';
 
+// Circuit-breaker duration constants — must match VFIDEToken.MAX_CIRCUIT_BREAKER_DURATION (7 days)
+const CB_DURATION_1_DAY  = 86_400;   // 1 day  in seconds
+const CB_DURATION_7_DAYS = 604_800;  // 7 days in seconds (contract maximum)
+
 export function EmergencyPanel() {
   const chainId = useChainId();
   const [showPauseConfirm, setShowPauseConfirm] = useState(false);
   const [showResumeConfirm, setShowResumeConfirm] = useState(false);
   const [showCircuitBreakerConfirm, setShowCircuitBreakerConfirm] = useState(false);
   const [circuitBreakerActive, setCircuitBreakerActive] = useState(false);
-  const [circuitBreakerDuration, setCircuitBreakerDuration] = useState(86400); // 24 hours in seconds
+  const [circuitBreakerDuration, setCircuitBreakerDuration] = useState(CB_DURATION_1_DAY); // 24h default (CB_DURATION_1_DAY)
   const [loading, setLoading] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
@@ -179,7 +183,7 @@ export function EmergencyPanel() {
               value={circuitBreakerDuration}
               onChange={setCircuitBreakerDuration}
               min={0}
-              max={604800} // 7 days max
+              max={CB_DURATION_7_DAYS} // contract MAX_CIRCUIT_BREAKER_DURATION
               step={3600} // 1 hour steps
               suffix="sec"
             />
@@ -189,10 +193,10 @@ export function EmergencyPanel() {
             <button onClick={() => setCircuitBreakerDuration(3600)} className="px-3 py-1 bg-white/5 rounded">
               1 hour
             </button>
-            <button onClick={() => setCircuitBreakerDuration(86400)} className="px-3 py-1 bg-white/5 rounded">
+            <button onClick={() => setCircuitBreakerDuration(CB_DURATION_1_DAY)} className="px-3 py-1 bg-white/5 rounded">
               24 hours
             </button>
-            <button onClick={() => setCircuitBreakerDuration(604800)} className="px-3 py-1 bg-white/5 rounded">
+            <button onClick={() => setCircuitBreakerDuration(CB_DURATION_7_DAYS)} className="px-3 py-1 bg-white/5 rounded">
               7 days (max)
             </button>
           </div>

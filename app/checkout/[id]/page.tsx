@@ -70,6 +70,9 @@ const LOCAL_CURRENCY_LOCALES: Record<string, string> = {
   BRL: 'pt-BR',
 };
 
+// Static reference rates used only to generate an "Estimated local value" hint.
+// These are approximate and NOT live FX rates — actual payment is settled in VFIDE/stablecoin.
+// Rates last updated: 2026-05-25. Update when > 30% drift is observed.
 const ESTIMATED_USD_TO_LOCAL: Record<string, number> = {
   USD: 1,
   EUR: 0.92,
@@ -412,7 +415,7 @@ export default function CheckoutPage() {
                   </div>
                   {estimatedLocalTotal && (
                     <div className="flex justify-between gap-3 text-xs text-blue-800/80 dark:text-blue-200/80">
-                      <span>Estimated local value ({preferredCurrency})</span>
+                      <span>Approx. local value ({preferredCurrency}) <span title="Indicative only — uses a static reference rate, not a live FX feed.">ⓘ</span></span>
                       <span>{estimatedLocalTotal}</span>
                     </div>
                   )}

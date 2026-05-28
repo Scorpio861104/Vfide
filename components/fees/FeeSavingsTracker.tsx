@@ -11,7 +11,7 @@
  * - Etsy:   6.5% 
  * - Shopify: 2.9% + $0.30
  * 
- * VFIDE buyer fee: 0.25% - 1% (based on ProofScore)
+ * VFIDE buyer fee: 0.25% - 5% (ProofScoreBurnRouter: minTotalBps=25, maxTotalBps=500)
  * VFIDE merchant fee: 0%
  * 
  * Usage:
@@ -179,7 +179,7 @@ export function FeeSavingsCalculator() {
     [volume, txCount]
   );
 
-  const vfideFeeMonthly = calculateVFIDEFee(volume, 50); // Assume 0.5% for calculator
+  const vfideFeeMonthly = calculateVFIDEFee(volume, 50); // Mid-range illustrative rate (0.5% = 50 bps). Actual: 0.25%–5% depending on ProofScore.
   const vfideFeeYearly = vfideFeeMonthly * 12;
 
   return (
