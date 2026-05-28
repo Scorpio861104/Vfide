@@ -328,7 +328,7 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
                 type="number"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-               
+                placeholder="0.00 — required to sign"
                 step="0.01"
                 min="0"
                 aria-describedby="payment-amount-help"
@@ -366,7 +366,7 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
               type="text"
               value={orderId}
               onChange={(e) => setOrderId(e.target.value)}
-             
+              placeholder="Auto-generated — edit to customise"
               aria-describedby="payment-order-help"
               className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-100  focus:border-accent focus:outline-none"
             />
@@ -382,7 +382,8 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
               <input
                 id="payment-link"
                 type="text"
-                value={paymentUrl}
+                value={securePayloadReady ? paymentUrl : ""}
+                placeholder={securePayloadReady ? "" : "Sign the QR to generate a shareable link"}
                 readOnly
                 aria-label="Secure payment link"
                 className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-300 text-sm truncate"
