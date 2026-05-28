@@ -105,7 +105,7 @@ export const navigationItems: NavItem[] = [
     color: '#8B5CF6',
     children: [
       { id: 'vault-main',     label: 'My Vault',     href: '/vault',            icon: Shield,     color: '#8B5CF6' },
-      { id: 'wallet',         label: 'Wallet',       href: '/crypto',           icon: Wallet,     color: '#8B5CF6' },
+      { id: 'wallet',         label: 'Wallet',       href: '/wallet',           icon: Wallet,     color: '#8B5CF6' },
       { id: 'guardians',      label: 'Guardians',    href: '/guardians',        icon: ShieldCheck,color: '#8B5CF6' },
       { id: 'vault-recover',  label: 'Recovery',     href: '/vault/recover',    icon: KeyRound,   color: '#8B5CF6' },
       { id: 'vesting',        label: 'Vesting',      href: '/vesting',          icon: Gift,       color: '#8B5CF6' },
@@ -129,8 +129,8 @@ export const navigationItems: NavItem[] = [
       { id: 'flashloan',      label: 'Flashloans P2P', href: '/flashloans',    icon: Zap,            color: '#10B981', badge: 'P2P' },
       { id: 'escrow',         label: 'Escrow',         href: '/escrow',        icon: Lock,           color: '#10B981' },
       { id: 'payroll',        label: 'Payroll',        href: '/payroll',       icon: Calendar,       color: '#10B981' },
-      { id: 'cross-chain',    label: 'Cross-Chain',    href: '/cross-chain',   icon: ArrowLeftRight, color: '#10B981' },
-      { id: 'stealth',        label: 'Private Pay',    href: '/stealth',       icon: Eye,            color: '#10B981' },
+      { id: 'cross-chain',    label: 'Cross-Chain',    href: '/wallet?tab=cross-chain', icon: ArrowLeftRight, color: '#10B981' },
+      { id: 'stealth',        label: 'Private Pay',    href: '/wallet?tab=private',    icon: Eye,            color: '#10B981' },
       { id: 'pay',            label: 'Quick Pay',      href: '/pay',           icon: Send,           color: '#10B981' },
       { id: 'subscriptions',  label: 'Subscriptions',  href: '/roadmap#subscriptions', icon: Repeat, color: '#10B981', comingSoon: true },
       { id: 'streaming',      label: 'Streaming',      href: '/roadmap#streaming',     icon: Zap,    color: '#10B981', comingSoon: true },
@@ -215,7 +215,7 @@ export const navigationItems: NavItem[] = [
       { id: 'paper-wallet',    label: 'Paper Wallet',   href: '/paper-wallet',    icon: FileText,   color: '#64748B' },
       { id: 'hardware-wallet', label: 'Hardware Wallet',href: '/hardware-wallet', icon: HardDrive,  color: '#64748B' },
       { id: 'enterprise',      label: 'Enterprise',     href: '/enterprise',      icon: Landmark,   color: '#64748B' },
-      { id: 'token-launch',    label: 'Token Launch',   href: '/token-launch',    icon: Rocket,     color: '#64748B' },
+      { id: 'token-launch',    label: 'Token Launch',   href: '/developer?tab=token-launch', icon: Rocket, color: '#64748B' },
       { id: 'roadmap',         label: "What's Coming",  href: '/roadmap',         icon: Map,        color: '#64748B' },
     ],
   },
@@ -229,7 +229,7 @@ export const navigationItems: NavItem[] = [
     children: [
       // /settings is the single config hub: Account | Vault | Security | Notifications
       { id: 'settings',  label: 'Settings',   href: '/settings',        icon: Settings,   color: '#94A3B8' },
-      { id: 'profile',   label: 'Profile',    href: '/profile',         icon: User,       color: '#94A3B8' },
+      { id: 'profile',   label: 'Profile',    href: '/me',              icon: User,       color: '#94A3B8' },
       { id: 'security',  label: 'Security',   href: '/security-center', icon: ShieldCheck,color: '#94A3B8' },
       { id: 'theme',     label: 'Theme',      href: '/theme',           icon: Palette,    color: '#94A3B8' },
       { id: 'help',      label: 'Help & Docs',href: '/docs',            icon: HelpCircle, color: '#94A3B8' },
