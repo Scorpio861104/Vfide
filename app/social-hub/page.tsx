@@ -35,7 +35,7 @@ import {
   Users,
   Camera,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, Suspense} from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAccount } from 'wagmi';
 import { Footer } from '@/components/layout/Footer';
@@ -107,7 +107,7 @@ const ANALYTICS_TABS: { id: AnalyticsTab; label: string }[] = [
 // UX-1: Valid tab IDs for type-safe URL parsing
 const VALID_MAIN_TABS = new Set<MainTab>(['feed', 'stories', 'messages', 'pay', 'analytics']);
 
-export default function SocialHubPage() {
+function SocialHubPageInner() {
   const { isConnected, address } = useAccount();
   // UX-1: Read initial tab from URL search params so ?tab= links work correctly
   // and browser Back/Forward preserves the active tab context
@@ -363,5 +363,13 @@ export default function SocialHubPage() {
       </div>
       <Footer />
     </div>
+  );
+}
+
+export default function SocialHubPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-zinc-950" />}>
+      <SocialHubPageInner />
+    </Suspense>
   );
 }

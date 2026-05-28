@@ -2,7 +2,7 @@
 
 import { AnimatePresence, m } from 'framer-motion';
 import { Eye, Palette, Sliders } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense} from 'react';
 import { useSearchParams } from 'next/navigation';
 import type React from 'react';
 
@@ -22,7 +22,7 @@ const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
 
 const VALID_TABS: TabId[] = ['presets', 'preview', 'advanced'];
 
-export default function ThemeManagementPage() {
+function ThemeManagementPageInner() {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab') as TabId | null;
   const [activeTab, setActiveTab] = useState<TabId>(
@@ -93,5 +93,13 @@ export default function ThemeManagementPage() {
 
       <Footer />
     </div>
+  );
+}
+
+export default function ThemeManagementPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-zinc-950" />}>
+      <ThemeManagementPageInner />
+    </Suspense>
   );
 }

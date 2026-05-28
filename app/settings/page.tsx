@@ -23,7 +23,7 @@ import type React from 'react';
 
 import { AnimatePresence, m } from 'framer-motion';
 import { Bell, Lock, Settings, Shield, User } from 'lucide-react';
-import { useState } from 'react';
+import { useState, Suspense} from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Footer } from '@/components/layout/Footer';
 
@@ -46,7 +46,7 @@ const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
 // UX-1: Valid tab IDs for type-safe URL parsing
 const VALID_TABS = new Set<TabId>(['account', 'vault', 'security', 'notifications']);
 
-export default function SettingsPage() {
+function SettingsPageInner() {
   // UX-1: Read initial tab from URL search params so ?tab= links work correctly
   // and browser Back/Forward preserves the active tab context
   const searchParams = useSearchParams();
@@ -120,5 +120,13 @@ export default function SettingsPage() {
       </div>
       <Footer />
     </div>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-zinc-950" />}>
+      <SettingsPageInner />
+    </Suspense>
   );
 }

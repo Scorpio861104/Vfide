@@ -28,7 +28,7 @@ import {
   Crown, ScrollText, Gavel, Landmark, LayoutDashboard,
   AlertTriangle, Flag } from 'lucide-react';
 import { useAccount } from 'wagmi';
-import { useState } from 'react';
+import { useState, Suspense} from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Footer } from '@/components/layout/Footer';
 // UX-3: Import SampleDataBanner to label hardcoded governance stats as illustrative
@@ -86,7 +86,7 @@ type CouncilSub  = 'overview' | 'members' | 'salary' | 'voting';
 const VALID_MAIN_TABS = new Set<MainTab>(['proposals', 'dao', 'council', 'elections', 'disputes', 'appeals', 'fraud']);
 const VALID_DAO_SUBS  = new Set<DaoSub>(['overview', 'members', 'treasury']);
 
-export default function GovernancePage() {
+function GovernancePageInner() {
   const { isConnected } = useAccount();
   const [locale] = useLocale();
   const _govCopy = pickLocaleCopy(GOVERNANCE_TRANSLATIONS, locale);
@@ -316,5 +316,13 @@ export default function GovernancePage() {
       </div>
       <Footer />
     </div>
+  );
+}
+
+export default function GovernancePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-zinc-950" />}>
+      <GovernancePageInner />
+    </Suspense>
   );
 }
