@@ -135,6 +135,7 @@ export function OwnerChallengeBanner() {
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         className="fixed top-0 left-0 right-0 z-[60] w-full bg-gradient-to-r from-red-600 via-orange-600 to-red-600 border-b-2 border-red-400/50 shadow-lg shadow-red-500/20"
+        data-testid="challenge-banner-root"
       >
         {/* Animated warning stripe across the top for extra visibility */}
         <m.div
@@ -158,7 +159,7 @@ export function OwnerChallengeBanner() {
                 <p className="text-white font-bold text-sm sm:text-base leading-tight">
                   Recovery claim active on your vault
                 </p>
-                <p className="text-white/80 text-xs sm:text-sm mt-0.5">
+                <p className="text-white/80 text-xs sm:text-sm mt-0.5" data-testid="challenge-status-text">
                   {isPending
                     ? `Guardians are voting (${claim.guardianApprovals}/${claim.guardianCountSnapshot} approved so far)`
                     : isApproved
@@ -179,18 +180,19 @@ export function OwnerChallengeBanner() {
                   whileTap={{ scale: 0.97 }}
                   onClick={() => setShowChallengeModal(true)}
                   className="flex-1 sm:flex-initial px-5 py-2 bg-white text-red-700 font-bold rounded-lg shadow-md hover:shadow-lg transition-shadow flex items-center justify-center gap-2"
+                  data-testid="challenge-btn"
                 >
                   <Shield className="h-4 w-4" />
                   Challenge This
                 </m.button>
               )}
               {submitted && (
-                <div className="text-white/90 text-sm font-semibold px-4 py-2 bg-white/10 rounded-lg">
+                <div className="text-white/90 text-sm font-semibold px-4 py-2 bg-white/10 rounded-lg" data-testid="challenge-submitted-badge">
                   Challenge submitted
                 </div>
               )}
               {!canChallenge && isPending && (
-                <div className="text-white/70 text-xs italic px-3 py-2">
+                <div className="text-white/70 text-xs italic px-3 py-2" data-testid="challenge-pending-notice">
                   Can challenge once guardians approve
                 </div>
               )}
@@ -303,6 +305,7 @@ export function OwnerChallengeBanner() {
                     rows={3}
                     maxLength={500}
                     disabled={isWritePending}
+                    data-testid="challenge-reason-input"
                     className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-gray-600 focus:outline-none focus:border-red-500/50 transition-colors text-sm disabled:opacity-50 resize-none"
                   />
                 </div>
@@ -328,6 +331,7 @@ export function OwnerChallengeBanner() {
                   whileTap={{ scale: isWritePending ? 1 : 0.98 }}
                   onClick={handleChallenge}
                   disabled={isWritePending}
+                  data-testid="challenge-confirm-btn"
                   className="px-6 py-2.5 bg-gradient-to-r from-red-500 to-orange-500 rounded-lg font-bold text-white flex items-center gap-2 shadow-lg shadow-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isWritePending ? (

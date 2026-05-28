@@ -136,6 +136,7 @@ export function ClaimFlowModal({
         transition={{ type: 'spring' as const, stiffness: 200 }}
         onClick={(e) => e.stopPropagation()}
         className="relative w-full max-w-xl overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 to-slate-800 border-2 border-white/20 shadow-2xl"
+        data-testid="rc-modal-root"
       >
         {/* Header with animated gradient */}
         <div className="relative p-8 bg-gradient-to-br from-accent/20 via-blue-500/15 to-purple-500/10 border-b border-white/10 overflow-hidden">
@@ -200,7 +201,7 @@ export function ClaimFlowModal({
                     <Shield className="h-4 w-4 text-accent" />
                     Vault to Recover
                   </p>
-                  <p className="font-mono text-accent text-lg break-all">{vault.address}</p>
+                  <p className="font-mono text-accent text-lg break-all" data-testid="rc-vault-address">{vault.address}</p>
                 </div>
 
                 <div className="p-5 rounded-2xl bg-white/5 border border-white/10">
@@ -208,12 +209,12 @@ export function ClaimFlowModal({
                     <UserCheck className="h-4 w-4 text-emerald-400" />
                     Your New Wallet
                   </p>
-                  <p className="font-mono text-emerald-400 text-lg break-all">
+                  <p className="font-mono text-emerald-400 text-lg break-all" data-testid="rc-new-wallet">
                     {newWalletAddress || 'Connect wallet to continue'}
                   </p>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30">
+                <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30" data-testid="rc-challenge-notice">
                   <div className="flex items-start gap-3">
                     <AlertCircle className="h-6 w-6 text-amber-400 mt-0.5 shrink-0" />
                     <div>
@@ -248,6 +249,7 @@ export function ClaimFlowModal({
                     onChange={(e) => setRecoveryId(e.target.value)}
                     placeholder="The recovery ID you set when creating your vault"
                     disabled={isWritePending}
+                    data-testid="rc-recovery-id"
                     className="w-full px-5 py-4 rounded-xl bg-white/5 border-2 border-white/10 text-white placeholder:text-gray-600 focus:outline-none focus:border-accent/50 transition-colors text-lg disabled:opacity-50"
                   />
                   <p className="text-xs text-gray-500 mt-2 ml-1">
@@ -267,6 +269,7 @@ export function ClaimFlowModal({
                     rows={3}
                     maxLength={500}
                     disabled={isWritePending}
+                    data-testid="rc-reason"
                     className="w-full px-5 py-4 rounded-xl bg-white/5 border-2 border-white/10 text-white placeholder:text-gray-600 focus:outline-none focus:border-accent/50 transition-colors resize-none disabled:opacity-50"
                   />
                   <p className="text-xs text-gray-500 mt-2 ml-1">
@@ -279,6 +282,7 @@ export function ClaimFlowModal({
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="p-4 rounded-xl bg-red-500/10 border border-red-500/30"
+                    data-testid="rc-error"
                   >
                     <div className="flex items-start gap-3">
                       <AlertCircle className="h-5 w-5 text-red-400 mt-0.5 shrink-0" />
@@ -299,6 +303,7 @@ export function ClaimFlowModal({
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -50 }}
                 className="text-center py-4"
+                data-testid="rc-success"
               >
                 <motion.div
                   initial={{ scale: 0 }}
@@ -393,6 +398,7 @@ export function ClaimFlowModal({
                   Bookmark{' '}
                   <a
                     href={`/vault/recover/status?vault=${vault.address}`}
+                  data-testid="rc-status-link"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-accent hover:text-accent underline"
@@ -438,6 +444,7 @@ export function ClaimFlowModal({
                   handleSubmit();
                 }
               }}
+              data-testid={step === 1 ? 'rc-continue-btn' : 'rc-submit-btn'}
               disabled={isWritePending || (step === 2 && (!recoveryId || !reason || !newWalletAddress))}
               className="px-8 py-3 bg-gradient-to-r from-accent to-blue-500 rounded-xl font-bold text-white flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-accent/30 relative overflow-hidden group"
             >

@@ -129,26 +129,39 @@ jest.mock('viem', () => ({
 
 jest.mock('@/hooks/useRecoveryClaim', () => ({
   useRecoveryClaim: jest.fn(() => ({
-    initiateByRecoveryId: jest.fn(async () => '0xdeadbeef'),
-    isWritePending: false,
+    // identifiers
+    claimId: 0n,
+    hasClaim: false,
+    // claim state
     claim: null,
-    status: 'idle',
+    claimStatus: 0, // RecoveryClaimStatus.None
     canFinalize: false,
-    canChallenge: false,
-    finalize: jest.fn(),
-    challenge: jest.fn(),
-    cancel: jest.fn(),
-    isOwner: false,
+    challengeTimeRemaining: 0n,
+    // role detection
     isClaimant: false,
-    challengeDeadline: null,
-    refetch: jest.fn(),
+    isOriginalOwner: false,
+    isInitiator: false,
+    // writes
+    initiate: jest.fn(),
+    initiateByRecoveryId: jest.fn(async () => '0xdeadbeef'),
+    finalize: jest.fn(),
+    expire: jest.fn(),
+    isWritePending: false,
+    writeError: null,
+    // helpers
+    hashEvidence: jest.fn(),
+    refetchClaim: jest.fn(),
   })),
+  // Canonical ordinals must match VaultRecoveryClaim.sol enum
   RecoveryClaimStatus: {
-    None: 'None',
-    Pending: 'Pending',
-    Finalized: 'Finalized',
-    Challenged: 'Challenged',
-    Cancelled: 'Cancelled',
+    None: 0,
+    Pending: 1,
+    GuardianApproved: 2,
+    Challenged: 3,
+    Approved: 4,
+    Executed: 5,
+    Rejected: 6,
+    Expired: 7,
   },
 }));
 

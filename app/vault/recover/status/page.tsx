@@ -48,10 +48,12 @@ import {
   Search,
   Unlock,
   Hourglass,
+  ShieldOff,
 } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useRecoveryClaim, RecoveryClaimStatus } from '@/hooks/useRecoveryClaim';
+import { useChallengeClaim } from '@/hooks/useChallengeClaim';
 import { CONTRACT_ADDRESSES } from '@/lib/contracts';
 import { VaultRegistryABI } from '@/lib/abis';
 
@@ -264,10 +266,39 @@ function RecoveryStatusBody({
     claimStatus,
     canFinalize,
     challengeTimeRemaining,
+    isOriginalOwner,
     finalize,
     isWritePending,
     refetchClaim,
   } = useRecoveryClaim({ targetVault: vaultAddress });
+
+  // Challenge (veto) path — for the original owner when their vault is under attack
+  const {
+    challenge,
+    isWritePending: isChallengeWritePending,
+    writeError: challengeWriteError,
+  } = useChallengeClaim({ claimId, originalOwner: claim?.originalOwner });
+
+  const [challengeReason, setChallengeReason] = useState('');
+  const [showChallengeForm, setShowChallengeForm] = useState(false);
+  const [challengeError, setChallengeError] = useState<string | null>(null);
+  const [challengeSuccess, setChallengeSuccess] = useState(false);
+
+  const handleChallenge = async () => {
+    if (!challengeReason.trim()) return;
+    setChallengeError(null);
+    try {
+      const hash = await challenge(challengeReason);
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash });
+      }
+      setChallengeSuccess(true);
+      await refetchClaim();
+    } catch (err: any) {
+      const message = err?.shortMessage || err?.details || err?.message || 'Challenge failed';
+      setChallengeError(message);
+    }
+  };
 
   const handleFinalize = async () => {
     setFinalizeError(null);
@@ -316,7 +347,7 @@ function RecoveryStatusBody({
   ].includes(claimStatus);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" data-testid="recovery-status-root">
       {/* Status overview card */}
       <GlassCard hover={false} className="p-6">
         <div className="flex items-start gap-4 mb-5">
@@ -347,21 +378,21 @@ function RecoveryStatusBody({
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Claim status</p>
-            <h2 className={`text-xl font-bold ${status.color}`}>{status.label}</h2>
+            <h2 className={`text-xl font-bold ${status.color}`} data-testid="recovery-status-label">{status.label}</h2>
             <p className="text-xs text-gray-500 mt-1">Vault {vaultAddress}</p>
           </div>
         </div>
 
         {/* Progress: approvals + window */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-          <div className="p-3 rounded-lg bg-black/20">
+          <div className="p-3 rounded-lg bg-black/20" data-testid="recovery-guardian-progress">
             <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Guardian approvals</p>
             <p className="text-white font-bold">
               {claim.guardianApprovals} of {claim.guardianCountSnapshot}
             </p>
           </div>
           {claimStatus === RecoveryClaimStatus.GuardianApproved && (
-            <div className="p-3 rounded-lg bg-black/20">
+            <div className="p-3 rounded-lg bg-black/20" data-testid="recovery-challenge-countdown">
               <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Challenge window</p>
               <p className="text-white font-bold">{formatTimeRemaining(challengeTimeRemaining)}</p>
             </div>
@@ -388,6 +419,7 @@ function RecoveryStatusBody({
           <button
             onClick={() => void handleFinalize()}
             disabled={!canFinalize || isWritePending}
+            data-testid="recovery-finalize-btn"
             className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-emerald-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isWritePending ? (
@@ -424,24 +456,109 @@ function RecoveryStatusBody({
         </GlassCard>
       )}
 
-      {/* Waiting state — challenge window */}
-      {claimStatus === RecoveryClaimStatus.GuardianApproved && (
+      {/* GuardianApproved state — claimant waits, original owner can veto */}
+      {claimStatus === RecoveryClaimStatus.GuardianApproved && !challengeSuccess && (
         <GlassCard hover={false} className="p-6">
           <h3 className="text-sm font-bold text-accent mb-2 flex items-center gap-2">
             <Clock size={16} />
             Challenge window in progress
           </h3>
+          {/* Claimant view */}
+          {!isOriginalOwner && (
+            <p className="text-sm text-gray-300">
+              Guardians approved your claim. The original wallet now has a window to challenge if
+              this recovery wasn&apos;t actually requested. Assuming no challenge, you&apos;ll be able to
+              finalize when the window closes ({formatTimeRemaining(challengeTimeRemaining)}).
+            </p>
+          )}
+
+          {/* Owner view — veto path */}
+          {isOriginalOwner && !showChallengeForm && (
+            <div className="space-y-3">
+              <p className="text-sm text-gray-300">
+                A recovery claim against your vault is in progress. If you did <strong>not</strong> initiate
+                this recovery, you can veto it now. The challenge window closes in{' '}
+                <span className="text-accent font-bold">{formatTimeRemaining(challengeTimeRemaining)}</span>.
+              </p>
+              <div className="flex gap-3 mt-3">
+                <button
+                  onClick={() => setShowChallengeForm(true)}
+                  className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-300 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors"
+                  data-testid="veto-open-btn"
+                >
+                  <ShieldOff size={14} />
+                  Veto this recovery
+                </button>
+                <p className="text-xs text-gray-500 self-center">
+                  Only do this if you did not request this recovery.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Owner veto form */}
+          {isOriginalOwner && showChallengeForm && (
+            <div className="space-y-3 mt-2">
+              <p className="text-xs text-gray-400">
+                Briefly explain why you&apos;re challenging this claim. This is recorded on-chain and
+                your guardians will be able to see it.
+              </p>
+              <textarea
+                value={challengeReason}
+                onChange={e => setChallengeReason(e.target.value)}
+                placeholder="e.g. I have not lost access to my wallet. This claim was not authorised by me."
+                className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-gray-600 focus:outline-none focus:border-red-400/50 transition-colors resize-none text-sm"
+                rows={3}
+                disabled={isChallengeWritePending}
+                data-testid="challenge-reason-input"
+              />
+              {challengeError && (
+                <p className="text-xs text-red-400" data-testid="challenge-error">{challengeError}</p>
+              )}
+              <div className="flex gap-2">
+                <button
+                  onClick={handleChallenge}
+                  disabled={!challengeReason.trim() || isChallengeWritePending}
+                  className="px-5 py-2.5 bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-sm font-bold flex items-center gap-2 transition-colors"
+                  data-testid="challenge-submit-btn"
+                >
+                  {isChallengeWritePending ? (
+                    <><Loader2 className="h-3.5 w-3.5 animate-spin" />Vetoing…</>
+                  ) : (
+                    <><ShieldOff size={14} />Confirm veto</>
+                  )}
+                </button>
+                <button
+                  onClick={() => { setShowChallengeForm(false); setChallengeReason(''); setChallengeError(null); }}
+                  disabled={isChallengeWritePending}
+                  className="px-4 py-2 text-gray-400 hover:text-white text-sm transition-colors"
+                  data-testid="challenge-cancel-btn"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </GlassCard>
+      )}
+
+      {/* Veto success confirmation */}
+      {challengeSuccess && (
+        <GlassCard hover={false} className="p-6 border border-emerald-500/30" data-testid="challenge-success">
+          <h3 className="text-lg font-bold text-emerald-300 mb-2 flex items-center gap-2">
+            <CheckCircle2 size={20} />
+            Recovery vetoed
+          </h3>
           <p className="text-sm text-gray-300">
-            Guardians approved your claim. The original wallet now has a window to challenge if
-            this recovery wasn&apos;t actually requested. Assuming no challenge, you&apos;ll be able to
-            finalize when the window closes ({formatTimeRemaining(challengeTimeRemaining)}).
+            You have successfully challenged this recovery claim. The claim has been blocked and
+            the initiator cannot attempt another claim against this vault for 30 days.
           </p>
         </GlassCard>
       )}
 
       {/* Success state — finalized */}
       {(claimStatus === RecoveryClaimStatus.Executed || finalizeSuccess) && (
-        <GlassCard hover={false} gradient="green" className="p-6 text-center">
+        <GlassCard hover={false} gradient="green" className="p-6 text-center" data-testid="recovery-finalized-success">
           <CheckCircle2 className="w-16 h-16 mx-auto mb-4 text-emerald-400" />
           <h3 className="text-xl font-bold text-white mb-2">Recovery complete</h3>
           <p className="text-sm text-gray-300 mb-5">
@@ -450,6 +567,7 @@ function RecoveryStatusBody({
           </p>
           <Link
             href="/vault"
+            data-testid="recovery-vault-link"
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg font-bold"
           >
             <Shield size={16} />
@@ -460,7 +578,7 @@ function RecoveryStatusBody({
 
       {/* Terminal failure states */}
       {claimStatus === RecoveryClaimStatus.Challenged && (
-        <GlassCard hover={false} className="p-6 border border-red-500/30">
+        <GlassCard hover={false} className="p-6 border border-red-500/30" data-testid="recovery-terminal-notice">
           <h3 className="text-lg font-bold text-red-300 mb-2 flex items-center gap-2">
             <XCircle size={20} />
             Claim was challenged
@@ -478,7 +596,7 @@ function RecoveryStatusBody({
       )}
 
       {claimStatus === RecoveryClaimStatus.Rejected && (
-        <GlassCard hover={false} className="p-6 border border-red-500/30">
+        <GlassCard hover={false} className="p-6 border border-red-500/30" data-testid="recovery-terminal-notice">
           <h3 className="text-lg font-bold text-red-300 mb-2 flex items-center gap-2">
             <XCircle size={20} />
             Claim was rejected
@@ -492,7 +610,7 @@ function RecoveryStatusBody({
       )}
 
       {claimStatus === RecoveryClaimStatus.Expired && (
-        <GlassCard hover={false} className="p-6">
+        <GlassCard hover={false} className="p-6" data-testid="recovery-terminal-notice">
           <h3 className="text-lg font-bold text-gray-300 mb-2 flex items-center gap-2">
             <AlertCircle size={20} />
             Claim expired

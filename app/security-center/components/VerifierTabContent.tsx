@@ -29,22 +29,29 @@ import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 // ─────────────────────────────────────────────────────────────────────────────
 // Types mirroring VaultRecoveryClaim.RecoveryClaim struct
 // ─────────────────────────────────────────────────────────────────────────────
-type ClaimStatus = 0n | 1n | 2n | 3n | 4n | 5n;
+// ClaimStatus ordinals: None=0, Pending=1, GuardianApproved=2, Challenged=3,
+// Approved=4, Executed=5, Rejected=6, Expired=7
+type ClaimStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+// Matches VaultRecoveryClaim.ClaimStatus enum exactly (ordinals 0–7)
 const STATUS_LABELS: Record<string, string> = {
   '0': 'None',
   '1': 'Pending',
   '2': 'Guardian Approved',
-  '3': 'Finalized',
-  '4': 'Rejected',
-  '5': 'Expired',
+  '3': 'Challenged',
+  '4': 'Approved',
+  '5': 'Executed',
+  '6': 'Rejected',
+  '7': 'Expired',
 };
 const STATUS_COLORS: Record<string, string> = {
   '0': 'text-zinc-400',
   '1': 'text-amber-400',
   '2': 'text-emerald-400',
-  '3': 'text-sky-400',
-  '4': 'text-red-400',
-  '5': 'text-zinc-500',
+  '3': 'text-orange-400',  // Challenged
+  '4': 'text-sky-400',    // Approved (ready to finalize)
+  '5': 'text-sky-400',    // Executed
+  '6': 'text-red-400',    // Rejected
+  '7': 'text-zinc-500',   // Expired
 };
 
 function shortAddr(addr: string): string {
@@ -95,20 +102,23 @@ function ClaimPanel({ claimId }: { claimId: bigint }) {
     refetchVoted,
   } = useVerifierVote({ claimId });
 
+  // viem decodes named struct components as a named-key object.
+  // Field names must match the ABI component names exactly.
   const claim = rawClaim as {
     vault: string;
     claimant: string;
+    originalOwner: string;
+    initiator: string;
     initiatedAt: bigint;
-    challengePeriodSnapshot: bigint;
-    reason: string;
-    evidenceHash: string;
+    challengeEndsAt: bigint;
+    expiresAt: bigint;
     status: ClaimStatus;
-    guardianApprovals: bigint;
-    guardianRejections: bigint;
-    verifierApprovals: bigint;
-    verifierRejections: bigint;
-    requiredApprovals: bigint;
-    requiredVerifierApprovals: bigint;
+    guardianApprovals: number;
+    verifierVotes: number;
+    guardianCountSnapshot: number;
+    challengePeriodSnapshot: bigint;
+    evidenceHash: string;
+    claimReason: string;   // ← contract field name is claimReason, not reason
   } | undefined;
 
   const [voteError, setVoteError] = useState<string | null>(null);
@@ -195,10 +205,10 @@ function ClaimPanel({ claimId }: { claimId: bigint }) {
           </div>
         </div>
 
-        {claim.reason && (
+        {claim.claimReason && (
           <div>
             <p className="text-zinc-500 uppercase text-xs tracking-wide mb-1">Reason</p>
-            <p className="text-zinc-300 text-sm">{claim.reason}</p>
+            <p className="text-zinc-300 text-sm">{claim.claimReason}</p>
           </div>
         )}
 
@@ -215,7 +225,7 @@ function ClaimPanel({ claimId }: { claimId: bigint }) {
         <h3 className="text-sm font-semibold text-zinc-300 uppercase tracking-wide mb-4">
           Vote Tally
         </h3>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-center">
           <div>
             <p className="text-2xl font-bold text-emerald-400">
               {claim.guardianApprovals.toString()}
@@ -223,27 +233,17 @@ function ClaimPanel({ claimId }: { claimId: bigint }) {
             <p className="text-xs text-zinc-500 mt-1">Guardian Approvals</p>
           </div>
           <div>
-            <p className="text-2xl font-bold text-red-400">
-              {claim.guardianRejections.toString()}
-            </p>
-            <p className="text-xs text-zinc-500 mt-1">Guardian Rejections</p>
-          </div>
-          <div>
             <p className="text-2xl font-bold text-sky-400">
-              {claim.verifierApprovals.toString()}
+              {claim.verifierVotes.toString()}
             </p>
-            <p className="text-xs text-zinc-500 mt-1">Verifier Approvals</p>
+            <p className="text-xs text-zinc-500 mt-1">Verifier Votes</p>
           </div>
           <div>
-            <p className="text-2xl font-bold text-orange-400">
-              {claim.verifierRejections.toString()}
+            <p className="text-2xl font-bold text-zinc-300">
+              {claim.guardianCountSnapshot.toString()}
             </p>
-            <p className="text-xs text-zinc-500 mt-1">Verifier Rejections</p>
+            <p className="text-xs text-zinc-500 mt-1">Guardians at Initiation</p>
           </div>
-        </div>
-        <div className="mt-4 flex gap-4 text-xs text-zinc-500">
-          <span>Required guardian: {claim.requiredApprovals.toString()}</span>
-          <span>Required verifier: {claim.requiredVerifierApprovals.toString()}</span>
         </div>
       </div>
 
