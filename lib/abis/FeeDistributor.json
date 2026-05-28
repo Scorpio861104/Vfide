@@ -844,16 +844,6 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "burnBps",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "sanctumBps",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
         "name": "daoPayrollBps",
         "type": "uint256"
       },
