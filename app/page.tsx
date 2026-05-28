@@ -78,11 +78,11 @@ const FEATURES = [
 ];
 
 const TRUST_POINTS = [
-  'Non-custodial: your keys, your coins',
-  'Open-source contracts on Base',
-  'Guardian = a trusted contact who helps rotate wallet access if you lose it (never holds your funds)',
-  'Sanctum = 20% of every fee flows to a protocol-level charity fund, disbursed on-chain',
-  'Every transaction has an on-chain audit trail',
+  'Send and receive payments anywhere in the world, instantly',
+  'Sell products or services — the platform takes nothing from you',
+  'No bank account required. No KYC for basic use.',
+  'No company can freeze, reverse, or seize your funds — by design',
+  'Your reputation grows with each honest transaction, lowering your fees over time',
 ];
 
 export default function Home() {
@@ -133,23 +133,24 @@ export default function Home() {
                   transition={{ duration: 0.5, delay: 0.1 }}
                   className="badge-live mb-6 w-fit"
                 >
-                  No Stripe. No PayPal. No fees for sellers — ever.
+                  Buy and sell anything · Zero seller fees · Your keys, always
                 </motion.div>
 
                 <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white mb-5 leading-[1.05] tracking-tight">
-                  The merchant fee is{' '}
-                  <span className="gradient-text-hero">zero. Permanently.</span>
+                  Payments for people,{' '}
+                  <span className="gradient-text-hero">not platforms.</span>
                 </h1>
 
                 <p className="text-lg sm:text-xl text-zinc-300 mb-3 max-w-md leading-relaxed">
-                  Not a promotion. Not a limited offer. Hardcoded into the contract —
-                  no DAO can change it, no update can override it.
+                  VFIDE is a payments app — like PayPal or Stripe, but{' '}
+                  <span className="text-white font-semibold">sellers pay zero fees</span>,
+                  and no company can freeze your account or reverse your transaction.
+                  Ever.
                 </p>
                 <p className="text-base text-zinc-400 mb-8 max-w-md leading-relaxed">
-                  Buyers pay a small trust fee that drops as their{' '}
-                  <span className="text-cyan-400 font-semibold">ProofScore</span>{' '}
-                  (on-chain reputation) grows — down to 0.25% at the top tier.
-                  You hold your own keys. No KYC for basic use.
+                  Buyers pay a small fee that shrinks automatically as they build a
+                  reputation on the network — down to 0.25% at the top level.
+                  You hold your own wallet. No bank. No middleman. No permission needed.
                 </p>
 
                 {/*
@@ -417,13 +418,14 @@ export default function Home() {
                 Zero fees. Open source. Self-custody.
               </div>
               <h2 className="text-4xl sm:text-5xl font-black text-white mb-5 leading-tight tracking-tight">
-                Sell anything.{' '}
-                <span className="gradient-text-hero">Keep everything.</span>
+                The payments app that{' '}
+                <span className="gradient-text-hero">works for you.</span>
               </h2>
               <p className="text-zinc-400 text-lg mb-10 max-w-2xl mx-auto">
-                The protocol doesn&apos;t take a cut from sellers. It never will —
-                that&apos;s written into the contract, not a policy.
-                Your ProofScore starts building the moment you connect.
+                Whether you&apos;re a seller in Lagos, a buyer in São Paulo, or
+                a freelancer in Manila — VFIDE charges sellers nothing,
+                lets you hold your own money, and gets cheaper for buyers
+                the more they use it. No account freezes. No permission slips.
               </p>
               <div className="flex flex-wrap items-center justify-center gap-4">
                 <Link

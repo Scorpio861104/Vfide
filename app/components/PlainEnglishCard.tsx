@@ -53,14 +53,17 @@ export function PlainEnglishCard() {
       <div className="container mx-auto max-w-5xl px-4">
         <div className="mb-8 text-center">
           <p className="mb-2 text-xs font-bold uppercase tracking-widest text-zinc-500">
-            New here? Start with this.
+            Three things to know
           </p>
           <h2
             id="plain-english-heading"
             className="text-2xl font-bold text-white sm:text-3xl"
           >
-            VFIDE in plain English
+            What does VFIDE actually do?
           </h2>
+          <p className="mt-3 text-sm text-zinc-500 max-w-lg mx-auto">
+            It&apos;s a payments network. Here are the three concepts that make it different from everything else.
+          </p>
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">

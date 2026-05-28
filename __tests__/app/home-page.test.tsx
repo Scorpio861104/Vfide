@@ -123,7 +123,7 @@ describe('Home page pathways', () => {
 
     // Copy sweep: H1 leads with the permanent zero-fee fact.
     // The two-door CTA (Shop / Sell) is unchanged.
-    expect(screen.getByRole('heading', { name: /The merchant fee is/i })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: /Payments for people/i })).toBeTruthy();
     expect(screen.getByRole('link', { name: /Sell on VFIDE/i }).getAttribute('href')).toBe('/merchant/setup');
     expect(screen.getByRole('link', { name: /Shop on VFIDE/i }).getAttribute('href')).toBe('/marketplace');
   });
@@ -137,8 +137,8 @@ describe('Home page pathways', () => {
     // translator card that anchors the rewrite.
     expect(screen.getAllByText(/Merchant fee/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Self-custody/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Sanctum Fund/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/VFIDE in plain English/i).length).toBeGreaterThan(0);
+    // PlainEnglishCard heading updated to "What does VFIDE actually do?"
+    expect(screen.getAllByText(/What does VFIDE actually do/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Get started in/i).length).toBeGreaterThan(0);
   });
 
