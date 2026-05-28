@@ -69,15 +69,20 @@ const ZERO_HASH = '0x00000000000000000000000000000000000000000000000000000000000
  *
  * Source: VaultRecoveryClaim.sol line 73-82.
  */
+// IMPORTANT: These values MUST match the ClaimStatus enum in VaultRecoveryClaim.sol
+// exactly by ordinal position. The on-chain value is decoded by viem as a uint8
+// and compared directly to these TypeScript enum members.
+// Contract order: None=0, Pending=1, GuardianApproved=2, Challenged=3,
+//                 Approved=4, Executed=5, Rejected=6, Expired=7
 export enum RecoveryClaimStatus {
   None = 0,
   Pending = 1,
   GuardianApproved = 2,
   Challenged = 3,
   Approved = 4,
-  Rejected = 5,
-  Expired = 6,
-  Executed = 7,
+  Executed = 5,   // Ownership transferred — matches contract ordinal 5
+  Rejected = 6,   // Claim was rejected by guardians — matches contract ordinal 6
+  Expired = 7,    // Claim expired without resolution — matches contract ordinal 7
 }
 
 /**
@@ -134,7 +139,12 @@ export function useRecoveryClaim({ targetVault, claimId: explicitClaimId }: UseR
     args: targetVault ? [targetVault] : undefined,
     query: { enabled: !!targetVault && !explicitClaimId },
   });
-  const activeClaimId = (activeClaimIdRaw as bigint | undefined) ?? 0n;
+  // getActiveClaimForVault returns (uint256 claimId, RecoveryClaim memory claim).
+  // viem decodes this as a tuple array; index 0 is the claimId uint256.
+  const activeClaimId: bigint =
+    Array.isArray(activeClaimIdRaw)
+      ? ((activeClaimIdRaw as any[])[0] as bigint) ?? 0n
+      : (activeClaimIdRaw as bigint | undefined) ?? 0n;
   const claimId = explicitClaimId ?? activeClaimId;
   const hasClaim = claimId > 0n;
 
@@ -197,7 +207,12 @@ export function useRecoveryClaim({ targetVault, claimId: explicitClaimId }: UseR
     };
   }, [viewData]);
 
-  const canFinalize = (viewData?.[1]?.result as boolean | undefined) ?? false;
+  // canFinalize returns (bool ok, string memory reason).
+  // viem decodes as a tuple array; index 0 is the bool.
+  const canFinalizeRaw = viewData?.[1]?.result;
+  const canFinalize: boolean = Array.isArray(canFinalizeRaw)
+    ? !!((canFinalizeRaw as any[])[0])
+    : !!(canFinalizeRaw as boolean | undefined);
   const challengeTimeRemaining = (viewData?.[2]?.result as bigint | undefined) ?? 0n;
 
   // ─────────────────────────────────────────────────────────────────

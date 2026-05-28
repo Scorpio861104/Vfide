@@ -82,12 +82,12 @@ function formatStatus(status: RecoveryClaimStatus): { label: string; color: stri
       return { label: 'Ready to finalize', color: 'text-emerald-300' };
     case RecoveryClaimStatus.Challenged:
       return { label: 'Challenged by owner', color: 'text-red-300' };
+    case RecoveryClaimStatus.Executed:
+      return { label: 'Recovery complete', color: 'text-emerald-300' };
     case RecoveryClaimStatus.Rejected:
       return { label: 'Rejected', color: 'text-red-300' };
     case RecoveryClaimStatus.Expired:
       return { label: 'Expired', color: 'text-gray-400' };
-    case RecoveryClaimStatus.Executed:
-      return { label: 'Recovery complete', color: 'text-emerald-300' };
   }
 }
 

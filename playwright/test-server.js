@@ -463,6 +463,229 @@ const payPage = (qs = '') => {
   `, '/pay')
 }
 
+
+// ─── /recovery-sign ─────────────────────────────────────────────────────────
+// Simulates the ClaimFlowModal (step 1→2→3) for Playwright recovery tests.
+// Accepts ?step=<1|2|3>&submitted=<true>&error=<msg>
+const recoverySignPage = (qs = '') => {
+  const params = new URLSearchParams(qs)
+  const step = Math.max(1, parseInt(params.get('step') || '1', 10) || 1)
+  const submitted = params.get('submitted') === 'true'
+  const error = params.get('error') || ''
+  const vault = params.get('vault') || '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb1'
+  const newWallet = params.get('wallet') || '0x1234567890123456789012345678901234567890'
+
+  const step2html = `
+    <label for="rc-id">Recovery ID</label>
+    <input id="rc-id" data-testid="rc-recovery-id" type="text" placeholder="Your recovery ID" aria-label="Recovery ID" />
+    <label for="rc-reason">Reason</label>
+    <textarea id="rc-reason" data-testid="rc-reason" aria-label="Reason for recovery" placeholder="Why are you recovering this vault?"></textarea>
+    ${error ? `<div data-testid="rc-error" role="alert" style="color:#f87171">${error}</div>` : ''}
+    <button data-testid="rc-submit-btn" aria-label="Submit recovery claim" onclick="handleSubmit()">
+      Submit Recovery Claim
+    </button>
+  `
+
+  const step3html = `
+    <div data-testid="rc-success" role="status" style="color:#10b981">
+      Recovery claim submitted successfully.
+    </div>
+    <a data-testid="rc-status-link" href="/recovery-status?vault=${vault}">
+      Track recovery status
+    </a>
+  `
+
+  return wrap('Claim Your Vault — VFIDE', `
+    <div data-testid="rc-modal-root" aria-label="Recovery claim flow">
+      <h2>Claim Your Vault</h2>
+      <p>Step ${step} of 3</p>
+
+      <!-- Progress bar -->
+      <div data-testid="rc-progress" aria-label="Step ${step} of 3" role="progressbar"
+           aria-valuenow="${step}" aria-valuemin="1" aria-valuemax="3">
+        ${[1,2,3].map(s => `<span style="width:33%;display:inline-block;height:4px;background:${s <= step ? '#6366f1' : '#3f3f46'}"></span>`).join('')}
+      </div>
+
+      ${step === 1 ? `
+        <div data-testid="rc-vault-address">${vault}</div>
+        <div data-testid="rc-new-wallet">${newWallet}</div>
+        <div data-testid="rc-challenge-notice" role="note">
+          This initiates a multi-day challenge period.
+        </div>
+        <button data-testid="rc-continue-btn" aria-label="Continue to step 2"
+          onclick="window.location.href='/recovery-sign?step=2&vault=${vault}&wallet=${newWallet}'">
+          Continue
+        </button>
+      ` : ''}
+
+      ${step === 2 ? step2html : ''}
+      ${step === 3 || submitted ? step3html : ''}
+
+      <script>
+        function handleSubmit() {
+          var id = document.querySelector('[data-testid="rc-recovery-id"]').value;
+          var reason = document.querySelector('[data-testid="rc-reason"]').value;
+          if (!id || !reason) {
+            var existing = document.querySelector('[data-testid="rc-error"]');
+            if (existing) { existing.textContent = 'Recovery ID and reason are required.'; return; }
+            var err = document.createElement('div');
+            err.setAttribute('data-testid', 'rc-error');
+            err.setAttribute('role', 'alert');
+            err.style.color = '#f87171';
+            err.textContent = 'Recovery ID and reason are required.';
+            document.querySelector('[data-testid="rc-submit-btn"]').before(err);
+            return;
+          }
+          window.location.href = '/recovery-sign?step=3&submitted=true&vault=${vault}&wallet=${newWallet}';
+        }
+      </script>
+    </div>
+  `, '/recovery-sign')
+}
+
+// ─── /recovery-status ───────────────────────────────────────────────────────
+// Simulates the RecoveryStatusPage for Playwright tests.
+// Accepts ?claimStatus=<status>&canFinalize=<true>&timeRemaining=<seconds>
+const recoveryStatusPage = (qs = '') => {
+  const params = new URLSearchParams(qs)
+  const vault = params.get('vault') || '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb1'
+  const statusName = params.get('claimStatus') || 'Pending'
+  const canFinalize = params.get('canFinalize') === 'true'
+  const timeRemaining = parseInt(params.get('timeRemaining') || '604800', 10) // 7 days default
+  const finalizeSuccess = params.get('finalizeSuccess') === 'true'
+  const guardianApprovals = parseInt(params.get('approvals') || '1', 10)
+  const guardianTotal = parseInt(params.get('total') || '3', 10)
+
+  // Status label mapping (mirrors hook RecoveryClaimStatus)
+  const statusLabels = {
+    None: 'No active claim',
+    Pending: 'Awaiting guardian votes',
+    GuardianApproved: 'Guardians approved — challenge window active',
+    Challenged: 'Challenged by owner',
+    Approved: 'Ready to finalize',
+    Executed: 'Recovery complete',
+    Rejected: 'Rejected',
+    Expired: 'Expired',
+  }
+  const label = statusLabels[statusName] || statusName
+  const isTerminal = ['Challenged', 'Rejected', 'Expired', 'Executed'].includes(statusName)
+  const isFinalizable = statusName === 'Approved' || canFinalize
+
+  const daysRemaining = Math.floor(timeRemaining / 86400)
+  const timeLabel = daysRemaining >= 2 ? `${daysRemaining} days remaining`
+    : daysRemaining === 1 ? '1 day remaining'
+    : `${Math.floor(timeRemaining / 3600)} hours remaining`
+
+  return wrap('Recovery Status — VFIDE', `
+    <div data-testid="recovery-status-root" aria-label="Recovery claim status">
+      <h1>Recovery Status</h1>
+
+      <div data-testid="recovery-vault-address">${vault}</div>
+
+      <div data-testid="recovery-status-label" aria-live="polite">${label}</div>
+
+      ${statusName === 'Pending' ? `
+        <div data-testid="recovery-guardian-progress" aria-label="Guardian votes">
+          ${guardianApprovals} / ${guardianTotal} guardians approved
+        </div>
+      ` : ''}
+
+      ${statusName === 'GuardianApproved' ? `
+        <div data-testid="recovery-challenge-countdown" aria-label="Challenge window countdown">
+          ${timeLabel}
+        </div>
+      ` : ''}
+
+      ${isFinalizable && !finalizeSuccess ? `
+        <button data-testid="recovery-finalize-btn" aria-label="Finalize recovery claim"
+          onclick="window.location.href='/recovery-status?claimStatus=Executed&finalizeSuccess=true&vault=${vault}'">
+          Finalize Recovery
+        </button>
+      ` : ''}
+
+      ${finalizeSuccess ? `
+        <div data-testid="recovery-finalized-success" role="status" style="color:#10b981">
+          Recovery complete. Vault ownership transferred.
+        </div>
+        <a data-testid="recovery-vault-link" href="/vault">Go to your vault</a>
+      ` : ''}
+
+      ${isTerminal && !finalizeSuccess ? `
+        <div data-testid="recovery-terminal-notice" role="status">
+          ${label}
+        </div>
+      ` : ''}
+    </div>
+  `, '/recovery-status')
+}
+
+// ─── /recovery-challenge ─────────────────────────────────────────────────────
+// Simulates the OwnerChallengeBanner for Playwright owner-veto tests.
+const recoveryChallengePage = (qs = '') => {
+  const params = new URLSearchParams(qs)
+  const canChallenge = params.get('canChallenge') !== 'false'
+  const challenged = params.get('challenged') === 'true'
+  const timeRemaining = parseInt(params.get('timeRemaining') || '604800', 10)
+  const daysRemaining = Math.floor(timeRemaining / 86400)
+  const timeLabel = daysRemaining >= 2 ? `${daysRemaining} days` : `${Math.floor(timeRemaining / 3600)} hours`
+  const approvals = parseInt(params.get('approvals') || '2', 10)
+  const total = parseInt(params.get('total') || '3', 10)
+  const status = params.get('status') || 'GuardianApproved'
+
+  return wrap('Owner Challenge — VFIDE', `
+    <div data-testid="challenge-banner-root" role="alert" aria-label="Recovery claim active on your vault"
+         style="background:#dc2626;padding:16px;color:white">
+      <h2>Recovery claim active on your vault</h2>
+
+      <div data-testid="challenge-status-text">
+        ${status === 'Pending'
+          ? `Guardians are voting (${approvals}/${total} approved so far)`
+          : `Guardians approved. Challenge window closes in ${timeLabel}.`}
+      </div>
+
+      ${canChallenge && !challenged ? `
+        <button data-testid="challenge-btn" aria-label="Challenge this recovery claim"
+          onclick="document.querySelector('[data-testid=challenge-modal]').style.display='block'">
+          Challenge This
+        </button>
+
+        <div data-testid="challenge-modal" style="display:none;margin-top:16px">
+          <label for="challenge-reason">Reason for challenging</label>
+          <textarea id="challenge-reason" data-testid="challenge-reason-input"
+            aria-label="Reason for challenge" placeholder="Why is this claim not authorized?"></textarea>
+          <button data-testid="challenge-confirm-btn" aria-label="Confirm challenge"
+            onclick="submitChallenge()">
+            Confirm Challenge
+          </button>
+        </div>
+      ` : ''}
+
+      ${challenged ? `
+        <div data-testid="challenge-submitted-badge" role="status">
+          Challenge submitted
+        </div>
+      ` : ''}
+
+      ${!canChallenge && status === 'Pending' ? `
+        <div data-testid="challenge-pending-notice">
+          Can challenge once guardians approve
+        </div>
+      ` : ''}
+    </div>
+
+    <script>
+      function submitChallenge() {
+        var reason = document.querySelector('[data-testid="challenge-reason-input"]').value;
+        if (!reason.trim()) {
+          alert('Please provide a reason.');
+          return;
+        }
+        window.location.href = '/recovery-challenge?challenged=true&canChallenge=false';
+      }
+    </script>
+  `, '/recovery-challenge')
+}
+
 // ── Router ────────────────────────────────────────────────────────────────
 const routes = {
   '/':          homePage,
@@ -487,6 +710,21 @@ const server = http.createServer((req, res) => {
   if (url === '/pay') {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
     res.end(payPage(qs))
+    return
+  }
+  if (url === '/recovery-sign') {
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+    res.end(recoverySignPage(qs))
+    return
+  }
+  if (url === '/recovery-status') {
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+    res.end(recoveryStatusPage(qs))
+    return
+  }
+  if (url === '/recovery-challenge') {
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+    res.end(recoveryChallengePage(qs))
     return
   }
 
