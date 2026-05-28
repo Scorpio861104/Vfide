@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Award, TrendingDown, Sparkles, ExternalLink } from 'lucide-react';
 
 import { useProofScore } from '@/hooks/useProofScore';
+import { HIGH_TRUST_THRESHOLD, LOW_TRUST_THRESHOLD } from '@/lib/constants';
 import { ChapterShell } from '../ChapterShell';
 
 interface ProofScoreChapterProps {
@@ -71,7 +72,7 @@ export function ProofScoreChapter({ onComplete, onSkip }: ProofScoreChapterProps
               <span className="font-semibold text-emerald-300">≥ 8,000:</span> 0.25% burn fee
             </li>
             <li>
-              <span className="font-semibold text-accent">5,000–7,999:</span> 2.5% sliding down with trust
+              <span className="font-semibold text-accent">{LOW_TRUST_THRESHOLD + 1}–{HIGH_TRUST_THRESHOLD - 1}:</span> sliding — up to 5% at the low end, as low as 0.25% approaching the top
             </li>
             <li>
               <span className="font-semibold text-amber-300">4,000–4,999:</span> Higher fee — build trust to bring it down

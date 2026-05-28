@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, Suspense, useEffect } from 'react';
 import { registerServiceWorker } from '@/lib/sw-register';
 import { usePathname } from 'next/navigation';
 import { useAccount } from 'wagmi';
@@ -52,7 +52,7 @@ export function ClientLayout({ children }: ClientLayoutProps) {
         <LiveProofScoreProvider>
           <WizardStateProvider>
             <AppShell>{children}</AppShell>
-            <WizardMount />
+            <Suspense fallback={null}><WizardMount /></Suspense>
           </WizardStateProvider>
         </LiveProofScoreProvider>
       </UserProvider>

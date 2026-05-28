@@ -188,7 +188,7 @@ export function VaultSetupWizard({ forceOpen = false, onClose }: VaultSetupWizar
                 VFIDE setup
               </p>
               <p className="truncate text-sm font-semibold text-white">
-                Chapter {currentIndex + 1} of {totalChapters} ·{' '}
+                Chapter {currentIndex + 1} of {totalChapters - 1} ·{' '}
                 {CHAPTERS.find((c) => c.id === state.currentChapter)?.shortLabel ?? ''}
               </p>
             </div>
@@ -288,7 +288,7 @@ function ContinuePrompt({
         <button
           type="button"
           onClick={onContinue}
-          className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-accent to-blue-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-accent/25 hover:scale-[1.01]"
+          className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-accent to-blue-600 px-4 py-3 text-sm font-bold text-zinc-950 shadow-lg shadow-accent/25 hover:scale-[1.01]"
         >
           <Play size={16} aria-hidden />
           Continue to {nextMeta?.shortLabel ?? 'next chapter'}
