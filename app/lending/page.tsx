@@ -32,9 +32,9 @@ export default function Page() {
             <div className="text-left bg-zinc-900/50 rounded-xl p-5 mb-8">
               <p className="text-xs text-zinc-500 uppercase tracking-widest mb-3">What to expect</p>
               <ul className="space-y-2">
-                <li className="flex items-start gap-2 text-sm text-zinc-300"><span className="text-cyan-400 mt-0.5">→</span>Borrow USDC against vault collateral at ProofScore-adjusted rates</li>
-                <li className="flex items-start gap-2 text-sm text-zinc-300"><span className="text-cyan-400 mt-0.5">→</span>No credit check — collateral and reputation are your credit score</li>
-                <li className="flex items-start gap-2 text-sm text-zinc-300"><span className="text-cyan-400 mt-0.5">→</span>Liquidation protection with Guardian-triggered top-ups</li>
+                <li className="flex items-start gap-2 text-sm text-zinc-300"><span className="text-accent mt-0.5">→</span>Borrow USDC against vault collateral at ProofScore-adjusted rates</li>
+                <li className="flex items-start gap-2 text-sm text-zinc-300"><span className="text-accent mt-0.5">→</span>No credit check — collateral and reputation are your credit score</li>
+                <li className="flex items-start gap-2 text-sm text-zinc-300"><span className="text-accent mt-0.5">→</span>Liquidation protection with Guardian-triggered top-ups</li>
               </ul>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">

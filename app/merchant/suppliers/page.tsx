@@ -84,7 +84,7 @@ export default function MerchantSuppliersPage() {
         </div>
         <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         <div className="container mx-auto max-w-4xl px-4 pb-16">
-          <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200">
+          <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-accent hover:text-accent">
             <ArrowLeft size={16} /> Back to Merchant Hub
           </Link>
 
@@ -93,10 +93,10 @@ export default function MerchantSuppliersPage() {
               <div className="badge-live mb-3">
               <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> Supply Chain
             </div>
-            <h1 className="flex items-center gap-3 text-3xl font-black tracking-tight"><Truck className="text-cyan-400" /> Suppliers & purchase orders</h1>
+            <h1 className="flex items-center gap-3 text-3xl font-black tracking-tight"><Truck className="text-accent" /> Suppliers & purchase orders</h1>
               <p className="mt-2 text-gray-400">Maintain your supplier directory and keep a clean record of restock requests and deliveries.</p>
             </div>
-            <button type="button" onClick={() => setShowAdd((current) => !current)} className="inline-flex items-center gap-2 rounded-xl border border-accent/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-200">
+            <button type="button" onClick={() => setShowAdd((current) => !current)} className="inline-flex items-center gap-2 rounded-xl border border-accent/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-accent">
               <Plus size={16} /> Add supplier
             </button>
           </div>
@@ -109,7 +109,7 @@ export default function MerchantSuppliersPage() {
                 <input value={draft.contactEmail} onChange={(event) =>  setDraft((current) => ({ ...current, contactEmail: event.target.value }))} className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-white" />
               </div>
               <textarea value={draft.notes} onChange={(event) =>  setDraft((current) => ({ ...current, notes: event.target.value }))} rows={3} className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-white" />
-              <button type="button" onClick={() => void addSupplier()} disabled={!draft.supplierName.trim()} className="rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">Save supplier</button>
+              <button type="button" onClick={() => void addSupplier()} disabled={!draft.supplierName.trim()} className="rounded-xl bg-gradient-to-r from-accent to-blue-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">Save supplier</button>
             </div>
           )}
 
@@ -121,7 +121,7 @@ export default function MerchantSuppliersPage() {
             <div className="space-y-6">
               <div className="grid gap-3 md:grid-cols-3">
                 <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-center"><div className="text-xs text-gray-400">Suppliers</div><div className="text-2xl font-bold text-white">{suppliers.length}</div></div>
-                <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-center"><div className="text-xs text-gray-400">Purchase Orders</div><div className="text-2xl font-bold text-cyan-300">{orders.length}</div></div>
+                <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-center"><div className="text-xs text-gray-400">Purchase Orders</div><div className="text-2xl font-bold text-accent">{orders.length}</div></div>
                 <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-center"><div className="text-xs text-gray-400">Delivered</div><div className="text-2xl font-bold text-emerald-300">{deliveredCount}</div></div>
               </div>
 
@@ -156,7 +156,7 @@ export default function MerchantSuppliersPage() {
                             <div className="text-xs text-gray-500">{formatDate(order.created_at, 'short')}</div>
                           </div>
                           <div className="flex items-center gap-2">
-                            {order.total && <span className="font-semibold text-cyan-300">{formatCurrency(order.total)}</span>}
+                            {order.total && <span className="font-semibold text-accent">{formatCurrency(order.total)}</span>}
                             <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs ${order.status === 'delivered' ? 'bg-emerald-500/10 text-emerald-300' : 'bg-white/5 text-gray-300'}`}>
                               {order.status === 'delivered' && <CheckCircle2 size={12} />} {order.status}
                             </span>

@@ -73,16 +73,16 @@ export function ResponsibilitiesTab({ isConnected }: { isConnected: boolean }) {
         </div>
         <button
           onClick={handleAddVault}
-          className="mt-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 px-4 py-2 font-bold text-white"
+          className="mt-3 rounded-xl bg-gradient-to-r from-accent to-blue-500 px-4 py-2 font-bold text-white"
         >
           Add Vault to Watchlist
         </button>
-        {notice && <p className="mt-3 text-sm text-cyan-200">{notice}</p>}
+        {notice && <p className="mt-3 text-sm text-accent">{notice}</p>}
       </div>
 
       <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/8 to-white/2 p-6 backdrop-blur-xl">
         <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-white">
-          <Users className="h-5 w-5 text-cyan-400" />
+          <Users className="h-5 w-5 text-accent" />
           Vaults You&apos;re Guarding ({inboxEntries.length})
         </h2>
 

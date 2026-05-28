@@ -97,15 +97,15 @@ export default function StoriesPage() {
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-3">
             <span className="bg-gradient-to-r from-cyan-400 via-violet-400 to-pink-400 bg-clip-text text-transparent flex items-center justify-center gap-3">
-              <Sparkles size={36} className="text-cyan-400" />Stories
+              <Sparkles size={36} className="text-accent" />Stories
             </span>
           </h1>
           <p className="text-white/50 text-lg max-w-2xl mx-auto">Share moments that disappear in 24 hours. See what the community is up to!</p>
           <div className="flex flex-wrap justify-center gap-2 text-xs uppercase tracking-[0.2em] text-white/30 mt-4">
             <span>Capture</span>
-            <span className="text-cyan-400">→</span>
+            <span className="text-accent">→</span>
             <span>Share</span>
-            <span className="text-cyan-400">→</span>
+            <span className="text-accent">→</span>
             <span>Inspire</span>
           </div>
         </motion.div>
@@ -129,10 +129,10 @@ export default function StoriesPage() {
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                   className="flex flex-col items-center gap-2 cursor-pointer shrink-0"
                   onClick={() => setShowCreator(true)}>
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-cyan-400/20 to-violet-400/20 border-2 border-dashed border-cyan-400/50 flex items-center justify-center hover:bg-cyan-400/10 transition-colors">
-                    <Plus size={28} className="text-cyan-400" />
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-accent/20 to-violet-400/20 border-2 border-dashed border-cyan-400/50 flex items-center justify-center hover:bg-cyan-400/10 transition-colors">
+                    <Plus size={28} className="text-accent" />
                   </div>
-                  <p className="text-cyan-400 text-xs font-medium">Add Story</p>
+                  <p className="text-accent text-xs font-medium">Add Story</p>
                 </motion.div>
 
                 {myStories.length > 0 && (

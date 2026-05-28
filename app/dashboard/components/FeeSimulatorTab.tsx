@@ -25,7 +25,7 @@ export function FeeSimulatorTab({ currentScore }: { currentScore: number }) {
       <motion.div variants={itemVariants}>
         <GlassCard className="p-8" hover={false}>
           <h2 className="mb-2 flex items-center gap-3 text-2xl font-bold text-white">
-            <Calculator className="text-cyan-400" size={28} />
+            <Calculator className="text-accent" size={28} />
             Fee Simulator
           </h2>
           <p className="mb-8 text-white/60">See how your ProofScore affects transaction fees</p>
@@ -43,7 +43,7 @@ export function FeeSimulatorTab({ currentScore }: { currentScore: number }) {
 
             <div>
               <label className="mb-3 block font-medium text-white/80">
-                Simulated ProofScore: <span className="text-cyan-400">{simulatedScore}</span>
+                Simulated ProofScore: <span className="text-accent">{simulatedScore}</span>
               </label>
               <input
                 type="range"
@@ -77,7 +77,7 @@ export function FeeSimulatorTab({ currentScore }: { currentScore: number }) {
             </div>
 
             <div className="rounded-xl border border-accent/30 bg-cyan-500/10 p-4">
-              <p className="text-sm text-cyan-400">
+              <p className="text-sm text-accent">
                 💡 <strong>Tip:</strong> Your current score of {currentScore} gives you a {calculateFee(currentScore).toFixed(2)}% fee rate.
                 {currentScore < 8000 && ' Increase your score to 8000 to unlock the minimum 0.25% rate!'}
               </p>

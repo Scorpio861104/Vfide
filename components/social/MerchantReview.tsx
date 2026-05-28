@@ -55,7 +55,7 @@ function scoreWeight(score: number): 'high' | 'medium' | 'low' {
 
 const WEIGHT_STYLES = {
   high: { border: 'border-emerald-500/15', bg: 'bg-emerald-500/3', badge: 'text-emerald-400', size: 'text-sm' },
-  medium: { border: 'border-white/10', bg: 'bg-white/2', badge: 'text-cyan-400', size: 'text-sm' },
+  medium: { border: 'border-white/10', bg: 'bg-white/2', badge: 'text-accent', size: 'text-sm' },
   low: { border: 'border-white/5', bg: 'bg-white/1', badge: 'text-gray-500', size: 'text-xs' },
 };
 
@@ -102,7 +102,7 @@ export function MerchantReview({ review, onHelpful }: MerchantReviewProps) {
           <div className="flex items-center gap-3 mt-2 text-[10px] text-gray-600">
             <span>{new Date(review.timestamp).toLocaleDateString()}</span>
             {onHelpful && (
-              <button onClick={() => onHelpful(review.id)} className="flex items-center gap-0.5 hover:text-cyan-400 transition-colors">
+              <button onClick={() => onHelpful(review.id)} className="flex items-center gap-0.5 hover:text-accent transition-colors">
                 <ThumbsUp size={10} />{review.helpful > 0 ? review.helpful : ''} Helpful
               </button>
             )}
@@ -263,7 +263,7 @@ export function CommunityBoard({ merchants, products, onMerchant, onProduct }: C
                   <div className="text-gray-500 text-[10px]">by {p.merchant} · {p.purchases7d} bought this week</div>
                 </div>
               </div>
-              <span className="text-cyan-400 font-mono font-bold text-sm">{p.currency}{p.price}</span>
+              <span className="text-accent font-mono font-bold text-sm">{p.currency}{p.price}</span>
             </motion.button>
           ))}
         </div>

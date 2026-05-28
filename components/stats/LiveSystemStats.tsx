@@ -132,7 +132,7 @@ export function LiveSystemStats() {
           label="Total Value Locked"
           value={`$${(totalValueLocked / 1000000).toFixed(2)}M`}
           subValue="in user vaults"
-          icon={<Lock className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-cyan-400" />}
+          icon={<Lock className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-accent" />}
           color="#00F0FF"
           trend={trends.tvl.direction}
           trendPercent={trends.tvl.percent}
@@ -179,7 +179,7 @@ export function LiveSystemStats() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4 text-center">
           <div>
             <p className="text-[10px] sm:text-xs text-zinc-100/50">Avg ProofScore</p>
-            <p className="text-base sm:text-lg md:text-xl font-bold text-cyan-400">685</p>
+            <p className="text-base sm:text-lg md:text-xl font-bold text-accent">685</p>
           </div>
           <div>
             <p className="text-[10px] sm:text-xs text-zinc-100/50">DAO Proposals</p>

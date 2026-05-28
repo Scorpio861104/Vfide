@@ -155,7 +155,7 @@ export function MerchantQuickSetup({ onComplete }: { onComplete?: (slug: string)
           <div key={s} className="flex-1 flex items-center gap-2">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
               s < step ? 'bg-emerald-500 text-white' :
-              s === step ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/25' :
+              s === step ? 'bg-gradient-to-r from-accent to-blue-500 text-white shadow-lg shadow-cyan-500/25' :
               'bg-white/5 text-gray-500 border border-white/10'
             }`}>
               {s < step ? <Check size={14} /> : s}

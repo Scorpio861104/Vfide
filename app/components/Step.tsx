@@ -40,7 +40,7 @@ export function Step({ number, title, description, time, index }: StepProps) {
       {/* Content */}
       <div className="flex-1 pb-10 pt-1">
         <div className="flex items-start justify-between gap-4 mb-2">
-          <h3 className="text-xl font-bold text-zinc-50 transition-colors group-hover:text-cyan-400 leading-snug">
+          <h3 className="text-xl font-bold text-zinc-50 transition-colors group-hover:text-accent leading-snug">
             {title}
           </h3>
           <span className="shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-500 bg-white/4 border border-white/8 rounded-full px-3 py-1">

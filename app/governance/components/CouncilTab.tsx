@@ -24,7 +24,7 @@ export function CouncilTab() {
       <div className="container mx-auto px-3 sm:px-4 max-w-3xl space-y-6">
         <div className="bg-cyan-500/5 border border-accent/20 rounded-2xl p-6">
           <div className="flex items-start gap-3">
-            <Users size={20} className="text-cyan-400 shrink-0 mt-1" />
+            <Users size={20} className="text-accent shrink-0 mt-1" />
             <div className="flex-1">
               <h2 className="text-2xl font-bold text-zinc-100 mb-2">Council governance — coming soon</h2>
               <p className="text-zinc-400 text-sm leading-relaxed">
@@ -38,7 +38,7 @@ export function CouncilTab() {
 
         <div className="bg-zinc-800 border border-zinc-700 rounded-2xl p-6 space-y-4">
           <h3 className="text-lg font-semibold text-zinc-100 flex items-center gap-2">
-            <Vote size={16} className="text-cyan-400" />
+            <Vote size={16} className="text-accent" />
             How governance works at V1
           </h3>
           <div className="space-y-3 text-sm text-zinc-300">
@@ -54,11 +54,11 @@ export function CouncilTab() {
             </ul>
             <p className="pt-2">
               See the{' '}
-              <Link href="/governance" className="text-cyan-400 hover:underline font-semibold">
+              <Link href="/governance" className="text-accent hover:underline font-semibold">
                 Proposals tab
               </Link>{' '}
               for currently active proposals, or the{' '}
-              <Link href="/governance" className="text-cyan-400 hover:underline font-semibold">
+              <Link href="/governance" className="text-accent hover:underline font-semibold">
                 Create tab
               </Link>{' '}
               to submit a new one.
@@ -101,7 +101,7 @@ export function CouncilTab() {
           </p>
           <Link
             href="/governance"
-            className="text-cyan-400 hover:underline text-sm inline-flex items-center gap-1"
+            className="text-accent hover:underline text-sm inline-flex items-center gap-1"
           >
             View active proposals <ArrowRight size={12} />
           </Link>

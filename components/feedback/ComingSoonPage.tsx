@@ -49,7 +49,7 @@ export function ComingSoonPage({
 
         <section className="relative py-12">
           <div className="container mx-auto max-w-3xl px-4">
-            <Link href={backHref} className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200 transition-colors">
+            <Link href={backHref} className="mb-6 inline-flex items-center gap-2 text-accent hover:text-accent transition-colors">
               <ArrowLeft size={16} /> {backLabel}
             </Link>
 

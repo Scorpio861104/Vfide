@@ -30,7 +30,7 @@ const variantStyles = {
     button: 'primary' as const,
   },
   info: {
-    icon: <AlertTriangle className="text-cyan-400" size={32} />,
+    icon: <AlertTriangle className="text-accent" size={32} />,
     bg: 'bg-cyan-400/20 border-cyan-400',
     button: 'primary' as const,
   },

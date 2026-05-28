@@ -170,7 +170,7 @@ export function ChainSelector({ className = '' }: ChainSelectorProps) {
                   <div className="text-xs text-zinc-500 truncate">{network.name}</div>
                 </div>
                 {isActive && (
-                  <CheckCircle2 size={14} className="text-cyan-400 flex-shrink-0" />
+                  <CheckCircle2 size={14} className="text-accent flex-shrink-0" />
                 )}
               </button>
             );

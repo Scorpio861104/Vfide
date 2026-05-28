@@ -29,7 +29,7 @@ export default function ProfilePage() {
               Identity Management
             </div>
             <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-6">
-              <User size={28} className="text-cyan-300" />
+              <User size={28} className="text-accent" />
             </div>
             <h1 className="text-4xl font-black text-white mb-4 tracking-tight">Your Profile</h1>
             <p className="text-zinc-400 mb-8 max-w-md mx-auto text-lg">

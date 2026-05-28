@@ -132,7 +132,7 @@ export function MyLoansTab() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 size={24} className="text-cyan-400 animate-spin" aria-hidden="true" />
+        <Loader2 size={24} className="text-accent animate-spin" aria-hidden="true" />
       </div>
     );
   }
@@ -223,7 +223,7 @@ function LoanRow({ id, loan, userAddress, busy, actingOn, termLoanAddress, onCan
     loan.state === LoanState.REPAID ? 'text-emerald-400' :
     loan.state === LoanState.DEFAULTED ? 'text-red-400' :
     loan.state === LoanState.GRACE ? 'text-amber-400' :
-    loan.state === LoanState.OPEN ? 'text-cyan-400' :
+    loan.state === LoanState.OPEN ? 'text-accent' :
     'text-zinc-400';
 
   return (

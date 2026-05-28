@@ -130,7 +130,7 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="relative h-48 md:h-64 bg-gradient-to-r from-cyan-400/20 via-violet-400/20 to-rose-500/20"
+        className="relative h-48 md:h-64 bg-gradient-to-r from-accent/20 via-violet-400/20 to-rose-500/20"
       >
         {user.coverImage && (
           <Image src={user.coverImage} alt="cover" fill className="object-cover" sizes="100vw" />
@@ -165,7 +165,7 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
                   transition={{ duration: 2, repeat: Infinity }}
                   title="Verified user"
                 >
-                  <CheckCircle2 className="w-8 h-8 text-cyan-400" />
+                  <CheckCircle2 className="w-8 h-8 text-accent" />
                 </motion.div>
               )}
             </div>
@@ -192,7 +192,7 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
               <button
                 disabled
                 title="Profile editing requires a /api/social/profile PUT endpoint that isn't built yet."
-                className="px-6 py-3 bg-cyan-400/20 border border-cyan-400/40 text-cyan-400/60 rounded-lg cursor-not-allowed font-semibold"
+                className="px-6 py-3 bg-cyan-400/20 border border-cyan-400/40 text-accent/60 rounded-lg cursor-not-allowed font-semibold"
               >
                 Edit Profile
               </button>
@@ -277,7 +277,7 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
           className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8"
         >
           <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 text-center hover:border-cyan-400 transition-colors">
-            <div className="text-cyan-400 text-2xl font-bold mb-1">{user.proofScore.toLocaleString()}</div>
+            <div className="text-accent text-2xl font-bold mb-1">{user.proofScore.toLocaleString()}</div>
             <div className="text-xs text-zinc-400">Proof Score</div>
           </div>
 
@@ -361,7 +361,7 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
                 onClick={() => setActiveTab(tab.key as typeof activeTab)}
                 className={`px-4 py-3 font-semibold text-sm whitespace-nowrap border-b-2 transition-all ${
                   activeTab === tab.key
-                    ? 'border-cyan-400 text-cyan-400'
+                    ? 'border-cyan-400 text-accent'
                     : 'border-transparent text-zinc-400 hover:text-zinc-100'
                 }`}
               >
@@ -433,7 +433,7 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
                     <div className="flex-1 min-w-0">
                       <h4 className="font-semibold text-zinc-100 truncate">{friend.displayName}</h4>
                       {friend.isMutual && (
-                        <div className="text-xs text-cyan-400 flex items-center gap-1">
+                        <div className="text-xs text-accent flex items-center gap-1">
                           <Users className="w-3 h-3" />
                           Mutual friends
                         </div>
@@ -442,7 +442,7 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
                   </div>
                   <div className="flex items-center justify-between text-sm mb-3">
                     <div>
-                      <div className="text-cyan-400 font-semibold">{friend.proofScore}</div>
+                      <div className="text-accent font-semibold">{friend.proofScore}</div>
                       <div className="text-zinc-400 text-xs">Proof Score</div>
                     </div>
                   </div>
@@ -497,7 +497,7 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
                           {achievement.progress} / {achievement.maxProgress}
                         </span>
                         {achievement.isUnlocked && (
-                          <span className="text-[10px] text-cyan-400 font-semibold">UNLOCKED</span>
+                          <span className="text-[10px] text-accent font-semibold">UNLOCKED</span>
                         )}
                       </div>
                     </div>
@@ -550,7 +550,7 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
                           : badge.rarity === 'uncommon'
                             ? 'text-green-400 bg-green-500/20'
                             : badge.rarity === 'rare'
-                              ? 'text-cyan-400 bg-cyan-400/20'
+                              ? 'text-accent bg-cyan-400/20'
                               : badge.rarity === 'epic'
                                 ? 'text-violet-400 bg-violet-400/20'
                                 : 'text-yellow-400 bg-yellow-500/20'

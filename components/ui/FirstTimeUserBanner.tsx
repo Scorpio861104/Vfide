@@ -63,7 +63,7 @@ export function FirstTimeUserBanner({
                 {onAction && actionText && (
                   <button
                     onClick={onAction}
-                    className="mt-3 text-xs font-semibold text-cyan-400 hover:underline"
+                    className="mt-3 text-xs font-semibold text-accent hover:underline"
                   >
                     {actionText} →
                   </button>

@@ -107,7 +107,7 @@ export default function MerchantPage() {
               </h1>
               <p className="mx-auto max-w-2xl text-lg text-zinc-400 leading-relaxed">
                 {isConnected
-                  ? <>Connected as <span className="font-mono text-cyan-400">{address?.slice(0, 6)}…{address?.slice(-4)}</span>. Pick a module below.</>
+                  ? <>Connected as <span className="font-mono text-accent">{address?.slice(0, 6)}…{address?.slice(-4)}</span>. Pick a module below.</>
                   : 'Inventory, invoicing, bookings, loyalty, taxes — every operations tool a small business needs, with zero payment-processor fees.'}
               </p>
               {!isConnected && (
@@ -148,7 +148,7 @@ export default function MerchantPage() {
                 </div>
                 {processors.map((p) => (
                   <div key={p.name} className={`flex items-center justify-between px-5 py-3.5 border-b border-white/5 last:border-0 transition-colors ${p.name === 'VFIDE' ? 'bg-cyan-500/8' : 'hover:bg-white/3'}`}>
-                    <div className={`font-semibold text-sm ${p.name === 'VFIDE' ? 'text-cyan-400' : 'text-white'}`}>{p.name}</div>
+                    <div className={`font-semibold text-sm ${p.name === 'VFIDE' ? 'text-accent' : 'text-white'}`}>{p.name}</div>
                     <div className={`font-mono font-bold text-sm ${p.name === 'VFIDE' ? 'text-glow-cyan' : 'text-zinc-300'}`}>{p.fee}</div>
                   </div>
                 ))}
@@ -191,13 +191,13 @@ export default function MerchantPage() {
                 <HubSection title="Setup" links={SETUP_MODULES} />
 
                 <div className="analytics-card p-6 flex items-start gap-4 mt-10">
-                  <GraduationCap size={26} className="text-cyan-400 flex-shrink-0 mt-0.5" />
+                  <GraduationCap size={26} className="text-accent flex-shrink-0 mt-0.5" />
                   <div>
                     <h3 className="font-bold text-white mb-1.5">First time? Start with these three.</h3>
                     <p className="text-sm text-zinc-400 leading-relaxed">
-                      1.{' '}<Link href="/merchant/setup" className="text-cyan-400 hover:text-cyan-300 transition-colors">Set up your storefront</Link>.{' '}
-                      2.{' '}<Link href="/merchant/inventory" className="text-cyan-400 hover:text-cyan-300 transition-colors">Add your first product</Link>.{' '}
-                      3.{' '}<Link href="/merchant/payment-links" className="text-cyan-400 hover:text-cyan-300 transition-colors">Generate a payment link</Link> to share with a customer.
+                      1.{' '}<Link href="/merchant/setup" className="text-accent hover:text-accent transition-colors">Set up your storefront</Link>.{' '}
+                      2.{' '}<Link href="/merchant/inventory" className="text-accent hover:text-accent transition-colors">Add your first product</Link>.{' '}
+                      3.{' '}<Link href="/merchant/payment-links" className="text-accent hover:text-accent transition-colors">Generate a payment link</Link> to share with a customer.
                     </p>
                   </div>
                 </div>

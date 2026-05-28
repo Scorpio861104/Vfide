@@ -136,7 +136,7 @@ export function WalletSwitcher() {
                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
                   isCurrentWallet ? 'bg-cyan-500/20' : 'bg-zinc-700'
                 }`}>
-                  <Wallet size={18} className={isCurrentWallet ? 'text-cyan-400' : 'text-zinc-400'} />
+                  <Wallet size={18} className={isCurrentWallet ? 'text-accent' : 'text-zinc-400'} />
                 </div>
 
                 {/* Info */}
@@ -233,7 +233,7 @@ export function WalletSwitcher() {
               {!wallet.isPrimary && !isEditing && (
                 <button
                   onClick={() => handleSetPrimary(wallet.address)}
-                  className="mt-2 text-xs text-zinc-500 hover:text-cyan-400 transition-colors"
+                  className="mt-2 text-xs text-zinc-500 hover:text-accent transition-colors"
                 >
                   Set as primary wallet
                 </button>

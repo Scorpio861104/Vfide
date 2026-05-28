@@ -102,7 +102,7 @@ export function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
       <motion.div variants={itemVariants}>
         <GlassCard className="p-8" hover={false}>
           <h2 className="mb-2 flex items-center gap-3 text-2xl font-bold text-white">
-            <Sliders className="text-cyan-400" size={28} />
+            <Sliders className="text-accent" size={28} />
             Score Projection
           </h2>
           <p className="mb-6 text-white/60">
@@ -145,7 +145,7 @@ export function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
 
             <div>
               <label className="mb-2 block text-sm font-medium text-white/80">
-                Months ahead: <span className="text-cyan-300">{months}</span>
+                Months ahead: <span className="text-accent">{months}</span>
               </label>
               <input
                 type="range"
@@ -170,7 +170,7 @@ export function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
                 <div className="text-xs text-white/60 mt-1">{currentTier.name}</div>
               </div>
               <div className="rounded-xl border border-accent/30 bg-accent/5 p-4">
-                <div className="text-xs uppercase tracking-wide text-cyan-300 mb-1">In {months} months</div>
+                <div className="text-xs uppercase tracking-wide text-accent mb-1">In {months} months</div>
                 <div className="text-3xl font-bold" style={{ color: tier.color }}>
                   {finalScore.toLocaleString()}
                 </div>

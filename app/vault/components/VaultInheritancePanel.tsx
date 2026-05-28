@@ -587,7 +587,7 @@ export function VaultInheritancePanel({ vaultAddress, userAddress }: VaultInheri
           {heirCount > 0 && (
             <div className="mb-6">
               <h3 className="text-sm font-semibold text-white/80 mb-3 flex items-center gap-2">
-                <ShieldCheck size={16} className="text-cyan-400" />
+                <ShieldCheck size={16} className="text-accent" />
                 Configured Heirs ({heirCount})
               </h3>
               <div className="space-y-2">
@@ -670,7 +670,7 @@ export function VaultInheritancePanel({ vaultAddress, userAddress }: VaultInheri
               <div>
                 <button
                   onClick={() => setShowProposeForm(v => !v)}
-                  className="flex items-center gap-2 text-sm font-bold text-cyan-400 hover:text-cyan-300 transition-colors"
+                  className="flex items-center gap-2 text-sm font-bold text-accent hover:text-accent transition-colors"
                 >
                   <UserPlus size={16} />
                   {heirCount > 0 ? 'Update Heir Configuration' : 'Configure Heirs'}

@@ -257,7 +257,7 @@ export function FeeSavingsCalculator() {
           })}
 
           {/* Annual savings callout */}
-          <div className="bg-gradient-to-r from-cyan-500/10 to-emerald-500/10 border border-accent/20 rounded-xl p-6 text-center mt-6">
+          <div className="bg-gradient-to-r from-accent/10 to-emerald-500/10 border border-accent/20 rounded-xl p-6 text-center mt-6">
             <div className="text-gray-400 text-sm mb-1">Estimated annual savings vs Square</div>
             <div className="text-4xl font-bold text-emerald-400 font-mono">
               {formatCurrency((results.find(r => r.name === 'Square')?.yearlyFee || 0) - vfideFeeYearly)}

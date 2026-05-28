@@ -99,7 +99,7 @@ function MemorialInner() {
               type="button"
               onClick={submitVault}
               disabled={!isAddress(vaultInput.trim())}
-              className="rounded-lg bg-cyan-500/20 px-4 py-2 text-sm text-cyan-300 hover:bg-accent/30 disabled:opacity-50"
+              className="rounded-lg bg-cyan-500/20 px-4 py-2 text-sm text-accent hover:bg-accent/30 disabled:opacity-50"
             >
               View memorial
             </button>
@@ -276,7 +276,7 @@ function MemorialState({ state, windowEnd }: { state: number; windowEnd: number 
   if (state === 3) {
     return (
       <div className="rounded-xl border border-accent/30 bg-accent/5 p-4">
-        <div className="flex items-center gap-3 text-cyan-200">
+        <div className="flex items-center gap-3 text-accent">
           <Clock size={20} />
           <div className="flex-1">
             <div className="text-xs uppercase tracking-wider opacity-70">State</div>

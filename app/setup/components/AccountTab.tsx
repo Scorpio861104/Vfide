@@ -90,7 +90,7 @@ export function AccountTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 size={24} className="text-cyan-400 animate-spin" />
+        <Loader2 size={24} className="text-accent animate-spin" />
       </div>
     );
   }
@@ -117,7 +117,7 @@ export function AccountTab() {
       {/* Edit form */}
       <div className="bg-white/3 border border-white/10 rounded-2xl p-6">
         <div className="flex items-center gap-2 mb-5">
-          <Edit2 size={16} className="text-cyan-400" />
+          <Edit2 size={16} className="text-accent" />
           <h3 className="text-white font-semibold">Edit Profile</h3>
         </div>
         <form onSubmit={handleSave} className="space-y-4">
@@ -173,7 +173,7 @@ export function AccountTab() {
           <button
             type="submit"
             disabled={saving}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent/20 hover:bg-accent/30 text-cyan-400 text-sm font-semibold transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent/20 hover:bg-accent/30 text-accent text-sm font-semibold transition-colors disabled:opacity-50"
           >
             {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
             {saving ? 'Saving…' : 'Save Changes'}

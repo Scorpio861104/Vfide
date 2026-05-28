@@ -94,7 +94,7 @@ export default function MarketplacePage() {
 
           {/* Results */}
           {loading ? (
-            <div className="text-center py-16"><Loader2 size={32} className="text-cyan-400 animate-spin mx-auto" /></div>
+            <div className="text-center py-16"><Loader2 size={32} className="text-accent animate-spin mx-auto" /></div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-16"><Package size={48} className="mx-auto mb-4 text-gray-600" /><p className="text-gray-400">No products found</p></div>
           ) : (

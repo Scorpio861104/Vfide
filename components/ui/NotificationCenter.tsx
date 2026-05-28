@@ -519,7 +519,7 @@ export function NotificationCenter() {
             <motion.span
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs font-bold rounded-full flex items-center justify-center"
+              className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-gradient-to-r from-accent to-blue-500 text-white text-xs font-bold rounded-full flex items-center justify-center"
             >
               {unreadCount > 9 ? '9+' : unreadCount}
             </motion.span>
@@ -554,7 +554,7 @@ export function NotificationCenter() {
               <div className="px-4 py-3 border-b border-zinc-700">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-bold text-zinc-100 flex items-center gap-2">
-                    <Bell size={18} className="text-cyan-400" />
+                    <Bell size={18} className="text-accent" />
                     Notifications
                     {unreadCount > 0 && (
                       <span className="px-2 py-0.5 bg-accent/20 text-accent rounded-full text-xs font-medium">
@@ -622,7 +622,7 @@ export function NotificationCenter() {
                       <div className="flex-1" />
                       <button
                         onClick={markAllRead}
-                        className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+                        className="text-xs text-accent hover:text-accent transition-colors"
                       >
                         Mark all read
                       </button>
@@ -676,7 +676,7 @@ export function NotificationCenter() {
                 <Link
                   href="/settings?tab=notifications"
                   onClick={() => setIsOpen(false)}
-                  className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-1"
+                  className="text-sm text-accent hover:text-accent transition-colors flex items-center gap-1"
                 >
                   View all
                   <ChevronRight size={14} />

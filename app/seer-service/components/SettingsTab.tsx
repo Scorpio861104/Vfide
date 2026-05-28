@@ -36,7 +36,7 @@ export function SettingsTab() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Settings size={16} className="text-cyan-400" />
+          <Settings size={16} className="text-accent" />
           <h3 className="text-white font-semibold text-sm">SEER Event Pipeline</h3>
         </div>
         <div className="flex gap-1">
@@ -58,7 +58,7 @@ export function SettingsTab() {
 
       {loading ? (
         <div className="flex items-center justify-center py-10">
-          <Loader2 size={20} className="text-cyan-400 animate-spin" />
+          <Loader2 size={20} className="text-accent animate-spin" />
         </div>
       ) : analytics ? (
         <>

@@ -57,7 +57,7 @@ export default function FlashLoansPage() {
                 <div className="text-xs text-white/40">Collateral</div>
               </div>
               <div className="analytics-card text-center px-5 py-3">
-                <div className="text-xl font-bold text-cyan-400">0.09%</div>
+                <div className="text-xl font-bold text-accent">0.09%</div>
                 <div className="text-xs text-white/40">Flash Fee</div>
               </div>
             </div>

@@ -75,7 +75,7 @@ export function GuardianPendingQueueWidget() {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
-        <Shield className="w-5 h-5 text-cyan-400" />
+        <Shield className="w-5 h-5 text-accent" />
         <h3 className="text-lg font-bold text-white">Pending queue (guarded vaults)</h3>
       </div>
       <div className="text-xs text-gray-400 -mt-2">
@@ -309,7 +309,7 @@ function PendingQueueRow({ vault, label, connectedAddress: _connectedAddress }: 
             void refetchWithdrawals();
             bumpRefresh();
           }}
-          className="text-xs text-cyan-400 hover:text-cyan-300"
+          className="text-xs text-accent hover:text-accent"
         >
           Refresh
         </button>

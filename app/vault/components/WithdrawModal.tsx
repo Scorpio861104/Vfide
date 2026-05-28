@@ -112,7 +112,7 @@ export function WithdrawModal({
             </div>
 
             <div className="mb-4 p-3 bg-cyan-500/10 border border-accent/30 rounded-xl">
-              <div className="text-cyan-300 text-sm font-bold mb-1">CardBound Signed Transfer</div>
+              <div className="text-accent text-sm font-bold mb-1">CardBound Signed Transfer</div>
               <div className="text-white/70 text-xs">
                 You&apos;ll sign a TransferIntent and execute a vault-to-vault transfer. Funds move
                 directly between the two vaults — no wallet round-trip required.

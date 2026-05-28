@@ -30,7 +30,7 @@ interface ProposalCardProps {
 function statusBadge(status?: ProposalStatus): { bg: string; text: string; Icon: typeof Clock } {
   switch (status) {
     case ProposalStatus.Active:
-      return { bg: 'bg-cyan-500/10 border-accent/30', text: 'text-cyan-300', Icon: Sparkles };
+      return { bg: 'bg-cyan-500/10 border-accent/30', text: 'text-accent', Icon: Sparkles };
     case ProposalStatus.Ended:
       return { bg: 'bg-zinc-500/10 border-zinc-500/30', text: 'text-zinc-300', Icon: Clock };
     case ProposalStatus.Succeeded:
@@ -98,7 +98,7 @@ export function ProposalCard({
       <div className="flex items-start justify-between mb-4 gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-2 flex-wrap">
-            <div className="inline-block px-3 py-1 bg-cyan-400/20 border border-cyan-400 rounded text-cyan-400 text-sm font-bold">
+            <div className="inline-block px-3 py-1 bg-cyan-400/20 border border-cyan-400 rounded text-accent text-sm font-bold">
               {prop.type}
             </div>
             {status !== undefined && (
@@ -108,7 +108,7 @@ export function ProposalCard({
               </div>
             )}
             {viewer?.hasVoted && isActive && (
-              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border bg-cyan-500/10 border-accent/30 text-cyan-200">
+              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border bg-cyan-500/10 border-accent/30 text-accent">
                 <CheckCircle2 size={10} /> You voted
               </div>
             )}
@@ -235,7 +235,7 @@ export function ProposalCard({
 
         <button
           onClick={() => onViewDetails(prop)}
-          className="px-4 py-2 bg-zinc-900 border border-zinc-700 text-zinc-400 rounded-lg hover:text-cyan-400 hover:border-cyan-400 transition-colors"
+          className="px-4 py-2 bg-zinc-900 border border-zinc-700 text-zinc-400 rounded-lg hover:text-accent hover:border-cyan-400 transition-colors"
         >
           View Details
         </button>

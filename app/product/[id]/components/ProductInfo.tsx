@@ -47,7 +47,7 @@ export function ProductInfo({ product }: { product: Product }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
-        <span className="text-xs px-2 py-0.5 bg-cyan-500/10 border border-accent/20 rounded text-cyan-400 capitalize flex items-center gap-1">
+        <span className="text-xs px-2 py-0.5 bg-cyan-500/10 border border-accent/20 rounded text-accent capitalize flex items-center gap-1">
           <TypeIcon size={10} /> {product.product_type}
         </span>
       </div>
@@ -62,7 +62,7 @@ export function ProductInfo({ product }: { product: Product }) {
       )}
 
       <div className="flex items-baseline gap-3">
-        <span className="text-3xl font-bold text-cyan-400 font-mono">${parseFloat(activePrice).toFixed(2)}</span>
+        <span className="text-3xl font-bold text-accent font-mono">${parseFloat(activePrice).toFixed(2)}</span>
         {hasDiscount && <span className="text-lg text-gray-500 line-through font-mono">${parseFloat(product.compare_at_price!).toFixed(2)}</span>}
       </div>
 
@@ -74,7 +74,7 @@ export function ProductInfo({ product }: { product: Product }) {
           <div className="flex flex-wrap gap-2">
             {product.variants.map(v => (
               <button key={v.id} onClick={() => setSelectedVariant(v.id)}
-                className={`px-3 py-1.5 rounded-lg text-sm border ${selectedVariant === v.id ? 'bg-accent/15 border-accent/40 text-cyan-400' : 'bg-white/3 border-white/10 text-gray-400'}`}>
+                className={`px-3 py-1.5 rounded-lg text-sm border ${selectedVariant === v.id ? 'bg-accent/15 border-accent/40 text-accent' : 'bg-white/3 border-white/10 text-gray-400'}`}>
                 {v.label}
               </button>
             ))}
@@ -89,7 +89,7 @@ export function ProductInfo({ product }: { product: Product }) {
           <button onClick={() => setQty(q => q + 1)} className="px-3 py-2 text-gray-400 hover:text-white"><Plus size={14} /></button>
         </div>
         <button onClick={handleAddToCart} disabled={!inStock} aria-label={`Add ${product.name} to cart`}
-          className={`flex-1 py-3 rounded-xl font-bold flex items-center justify-center gap-2 ${addedToCart ? 'bg-emerald-500 text-white' : inStock ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white' : 'bg-white/5 text-gray-500'}`}>
+          className={`flex-1 py-3 rounded-xl font-bold flex items-center justify-center gap-2 ${addedToCart ? 'bg-emerald-500 text-white' : inStock ? 'bg-gradient-to-r from-accent to-blue-600 text-white' : 'bg-white/5 text-gray-500'}`}>
           {addedToCart ? <><Check size={16} /> Added!</> : <><ShoppingCart size={16} /> Add to cart</>}
         </button>
         <button onClick={() => setWishlisted(!wishlisted)} className="p-3 rounded-xl border border-white/10 hover:border-red-500/30">
@@ -99,7 +99,7 @@ export function ProductInfo({ product }: { product: Product }) {
 
       {product.merchant_slug && (
         <Link href={`/store/${product.merchant_slug}`} className="flex items-center gap-3 p-3 bg-white/3 border border-white/5 rounded-xl hover:border-accent/20">
-          <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center text-cyan-400 font-bold text-xs">{product.merchant_name[0]}</div>
+          <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center text-accent font-bold text-xs">{product.merchant_name[0]}</div>
           <div className="flex-1"><div className="text-white text-sm font-medium">{product.merchant_name}</div><div className="text-xs text-gray-500">View store</div></div>
         </Link>
       )}

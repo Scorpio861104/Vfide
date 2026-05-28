@@ -122,7 +122,7 @@ export function CreateTab() {
     <div className="space-y-5 max-w-xl">
       <div className="bg-cyan-500/5 border border-accent/20 rounded-2xl p-5">
         <div className="flex items-center gap-2 mb-2">
-          <ShieldCheck size={18} className="text-cyan-400" />
+          <ShieldCheck size={18} className="text-accent" />
           <h3 className="text-white font-semibold">Pay with escrow protection</h3>
         </div>
         <p className="text-xs text-gray-400 leading-relaxed">

@@ -440,7 +440,7 @@ function Step1Heirs({
 
   return (
     <section className="space-y-4">
-      <div className="flex items-center gap-2 text-cyan-400">
+      <div className="flex items-center gap-2 text-accent">
         <Users size={18} />
         <h2 className="text-lg font-semibold">Who are your heirs?</h2>
       </div>
@@ -525,7 +525,7 @@ function Step2Shares({
   const distance = total - 10000;
   return (
     <section className="space-y-4">
-      <div className="flex items-center gap-2 text-cyan-400">
+      <div className="flex items-center gap-2 text-accent">
         <Shield size={18} />
         <h2 className="text-lg font-semibold">How is the vault split?</h2>
       </div>
@@ -598,7 +598,7 @@ function Step3Secrets({
 }) {
   return (
     <section className="space-y-4">
-      <div className="flex items-center gap-2 text-cyan-400">
+      <div className="flex items-center gap-2 text-accent">
         <Key size={18} />
         <h2 className="text-lg font-semibold">Secrets for each heir</h2>
       </div>
@@ -639,7 +639,7 @@ function Step3Secrets({
                 type="button"
                 onClick={() => onDownload(heir, i)}
                 disabled={!heir.secret}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-accent/15 px-3 py-1.5 text-xs text-cyan-300 hover:bg-accent/25 disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-accent/15 px-3 py-1.5 text-xs text-accent hover:bg-accent/25 disabled:opacity-50"
               >
                 <Download size={12} /> Envelope
               </button>
@@ -664,7 +664,7 @@ function Step3Secrets({
               <button
                 type="button"
                 onClick={() => onRegenerate(heir.id)}
-                className="mt-2 text-[10px] text-cyan-400 hover:text-cyan-300"
+                className="mt-2 text-[10px] text-accent hover:text-accent"
               >
                 Regenerate secret
               </button>
@@ -696,7 +696,7 @@ function Step4Review({
   const allReady = heirs.every((h) => h.guardian && h.secret) && total === 10000;
   return (
     <section className="space-y-4">
-      <div className="flex items-center gap-2 text-cyan-400">
+      <div className="flex items-center gap-2 text-accent">
         <FileText size={18} />
         <h2 className="text-lg font-semibold">Review your inheritance plan</h2>
       </div>
@@ -730,7 +730,7 @@ function Step4Review({
         ))}
       </div>
 
-      <div className="rounded-xl border border-accent/30 bg-accent/5 p-3 text-xs text-cyan-200">
+      <div className="rounded-xl border border-accent/30 bg-accent/5 p-3 text-xs text-accent">
         After you click <strong>Propose</strong>, a 30-day cooldown starts. You
         can cancel during that window. After 30 days, return to this tab and
         click <strong>Confirm</strong> to make the configuration active.
@@ -746,7 +746,7 @@ function Step4Review({
         type="button"
         onClick={onSubmit}
         disabled={!allReady || submitting}
-        className="w-full rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 py-3 text-white font-bold disabled:opacity-50"
+        className="w-full rounded-xl bg-gradient-to-r from-accent to-blue-500 py-3 text-white font-bold disabled:opacity-50"
       >
         {submitting ? (
           <span className="inline-flex items-center gap-2">
@@ -790,7 +790,7 @@ function NavButtons({
           type="button"
           onClick={onNext}
           disabled={nextDisabled || !onNext}
-          className="rounded-lg bg-cyan-500/20 px-4 py-2 text-sm text-cyan-300 transition hover:bg-accent/30 disabled:opacity-30"
+          className="rounded-lg bg-cyan-500/20 px-4 py-2 text-sm text-accent transition hover:bg-accent/30 disabled:opacity-30"
         >
           Next
         </button>
@@ -816,7 +816,7 @@ function ExistingConfigNotice() {
         </p>
         <a
           href="/inheritance/status"
-          className="mt-4 inline-block rounded-lg bg-cyan-500/20 px-4 py-2 text-sm text-cyan-300"
+          className="mt-4 inline-block rounded-lg bg-cyan-500/20 px-4 py-2 text-sm text-accent"
         >
           Open status page
         </a>
@@ -836,7 +836,7 @@ function NoVaultNotice() {
         </p>
         <a
           href="/vault"
-          className="mt-4 inline-block rounded-lg bg-cyan-500/20 px-4 py-2 text-sm text-cyan-300"
+          className="mt-4 inline-block rounded-lg bg-cyan-500/20 px-4 py-2 text-sm text-accent"
         >
           Deploy vault
         </a>
@@ -857,7 +857,7 @@ function NoGuardiansNotice() {
         </p>
         <a
           href="/guardians"
-          className="mt-4 inline-block rounded-lg bg-cyan-500/20 px-4 py-2 text-sm text-cyan-300"
+          className="mt-4 inline-block rounded-lg bg-cyan-500/20 px-4 py-2 text-sm text-accent"
         >
           Manage guardians
         </a>
@@ -954,7 +954,7 @@ function ProposalSuccessPage({
 
       <a
         href="/inheritance/status"
-        className="mt-6 inline-block rounded-lg bg-cyan-500/20 px-4 py-2 text-sm text-cyan-300"
+        className="mt-6 inline-block rounded-lg bg-cyan-500/20 px-4 py-2 text-sm text-accent"
       >
         Go to status page
       </a>

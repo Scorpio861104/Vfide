@@ -59,7 +59,7 @@ export function MembersTab() {
       {stats && (
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-white/3 border border-white/10 rounded-xl p-4">
-            <div className="flex items-center gap-2 mb-1"><Users size={14} className="text-cyan-400" /><p className="text-xs text-gray-400">Protocol Members</p></div>
+            <div className="flex items-center gap-2 mb-1"><Users size={14} className="text-accent" /><p className="text-xs text-gray-400">Protocol Members</p></div>
             <p className="text-2xl font-bold text-white">{stats.totalUsers.toLocaleString()}</p>
           </div>
           <div className="bg-white/3 border border-white/10 rounded-xl p-4">
@@ -76,7 +76,7 @@ export function MembersTab() {
         </div>
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 size={20} className="text-cyan-400 animate-spin" />
+            <Loader2 size={20} className="text-accent animate-spin" />
           </div>
         ) : contributors.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-center">
@@ -96,7 +96,7 @@ export function MembersTab() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-white font-medium">
                       {c.username ?? `${c.address.slice(0, 10)}…`}
-                      {isMe && <span className="ml-1 text-xs text-cyan-400">(you)</span>}
+                      {isMe && <span className="ml-1 text-xs text-accent">(you)</span>}
                     </p>
                   </div>
                   <div className="text-right">

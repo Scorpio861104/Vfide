@@ -38,9 +38,9 @@ export function GatewayTab({ isConnected }: { isConnected: boolean }) {
   return (
     <div className="space-y-8">
       {/* Gateway Overview */}
-      <div className="bg-gradient-to-br from-cyan-900/20 to-blue-900/20 border border-accent/30 rounded-xl p-4 sm:p-6 md:p-8">
+      <div className="bg-gradient-to-br from-accent/10 to-blue-900/20 border border-accent/30 rounded-xl p-4 sm:p-6 md:p-8">
         <div className="flex items-center gap-4 mb-6">
-          <Globe className="w-12 h-12 text-cyan-400" />
+          <Globe className="w-12 h-12 text-accent" />
           <div>
             <h2 className="text-2xl font-bold text-zinc-100">Enterprise Gateway</h2>
             <p className="text-zinc-400">High-volume payment processing with batch settlements</p>
@@ -48,7 +48,7 @@ export function GatewayTab({ isConnected }: { isConnected: boolean }) {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-black/30 rounded-lg p-4">
-            <div className="text-3xl font-bold text-cyan-400">247</div>
+            <div className="text-3xl font-bold text-accent">247</div>
             <div className="text-sm text-zinc-400">Orders Processed</div>
           </div>
           <div className="bg-black/30 rounded-lg p-4">
@@ -126,7 +126,7 @@ export function GatewayTab({ isConnected }: { isConnected: boolean }) {
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-cyan-400 font-bold">{order.amount}</div>
+                <div className="text-accent font-bold">{order.amount}</div>
                 <div className={`text-xs ${order.status === 'settled' ? 'text-green-400' : 'text-yellow-400'}`}>
                   {order.status === 'settled' ? 'Settled' : 'Pending'}
                 </div>

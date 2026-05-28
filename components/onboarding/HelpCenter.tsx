@@ -151,7 +151,7 @@ export function HelpCenter() {
           >
             <div className="flex items-center justify-between p-4 border-b border-gray-700">
               <div className="flex items-center gap-2">
-                <Book size={16} className="text-cyan-400" />
+                <Book size={16} className="text-accent" />
                 <span className="font-bold text-white">Help Center</span>
               </div>
               <button
@@ -200,7 +200,7 @@ export function HelpCenter() {
                             >
                               <ArrowRight
                                 size={12}
-                                className="mt-0.5 flex-shrink-0 text-cyan-500"
+                                className="mt-0.5 flex-shrink-0 text-accent"
                               />
                               {line}
                             </li>

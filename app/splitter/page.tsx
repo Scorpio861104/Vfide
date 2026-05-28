@@ -293,7 +293,7 @@ export default function SplitterPage() {
                     void refetchSplitter();
                     void refetchToken();
                   }}
-                  className="text-zinc-400 hover:text-cyan-400 transition-colors"
+                  className="text-zinc-400 hover:text-accent transition-colors"
                 >
                   <RefreshCw size={14} aria-hidden="true" />
                 </button>
@@ -301,7 +301,7 @@ export default function SplitterPage() {
 
               {splitterLoading && (
                 <div className="flex justify-center py-6">
-                  <Loader2 className="animate-spin text-cyan-400" size={24} aria-hidden="true" />
+                  <Loader2 className="animate-spin text-accent" size={24} aria-hidden="true" />
                 </div>
               )}
 
@@ -335,7 +335,7 @@ export default function SplitterPage() {
                         <div className="flex-1 font-mono text-xs text-zinc-300">
                           {shortAddr(p.account)}
                         </div>
-                        <div className="text-sm text-cyan-300 font-mono">
+                        <div className="text-sm text-accent font-mono">
                           {p.shareBps.toString()} bps
                         </div>
                         <div className="text-xs text-zinc-500 w-14 text-right">
@@ -357,7 +357,7 @@ export default function SplitterPage() {
               </h3>
               {tokenLoading ? (
                 <div className="flex justify-center py-4">
-                  <Loader2 className="animate-spin text-cyan-400" size={20} aria-hidden="true" />
+                  <Loader2 className="animate-spin text-accent" size={20} aria-hidden="true" />
                 </div>
               ) : (
                 <div className="text-3xl font-bold text-white font-mono">

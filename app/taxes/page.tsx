@@ -108,7 +108,7 @@ export default function TaxesPage() {
           className="glass-card-premium overflow-hidden">
           <div className="p-4 border-b border-white/5 flex items-center justify-between">
             <h3 className="font-semibold text-white flex items-center gap-2">
-              <Calculator size={16} className="text-cyan-400" />Tax Events ({taxEvents.length})
+              <Calculator size={16} className="text-accent" />Tax Events ({taxEvents.length})
             </h3>
             <div className="flex gap-2">
               <button

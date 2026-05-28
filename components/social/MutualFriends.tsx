@@ -79,7 +79,7 @@ export function MutualFriends({ userAddress, currentUserAddress }: MutualFriends
       className="p-4 bg-zinc-950 border border-zinc-800 rounded-xl"
     >
       <div className="flex items-center gap-2 mb-3">
-        <Share2 className="w-4 h-4 text-cyan-400" />
+        <Share2 className="w-4 h-4 text-accent" />
         <h4 className="font-semibold text-zinc-100">
           Mutual Friends ({mutualFriends.length})
         </h4>

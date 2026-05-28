@@ -512,7 +512,7 @@ export function MerchantPOS() {
             onClick={() => setActiveTab('pos')}
             className={`px-6 py-3 rounded-lg font-bold transition-all ${
               activeTab === 'pos'
-                ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white'
+                ? 'bg-gradient-to-r from-accent to-blue-500 text-white'
                 : 'bg-zinc-950/50 text-zinc-100/60 hover:text-zinc-100'
             }`}
           >
@@ -522,7 +522,7 @@ export function MerchantPOS() {
             onClick={() => setActiveTab('products')}
             className={`px-6 py-3 rounded-lg font-bold transition-all ${
               activeTab === 'products'
-                ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white'
+                ? 'bg-gradient-to-r from-accent to-blue-500 text-white'
                 : 'bg-zinc-950/50 text-zinc-100/60 hover:text-zinc-100'
             }`}
           >
@@ -532,7 +532,7 @@ export function MerchantPOS() {
             onClick={() => setActiveTab('sales')}
             className={`px-6 py-3 rounded-lg font-bold transition-all ${
               activeTab === 'sales'
-                ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white'
+                ? 'bg-gradient-to-r from-accent to-blue-500 text-white'
                 : 'bg-zinc-950/50 text-zinc-100/60 hover:text-zinc-100'
             }`}
           >
@@ -739,7 +739,7 @@ export function MerchantPOS() {
                       setShowQRPayment(true)
                     }}
                     disabled={!hasPayableVfideAmount}
-                    className="w-full bg-gradient-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold py-4 rounded-xl hover:scale-105 transition-transform disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+                    className="w-full bg-gradient-to-r from-emerald-400 to-accent text-zinc-950 font-bold py-4 rounded-xl hover:scale-105 transition-transform disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
                   >
                     {hasPayableVfideAmount ? 'Generate QR Payment' : 'QR Payment Requires VFIDE Amount'}
                   </button>
@@ -761,7 +761,7 @@ export function MerchantPOS() {
               <h2 className="text-2xl font-bold text-zinc-100">Manage Products</h2>
               <button
                 onClick={() => setShowAddProduct(true)}
-                className="bg-gradient-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold px-6 py-3 rounded-lg hover:scale-105 transition-transform"
+                className="bg-gradient-to-r from-emerald-400 to-accent text-zinc-950 font-bold px-6 py-3 rounded-lg hover:scale-105 transition-transform"
               >
                 + Add Product
               </button>
@@ -803,7 +803,7 @@ export function MerchantPOS() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-accent/20">
                 <p className="text-sm text-zinc-100/60 mb-2">Today&apos;s Sales</p>
-                <p className="text-3xl font-bold text-cyan-400">{todaysSales.length}</p>
+                <p className="text-3xl font-bold text-accent">{todaysSales.length}</p>
               </div>
               <div className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-emerald-400/20">
                 <p className="text-sm text-zinc-100/60 mb-2">Revenue</p>
@@ -934,7 +934,7 @@ export function MerchantPOS() {
                 <div className="flex gap-3 pt-4">
                   <button
                     onClick={handleAddProduct}
-                    className="flex-1 bg-gradient-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold py-3 rounded-lg hover:scale-105 transition-transform"
+                    className="flex-1 bg-gradient-to-r from-emerald-400 to-accent text-zinc-950 font-bold py-3 rounded-lg hover:scale-105 transition-transform"
                   >
                     Add Product
                   </button>
@@ -1070,7 +1070,7 @@ export function MerchantPOS() {
                     <motion.div
                       animate={{ opacity: [0.5, 1, 0.5] }}
                       transition={{ duration: 1.5, repeat: Infinity }}
-                      className="flex items-center justify-center gap-2 text-cyan-400"
+                      className="flex items-center justify-center gap-2 text-accent"
                     >
                       <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
                       <span className="text-sm">Waiting for blockchain confirmation...</span>
@@ -1166,7 +1166,7 @@ export function MerchantPOS() {
                         completeSale()
                       }
                     }}
-                    className="bg-gradient-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold py-3 rounded-lg hover:scale-105 transition-transform"
+                    className="bg-gradient-to-r from-emerald-400 to-accent text-zinc-950 font-bold py-3 rounded-lg hover:scale-105 transition-transform"
                   >
                     {customerEmail ? 'Send Receipt' : 'Continue'}
                   </button>

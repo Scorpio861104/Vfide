@@ -221,7 +221,7 @@ export function VaultSafetyPanel({ vaultAddress, compact = false }: Props) {
   return (
     <GlassCard hover={false} className="p-5">
       <div className="mb-4 flex items-center gap-2">
-        <Shield className="text-cyan-400" size={20} />
+        <Shield className="text-accent" size={20} />
         <h2 className="text-lg font-bold text-white">Your vault&apos;s safety</h2>
       </div>
 
@@ -256,7 +256,7 @@ export function VaultSafetyPanel({ vaultAddress, compact = false }: Props) {
               {isExpanded && item.cta && (
                 <a
                   href={item.cta.href}
-                  className="mt-3 ml-7 inline-flex items-center gap-1.5 text-xs font-semibold text-cyan-300 hover:text-cyan-200"
+                  className="mt-3 ml-7 inline-flex items-center gap-1.5 text-xs font-semibold text-accent hover:text-accent"
                 >
                   {item.cta.label}
                   <ExternalLink size={11} />
@@ -269,7 +269,7 @@ export function VaultSafetyPanel({ vaultAddress, compact = false }: Props) {
 
       <a
         href="/vault/safety"
-        className="mt-4 inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-cyan-300 transition-colors"
+        className="mt-4 inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-accent transition-colors"
       >
         Learn more about how your vault is protected
         <ChevronRight size={11} />

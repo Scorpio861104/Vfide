@@ -12,7 +12,7 @@ export function AuroraBackground() {
       <motion.div
         animate={{ x: [0, 100, -50, 0], y: [0, -50, 50, 0], scale: [1, 1.2, 0.9, 1] }}
         transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute left-1/4 top-0 h-200 w-200 rounded-full bg-gradient-to-br from-cyan-500/20 via-blue-500/10 to-transparent blur-[150px]"
+        className="absolute left-1/4 top-0 h-200 w-200 rounded-full bg-gradient-to-br from-accent/20 via-blue-500/10 to-transparent blur-[150px]"
       />
       <motion.div
         animate={{ x: [0, -80, 60, 0], y: [0, 60, -40, 0], scale: [1, 0.8, 1.1, 1] }}
@@ -129,7 +129,7 @@ export function VaultKeyVisualization({ isSearching }: { isSearching: boolean })
             transition={{ duration: 1, repeat: Infinity }}
             className="flex h-16 w-16 items-center justify-center rounded-2xl border border-accent/50 bg-gradient-to-br from-cyan-500/30 to-blue-600/30 backdrop-blur-xl md:h-20 md:w-20"
           >
-            <KeyRound className="h-8 w-8 text-cyan-400 md:h-10 md:w-10" />
+            <KeyRound className="h-8 w-8 text-accent md:h-10 md:w-10" />
           </motion.div>
           {isSearching && (
             <motion.div

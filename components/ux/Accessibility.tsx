@@ -550,7 +550,7 @@ export function AccessibleTabs({
               relative px-4 py-3 text-sm font-medium transition-colors
               focus:outline-none focus:ring-2 focus:ring-accent focus:ring-inset
               ${activeTab === tab.id 
-                ? 'text-cyan-400' 
+                ? 'text-accent' 
                 : tab.disabled 
                 ? 'text-gray-600 cursor-not-allowed'
                 : 'text-gray-400 hover:text-gray-200'

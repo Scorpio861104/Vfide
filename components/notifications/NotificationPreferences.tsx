@@ -41,7 +41,7 @@ export function NotificationPreferences({
       [NotificationType.GOVERNANCE]: 'text-purple-400',
       [NotificationType.REWARD]: 'text-yellow-400',
       [NotificationType.ALERT]: 'text-orange-400',
-      [NotificationType.SYSTEM]: 'text-cyan-400',
+      [NotificationType.SYSTEM]: 'text-accent',
       [NotificationType.SOCIAL]: 'text-pink-400',
       [NotificationType.MARKET]: 'text-blue-400',
     };

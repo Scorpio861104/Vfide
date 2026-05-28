@@ -24,7 +24,7 @@ export function ActivityTab() {
                 <div className="text-sm text-gray-300">
                   <Address address={item.address} />
                 </div>
-                <div className="text-xs text-cyan-300 mt-1">{item.status} • +{item.points} point{item.points === 1 ? '' : 's'}</div>
+                <div className="text-xs text-accent mt-1">{item.status} • +{item.points} point{item.points === 1 ? '' : 's'}</div>
               </div>
             ))}
           </div>

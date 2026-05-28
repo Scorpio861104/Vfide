@@ -60,7 +60,7 @@ export function TransactionHistory({ transactions = [], loading = false }: Trans
       case 'vault_withdraw':
         return 'text-blue-500';
       default:
-        return 'text-cyan-400';
+        return 'text-accent';
     }
   };
 
@@ -146,7 +146,7 @@ export function TransactionHistory({ transactions = [], loading = false }: Trans
             href={getExplorerLink(chainId, tx.txHash, 'tx')}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-cyan-400 hover:text-cyan-400 transition-colors flex items-center gap-1 text-xs"
+            className="text-accent hover:text-accent transition-colors flex items-center gap-1 text-xs"
           >
             View
             <ExternalLink size={12} />
@@ -211,7 +211,7 @@ export function TransactionHistory({ transactions = [], loading = false }: Trans
         </div>
       ) : usePerformanceMode ? (
         <div className="space-y-3">
-          <div className="rounded-lg border border-accent/30 bg-cyan-400/5 px-3 py-2 text-sm text-cyan-100">
+          <div className="rounded-lg border border-accent/30 bg-cyan-400/5 px-3 py-2 text-sm text-accent">
             Performance mode active — long transaction histories are windowed for smoother scrolling.
           </div>
           <VirtualizedList
@@ -235,7 +235,7 @@ export function TransactionHistory({ transactions = [], loading = false }: Trans
             <button
               type="button"
               onClick={() => setShowFullHistory((prev) => !prev)}
-              className="text-cyan-400 text-sm hover:underline"
+              className="text-accent text-sm hover:underline"
             >
               {usePerformanceMode ? 'Show full list →' : 'Use performance mode →'}
             </button>

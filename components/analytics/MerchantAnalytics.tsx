@@ -114,7 +114,7 @@ export function MerchantAnalytics({ merchantAddress }: MerchantAnalyticsProps) {
       {data.topProducts.length > 0 && (
         <div className="bg-white/3 border border-white/10 rounded-2xl p-6">
           <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-            <Package size={20} className="text-cyan-400" />
+            <Package size={20} className="text-accent" />
             Top Products
           </h3>
           <div className="space-y-3">
@@ -146,7 +146,7 @@ export function MerchantAnalytics({ merchantAddress }: MerchantAnalyticsProps) {
       {data.dailyRevenue.length > 0 && (
         <div className="bg-white/3 border border-white/10 rounded-2xl p-6">
           <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-            <Calendar size={20} className="text-cyan-400" />
+            <Calendar size={20} className="text-accent" />
             Daily Revenue
           </h3>
           <div className="flex items-end gap-1 h-32">
@@ -159,7 +159,7 @@ export function MerchantAnalytics({ merchantAddress }: MerchantAnalyticsProps) {
                   initial={{ height: 0 }}
                   animate={{ height: `${heightPct}%` }}
                   transition={{ delay: i * 0.02 }}
-                  className="flex-1 bg-gradient-to-t from-cyan-500/40 to-cyan-400/80 rounded-t min-h-[2px]"
+                  className="flex-1 bg-gradient-to-t from-cyan-500/40 to-accent/80 rounded-t min-h-[2px]"
                   title={`${day.date}: $${day.amount.toFixed(2)}`}
                 />
               );
@@ -183,7 +183,7 @@ function StatCard({ label, value, change, icon: Icon, color }: {
   color: 'cyan' | 'emerald' | 'amber';
 }) {
   const colorMap = {
-    cyan: { bg: 'bg-cyan-500/20', text: 'text-cyan-400' },
+    cyan: { bg: 'bg-cyan-500/20', text: 'text-accent' },
     emerald: { bg: 'bg-emerald-500/20', text: 'text-emerald-400' },
     amber: { bg: 'bg-amber-500/20', text: 'text-amber-400' },
   };

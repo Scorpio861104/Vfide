@@ -146,7 +146,7 @@ export function BusinessBooks({ transactions = [], onAddExpense }: BusinessBooks
           </button>
           <button
             onClick={() => setShowAdd((value) => !value)}
-            className="flex items-center gap-1.5 rounded-xl border border-accent/30 bg-cyan-500/20 px-3 py-2 text-sm font-bold text-cyan-400"
+            className="flex items-center gap-1.5 rounded-xl border border-accent/30 bg-cyan-500/20 px-3 py-2 text-sm font-bold text-accent"
           >
             <Plus size={14} />
             Add Expense
@@ -165,13 +165,13 @@ export function BusinessBooks({ transactions = [], onAddExpense }: BusinessBooks
         </div>
         <div className="rounded-xl border border-white/10 bg-white/5 p-4">
           <div className="mb-1 text-xs text-gray-400">Profit</div>
-          <div className={`font-mono text-xl font-bold ${profit >= 0 ? 'text-cyan-400' : 'text-red-400'}`}>
+          <div className={`font-mono text-xl font-bold ${profit >= 0 ? 'text-accent' : 'text-red-400'}`}>
             {formatCurrency(profit)}
           </div>
         </div>
         <div className="rounded-xl border border-accent/15 bg-accent/5 p-4">
           <div className="mb-1 text-xs text-gray-400">Margin</div>
-          <div className="text-xl font-bold text-cyan-400">{margin.toFixed(1)}%</div>
+          <div className="text-xl font-bold text-accent">{margin.toFixed(1)}%</div>
         </div>
       </div>
 
@@ -221,7 +221,7 @@ export function BusinessBooks({ transactions = [], onAddExpense }: BusinessBooks
             <button
               onClick={handleAdd}
               disabled={!form.amount || !form.description}
-              className="flex-1 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 py-2.5 font-bold text-white disabled:opacity-50"
+              className="flex-1 rounded-xl bg-gradient-to-r from-accent to-blue-600 py-2.5 font-bold text-white disabled:opacity-50"
             >
               Add
             </button>

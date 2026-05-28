@@ -64,9 +64,9 @@ export function OverviewTab() {
             value: 'TBD',
             label: 'Council Seats',
             sub: 'set at contract deploy',
-            gradient: 'from-cyan-500/20 to-blue-500/10',
+            gradient: 'from-accent/20 to-blue-500/10',
             border: 'border-accent/20',
-            text: 'text-cyan-400',
+            text: 'text-accent',
           },
           {
             value: '—',
@@ -121,7 +121,7 @@ export function OverviewTab() {
           </p>
           <Link
             href="/governance"
-            className="text-cyan-400 hover:text-cyan-300 inline-flex items-center gap-1 transition-colors"
+            className="text-accent hover:text-accent inline-flex items-center gap-1 transition-colors"
           >
             See active proposals <ArrowRight size={12} />
           </Link>
@@ -140,8 +140,8 @@ export function OverviewTab() {
           {[
             {
               icon: Shield,
-              color: 'text-cyan-400',
-              bg: 'from-cyan-500/20 to-cyan-500/5',
+              color: 'text-accent',
+              bg: 'from-accent/20 to-accent/5',
               border: 'border-accent/20',
               title: 'Protocol Security',
               desc: 'Monitor and respond to security incidents, manage emergency controls',

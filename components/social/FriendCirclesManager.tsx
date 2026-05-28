@@ -197,7 +197,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-zinc-100 flex items-center gap-2">
-            <Users className="w-6 h-6 text-cyan-400" />
+            <Users className="w-6 h-6 text-accent" />
             Friend Circles
           </h2>
           <p className="text-sm text-zinc-400 mt-1">
@@ -334,7 +334,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
                 <p>No members yet</p>
                 <button
                   onClick={() => setShowAddMembers(true)}
-                  className="mt-3 text-sm text-cyan-400 hover:underline"
+                  className="mt-3 text-sm text-accent hover:underline"
                 >
                   Add your first member
                 </button>

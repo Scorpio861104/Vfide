@@ -147,7 +147,7 @@ export default function MerchantBookingsPage() {
         <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         <section className="py-12">
           <div className="container mx-auto max-w-6xl px-4">
-            <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200">
+            <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-accent hover:text-accent">
               <ArrowLeft size={16} /> Back to Merchant Hub
             </Link>
 
@@ -166,7 +166,7 @@ export default function MerchantBookingsPage() {
                   onClick={() => setShowCreateSlot(true)}
                   disabled={!address || services.length === 0}
                   title={services.length === 0 ? 'Create a service-type product first in Inventory' : undefined}
-                  className="px-5 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90"
+                  className="px-5 py-3 bg-gradient-to-r from-accent to-blue-500 rounded-xl font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90"
                 >
                   <Plus size={18} /> New slot
                 </button>
@@ -200,7 +200,7 @@ export default function MerchantBookingsPage() {
                     <button
                       key={t}
                       onClick={() => setTab(t)}
-                      className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${tab === t ? 'border-cyan-400 text-cyan-300' : 'border-transparent text-zinc-400 hover:text-zinc-300'}`}
+                      className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${tab === t ? 'border-cyan-400 text-accent' : 'border-transparent text-zinc-400 hover:text-zinc-300'}`}
                     >
                       {t === 'bookings' ? 'Appointments' : 'Availability slots'}
                     </button>
@@ -235,7 +235,7 @@ export default function MerchantBookingsPage() {
                       <div className="p-12 text-center text-zinc-400">
                         No availability slots yet.{' '}
                         {services.length === 0
-                          ? <>First create a service-type product in <Link href="/merchant/inventory" className="text-cyan-300 hover:text-cyan-200">Inventory</Link>, then come back here.</>
+                          ? <>First create a service-type product in <Link href="/merchant/inventory" className="text-accent hover:text-accent">Inventory</Link>, then come back here.</>
                           : <>Click New slot to add one.</>}
                       </div>
                     ) : (
@@ -453,7 +453,7 @@ function CreateSlotModal({ services, onClose, onCreated, onError }: {
             <span className="text-xs text-zinc-500 mt-1 block">Use 1 for 1-on-1 services, higher for group classes.</span>
           </label>
 
-          <button onClick={submit} disabled={!canSubmit} className="w-full px-5 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
+          <button onClick={submit} disabled={!canSubmit} className="w-full px-5 py-3 bg-gradient-to-r from-accent to-blue-500 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
             {submitting ? 'Creating…' : 'Create slot'}
           </button>
         </div>

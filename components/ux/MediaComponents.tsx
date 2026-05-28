@@ -220,7 +220,7 @@ export function Avatar({
     if (!name) return 'from-gray-600 to-gray-700';
     const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     const gradients = [
-      'from-cyan-500 to-blue-500',
+      'from-accent to-blue-500',
       'from-purple-500 to-pink-500',
       'from-green-500 to-emerald-500',
       'from-orange-500 to-red-500',
@@ -522,7 +522,7 @@ export function VideoPlayer({
             <div className="flex items-center gap-3">
               <button
                 onClick={togglePlay}
-                className="p-2 text-white hover:text-cyan-400 transition-colors"
+                className="p-2 text-white hover:text-accent transition-colors"
                 aria-label={isPlaying ? 'Pause' : 'Play'}
               >
                 {isPlaying ? (
@@ -534,7 +534,7 @@ export function VideoPlayer({
 
               <button
                 onClick={toggleMute}
-                className="p-2 text-white hover:text-cyan-400 transition-colors"
+                className="p-2 text-white hover:text-accent transition-colors"
                 aria-label={isMuted ? 'Unmute' : 'Mute'}
               >
                 {isMuted ? (
@@ -548,7 +548,7 @@ export function VideoPlayer({
 
               <button
                 onClick={handleFullscreen}
-                className="p-2 text-white hover:text-cyan-400 transition-colors"
+                className="p-2 text-white hover:text-accent transition-colors"
                 aria-label="Fullscreen"
               >
                 <Maximize className="w-5 h-5" />

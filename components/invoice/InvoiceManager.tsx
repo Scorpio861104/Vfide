@@ -103,7 +103,7 @@ export function InvoiceManager({ merchantAddress: _merchantAddress, invoices = [
           <option value="overdue">Overdue</option>
         </select>
         <button onClick={() => setView('create')}
-          className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold text-sm">
+          className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-accent to-blue-600 text-white rounded-xl font-bold text-sm">
           <Plus size={16} /> New Invoice
         </button>
       </div>
@@ -138,7 +138,7 @@ function InvoiceRow({ invoice, formatCurrency, formatDate, onSend, onCancel: _on
     <div className="flex items-center justify-between p-4 bg-white/3 border border-white/5 rounded-xl hover:border-white/10 transition-colors">
       <div className="flex items-center gap-4">
         <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
-          <FileText size={18} className="text-cyan-400" />
+          <FileText size={18} className="text-accent" />
         </div>
         <div>
           <div className="flex items-center gap-2">
@@ -215,11 +215,11 @@ function CreateInvoiceForm({ onSubmit, onCancel }: {
               className="w-20 px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm text-center focus:border-accent/50 focus:outline-none" />
             <input type="number" value={item.unitPrice || ''} onChange={e =>  updateItem(i, 'unitPrice', e.target.value)} step="0.01"
               className="w-28 px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm text-right font-mono focus:border-accent/50 focus:outline-none" />
-            <span className="w-24 text-right text-cyan-400 font-mono text-sm">{formatCurrency(item.quantity * item.unitPrice)}</span>
+            <span className="w-24 text-right text-accent font-mono text-sm">{formatCurrency(item.quantity * item.unitPrice)}</span>
             {items.length > 1 && <button onClick={() => removeItem(i)} className="text-gray-500 hover:text-red-400"><X size={16} /></button>}
           </div>
         ))}
-        <button onClick={addItem} className="text-cyan-400 text-sm font-bold hover:text-cyan-300">+ Add item</button>
+        <button onClick={addItem} className="text-accent text-sm font-bold hover:text-accent">+ Add item</button>
       </div>
 
       {/* Totals + settings */}
@@ -246,7 +246,7 @@ function CreateInvoiceForm({ onSubmit, onCancel }: {
         <div className="bg-white/5 border border-white/10 rounded-xl p-5 space-y-3 self-start">
           <div className="flex justify-between text-sm"><span className="text-gray-400">Subtotal</span><span className="text-white">{formatCurrency(subtotal)}</span></div>
           {taxRate > 0 && <div className="flex justify-between text-sm"><span className="text-gray-400">Tax ({taxRate}%)</span><span className="text-white">{formatCurrency(tax)}</span></div>}
-          <div className="border-t border-white/10 pt-3 flex justify-between"><span className="text-white font-bold">Total</span><span className="text-cyan-400 font-bold text-xl font-mono">{formatCurrency(total)}</span></div>
+          <div className="border-t border-white/10 pt-3 flex justify-between"><span className="text-white font-bold">Total</span><span className="text-accent font-bold text-xl font-mono">{formatCurrency(total)}</span></div>
         </div>
       </div>
 
@@ -255,7 +255,7 @@ function CreateInvoiceForm({ onSubmit, onCancel }: {
         <button onClick={onCancel} className="flex-1 py-3 border border-white/10 text-gray-400 rounded-xl font-bold">Cancel</button>
         <button onClick={() => onSubmit({ customerName, customerPhone, items, subtotal, tax, taxRate, total, notes, dueDate: Date.now() + dueInDays * 86400000 })}
           disabled={!customerName || items.every(i => !i.description)}
-          className="flex-1 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2">
+          className="flex-1 py-3 bg-gradient-to-r from-accent to-blue-600 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2">
           <FileText size={18} /> Create Invoice
         </button>
       </div>

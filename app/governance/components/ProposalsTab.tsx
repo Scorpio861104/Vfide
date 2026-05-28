@@ -197,7 +197,7 @@ export function ProposalsTab({
         {/* Eligibility banner — shows when wallet is connected */}
         {address && (
           <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-4 flex items-center gap-3 flex-wrap">
-            <Wallet className="text-cyan-400 shrink-0" size={18} />
+            <Wallet className="text-accent shrink-0" size={18} />
             <div className="flex-1 min-w-0">
               <p className="text-sm text-zinc-100">
                 <span className="text-zinc-400">Voting power:</span>{' '}
@@ -237,7 +237,7 @@ export function ProposalsTab({
               <h2 className="text-2xl font-bold text-zinc-100">
                 Active Proposals ({filteredProposals.length})
                 {proposalsLoading && (
-                  <Loader2 size={16} className="inline ml-2 text-cyan-400 animate-spin" />
+                  <Loader2 size={16} className="inline ml-2 text-accent animate-spin" />
                 )}
               </h2>
               <div className="flex gap-2">
@@ -249,14 +249,14 @@ export function ProposalsTab({
                       rows: filteredProposals.map((p) => [p.id, p.type, p.title, p.forVotes, p.againstVotes]),
                     });
                   }}
-                  className="px-4 py-2 bg-zinc-900 border border-zinc-700 text-cyan-400 rounded-lg font-bold hover:border-cyan-400 transition-colors"
+                  className="px-4 py-2 bg-zinc-900 border border-zinc-700 text-accent rounded-lg font-bold hover:border-cyan-400 transition-colors"
                 >
                   📊 Export CSV
                 </button>
                 <button
                   onClick={() => onCreateProposal?.()}
                   disabled={!onCreateProposal}
-                  className="px-6 py-2 bg-gradient-to-r from-cyan-400 to-blue-500 text-zinc-900 rounded-lg font-bold hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  className="px-6 py-2 bg-gradient-to-r from-accent to-blue-500 text-zinc-900 rounded-lg font-bold hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
                   Create Proposal
                 </button>
@@ -269,7 +269,7 @@ export function ProposalsTab({
                   key={type}
                   onClick={() => setFilterType(type)}
                   className={`px-4 py-2 rounded-lg font-bold whitespace-nowrap transition-all ${
-                    filterType === type ? 'bg-cyan-400 text-zinc-900' : 'bg-zinc-900 text-zinc-400 hover:text-cyan-400'
+                    filterType === type ? 'bg-cyan-400 text-zinc-900' : 'bg-zinc-900 text-zinc-400 hover:text-accent'
                   }`}
                 >
                   {type === 'all' ? 'All' : type}
@@ -285,7 +285,7 @@ export function ProposalsTab({
               </div>
             ) : usePerformanceMode ? (
               <>
-                <div className="rounded-lg border border-accent/30 bg-cyan-400/5 px-3 py-2 text-sm text-cyan-100">
+                <div className="rounded-lg border border-accent/30 bg-cyan-400/5 px-3 py-2 text-sm text-accent">
                   Performance mode active — large proposal sets are windowed for smoother scrolling.
                 </div>
                 <VirtualizedList
@@ -334,7 +334,7 @@ export function ProposalsTab({
               <button
                 type="button"
                 onClick={() => setShowAllProposals((prev) => !prev)}
-                className="text-sm text-cyan-400 hover:underline"
+                className="text-sm text-accent hover:underline"
               >
                 {usePerformanceMode ? 'Show full proposal list' : 'Use performance mode'}
               </button>
@@ -351,14 +351,14 @@ export function ProposalsTab({
           >
             <div className="p-6 border-b border-zinc-700 flex items-center justify-between">
               <div>
-                <div className="inline-block px-3 py-1 bg-cyan-400/20 border border-cyan-400 rounded text-cyan-400 text-sm font-bold mb-2">
+                <div className="inline-block px-3 py-1 bg-cyan-400/20 border border-cyan-400 rounded text-accent text-sm font-bold mb-2">
                   {selectedProposal.type}
                 </div>
                 <h2 className="text-2xl font-bold text-zinc-100">
                   #{selectedProposal.id}: {selectedProposal.title}
                 </h2>
               </div>
-              <button onClick={() => setSelectedProposal(null)} className="text-zinc-400 hover:text-cyan-400 text-2xl">
+              <button onClick={() => setSelectedProposal(null)} className="text-zinc-400 hover:text-accent text-2xl">
                 ✕
               </button>
             </div>
@@ -436,5 +436,5 @@ export function ProposalsTab({
 
 function ProposalCountdown({ endTime }: { endTime: number }) {
   const timeLeft = useCountdown(endTime);
-  return <div className="text-cyan-400 font-bold text-lg">{timeLeft}</div>;
+  return <div className="text-accent font-bold text-lg">{timeLeft}</div>;
 }

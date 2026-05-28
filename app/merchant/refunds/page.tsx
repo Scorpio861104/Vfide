@@ -210,7 +210,7 @@ export default function MerchantRefundsPage() {
         <div className="container mx-auto max-w-4xl px-4 pb-16">
           <Link
             href="/merchant"
-            className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200"
+            className="mb-6 inline-flex items-center gap-2 text-accent hover:text-accent"
           >
             <ArrowLeft size={16} /> Back to Merchant Hub
           </Link>
@@ -221,7 +221,7 @@ export default function MerchantRefundsPage() {
               <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> Refund Management
             </div>
             <h1 className="text-3xl font-black text-white mb-2 flex items-center gap-3 tracking-tight">
-                <RotateCcw className="text-cyan-400" size={28} />
+                <RotateCcw className="text-accent" size={28} />
                 Refunds
               </h1>
               <p className="text-gray-400 text-sm leading-relaxed max-w-2xl">
@@ -233,7 +233,7 @@ export default function MerchantRefundsPage() {
             {!showStartForm && (
               <button
                 onClick={() => setShowStartForm(true)}
-                className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg font-bold flex items-center gap-2 shadow-md shadow-cyan-500/20"
+                className="px-4 py-2 bg-gradient-to-r from-accent to-blue-500 text-white rounded-lg font-bold flex items-center gap-2 shadow-md shadow-cyan-500/20"
               >
                 <Plus size={16} />
                 Start a refund
@@ -312,7 +312,7 @@ export default function MerchantRefundsPage() {
                     <button
                       onClick={() => void handleStartRefund()}
                       disabled={isWritePending || !customer || !amount || !orderId}
-                      className="px-5 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg font-bold flex items-center gap-2 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-5 py-2 bg-gradient-to-r from-accent to-blue-500 text-white rounded-lg font-bold flex items-center gap-2 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isWritePending ? (
                         <>
@@ -340,7 +340,7 @@ export default function MerchantRefundsPage() {
           )}
 
           {actionMessage && (
-            <div className="mb-4 p-3 rounded-lg bg-cyan-500/10 border border-accent/30 text-xs text-cyan-200 break-all">
+            <div className="mb-4 p-3 rounded-lg bg-cyan-500/10 border border-accent/30 text-xs text-accent break-all">
               {actionMessage}
             </div>
           )}

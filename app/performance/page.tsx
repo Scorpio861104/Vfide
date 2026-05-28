@@ -76,7 +76,7 @@ export default function PerformancePage() {
             </div>
             <h1 className="text-4xl font-bold mb-2">
               <span className="bg-gradient-to-r from-cyan-400 via-emerald-400 to-blue-400 bg-clip-text text-transparent flex items-center gap-3">
-                <Activity size={32} className="text-cyan-400" />Performance Command
+                <Activity size={32} className="text-accent" />Performance Command
               </span>
             </h1>
             <p className="text-white/50">Monitor system health, page load quality, and live user activity.</p>
@@ -91,7 +91,7 @@ export default function PerformancePage() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
           className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-4">
           <div className="analytics-card p-5">
-            <div className="mb-2 flex items-center gap-2 text-cyan-300"><Activity size={16} /><span className="text-sm font-semibold">Health Score</span></div>
+            <div className="mb-2 flex items-center gap-2 text-accent"><Activity size={16} /><span className="text-sm font-semibold">Health Score</span></div>
             <div className="text-3xl font-bold text-white">{healthScore}</div>
           </div>
           <div className="analytics-card p-5">

@@ -56,7 +56,7 @@ export function VaultTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 size={24} className="text-cyan-400 animate-spin" />
+        <Loader2 size={24} className="text-accent animate-spin" />
       </div>
     );
   }
@@ -69,7 +69,7 @@ export function VaultTab() {
       <div className="bg-white/3 border border-white/10 rounded-2xl p-6">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 bg-cyan-500/10 rounded-xl flex items-center justify-center">
-            <TrendingUp size={18} className="text-cyan-400" />
+            <TrendingUp size={18} className="text-accent" />
           </div>
           <div>
             <p className="text-xs text-gray-400">Proof Score</p>
@@ -78,7 +78,7 @@ export function VaultTab() {
         </div>
         <div className="w-full bg-white/5 rounded-full h-2">
           <div
-            className="h-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all"
+            className="h-2 rounded-full bg-gradient-to-r from-accent to-blue-500 transition-all"
             style={{ width: `${Math.min(((state?.proofScore ?? 0) / 1000) * 100, 100)}%` }}
           />
         </div>

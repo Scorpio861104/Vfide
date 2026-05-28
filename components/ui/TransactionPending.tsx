@@ -43,7 +43,7 @@ export function TransactionPending({
 
   const statusConfig = {
     pending: {
-      icon: <Loader2 className="animate-spin text-cyan-400" size={48} />,
+      icon: <Loader2 className="animate-spin text-accent" size={48} />,
       title: title || 'Confirm in Wallet',
       message: message || 'Please confirm the transaction in your wallet...',
       color: '#00F0FF',
@@ -108,7 +108,7 @@ export function TransactionPending({
                 href={`${explorerUrl}/tx/${hash}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-400 transition-colors mb-6"
+                className="inline-flex items-center gap-2 text-accent hover:text-accent transition-colors mb-6"
               >
                 <span className="font-mono text-sm">
                   {hash.slice(0, 10)}...{hash.slice(-8)}

@@ -47,7 +47,7 @@ export function CreatePostCard({ onPost }: { onPost: (content: string) => void }
                   <button
                     disabled
                     title="Image upload requires the /api/upload endpoint, not built yet."
-                    className="p-2 rounded-lg text-cyan-400/40 cursor-not-allowed"
+                    className="p-2 rounded-lg text-accent/40 cursor-not-allowed"
                   >
                     <ImageIcon className="w-5 h-5" />
                   </button>

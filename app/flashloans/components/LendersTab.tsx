@@ -79,7 +79,7 @@ export function LendersTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 size={24} className="text-cyan-400 animate-spin" aria-hidden="true" />
+        <Loader2 size={24} className="text-accent animate-spin" aria-hidden="true" />
       </div>
     );
   }
@@ -119,7 +119,7 @@ export function LendersTab() {
                   <td className="px-4 py-3 text-right font-mono text-xs text-white">
                     {formatUnits(r.balance, VFIDE_DECIMALS)}
                   </td>
-                  <td className="px-4 py-3 text-right font-mono text-xs text-cyan-400">
+                  <td className="px-4 py-3 text-right font-mono text-xs text-accent">
                     {(Number(r.feeBps) / 100).toFixed(2)}%
                   </td>
                   <td className="px-4 py-3 text-right font-mono text-xs text-emerald-400">

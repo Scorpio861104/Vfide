@@ -188,7 +188,7 @@ export function SocialNotifications() {
                   {unreadCount > 0 && (
                     <button
                       onClick={markAllAsRead}
-                      className="text-xs text-cyan-400 hover:underline"
+                      className="text-xs text-accent hover:underline"
                     >
                       Mark all read
                     </button>
@@ -254,7 +254,7 @@ export function SocialNotifications() {
                                     {!notif.read && (
                                       <button
                                         onClick={() => markAsRead(notif.id)}
-                                        className="text-xs text-cyan-400 hover:underline"
+                                        className="text-xs text-accent hover:underline"
                                       >
                                         Mark read
                                       </button>

@@ -46,8 +46,8 @@ export function PendingActionsTab({ isConnected }: { isConnected: boolean }) {
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 max-w-4xl mx-auto">
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-        className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-accent/30 rounded-2xl p-6">
-        <h2 className="text-xl font-bold text-cyan-400 mb-4 flex items-center gap-3">
+        className="bg-gradient-to-br from-accent/10 to-blue-500/10 border border-accent/30 rounded-2xl p-6">
+        <h2 className="text-xl font-bold text-accent mb-4 flex items-center gap-3">
           <Shield size={24} />
           Guardian Inbox
         </h2>
@@ -69,10 +69,10 @@ export function PendingActionsTab({ isConnected }: { isConnected: boolean }) {
             className="px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-white focus:outline-none focus:border-accent/50" />
         </div>
         <button onClick={handleAddVault}
-          className="mt-3 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold">
+          className="mt-3 px-4 py-2 bg-gradient-to-r from-accent to-blue-500 text-white rounded-xl font-bold">
           Add Vault to Watchlist
         </button>
-        {notice && <p className="text-sm text-cyan-200 mt-3">{notice}</p>}
+        {notice && <p className="text-sm text-accent mt-3">{notice}</p>}
 
         {inboxEntries.length === 0 ? (
           <div className="mt-4 p-6 bg-black/30 border border-white/10 rounded-xl text-center">

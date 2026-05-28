@@ -133,14 +133,14 @@ export default function PendingChangesPage() {
         <div className="container mx-auto max-w-3xl px-4 pb-16">
           <Link
             href="/vault"
-            className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200"
+            className="mb-6 inline-flex items-center gap-2 text-accent hover:text-accent"
           >
             <ArrowLeft size={16} /> Back to your vault
           </Link>
 
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-white mb-3 flex items-center gap-3">
-              <Hourglass className="text-cyan-400" size={28} />
+              <Hourglass className="text-accent" size={28} />
               Pending changes
             </h1>
             <p className="text-gray-400 leading-relaxed">
@@ -278,7 +278,7 @@ export default function PendingChangesPage() {
                 disabled={isWritePending}
                 className={`px-6 py-2.5 rounded-lg font-bold text-white flex items-center gap-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${
                   confirmingAction.kind === 'apply'
-                    ? 'bg-gradient-to-r from-cyan-500 to-blue-500 shadow-cyan-500/30'
+                    ? 'bg-gradient-to-r from-accent to-blue-500 shadow-cyan-500/30'
                     : 'bg-gradient-to-r from-red-500 to-orange-500 shadow-red-500/30'
                 }`}
               >
@@ -333,12 +333,12 @@ function PendingChangeCard({
       <div className="flex items-start justify-between gap-4 mb-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <Settings className="text-cyan-400 shrink-0" size={16} />
+            <Settings className="text-accent shrink-0" size={16} />
             <h3 className="text-sm font-bold text-white">{change.label}</h3>
             {isManagedElsewhere && (
               <Link
                 href="/guardians"
-                className="text-xs text-cyan-400 hover:text-cyan-300 italic"
+                className="text-xs text-accent hover:text-accent italic"
                 title="Also manageable in the guardian tab"
               >
                 (also in guardian tab)
@@ -391,7 +391,7 @@ function PendingChangeCard({
         <button
           onClick={onApplyClick}
           disabled={!isAdmin || !change.canApply || isWritePending}
-          className="flex-1 sm:flex-initial px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg font-semibold text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-cyan-500/20"
+          className="flex-1 sm:flex-initial px-4 py-2 bg-gradient-to-r from-accent to-blue-500 text-white rounded-lg font-semibold text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-cyan-500/20"
           title={
             !change.canApply
               ? 'Timelock has not yet expired'

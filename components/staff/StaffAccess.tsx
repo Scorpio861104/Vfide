@@ -60,12 +60,12 @@ export function StaffManager({ staff = [], onAdd, onRemove }: StaffManagerProps)
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="flex items-center gap-2 text-xl font-bold text-white">
-          <Users className="text-cyan-400" />
+          <Users className="text-accent" />
           Staff
         </h2>
         <button
           onClick={() => setShowAdd((value) => !value)}
-          className="flex items-center gap-1.5 rounded-xl border border-accent/30 bg-cyan-500/20 px-4 py-2 text-sm font-bold text-cyan-400"
+          className="flex items-center gap-1.5 rounded-xl border border-accent/30 bg-cyan-500/20 px-4 py-2 text-sm font-bold text-accent"
         >
           <Plus size={14} />
           Add Staff
@@ -111,7 +111,7 @@ export function StaffManager({ staff = [], onAdd, onRemove }: StaffManagerProps)
             </button>
             <button
               onClick={handleAdd}
-              className="flex-1 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 py-2.5 font-bold text-white"
+              className="flex-1 rounded-xl bg-gradient-to-r from-accent to-blue-600 py-2.5 font-bold text-white"
             >
               Add
             </button>

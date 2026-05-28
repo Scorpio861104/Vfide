@@ -50,7 +50,7 @@ export function UnifiedSearch({
           onFocus={() => setIsOpen(true)} onKeyDown={handleKeyDown} autoFocus={autoFocus}
           className={`w-full ${sizeClasses[size]} bg-white/5 border border-white/10 rounded-2xl text-white  focus:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/20 transition-all`} />
         {query && (
-          <button onClick={clearQuery} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-cyan-400 transition-colors" aria-label="Clear search">
+          <button onClick={clearQuery} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-accent transition-colors" aria-label="Clear search">
             <X size={iconSizes[size] - 4} />
           </button>
         )}
@@ -73,7 +73,7 @@ export function UnifiedSearch({
                 <div className="text-xs text-gray-500 uppercase tracking-wider px-2 mb-2 flex items-center gap-1.5"><Clock size={12} /> Recent searches</div>
                 {recentSearches.map((term) => (
                   <button key={term} onClick={() => { handleInput(term); goToSearch(term); }}
-                    className="w-full text-left px-3 py-2 rounded-lg text-sm text-gray-300 hover:bg-white/5 hover:text-cyan-400 transition-colors flex items-center gap-2">
+                    className="w-full text-left px-3 py-2 rounded-lg text-sm text-gray-300 hover:bg-white/5 hover:text-accent transition-colors flex items-center gap-2">
                     <Search size={14} className="text-gray-600" />{term}
                   </button>
                 ))}
@@ -118,7 +118,7 @@ export function UnifiedSearch({
                         <div className="text-white text-sm truncate">{p.name}</div>
                         <div className="text-xs text-gray-500">{p.merchant_slug ? `by ${p.merchant_slug}` : p.product_type}</div>
                       </div>
-                      <div className="text-cyan-400 font-mono text-sm font-medium">${parseFloat(p.price).toFixed(2)}</div>
+                      <div className="text-accent font-mono text-sm font-medium">${parseFloat(p.price).toFixed(2)}</div>
                     </button>
                   );
                 })}
@@ -127,7 +127,7 @@ export function UnifiedSearch({
 
             {query.trim().length >= 2 && (
               <button onClick={() => goToSearch(query.trim())}
-                className="w-full px-4 py-3 border-t border-white/5 text-sm text-cyan-400 hover:bg-cyan-500/5 transition-colors flex items-center justify-center gap-2">
+                className="w-full px-4 py-3 border-t border-white/5 text-sm text-accent hover:bg-cyan-500/5 transition-colors flex items-center justify-center gap-2">
                 <Search size={14} />Search all results for &ldquo;{query.trim()}&rdquo;<ArrowRight size={14} />
               </button>
             )}

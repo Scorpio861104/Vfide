@@ -204,7 +204,7 @@ export function SpendLimitsChapter({ onComplete, onSkip }: SpendLimitsChapterPro
         </div>
 
         <div className="flex items-start gap-2 rounded-xl border border-white/10 bg-white/[0.02] p-3 text-xs text-white/70">
-          <Info className="mt-0.5 flex-shrink-0 text-cyan-300" size={14} aria-hidden />
+          <Info className="mt-0.5 flex-shrink-0 text-accent" size={14} aria-hidden />
           Setting any value to 0 means &ldquo;no limit&rdquo; on-chain. That&rsquo;s permissive — better to keep
           tight caps that match your real spending. You can change these later from the Vault page.
         </div>

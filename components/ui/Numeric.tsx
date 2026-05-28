@@ -131,7 +131,7 @@ const TONE_CLASSES: Record<NumericTone, string> = {
   neutral:  '',
   positive: 'text-emerald-300',
   negative: 'text-rose-300',
-  accent:   'text-cyan-300',
+  accent:   'text-accent',
   muted:    'text-gray-500',
 };
 

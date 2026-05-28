@@ -204,7 +204,7 @@ export function AvatarUpload({
               )}
               {isUploading && (
                 <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                  <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+                  <Loader2 className="w-8 h-8 text-accent animate-spin" />
                 </div>
               )}
             </div>
@@ -233,7 +233,7 @@ export function AvatarUpload({
                   initial={{ width: 0 }}
                   animate={{ width: `${uploadProgress}%` }}
                   transition={{ duration: 0.3 }}
-                  className="h-full bg-gradient-to-r from-cyan-400 to-blue-500"
+                  className="h-full bg-gradient-to-r from-accent to-blue-500"
                 />
               </div>
             </motion.div>
@@ -279,7 +279,7 @@ export function AvatarUpload({
 
             <div className="flex flex-col items-center gap-3 text-center">
               <div className="p-3 bg-cyan-400/10 rounded-full">
-                <Upload className="w-6 h-6 text-cyan-400" />
+                <Upload className="w-6 h-6 text-accent" />
               </div>
               
               <div>

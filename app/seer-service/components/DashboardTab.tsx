@@ -32,7 +32,7 @@ export function DashboardTab() {
 
   const stats = data
     ? [
-        { label: 'Total Events', value: data.total_events, color: 'text-cyan-400' },
+        { label: 'Total Events', value: data.total_events, color: 'text-accent' },
         { label: 'Allowed', value: data.allowed_events, color: 'text-green-400' },
         { label: 'Warned', value: data.warned_events, color: 'text-yellow-400' },
         { label: 'Delayed', value: data.delayed_events, color: 'text-orange-400' },
@@ -61,7 +61,7 @@ export function DashboardTab() {
 
       {loading && (
         <div className="flex items-center justify-center py-12">
-          <Loader2 size={24} className="text-cyan-400 animate-spin" />
+          <Loader2 size={24} className="text-accent animate-spin" />
         </div>
       )}
 

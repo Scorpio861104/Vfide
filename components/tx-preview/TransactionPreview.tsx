@@ -133,7 +133,7 @@ export function TransactionPreview(props: TransactionPreviewProps) {
         {/* Header */}
         <div className="p-5 pb-0 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Eye size={20} className="text-cyan-400" />
+            <Eye size={20} className="text-accent" />
             <h3 className="text-lg font-bold text-white">Review Transaction</h3>
           </div>
           <button onClick={props.onCancel} className="p-2 text-gray-400 hover:text-white" aria-label="Close"><X size={18} /></button>
@@ -147,7 +147,7 @@ export function TransactionPreview(props: TransactionPreviewProps) {
               <div className="text-white font-mono text-sm">{formatNumber(tknTotal, 2)}</div>
               <div className="text-gray-500 text-xs">{token}</div>
             </div>
-            <ArrowRight size={20} className="text-cyan-400 flex-shrink-0" />
+            <ArrowRight size={20} className="text-accent flex-shrink-0" />
             <div className="flex-1 min-w-0 text-center">
               <div className="text-gray-500 text-xs mb-1">{label.preposition}</div>
               <div className="text-white font-bold text-sm truncate">{to}</div>
@@ -176,7 +176,7 @@ export function TransactionPreview(props: TransactionPreviewProps) {
             )}
             <div className="border-t border-white/10 pt-2.5 flex justify-between">
               <span className="text-white font-bold">Total</span>
-              <span className="text-cyan-400 font-bold">{formatCurrency(total + (gasPrice || 0))}</span>
+              <span className="text-accent font-bold">{formatCurrency(total + (gasPrice || 0))}</span>
             </div>
           </div>
 
@@ -195,7 +195,7 @@ export function TransactionPreview(props: TransactionPreviewProps) {
                 <div key={i} className={`flex items-start gap-2 p-3 rounded-xl text-xs ${
                   risk.level === 'danger' ? 'bg-red-500/10 border border-red-500/30 text-red-400' :
                   risk.level === 'warning' ? 'bg-amber-500/10 border border-amber-500/30 text-amber-400' :
-                  'bg-cyan-500/10 border border-accent/30 text-cyan-400'
+                  'bg-cyan-500/10 border border-accent/30 text-accent'
                 }`}>
                   {risk.level === 'danger' ? <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" /> :
                    risk.level === 'warning' ? <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" /> :
@@ -233,7 +233,7 @@ export function TransactionPreview(props: TransactionPreviewProps) {
             <button
               onClick={handleConfirm}
               disabled={hasDanger || isConfirming}
-              className="flex-1 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+              className="flex-1 py-3 bg-gradient-to-r from-accent to-blue-600 text-white rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {isConfirming ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
               {label.verb}

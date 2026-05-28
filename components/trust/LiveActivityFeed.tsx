@@ -190,7 +190,7 @@ function ActivityCard({ activity }: { activity: ActivityItem }) {
             {activity.from && (
               <div className="flex items-center gap-1 sm:gap-2 mt-1 sm:mt-2 text-[10px] sm:text-xs">
                 <span className="text-zinc-100/50">From:</span>
-                <code className="text-cyan-400 font-mono truncate">
+                <code className="text-accent font-mono truncate">
                   {activity.from.slice(0, 6)}...{activity.from.slice(-4)}
                 </code>
               </div>
@@ -203,7 +203,7 @@ function ActivityCard({ activity }: { activity: ActivityItem }) {
                 href={getExplorerLink(chainId, activity.txHash, 'tx')}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-cyan-400 hover:text-cyan-400 mt-2 inline-flex items-center gap-1 transition-colors"
+                className="text-xs text-accent hover:text-accent mt-2 inline-flex items-center gap-1 transition-colors"
               >
                 View on Explorer →
               </motion.a>

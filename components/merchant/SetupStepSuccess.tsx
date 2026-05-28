@@ -31,7 +31,7 @@ export function SetupStepSuccess({ businessName, slug }: SetupStepSuccessProps) 
       <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-6 max-w-md mx-auto">
         <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">Your store link</div>
         <div className="flex items-center gap-2">
-          <code className="flex-1 text-cyan-400 text-sm truncate">
+          <code className="flex-1 text-accent text-sm truncate">
             {typeof window !== 'undefined' ? window.location.origin : ''}/store/{slug}
           </code>
           <button onClick={copyLink} className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
@@ -42,7 +42,7 @@ export function SetupStepSuccess({ businessName, slug }: SetupStepSuccessProps) 
 
       <div className="flex flex-col sm:flex-row gap-3 justify-center">
         <a href={`/store/${slug}`}
-          className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform">
+          className="px-6 py-3 bg-gradient-to-r from-accent to-blue-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform">
           <ExternalLink size={18} /> View your store
         </a>
         <button onClick={copyLink}

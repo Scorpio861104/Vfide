@@ -148,7 +148,7 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
               animate={{ rotate: [0, 5, -5, 0] }}
               transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
             >
-              <Users className="w-5 h-5 text-cyan-400" />
+              <Users className="w-5 h-5 text-accent" />
             </motion.div>
             Friends
             <span className="text-sm font-normal text-zinc-500">({friends.length})</span>
@@ -241,7 +241,7 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
             <div className="p-4 bg-gradient-to-b from-cyan-400/5 to-transparent">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-semibold text-zinc-100 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-cyan-400" />
+                  <Sparkles className="w-4 h-4 text-accent" />
                   Add New Friend
                 </h3>
               </div>
@@ -264,7 +264,7 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
                 whileTap={{ scale: 0.98 }}
                 onClick={handleAddFriend}
                 disabled={!newFriendAddress}
-                className="w-full py-2.5 bg-gradient-to-r from-cyan-400 to-[#00D5E0] text-zinc-950 rounded-xl font-semibold text-sm hover:from-[#00D5E0] hover:to-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                className="w-full py-2.5 bg-gradient-to-r from-cyan-400 to-[#00D5E0] text-zinc-950 rounded-xl font-semibold text-sm hover:from-[#00D5E0] hover:to-accent disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
               >
                 <UserPlus className="w-4 h-4" />
                 Add Friend
@@ -375,7 +375,7 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
                             </motion.div>
                           )}
                           {friend.proofScore && friend.proofScore >= 8000 && (
-                            <Shield className="w-3 h-3 text-cyan-400" />
+                            <Shield className="w-3 h-3 text-accent" />
                           )}
                         </div>
                         <div className="flex items-center gap-2">
@@ -408,7 +408,7 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
                             e.stopPropagation();
                             onSelectFriend(friend);
                           }}
-                          className="p-1.5 rounded-lg hover:bg-zinc-700 text-zinc-400 hover:text-cyan-400 transition-colors"
+                          className="p-1.5 rounded-lg hover:bg-zinc-700 text-zinc-400 hover:text-accent transition-colors"
                         >
                           <MessageCircle className="w-4 h-4" />
                         </motion.button>

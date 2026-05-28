@@ -101,7 +101,7 @@ export default function MerchantTipsPage() {
         <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         <section className="py-12">
           <div className="container mx-auto max-w-4xl px-4">
-            <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200">
+            <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-accent hover:text-accent">
               <ArrowLeft size={16} /> Back to Merchant Hub
             </Link>
 
@@ -242,7 +242,7 @@ export default function MerchantTipsPage() {
                         <button
                           onClick={save}
                           disabled={saving}
-                          className="px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
+                          className="px-5 py-2.5 bg-gradient-to-r from-accent to-blue-500 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
                         >
                           <Save size={16} /> {saving ? 'Saving…' : 'Save settings'}
                         </button>

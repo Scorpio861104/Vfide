@@ -102,7 +102,7 @@ export function BeneficiaryManager({ selectedId, onSelect }: BeneficiaryManagerP
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 text-white">
-        <Users size={18} className="text-cyan-400" />
+        <Users size={18} className="text-accent" />
         <h2 className="text-xl font-bold">Saved beneficiaries</h2>
       </div>
 

@@ -36,7 +36,7 @@ export function SetupStepProducts({
     <motion.div key="step2" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-          <Package className="text-cyan-400" size={24} /> Add your products
+          <Package className="text-accent" size={24} /> Add your products
         </h2>
         <p className="text-gray-400 mt-1">Add at least one product. You can add more after setup.</p>
       </div>
@@ -114,7 +114,7 @@ export function SetupStepProducts({
         ))}
 
         <button onClick={addProduct}
-          className="w-full py-3 border-2 border-dashed border-white/10 rounded-xl text-gray-400 hover:text-cyan-400 hover:border-accent/30 transition-all flex items-center justify-center gap-2">
+          className="w-full py-3 border-2 border-dashed border-white/10 rounded-xl text-gray-400 hover:text-accent hover:border-accent/30 transition-all flex items-center justify-center gap-2">
           <Plus size={18} /> Add another product
         </button>
       </div>

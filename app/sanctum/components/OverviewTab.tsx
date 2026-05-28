@@ -84,7 +84,7 @@ export function OverviewTab() {
         <div className="space-y-4">
           <div className="bg-black/30 rounded-xl p-4 border border-white/5">
             <div className="flex items-center gap-2 mb-2">
-              <Shield className="w-5 h-5 text-cyan-400" />
+              <Shield className="w-5 h-5 text-accent" />
               <span className="text-white font-bold">Multi-Signature Required</span>
             </div>
             <p className="text-sm text-gray-400">
@@ -94,7 +94,7 @@ export function OverviewTab() {
           </div>
           <div className="bg-black/30 rounded-xl p-4 border border-white/5">
             <div className="flex items-center gap-2 mb-2">
-              <Users className="w-5 h-5 text-cyan-400" />
+              <Users className="w-5 h-5 text-accent" />
               <span className="text-white font-bold">DAO Oversight</span>
             </div>
             <p className="text-sm text-gray-400">

@@ -29,14 +29,14 @@ export default function VaultSafetyPage() {
         <div className="container mx-auto max-w-3xl px-4 pb-16">
           <Link
             href="/vault"
-            className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200"
+            className="mb-6 inline-flex items-center gap-2 text-accent hover:text-accent"
           >
             <ArrowLeft size={16} /> Back to your vault
           </Link>
 
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-white mb-3 flex items-center gap-3">
-              <Shield className="text-cyan-400" size={28} />
+              <Shield className="text-accent" size={28} />
               How your vault is protected
             </h1>
             <p className="text-gray-400 leading-relaxed">
@@ -75,7 +75,7 @@ export default function VaultSafetyPage() {
 
           {/* ─────────────────────────────────────────────────────────── */}
           <Section
-            icon={<Users className="text-cyan-400" size={20} />}
+            icon={<Users className="text-accent" size={20} />}
             title="Recovery guardians"
           >
             <p>
@@ -151,7 +151,7 @@ export default function VaultSafetyPage() {
 
           {/* ─────────────────────────────────────────────────────────── */}
           <Section
-            icon={<Clock className="text-cyan-400" size={20} />}
+            icon={<Clock className="text-accent" size={20} />}
             title="The veto window"
           >
             <p>
@@ -322,7 +322,7 @@ export default function VaultSafetyPage() {
             <p>
               For a complete breakdown of what&apos;s visible to whom and how to
               think about privacy on VFIDE, see the{' '}
-              <Link href="/legal?tab=privacy" className="text-cyan-300 hover:text-cyan-200">
+              <Link href="/legal?tab=privacy" className="text-accent hover:text-accent">
                 full privacy explanation
               </Link>.
             </p>
@@ -339,7 +339,7 @@ export default function VaultSafetyPage() {
             </p>
             <Link
               href="/support"
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-cyan-300 hover:text-cyan-200"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:text-accent"
             >
               Tell us what was unclear
               <ChevronRight size={14} />

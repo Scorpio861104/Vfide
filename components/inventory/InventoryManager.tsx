@@ -14,7 +14,7 @@ export function InventoryManager({ items = [], onAdjustStock }: { items: Invento
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-accent/5 border border-accent/15 rounded-xl p-4"><div className="text-gray-400 text-xs mb-1">Products</div><div className="text-cyan-400 font-bold text-lg">{stats.total}</div></div>
+        <div className="bg-accent/5 border border-accent/15 rounded-xl p-4"><div className="text-gray-400 text-xs mb-1">Products</div><div className="text-accent font-bold text-lg">{stats.total}</div></div>
         <div className="bg-emerald-500/5 border border-emerald-500/15 rounded-xl p-4"><div className="text-gray-400 text-xs mb-1">Inventory Value</div><div className="text-emerald-400 font-bold text-lg font-mono">{formatCurrency(stats.value)}</div></div>
         <div className="bg-amber-500/5 border border-amber-500/15 rounded-xl p-4"><div className="text-gray-400 text-xs mb-1">Low Stock</div><div className="text-amber-400 font-bold text-lg">{stats.low}</div></div>
         <div className="bg-red-500/5 border border-red-500/15 rounded-xl p-4"><div className="text-gray-400 text-xs mb-1">Out of Stock</div><div className="text-red-400 font-bold text-lg">{stats.out}</div></div>

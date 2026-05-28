@@ -130,7 +130,7 @@ export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEnd
       <div>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Award className="w-5 h-5 text-cyan-400" />
+            <Award className="w-5 h-5 text-accent" />
             <h3 className="font-bold text-zinc-100">
               Endorsements ({totalEndorsements})
             </h3>

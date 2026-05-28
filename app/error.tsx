@@ -65,14 +65,14 @@ export default function Error({
         >
           <button
             onClick={reset}
-            className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-gradient-to-r from-cyan-400 to-blue-500 text-zinc-900 rounded-lg font-bold hover:scale-105 transition-transform"
+            className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-gradient-to-r from-accent to-blue-500 text-zinc-900 rounded-lg font-bold hover:scale-105 transition-transform"
           >
             <RefreshCw className="w-5 h-5" />
             Try Again
           </button>
           <Link
             href="/"
-            className="inline-flex items-center justify-center gap-2 px-8 py-3 border-2 border-cyan-400 text-cyan-400 rounded-lg font-bold hover:bg-cyan-400/10 transition-colors"
+            className="inline-flex items-center justify-center gap-2 px-8 py-3 border-2 border-cyan-400 text-accent rounded-lg font-bold hover:bg-cyan-400/10 transition-colors"
           >
             <Home className="w-5 h-5" />
             Go Home
@@ -92,7 +92,7 @@ export default function Error({
               href="https://github.com/Scorpio861104/Vfide/issues" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-cyan-400 hover:underline"
+              className="text-accent hover:underline"
             >
               report an issue
             </a>{" "}

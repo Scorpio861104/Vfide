@@ -45,7 +45,7 @@ export function ProgressSteps({ steps, currentStep, className = '' }: ProgressSt
                 {isCompleted ? (
                   <Check className="text-zinc-900" size={20} />
                 ) : (
-                  <span className={`font-bold ${isCurrent ? 'text-cyan-400' : 'text-zinc-400'}`}>
+                  <span className={`font-bold ${isCurrent ? 'text-accent' : 'text-zinc-400'}`}>
                     {index + 1}
                   </span>
                 )}
@@ -53,7 +53,7 @@ export function ProgressSteps({ steps, currentStep, className = '' }: ProgressSt
               
               {/* Step label */}
               <div className="mt-2 text-center">
-                <div className={`text-sm font-medium ${isCurrent ? 'text-zinc-100' : isCompleted ? 'text-cyan-400' : 'text-zinc-400'}`}>
+                <div className={`text-sm font-medium ${isCurrent ? 'text-zinc-100' : isCompleted ? 'text-accent' : 'text-zinc-400'}`}>
                   {step.title}
                 </div>
                 {step.description && (

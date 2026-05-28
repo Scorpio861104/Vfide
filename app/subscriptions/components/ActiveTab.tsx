@@ -48,7 +48,7 @@ export function ActiveTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 size={24} className="text-cyan-400 animate-spin" />
+        <Loader2 size={24} className="text-accent animate-spin" />
       </div>
     );
   }
@@ -76,7 +76,7 @@ export function ActiveTab() {
       {subs.map((sub) => (
         <div key={sub.id} className="bg-white/3 border border-white/10 rounded-xl p-4 flex items-center gap-4">
           <div className="w-10 h-10 bg-cyan-500/10 rounded-xl flex items-center justify-center flex-shrink-0">
-            <RefreshCw size={18} className="text-cyan-400" />
+            <RefreshCw size={18} className="text-accent" />
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-white font-semibold text-sm">{sub.label}</p>

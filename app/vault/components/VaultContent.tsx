@@ -120,7 +120,7 @@ export function VaultContent() {
               <div className="container mx-auto px-4 max-w-6xl">
                 <GlassCard className="p-6" hover={false}>
                   <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                    <TrendingUp className="text-cyan-400" size={24} />
+                    <TrendingUp className="text-accent" size={24} />
                     Transaction History
                   </h2>
                   <TransactionHistory transactions={transactions} loading={txLoading} />

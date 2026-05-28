@@ -24,7 +24,7 @@ export function MessagesTab({ hasVault = false }: MessagesTabProps) {
         ) : (
           <div className="flex h-full flex-col items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 p-12 text-center">
             <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-cyan-400/10">
-              <MessageCircle className="h-12 w-12 text-cyan-400" />
+              <MessageCircle className="h-12 w-12 text-accent" />
             </div>
             <h3 className="mb-3 text-2xl font-bold text-zinc-100">Select a Friend to Start Messaging</h3>
             <p className="mb-6 max-w-md text-zinc-400">

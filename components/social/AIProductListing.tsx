@@ -127,7 +127,7 @@ export function AIProductListing({ onPublish, onClose }: AIProductListingProps) 
           ) : (
             <div className="flex-1 flex items-center justify-center h-full">
               <button onClick={startCamera} className="flex flex-col items-center gap-3 p-8">
-                <div className="w-20 h-20 rounded-2xl bg-cyan-500/20 border border-accent/30 flex items-center justify-center"><Camera size={32} className="text-cyan-400" /></div>
+                <div className="w-20 h-20 rounded-2xl bg-cyan-500/20 border border-accent/30 flex items-center justify-center"><Camera size={32} className="text-accent" /></div>
                 <span className="text-white font-bold">Take Product Photo</span>
                 <span className="text-gray-500 text-xs">AI will generate the listing for you</span>
               </button>
@@ -143,7 +143,7 @@ export function AIProductListing({ onPublish, onClose }: AIProductListingProps) 
             {generating ? (
               <div className="flex items-center justify-center gap-3 py-8">
                 <div className="w-6 h-6 border-2 border-accent/20 border-t-cyan-500 rounded-full animate-spin" />
-                <span className="text-cyan-400 text-sm">AI is analyzing your product...</span>
+                <span className="text-accent text-sm">AI is analyzing your product...</span>
               </div>
             ) : listing ? (
               <div className="space-y-3">
@@ -167,7 +167,7 @@ export function AIProductListing({ onPublish, onClose }: AIProductListingProps) 
                     {editing ? (
                       <input value={listing.suggestedPrice} onChange={e =>  setListing({ ...listing, suggestedPrice: parseFloat(e.target.value) || 0 })} type="number"
                         className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white font-mono text-sm mt-1 focus:outline-none focus:border-accent/50" />
-                    ) : <p className="text-cyan-400 font-mono font-bold">{listing.currency}{listing.suggestedPrice}</p>}
+                    ) : <p className="text-accent font-mono font-bold">{listing.currency}{listing.suggestedPrice}</p>}
                   </div>
                   <div>
                     <label className="text-[10px] text-gray-500 uppercase tracking-wider">Category</label>
@@ -187,7 +187,7 @@ export function AIProductListing({ onPublish, onClose }: AIProductListingProps) 
                   <button onClick={retake} className="flex-1 py-3 flex items-center justify-center gap-1.5 bg-white/5 border border-white/10 text-gray-400 rounded-xl text-sm font-bold"><RefreshCw size={14} />Retake</button>
                   <button onClick={() => setEditing(!editing)} className="py-3 px-4 flex items-center justify-center gap-1.5 bg-white/5 border border-white/10 text-gray-400 rounded-xl text-sm font-bold"><Edit3 size={14} />{editing ? 'Done' : 'Edit'}</button>
                   <button onClick={() => { if (imageBlob && listing) onPublish({ ...listing, imageBlob }); }}
-                    className="flex-1 py-3 flex items-center justify-center gap-1.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl text-sm font-bold"><Check size={14} />Publish</button>
+                    className="flex-1 py-3 flex items-center justify-center gap-1.5 bg-gradient-to-r from-accent to-blue-500 text-white rounded-xl text-sm font-bold"><Check size={14} />Publish</button>
                 </div>
               </div>
             ) : null}

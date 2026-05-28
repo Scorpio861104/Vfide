@@ -117,7 +117,7 @@ export function StoryCreator({
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-zinc-700">
-          <h2 className="text-xl font-bold text-cyan-400">Create Story</h2>
+          <h2 className="text-xl font-bold text-accent">Create Story</h2>
           <button
             onClick={onClose}
             aria-label="Close story creator"

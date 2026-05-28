@@ -403,7 +403,7 @@ export function ExpandableCard({
 
         <button
           onClick={toggleExpand}
-          className="mt-3 flex items-center gap-2 text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
+          className="mt-3 flex items-center gap-2 text-sm text-accent hover:text-accent transition-colors"
         >
           {isExpanded ? (
             <>

@@ -48,7 +48,7 @@ export function DashboardTab() {
         </div>
         <div className="bg-white/3 border border-white/10 rounded-2xl p-5">
           <div className="text-sm text-gray-400">Estimated Rank</div>
-          <div className="text-3xl font-bold text-cyan-300 mt-2">#{estimatedRank}</div>
+          <div className="text-3xl font-bold text-accent mt-2">#{estimatedRank}</div>
         </div>
         <div className="bg-white/3 border border-white/10 rounded-2xl p-5">
           <div className="text-sm text-gray-400">Season</div>
@@ -63,7 +63,7 @@ export function DashboardTab() {
         <button
           type="button"
           onClick={() => void handleCopy()}
-          className="rounded-xl border border-accent/30 bg-cyan-500/15 px-4 py-2 font-semibold text-cyan-300"
+          className="rounded-xl border border-accent/30 bg-cyan-500/15 px-4 py-2 font-semibold text-accent"
         >
           {copied ? 'Copied' : 'Copy'}
         </button>

@@ -30,7 +30,7 @@ export default function WalletError({
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button
             onClick={reset}
-            className="inline-flex items-center gap-2 rounded-xl border border-accent/30 bg-cyan-500/10 px-5 py-2.5 text-cyan-300 hover:bg-cyan-500/20 transition"
+            className="inline-flex items-center gap-2 rounded-xl border border-accent/30 bg-cyan-500/10 px-5 py-2.5 text-accent hover:bg-cyan-500/20 transition"
           >
             <RefreshCw className="w-4 h-4" /> Try Again
           </button>

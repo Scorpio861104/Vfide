@@ -71,7 +71,7 @@ export function FriendRequestsPanel({ onAccept, onReject }: FriendRequestsPanelP
 
   const getTrustLevel = (proofScore?: number) => {
     if (!proofScore) return { label: 'Unknown', color: 'text-zinc-500' };
-    if (proofScore >= 8000) return { label: 'Elite', color: 'text-cyan-400' };
+    if (proofScore >= 8000) return { label: 'Elite', color: 'text-accent' };
     if (proofScore >= 5400) return { label: 'Trusted', color: 'text-emerald-500' };
     if (proofScore >= 4000) return { label: 'Standard', color: 'text-amber-400' };
     return { label: 'Low Trust', color: 'text-pink-400' };
@@ -90,7 +90,7 @@ export function FriendRequestsPanel({ onAccept, onReject }: FriendRequestsPanelP
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-bold text-zinc-100 flex items-center gap-2">
-          <UserPlus className="w-5 h-5 text-cyan-400" />
+          <UserPlus className="w-5 h-5 text-accent" />
           Friend Requests
           {pendingCount > 0 && (
             <span className="ml-2 px-2 py-0.5 bg-accent/20 text-accent rounded-full text-xs font-bold">

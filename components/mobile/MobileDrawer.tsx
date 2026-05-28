@@ -191,7 +191,7 @@ export function MobileDrawer({ items = [], logo, onNavClick, children, className
                         <Link
                           href={item.href}
                           onClick={() => handleNavClick(item.href)}
-                          className="flex items-center justify-between gap-3 px-4 py-3 text-zinc-400 hover:text-cyan-400 hover:bg-zinc-800 rounded-lg transition-all duration-200 group"
+                          className="flex items-center justify-between gap-3 px-4 py-3 text-zinc-400 hover:text-accent hover:bg-zinc-800 rounded-lg transition-all duration-200 group"
                         >
                           <div className="flex items-center gap-3">
                             {item.icon && <span className="w-5 h-5">{item.icon}</span>}

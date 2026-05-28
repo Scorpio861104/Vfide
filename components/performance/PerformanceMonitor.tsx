@@ -345,7 +345,7 @@ export function PerformancePanel({
           className="w-full px-4 py-3 flex items-center justify-between hover:bg-zinc-800/50 transition-colors"
         >
           <div className="flex items-center gap-2">
-            <Activity className="w-4 h-4 text-cyan-400" />
+            <Activity className="w-4 h-4 text-accent" />
             <span className="text-sm font-bold text-white">Performance</span>
           </div>
           <div className="flex items-center gap-2">

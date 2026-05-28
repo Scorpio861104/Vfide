@@ -214,7 +214,7 @@ export function HistoryTab({ searchQuery = '' }: { searchQuery?: string }) {
                     ]),
                   });
                 }}
-                className="px-4 py-2 bg-zinc-900 border border-zinc-700 text-cyan-400 rounded-lg font-bold hover:border-cyan-400"
+                className="px-4 py-2 bg-zinc-900 border border-zinc-700 text-accent rounded-lg font-bold hover:border-cyan-400"
               >
                 📊 Export CSV
               </button>

@@ -68,7 +68,7 @@ function HubCard({ link }: { link: HubLink }) {
     >
       <div className="flex items-start gap-3">
         <div className="rounded-lg bg-zinc-900 p-2 transition-colors group-hover:bg-cyan-500/10">
-          <Icon size={20} className="text-cyan-300" />
+          <Icon size={20} className="text-accent" />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5 font-medium text-white">

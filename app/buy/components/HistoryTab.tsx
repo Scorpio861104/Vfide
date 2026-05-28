@@ -54,7 +54,7 @@ export function HistoryTab() {
         </div>
       ) : loading ? (
         <div className="flex items-center justify-center py-10">
-          <Loader2 size={20} className="text-cyan-400 animate-spin" />
+          <Loader2 size={20} className="text-accent animate-spin" />
         </div>
       ) : txActivities.length === 0 ? (
         <div className="bg-white/3 border border-white/10 rounded-2xl p-8 text-center">

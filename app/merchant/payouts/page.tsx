@@ -236,7 +236,7 @@ export default function MerchantPayoutsPage() {
           <div className="grid-pattern absolute inset-0 opacity-[0.03]" />
         </div>
         <div className="relative container mx-auto max-w-5xl px-4">
-          <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200 text-sm">
+          <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-accent hover:text-accent text-sm">
             <ArrowLeft size={16} /> Back to Merchant Hub
           </Link>
 
@@ -328,7 +328,7 @@ export default function MerchantPayoutsPage() {
                             type="button"
                             onClick={() => openCashOut(b.tokenConfig)}
                             disabled={!canCashOut}
-                            className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-cyan-500/15 border border-accent/30 px-3 py-2 text-sm font-medium text-cyan-200 transition-colors hover:bg-cyan-500/25 disabled:opacity-40 disabled:cursor-not-allowed"
+                            className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-cyan-500/15 border border-accent/30 px-3 py-2 text-sm font-medium text-accent transition-colors hover:bg-cyan-500/25 disabled:opacity-40 disabled:cursor-not-allowed"
                           >
                             <ArrowUpRight size={14} />
                             Cash out
@@ -415,7 +415,7 @@ export default function MerchantPayoutsPage() {
                   <em>Awaiting provider</em> until the provider&apos;s webhook lets us know they&apos;ve moved
                   to processing or completed. If you completed the provider flow and it&apos;s still
                   shown as awaiting after a few minutes,{' '}
-                  <Link href="/support" className="text-cyan-300 hover:underline inline-flex items-center gap-1">
+                  <Link href="/support" className="text-accent hover:underline inline-flex items-center gap-1">
                     contact support <ExternalLink size={11} />
                   </Link>.
                 </p>

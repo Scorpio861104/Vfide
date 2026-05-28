@@ -160,14 +160,14 @@ export function CheckoutPanel({
           <motion.div key="review" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, x: -20 }}>
             {/* Merchant header */}
             <div className="flex items-center gap-3 mb-6 p-4 bg-white/3 border border-white/10 rounded-xl">
-              <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center text-cyan-400 font-bold">
+              <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center text-accent font-bold">
                 {merchantName[0]?.toUpperCase()}
               </div>
               <div className="flex-1">
                 <div className="text-white font-bold">{merchantName}</div>
                 {merchantProofScore !== undefined && (
                   <div className="text-xs text-gray-500 flex items-center gap-1">
-                    <Shield size={10} className="text-cyan-400" />
+                    <Shield size={10} className="text-accent" />
                     ProofScore {merchantProofScore.toLocaleString()}
                   </div>
                 )}
@@ -209,7 +209,7 @@ export function CheckoutPanel({
               </div>
               <div className="border-t border-white/10 pt-2 flex justify-between">
                 <span className="text-white font-bold">Total</span>
-                <span className="text-cyan-400 font-bold text-lg">{formatCurrency(total)}</span>
+                <span className="text-accent font-bold text-lg">{formatCurrency(total)}</span>
               </div>
               <div className="text-xs text-emerald-400 text-right">
                 Merchant fee: {formatCurrency(0)} (saved {formatCurrency(feeSavedVsSquare)} vs Square)
@@ -254,7 +254,7 @@ export function CheckoutPanel({
             <button
               onClick={handlePay}
               disabled={!isConnected || isPaying || isProcessing || !hasValidTokenQuote}
-              className="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold text-lg disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full py-4 bg-gradient-to-r from-accent to-blue-600 text-white rounded-xl font-bold text-lg disabled:opacity-50 flex items-center justify-center gap-2"
             >
               <Wallet size={22} />
               Pay {formatCurrency(total)}
@@ -272,7 +272,7 @@ export function CheckoutPanel({
         {step === 'paying' && (
           <motion.div key="paying" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             className="text-center py-12">
-            <Loader2 size={48} className="text-cyan-400 animate-spin mx-auto mb-6" />
+            <Loader2 size={48} className="text-accent animate-spin mx-auto mb-6" />
             <h3 className="text-xl font-bold text-white mb-2">Processing payment...</h3>
             <p className="text-gray-400">Confirm the transaction in your wallet</p>
           </motion.div>

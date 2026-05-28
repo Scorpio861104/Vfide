@@ -91,7 +91,7 @@ export function MyEscrowsTab() {
     <div className="space-y-4">
       {/* Header / summary */}
       <div className="bg-zinc-800 border border-zinc-700 rounded-2xl p-5 flex items-start gap-3">
-        <ShieldAlert className="text-cyan-400 shrink-0 mt-0.5" size={20} />
+        <ShieldAlert className="text-accent shrink-0 mt-0.5" size={20} />
         <div className="flex-1">
           <p className="text-zinc-100 font-semibold">
             {escrows.length === 0

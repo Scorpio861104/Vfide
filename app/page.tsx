@@ -196,7 +196,7 @@ export default function Home() {
                       transition={{ duration: 0.5, delay: 0.3 + i * 0.08 }}
                       className="flex items-center gap-2 text-sm text-zinc-400"
                     >
-                      <CheckCircle2 size={14} className="text-cyan-400 shrink-0" aria-hidden="true" />
+                      <CheckCircle2 size={14} className="text-accent shrink-0" aria-hidden="true" />
                       {point}
                     </motion.div>
                   ))}

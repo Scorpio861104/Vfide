@@ -155,7 +155,7 @@ export function MonumentCorner() {
             <div className="border-t border-white/10 px-4 py-2">
               <Link
                 href="/treasury"
-                className="inline-flex items-center gap-1 text-xs text-cyan-300 hover:text-cyan-200"
+                className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent"
               >
                 Full activity <ArrowUpRight size={10} />
               </Link>

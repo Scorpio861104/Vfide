@@ -54,15 +54,15 @@ export function BorrowInfoTab() {
     <div className="space-y-6">
       <div className="rounded-2xl border border-accent/20 bg-cyan-500/5 p-5">
         <div className="flex items-start gap-3">
-          <Info size={18} className="text-cyan-400 mt-0.5 shrink-0" aria-hidden="true" />
+          <Info size={18} className="text-accent mt-0.5 shrink-0" aria-hidden="true" />
           <div>
             <h3 className="text-white font-semibold text-sm mb-1">How borrowing works</h3>
             <p className="text-zinc-300 text-sm leading-relaxed">
               Flash loans are atomic: the entire borrow + use + repay happens in a single transaction.
               You can&rsquo;t borrow directly from a normal wallet — you need to deploy a contract that
-              implements <code className="text-cyan-300 bg-cyan-500/10 px-1 rounded">IERC3156FlashBorrower</code>.
-              Your contract calls <code className="text-cyan-300 bg-cyan-500/10 px-1 rounded">flashLoan(lender, receiver, amount, maxFeeBps, data)</code>,
-              the protocol sends the tokens to it, runs <code className="text-cyan-300 bg-cyan-500/10 px-1 rounded">onFlashLoan</code>,
+              implements <code className="text-accent bg-cyan-500/10 px-1 rounded">IERC3156FlashBorrower</code>.
+              Your contract calls <code className="text-accent bg-cyan-500/10 px-1 rounded">flashLoan(lender, receiver, amount, maxFeeBps, data)</code>,
+              the protocol sends the tokens to it, runs <code className="text-accent bg-cyan-500/10 px-1 rounded">onFlashLoan</code>,
               and reverts the whole transaction if your contract hasn&rsquo;t paid back
               amount + fee by the end.
             </p>
@@ -72,7 +72,7 @@ export function BorrowInfoTab() {
 
       <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
         <div className="flex items-center gap-2 mb-3">
-          <Search size={16} className="text-cyan-400" aria-hidden="true" />
+          <Search size={16} className="text-accent" aria-hidden="true" />
           <h3 className="text-white font-semibold text-sm">Quote a loan</h3>
         </div>
         <p className="text-xs text-zinc-400 mb-3">
@@ -110,7 +110,7 @@ export function BorrowInfoTab() {
                 </div>
                 <div className="flex items-center justify-between rounded-lg bg-white/[0.03] border border-white/10 px-3 py-2">
                   <span className="text-xs text-zinc-400">Fee rate</span>
-                  <span className="text-xs font-mono text-cyan-400">
+                  <span className="text-xs font-mono text-accent">
                     {(Number(feeBps) / 100).toFixed(2)}%
                   </span>
                 </div>

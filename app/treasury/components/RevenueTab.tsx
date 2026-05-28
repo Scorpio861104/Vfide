@@ -175,9 +175,9 @@ export function RevenueTab() {
         <h3 className="text-xl font-bold text-zinc-100 mb-6">Fee Flow</h3>
         <div className="flex items-center justify-center gap-4 flex-wrap">
           <FlowBox title="Transfer Fees" subtitle="from ProofScoreBurnRouter" />
-          <ArrowRight className="text-cyan-400" />
+          <ArrowRight className="text-accent" />
           <FlowBox title="FeeDistributor" subtitle="splits via feeSplit BPS" />
-          <ArrowRight className="text-cyan-400" />
+          <ArrowRight className="text-accent" />
           <FlowBox title="5 destinations" subtitle="below" />
         </div>
       </div>
@@ -206,14 +206,14 @@ export function RevenueTab() {
                           href={getAddressExplorerUrl(payee.address, chainId ?? DEFAULT_CHAIN_ID)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs text-cyan-400 hover:text-cyan-300 font-mono inline-flex items-center gap-1 mt-1 transition-colors"
+                          className="text-xs text-accent hover:text-accent font-mono inline-flex items-center gap-1 mt-1 transition-colors"
                           title={payee.address}
                         >
                           {shortAddr(payee.address)} <ExternalLink size={10} />
                         </a>
                       )}
                     </div>
-                    <div className="text-2xl font-bold text-cyan-400 tabular-nums">
+                    <div className="text-2xl font-bold text-accent tabular-nums">
                       {pct.toFixed(2)}%
                     </div>
                   </div>

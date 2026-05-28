@@ -256,7 +256,7 @@ export function TransactionTrailOverlay() {
             const bg =
               trail.status === 'failed' ? 'bg-red-500/15 border-red-500/40 text-red-200'
               : trail.status === 'confirmed' ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-200'
-              : 'bg-accent/15 border-accent/40 text-cyan-200';
+              : 'bg-accent/15 border-accent/40 text-accent';
             const label = trail.label ?? 'Transaction';
             const statusText = (() => {
               switch (trail.status) {

@@ -19,7 +19,7 @@ export function RelatedProducts({ products }: { products: any[] }) {
               )}
             </div>
             <div className="text-xs text-white truncate">{p.name}</div>
-            <div className="text-xs text-cyan-400 font-mono">${parseFloat(p.price).toFixed(2)}</div>
+            <div className="text-xs text-accent font-mono">${parseFloat(p.price).toFixed(2)}</div>
           </Link>
         ))}
       </div>

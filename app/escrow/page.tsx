@@ -58,7 +58,7 @@ export default function EscrowPage() {
             </div>
             <div className="flex items-center gap-2">
               <div className="analytics-card text-center px-5 py-3">
-                <div className="text-xl font-bold text-cyan-400">$2.4M</div>
+                <div className="text-xl font-bold text-accent">$2.4M</div>
                 <div className="text-xs text-white/40">Locked</div>
               </div>
               <div className="analytics-card text-center px-5 py-3">

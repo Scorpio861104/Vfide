@@ -543,7 +543,7 @@ export function NotificationBadge({
         <>
           <span className={`
             absolute ${badgeSizeClasses[size]} rounded-full 
-            bg-gradient-to-r from-cyan-500 to-blue-500 
+            bg-gradient-to-r from-accent to-blue-500 
             flex items-center justify-center font-bold text-white
           `}>
             {count > 99 ? '99+' : count}
@@ -641,7 +641,7 @@ export function NotificationDropdown({ isOpen, onClose }: NotificationDropdownPr
             <div className="p-4 border-b border-white/10">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Bell size={20} className="text-cyan-400" />
+                  <Bell size={20} className="text-accent" />
                   Notifications
                   {unreadCount > 0 && (
                     <span className="px-2 py-0.5 bg-accent/20 text-accent rounded-full text-xs font-medium">
@@ -707,7 +707,7 @@ export function NotificationDropdown({ isOpen, onClose }: NotificationDropdownPr
                   <div className="flex-1" />
                   <button
                     onClick={markAllAsRead}
-                    className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+                    className="text-xs text-accent hover:text-accent transition-colors"
                   >
                     Mark all read
                   </button>
@@ -838,7 +838,7 @@ function NotificationSettings({ preferences, onUpdate }: NotificationSettingsPro
               type="checkbox"
               checked={preferences.enabled}
               onChange={(e) =>  onUpdate({ ...preferences, enabled: e.target.checked })}
-              className="w-5 h-5 rounded bg-white/10 border-white/20 text-cyan-500 focus:ring-accent/50"
+              className="w-5 h-5 rounded bg-white/10 border-white/20 text-accent focus:ring-accent/50"
             />
           </label>
           <label className="flex items-center justify-between">
@@ -847,7 +847,7 @@ function NotificationSettings({ preferences, onUpdate }: NotificationSettingsPro
               type="checkbox"
               checked={preferences.sound}
               onChange={(e) =>  onUpdate({ ...preferences, sound: e.target.checked })}
-              className="w-5 h-5 rounded bg-white/10 border-white/20 text-cyan-500 focus:ring-accent/50"
+              className="w-5 h-5 rounded bg-white/10 border-white/20 text-accent focus:ring-accent/50"
             />
           </label>
           <label className="flex items-center justify-between">
@@ -856,7 +856,7 @@ function NotificationSettings({ preferences, onUpdate }: NotificationSettingsPro
               type="checkbox"
               checked={preferences.desktop}
               onChange={(e) =>  onUpdate({ ...preferences, desktop: e.target.checked })}
-              className="w-5 h-5 rounded bg-white/10 border-white/20 text-cyan-500 focus:ring-accent/50"
+              className="w-5 h-5 rounded bg-white/10 border-white/20 text-accent focus:ring-accent/50"
             />
           </label>
           <label className="flex items-center justify-between">
@@ -865,7 +865,7 @@ function NotificationSettings({ preferences, onUpdate }: NotificationSettingsPro
               type="checkbox"
               checked={preferences.vibrate}
               onChange={(e) =>  onUpdate({ ...preferences, vibrate: e.target.checked })}
-              className="w-5 h-5 rounded bg-white/10 border-white/20 text-cyan-500 focus:ring-accent/50"
+              className="w-5 h-5 rounded bg-white/10 border-white/20 text-accent focus:ring-accent/50"
             />
           </label>
         </div>
@@ -888,7 +888,7 @@ function NotificationSettings({ preferences, onUpdate }: NotificationSettingsPro
                   ...preferences,
                   categories: { ...preferences.categories, [key]: e.target.checked }
                 })}
-                className="w-5 h-5 rounded bg-white/10 border-white/20 text-cyan-500 focus:ring-accent/50"
+                className="w-5 h-5 rounded bg-white/10 border-white/20 text-accent focus:ring-accent/50"
               />
             </label>
           ))}
@@ -907,7 +907,7 @@ function NotificationSettings({ preferences, onUpdate }: NotificationSettingsPro
               ...preferences,
               quietHours: { ...preferences.quietHours, enabled: e.target.checked }
             })}
-            className="w-5 h-5 rounded bg-white/10 border-white/20 text-cyan-500 focus:ring-accent/50"
+            className="w-5 h-5 rounded bg-white/10 border-white/20 text-accent focus:ring-accent/50"
           />
         </label>
         {preferences.quietHours.enabled && (

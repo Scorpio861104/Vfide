@@ -47,7 +47,7 @@ export function CreateTab() {
     <div className="space-y-6">
       <div className="bg-white/3 border border-white/10 rounded-2xl p-6">
         <div className="flex items-center gap-2 mb-5">
-          <BellPlus size={16} className="text-cyan-400" />
+          <BellPlus size={16} className="text-accent" />
           <h3 className="text-white font-semibold">New Price Alert</h3>
         </div>
         <form onSubmit={handleSave} className="space-y-4">
@@ -111,7 +111,7 @@ export function CreateTab() {
           ) : (
             <button
               type="submit"
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent/20 hover:bg-accent/30 text-cyan-400 text-sm font-semibold transition-colors"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent/20 hover:bg-accent/30 text-accent text-sm font-semibold transition-colors"
             >
               <BellPlus size={14} /> Create Alert
             </button>

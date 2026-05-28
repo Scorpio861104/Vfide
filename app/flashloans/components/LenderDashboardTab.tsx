@@ -115,7 +115,7 @@ export function LenderDashboardTab() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 size={24} className="text-cyan-400 animate-spin" aria-hidden="true" />
+        <Loader2 size={24} className="text-accent animate-spin" aria-hidden="true" />
       </div>
     );
   }
@@ -167,7 +167,7 @@ export function LenderDashboardTab() {
       <div className="space-y-5">
         <div className="rounded-2xl border border-accent/20 bg-cyan-500/5 p-6">
           <div className="flex items-center gap-2 mb-3">
-            <Wallet size={16} className="text-cyan-400" aria-hidden="true" />
+            <Wallet size={16} className="text-accent" aria-hidden="true" />
             <h3 className="text-white font-semibold">Become a Lender</h3>
           </div>
           <p className="text-zinc-300 text-sm mb-4">
@@ -190,7 +190,7 @@ export function LenderDashboardTab() {
             <button
               onClick={handleDeposit}
               disabled={depositPending || depositConfirming || !depositInput}
-              className="flex items-center gap-2 rounded-lg bg-accent/20 hover:bg-accent/30 px-4 py-2 text-sm font-semibold text-cyan-400 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+              className="flex items-center gap-2 rounded-lg bg-accent/20 hover:bg-accent/30 px-4 py-2 text-sm font-semibold text-accent transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
             >
               {depositPending || depositConfirming ? (
                 <Loader2 size={14} className="animate-spin" aria-hidden="true" />
@@ -215,7 +215,7 @@ export function LenderDashboardTab() {
     {
       label: 'Available balance',
       value: `${formatUnits(info.balance, VFIDE_DECIMALS)} VFIDE`,
-      icon: <Wallet size={14} className="text-cyan-400" aria-hidden="true" />,
+      icon: <Wallet size={14} className="text-accent" aria-hidden="true" />,
     },
     {
       label: 'Fee rate',
@@ -257,7 +257,7 @@ export function LenderDashboardTab() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
           <div className="flex items-center gap-2 mb-3">
-            <Plus size={16} className="text-cyan-400" aria-hidden="true" />
+            <Plus size={16} className="text-accent" aria-hidden="true" />
             <h3 className="text-white font-semibold text-sm">Top up</h3>
           </div>
           <div className="flex gap-2">
@@ -275,7 +275,7 @@ export function LenderDashboardTab() {
             <button
               onClick={handleDeposit}
               disabled={depositPending || depositConfirming || !depositInput}
-              className="rounded-lg bg-accent/20 hover:bg-accent/30 px-3 py-2 text-sm font-semibold text-cyan-400 disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+              className="rounded-lg bg-accent/20 hover:bg-accent/30 px-3 py-2 text-sm font-semibold text-accent disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
             >
               {depositPending || depositConfirming ? <Loader2 size={14} className="animate-spin" aria-hidden="true" /> : 'Add'}
             </button>

@@ -54,7 +54,7 @@ export default function RemittancePage() {
         <div className="container mx-auto px-4 max-w-5xl py-12 relative">
           {/* Header */}
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-12 text-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-cyan-500/10 px-4 py-1.5 text-xs uppercase tracking-widest text-cyan-300 mb-6">
+            <div className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-cyan-500/10 px-4 py-1.5 text-xs uppercase tracking-widest text-accent mb-6">
               <Globe size={12} /> International transfers on Base
             </div>
             <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-4">
@@ -132,7 +132,7 @@ export default function RemittancePage() {
                   </div>
                   <div className="border-t border-zinc-800 pt-2 flex justify-between font-semibold">
                     <span className="text-white">Recipient gets</span>
-                    <span className="text-cyan-400">${Math.max(0, netAmount).toFixed(2)} USDC</span>
+                    <span className="text-accent">${Math.max(0, netAmount).toFixed(2)} USDC</span>
                   </div>
                 </div>
 
@@ -151,7 +151,7 @@ export default function RemittancePage() {
                 <div className="space-y-4">
                   {STEPS.map((s) => (
                     <div key={s.step} className="flex items-start gap-4">
-                      <div className="w-8 h-8 rounded-full bg-cyan-500/20 border border-accent/30 flex items-center justify-center text-cyan-300 text-sm font-bold shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-cyan-500/20 border border-accent/30 flex items-center justify-center text-accent text-sm font-bold shrink-0">
                         {s.step}
                       </div>
                       <div>

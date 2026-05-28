@@ -62,7 +62,7 @@ export function ResolvedTab() {
         </div>
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 size={20} className="text-cyan-400 animate-spin" />
+            <Loader2 size={20} className="text-accent animate-spin" />
           </div>
         ) : resolved.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-center">

@@ -277,7 +277,7 @@ export function PayContent() {
             <span>Secure Checkout</span>
           </motion.div>
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-2 tracking-tight">
-            Complete <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">Payment</span>
+            Complete <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-blue-400">Payment</span>
           </h1>
           <p className="text-xl text-gray-400">
             Secure checkout powered by VFIDE
@@ -309,7 +309,7 @@ export function PayContent() {
               </div>
               <div className="mt-2 text-xs text-gray-400">Order: <span className="font-mono text-gray-300">{orderId}</span></div>
               <div className="flex flex-wrap items-center gap-2 mt-2">
-                <div className="px-3 py-1 bg-cyan-500/20 border border-accent/30 rounded-lg text-cyan-400 text-sm font-bold">
+                <div className="px-3 py-1 bg-cyan-500/20 border border-accent/30 rounded-lg text-accent text-sm font-bold">
                   TRUSTED • ProofScore 845
                 </div>
                 <div className={`px-3 py-1 rounded-lg text-sm font-bold ${
@@ -351,7 +351,7 @@ export function PayContent() {
             {/* Amount */}
             <div className="mb-8">
               <div className="text-gray-400 text-sm mb-2">Amount (VFIDE)</div>
-              <div className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 mb-2">{amountVfide.toLocaleString(undefined, { maximumFractionDigits: 6 })}</div>
+              <div className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-accent to-blue-400 mb-2">{amountVfide.toLocaleString(undefined, { maximumFractionDigits: 6 })}</div>
               <div className="text-gray-400">
                 {priceLoading ? (
                   <span className="animate-pulse">Calculating...</span>
@@ -388,7 +388,7 @@ export function PayContent() {
                         <div className="text-gray-400 text-sm">{method.desc}</div>
                       </div>
                       {selectedMethod === method.id && (
-                        <span className="text-cyan-400 font-bold text-sm">SELECTED</span>
+                        <span className="text-accent font-bold text-sm">SELECTED</span>
                       )}
                     </div>
                   </motion.button>
@@ -409,7 +409,7 @@ export function PayContent() {
               <div className="border-t border-white/10 my-3" />
               <div className="flex justify-between items-center">
                 <span className="text-white font-bold">Settlement path</span>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 font-bold text-xl">{settlementTone.method}</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-blue-400 font-bold text-xl">{settlementTone.method}</span>
               </div>
             </div>
 
@@ -420,7 +420,7 @@ export function PayContent() {
               disabled={effectiveProcessing || !merchant || !hasValidAmount || !qrReadyForPayment}
               whileHover={{ scale: effectiveProcessing ? 1 : 1.02 }}
               whileTap={{ scale: effectiveProcessing ? 1 : 0.98 }}
-              className="w-full px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold text-lg shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full px-8 py-4 bg-gradient-to-r from-accent to-blue-500 text-white rounded-xl font-bold text-lg shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {effectiveProcessing ? (
                 <>

@@ -340,7 +340,7 @@ export function ProofScoreBreakdown({ sources }: { sources: ScoreSource[] }) {
 // ── Example usage of breakdown ──────────────────────────────────────────────
 
 export const EXAMPLE_SOURCES: ScoreSource[] = [
-  { label: 'Transactions completed', points: 1800, icon: ShoppingCart, color: 'text-cyan-400' },
+  { label: 'Transactions completed', points: 1800, icon: ShoppingCart, color: 'text-accent' },
   { label: 'Governance participation', points: 900, icon: Vote, color: 'text-purple-400' },
   { label: 'Peer endorsements', points: 600, icon: Users, color: 'text-emerald-400' },
   { label: 'Account age bonus', points: 500, icon: Shield, color: 'text-blue-400' },

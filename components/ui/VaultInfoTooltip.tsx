@@ -94,7 +94,7 @@ export function VaultInfoTooltip({
                 </p>
 
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold text-cyan-400">With a vault, you can:</p>
+                  <p className="text-xs font-semibold text-accent">With a vault, you can:</p>
                   <ul className="text-xs text-zinc-400 space-y-1.5">
                     <li className="flex items-start gap-2">
                       <span className="text-emerald-500 mt-0.5">✓</span>

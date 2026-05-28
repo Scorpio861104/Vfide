@@ -79,7 +79,7 @@ export function CreateTab() {
         <CheckCircle size={48} className="text-green-400 mb-4" />
         <h3 className="text-white font-bold text-lg mb-2">Stream Created</h3>
         <p className="text-gray-400 text-sm mb-6">The payroll stream has been created and is now active.</p>
-        <button onClick={() => setSuccess(false)} className="px-4 py-2 rounded-lg bg-accent/20 hover:bg-accent/30 text-cyan-400 text-sm font-semibold transition-colors">
+        <button onClick={() => setSuccess(false)} className="px-4 py-2 rounded-lg bg-accent/20 hover:bg-accent/30 text-accent text-sm font-semibold transition-colors">
           Create Another
         </button>
       </div>
@@ -94,7 +94,7 @@ export function CreateTab() {
     <div className="space-y-6">
       <div className="bg-white/3 border border-white/10 rounded-2xl p-6">
         <div className="flex items-center gap-2 mb-5">
-          <Plus size={16} className="text-cyan-400" />
+          <Plus size={16} className="text-accent" />
           <h3 className="text-white font-semibold">New Payroll Stream</h3>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -159,7 +159,7 @@ export function CreateTab() {
 
           {rate && (
             <p className="text-xs text-gray-500">
-              Rate: <span className="text-cyan-400">{rate} {form.token}/second</span>
+              Rate: <span className="text-accent">{rate} {form.token}/second</span>
             </p>
           )}
 
@@ -168,7 +168,7 @@ export function CreateTab() {
           <button
             type="submit"
             disabled={submitting}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent/20 hover:bg-accent/30 text-cyan-400 text-sm font-semibold transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent/20 hover:bg-accent/30 text-accent text-sm font-semibold transition-colors disabled:opacity-50"
           >
             {submitting ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
             {submitting ? 'Creating…' : 'Create Stream'}

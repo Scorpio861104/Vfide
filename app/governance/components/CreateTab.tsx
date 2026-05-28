@@ -656,7 +656,7 @@ export function CreateTab() {
     <div className="space-y-6 max-w-2xl">
       {/* Eligibility banner */}
       <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-4 flex items-start gap-3">
-        <Wallet className="text-cyan-400 shrink-0 mt-0.5" size={18} />
+        <Wallet className="text-accent shrink-0 mt-0.5" size={18} />
         <div className="flex-1 text-sm">
           <p className="text-zinc-100">
             Voting power: <span className="font-semibold tabular-nums">{dao.votingPower.toString()}</span>
@@ -721,7 +721,7 @@ export function CreateTab() {
                     }`}
                   >
                     <div className="flex items-start gap-3">
-                      <Icon size={18} className={selected ? 'text-cyan-400' : 'text-zinc-400'} />
+                      <Icon size={18} className={selected ? 'text-accent' : 'text-zinc-400'} />
                       <div className="flex-1 min-w-0">
                         <p className={`text-sm font-semibold ${selected ? 'text-white' : 'text-zinc-200'}`}>
                           {t.label}

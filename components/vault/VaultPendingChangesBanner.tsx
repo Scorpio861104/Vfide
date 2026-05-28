@@ -50,7 +50,7 @@ export function VaultPendingChangesBanner({ vaultAddress }: { vaultAddress: Addr
         className={`block rounded-2xl p-4 border-2 transition-colors ${
           hasReady
             ? 'bg-gradient-to-br from-emerald-500/10 to-teal-500/5 border-emerald-500/30 hover:border-emerald-400/50'
-            : 'bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border-accent/30 hover:border-cyan-400/50'
+            : 'bg-gradient-to-br from-accent/10 to-blue-500/5 border-accent/30 hover:border-cyan-400/50'
         }`}
       >
         <div className="flex items-center justify-between gap-4">
@@ -63,7 +63,7 @@ export function VaultPendingChangesBanner({ vaultAddress }: { vaultAddress: Addr
               {hasReady ? (
                 <CheckCircle2 className="text-emerald-300" size={20} />
               ) : (
-                <Hourglass className="text-cyan-300" size={20} />
+                <Hourglass className="text-accent" size={20} />
               )}
             </div>
             <div className="min-w-0">
@@ -74,14 +74,14 @@ export function VaultPendingChangesBanner({ vaultAddress }: { vaultAddress: Addr
                     ? `${readyCount} ready · ${waitingCount} waiting for timelock`
                     : `${waitingCount} pending ${waitingCount === 1 ? 'change' : 'changes'} on your vault`}
               </p>
-              <p className={`text-xs mt-0.5 ${hasReady ? 'text-emerald-300/80' : 'text-cyan-300/80'}`}>
+              <p className={`text-xs mt-0.5 ${hasReady ? 'text-emerald-300/80' : 'text-accent/80'}`}>
                 {hasReady
                   ? 'Click to apply now, or cancel if you changed your mind'
                   : 'Click to view what\'s queued'}
               </p>
             </div>
           </div>
-          <ChevronRight className={hasReady ? 'text-emerald-300' : 'text-cyan-300'} size={20} />
+          <ChevronRight className={hasReady ? 'text-emerald-300' : 'text-accent'} size={20} />
         </div>
       </Link>
     </motion.div>

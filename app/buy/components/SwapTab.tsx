@@ -99,7 +99,7 @@ export function SwapTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 size={18} className="text-cyan-400 animate-spin" />
+        <Loader2 size={18} className="text-accent animate-spin" />
       </div>
     );
   }
@@ -156,7 +156,7 @@ export function SwapTab() {
 
         <div className="bg-white/5 border border-white/10 rounded-xl p-3">
           <p className="text-xs text-gray-400 mb-1">Estimated Output</p>
-          <p className="text-lg font-semibold text-cyan-400">{estimatedOut.toFixed(4)} {toToken}</p>
+          <p className="text-lg font-semibold text-accent">{estimatedOut.toFixed(4)} {toToken}</p>
           <p className="text-xs text-gray-500 mt-1">
             Pricing based on live protocol feed ({fromToken}/USD and {toToken}/USD)
           </p>
@@ -178,7 +178,7 @@ export function SwapTab() {
         {routeSummary && (
           <div
             role="status"
-            className="bg-cyan-500/10 border border-accent/30 rounded-lg p-3 text-xs text-cyan-300"
+            className="bg-cyan-500/10 border border-accent/30 rounded-lg p-3 text-xs text-accent"
           >
             {routeSummary}
           </div>

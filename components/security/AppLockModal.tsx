@@ -163,13 +163,13 @@ export function AppLockModal({
           {tab === 'webauthn' ? (
             <div className="text-center py-6">
               {busy ? (
-                <div className="flex flex-col items-center gap-3 text-cyan-400">
+                <div className="flex flex-col items-center gap-3 text-accent">
                   <Loader2 size={32} className="animate-spin" />
                   <div className="text-sm">Waiting for biometric…</div>
                 </div>
               ) : (
                 <div className="text-sm text-gray-300">
-                  <Fingerprint size={36} className="mx-auto mb-3 text-cyan-400" />
+                  <Fingerprint size={36} className="mx-auto mb-3 text-accent" />
                   Use your device biometric to confirm.
                   {error && (
                     <div className="mt-3 text-red-400 text-xs">{error}</div>

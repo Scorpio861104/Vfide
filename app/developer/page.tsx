@@ -32,9 +32,9 @@ export default function Page() {
             <div className="text-left bg-zinc-900/50 rounded-xl p-5 mb-8">
               <p className="text-xs text-zinc-500 uppercase tracking-widest mb-3">What to expect</p>
               <ul className="space-y-2">
-                <li className="flex items-start gap-2 text-sm text-zinc-300"><span className="text-cyan-400 mt-0.5">→</span>REST API and webhook integrations for merchant flows</li>
-                <li className="flex items-start gap-2 text-sm text-zinc-300"><span className="text-cyan-400 mt-0.5">→</span>JavaScript/TypeScript SDK with typed contract ABIs</li>
-                <li className="flex items-start gap-2 text-sm text-zinc-300"><span className="text-cyan-400 mt-0.5">→</span>Embed checkout widgets for any storefront</li>
+                <li className="flex items-start gap-2 text-sm text-zinc-300"><span className="text-accent mt-0.5">→</span>REST API and webhook integrations for merchant flows</li>
+                <li className="flex items-start gap-2 text-sm text-zinc-300"><span className="text-accent mt-0.5">→</span>JavaScript/TypeScript SDK with typed contract ABIs</li>
+                <li className="flex items-start gap-2 text-sm text-zinc-300"><span className="text-accent mt-0.5">→</span>Embed checkout widgets for any storefront</li>
               </ul>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">

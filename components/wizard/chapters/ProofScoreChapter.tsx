@@ -57,7 +57,7 @@ export function ProofScoreChapter({ onComplete, onSkip }: ProofScoreChapterProps
           />
           <Stat
             icon={Sparkles}
-            color="text-cyan-300"
+            color="text-accent"
             label="Score range"
             value="0–10,000"
             sub="5,000 is neutral"
@@ -71,7 +71,7 @@ export function ProofScoreChapter({ onComplete, onSkip }: ProofScoreChapterProps
               <span className="font-semibold text-emerald-300">≥ 8,000:</span> 0.25% burn fee
             </li>
             <li>
-              <span className="font-semibold text-cyan-300">5,000–7,999:</span> 2.5% sliding down with trust
+              <span className="font-semibold text-accent">5,000–7,999:</span> 2.5% sliding down with trust
             </li>
             <li>
               <span className="font-semibold text-amber-300">4,000–4,999:</span> Higher fee — build trust to bring it down
@@ -82,7 +82,7 @@ export function ProofScoreChapter({ onComplete, onSkip }: ProofScoreChapterProps
           </ul>
         </div>
 
-        <div className="rounded-xl border border-accent/30 bg-cyan-500/5 p-4 text-sm text-cyan-100">
+        <div className="rounded-xl border border-accent/30 bg-cyan-500/5 p-4 text-sm text-accent">
           <p className="font-semibold text-white">Your first payment</p>
           <p className="mt-1 text-white/80">
             Each completed payment, on-time loan repayment, and merchant endorsement nudges your
@@ -91,7 +91,7 @@ export function ProofScoreChapter({ onComplete, onSkip }: ProofScoreChapterProps
           <div className="mt-3 flex flex-wrap gap-2">
             <Link
               href="/marketplace"
-              className="inline-flex items-center gap-1 rounded-lg bg-cyan-500/20 px-3 py-1.5 text-xs font-semibold text-cyan-100 hover:bg-cyan-500/30"
+              className="inline-flex items-center gap-1 rounded-lg bg-cyan-500/20 px-3 py-1.5 text-xs font-semibold text-accent hover:bg-cyan-500/30"
             >
               Browse merchants <ExternalLink size={12} aria-hidden />
             </Link>

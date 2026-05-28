@@ -191,7 +191,7 @@ export function OnboardingPathChooser() {
           onClick={() => choosePath('buyer')}
           className="p-6 bg-white/3 border-2 border-white/10 rounded-2xl hover:border-accent/40 transition-colors text-left"
         >
-          <ShoppingCart size={32} className="text-cyan-400 mb-3" />
+          <ShoppingCart size={32} className="text-accent mb-3" />
           <div className="text-white font-bold text-lg mb-1">I want to buy</div>
           <div className="text-gray-400 text-sm">Shop from trusted sellers with lower fees than any payment platform.</div>
         </motion.button>

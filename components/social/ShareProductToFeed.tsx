@@ -60,7 +60,7 @@ export function ShareProductToFeed({ product, className = '' }: ShareProductToFe
     <>
       <button
         onClick={() => setShowModal(true)}
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-gray-400 hover:text-cyan-400 hover:border-accent/30 transition-all text-sm ${className}`}
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-gray-400 hover:text-accent hover:border-accent/30 transition-all text-sm ${className}`}
       >
         <Share2 size={14} />
         Share to feed
@@ -85,7 +85,7 @@ export function ShareProductToFeed({ product, className = '' }: ShareProductToFe
               {/* Header */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
                 <h3 className="text-white font-bold flex items-center gap-2">
-                  <Share2 size={18} className="text-cyan-400" />
+                  <Share2 size={18} className="text-accent" />
                   Share to feed
                 </h3>
                 <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-white transition-colors">
@@ -105,7 +105,7 @@ export function ShareProductToFeed({ product, className = '' }: ShareProductToFe
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="text-white font-medium truncate">{product.name}</div>
-                    <div className="text-cyan-400 font-mono font-bold">${parseFloat(product.price).toFixed(2)}</div>
+                    <div className="text-accent font-mono font-bold">${parseFloat(product.price).toFixed(2)}</div>
                     <div className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
                       <Store size={10} /> {product.merchantName}
                       {product.merchantProofScore && (
@@ -137,7 +137,7 @@ export function ShareProductToFeed({ product, className = '' }: ShareProductToFe
                 <button
                   onClick={handlePost}
                   disabled={isPosting}
-                  className="px-6 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold text-sm flex items-center gap-2 hover:scale-[1.02] transition-transform disabled:opacity-50"
+                  className="px-6 py-2 bg-gradient-to-r from-accent to-blue-500 text-white rounded-xl font-bold text-sm flex items-center gap-2 hover:scale-[1.02] transition-transform disabled:opacity-50"
                 >
                   {isPosting ? <><Loader2 size={14} className="animate-spin" /> Posting...</> : <><Send size={14} /> Post</>}
                 </button>

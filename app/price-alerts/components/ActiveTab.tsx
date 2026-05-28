@@ -264,7 +264,7 @@ export function ActiveTab() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {triggered && <span className="text-xs text-cyan-400 font-semibold">⚡ Triggered</span>}
+                    {triggered && <span className="text-xs text-accent font-semibold">⚡ Triggered</span>}
                     <button onClick={() => toggle(a.id)} className="text-gray-500 hover:text-yellow-400 transition-colors" aria-label="Toggle alert">
                       {a.active ? <Bell size={14} /> : <BellOff size={14} />}
                     </button>

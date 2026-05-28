@@ -133,7 +133,7 @@ export function StoreClient({ merchant, initialProducts, slug }: StoreClientProp
             {/* Share */}
             <button
               onClick={() => setShowShare(true)}
-              className="p-2.5 bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-cyan-400 transition-colors"
+              className="p-2.5 bg-white/5 border border-white/10 rounded-xl text-gray-400 hover:text-accent transition-colors"
             >
               <Share2 size={16} />
             </button>

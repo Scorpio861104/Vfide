@@ -134,7 +134,7 @@ export default function GovernancePage() {
                   <div className="text-xs text-white/40">Proposals</div>
                 </div>
                 <div className="analytics-card text-center px-5 py-3">
-                  <div className="text-xl font-bold text-cyan-400">18</div>
+                  <div className="text-xl font-bold text-accent">18</div>
                   <div className="text-xs text-white/40">Active</div>
                 </div>
                 <div className="analytics-card text-center px-5 py-3">

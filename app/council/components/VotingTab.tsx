@@ -68,7 +68,7 @@ export function VotingTab({ isConnected }: { isConnected: boolean }) {
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <span className="text-gray-400">Votes:</span>
-                    <span className="text-cyan-400 font-bold">{vote.votesFor}/{vote.votesNeeded}</span>
+                    <span className="text-accent font-bold">{vote.votesFor}/{vote.votesNeeded}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-gray-400">
                     <Clock size={14} />

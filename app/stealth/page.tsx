@@ -58,7 +58,7 @@ export default function StealthPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="analytics-card p-4">
               <div className="flex items-center gap-2 mb-1">
-                <Shield size={14} className="text-cyan-400" />
+                <Shield size={14} className="text-accent" />
                 <p className="text-xs text-gray-400">Privacy Engine</p>
               </div>
               <p className="text-white font-semibold">EIP-5564 Validation</p>

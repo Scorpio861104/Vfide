@@ -112,7 +112,7 @@ export const EnhancedInput = forwardRef<HTMLInputElement, FormFieldProps>(functi
         <label
           htmlFor={id}
           className={`text-sm font-medium transition-colors ${
-            isFocused ? 'text-cyan-400' : 'text-zinc-300'
+            isFocused ? 'text-accent' : 'text-zinc-300'
           }`}
         >
           {label}
@@ -166,7 +166,7 @@ export const EnhancedInput = forwardRef<HTMLInputElement, FormFieldProps>(functi
         {/* Right Side Icons */}
         <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
           {isValidating && (
-            <Loader2 className="w-4 h-4 text-cyan-400 animate-spin" />
+            <Loader2 className="w-4 h-4 text-accent animate-spin" />
           )}
 
           {!isValidating && showSuccessIndicator && isSuccess && !hasError && (
@@ -323,7 +323,7 @@ export const EnhancedTextarea = forwardRef<HTMLTextAreaElement, EnhancedTextarea
         <label
           htmlFor={id}
           className={`text-sm font-medium transition-colors ${
-            isFocused ? 'text-cyan-400' : 'text-zinc-300'
+            isFocused ? 'text-accent' : 'text-zinc-300'
           }`}
         >
           {label}
@@ -699,7 +699,7 @@ export function TagInput({
                 e.stopPropagation();
                 removeTag(index);
               }}
-              className="hover:text-cyan-200"
+              className="hover:text-accent"
             >
               <X className="w-3 h-3" />
             </button>

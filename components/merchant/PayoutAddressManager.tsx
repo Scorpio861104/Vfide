@@ -168,16 +168,16 @@ export function PayoutAddressManager({ currentPayoutAddress }: PayoutAddressMana
             {canApply ? (
               <CheckCircle2 className="text-emerald-300 shrink-0 mt-0.5" size={16} />
             ) : (
-              <Clock className="text-cyan-300 shrink-0 mt-0.5" size={16} />
+              <Clock className="text-accent shrink-0 mt-0.5" size={16} />
             )}
             <div className="flex-1">
-              <p className={`text-xs font-semibold ${canApply ? 'text-emerald-200' : 'text-cyan-200'}`}>
+              <p className={`text-xs font-semibold ${canApply ? 'text-emerald-200' : 'text-accent'}`}>
                 {canApply ? 'Ready to apply' : 'Change pending'}
               </p>
               <p className="text-xs text-gray-300 font-mono mt-1 break-all">
                 → {shortAddress(pending.proposed)}
               </p>
-              <p className={`text-xs mt-1 ${canApply ? 'text-emerald-300/80' : 'text-cyan-300/80'}`}>
+              <p className={`text-xs mt-1 ${canApply ? 'text-emerald-300/80' : 'text-accent/80'}`}>
                 {canApply ? 'Timelock elapsed. Apply or cancel below.' : formatRemaining(remainingSec)}
               </p>
             </div>
@@ -213,7 +213,7 @@ export function PayoutAddressManager({ currentPayoutAddress }: PayoutAddressMana
         </div>
       )}
       {actionMessage && !actionError && (
-        <div className="p-2 rounded-lg bg-cyan-500/10 border border-accent/30 text-xs text-cyan-200">
+        <div className="p-2 rounded-lg bg-cyan-500/10 border border-accent/30 text-xs text-accent">
           {actionMessage}
         </div>
       )}

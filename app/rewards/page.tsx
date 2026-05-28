@@ -17,15 +17,15 @@ export default function RewardsPage() {
         <h2 className="text-2xl font-bold mb-4">What VFIDE is for</h2>
         <ul className="space-y-3 text-zinc-300 mb-10">
           <li className="flex gap-2">
-            <span className="text-cyan-400">→</span>
+            <span className="text-accent">→</span>
             <span>Governance voting rights — shape protocol rules, fees, and treasury allocations.</span>
           </li>
           <li className="flex gap-2">
-            <span className="text-cyan-400">→</span>
+            <span className="text-accent">→</span>
             <span>Protocol access — stake VFIDE to unlock merchant tiers and advanced vault features.</span>
           </li>
           <li className="flex gap-2">
-            <span className="text-cyan-400">→</span>
+            <span className="text-accent">→</span>
             <span>Governance duty points — earned by participating in Seer panels, not by holding.</span>
           </li>
         </ul>

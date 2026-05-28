@@ -127,9 +127,9 @@ export default function VaultRecoveryPage() {
         <div className="container mx-auto px-4 max-w-5xl">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-accent/30 mb-8">
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-accent/20 to-purple-500/20 border border-accent/30 mb-8">
               <motion.div animate={{ rotate: 360 }} transition={{ duration: 10, repeat: Infinity, ease: "linear" }}>
-                <Sparkles className="h-4 w-4 text-cyan-400" />
+                <Sparkles className="h-4 w-4 text-accent" />
               </motion.div>
               <span className="text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">Industry First: Wallet Recovery Without Seed Phrases</span>
             </motion.div>
@@ -138,7 +138,7 @@ export default function VaultRecoveryPage() {
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400">Your Vault</span>
             </motion.h2>
             <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
-              Lost your wallet? No problem. Search for your vault using your <span className="text-cyan-400"> recovery ID</span>, <span className="text-purple-400"> email</span>, <span className="text-amber-400"> username</span>, or through your <span className="text-emerald-400"> guardians</span>.
+              Lost your wallet? No problem. Search for your vault using your <span className="text-accent"> recovery ID</span>, <span className="text-purple-400"> email</span>, <span className="text-amber-400"> username</span>, or through your <span className="text-emerald-400"> guardians</span>.
             </motion.p>
           </motion.div>
           <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.4 }} className="mb-10">
@@ -152,7 +152,7 @@ export default function VaultRecoveryPage() {
         <div className="container mx-auto px-4 max-w-5xl">
           <motion.div variants={containerVariants} initial="hidden" animate="show" className="space-y-8">
             <motion.div variants={itemVariants}>
-              <h3 className="text-lg font-bold text-white mb-5 flex items-center gap-2"><Radar className="h-5 w-5 text-cyan-400" /> Select Search Method</h3>
+              <h3 className="text-lg font-bold text-white mb-5 flex items-center gap-2"><Radar className="h-5 w-5 text-accent" /> Select Search Method</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <SearchMethodButton icon={Fingerprint} title="Recovery ID" description="Your secret phrase" active={searchMethod === "recoveryId"} onClick={() => setSearchMethod("recoveryId")} gradient="cyan" badge="Best" />
                 <SearchMethodButton icon={Mail} title="Email" description="Linked email address" active={searchMethod === "email"} onClick={() => setSearchMethod("email")} gradient="purple" />
@@ -165,7 +165,7 @@ export default function VaultRecoveryPage() {
               <GlassCard className="p-8" hover={false} glow gradient="cyan">
                 <div className="flex flex-col md:flex-row gap-4">
                   <div className="flex-1 relative">
-                    <div className="absolute left-5 top-1/2 -translate-y-1/2"><Search className="h-5 w-5 text-cyan-400" /></div>
+                    <div className="absolute left-5 top-1/2 -translate-y-1/2"><Search className="h-5 w-5 text-accent" /></div>
                     <input type={searchMethod === "email" ? "email" : "text"} value={searchQuery} onChange={(e) =>  setSearchQuery(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                      
                       className="w-full pl-14 pr-6 py-5 rounded-2xl bg-white/5 border-2 border-white/10 text-white  focus:outline-none focus:border-accent/50 text-lg transition-all" />

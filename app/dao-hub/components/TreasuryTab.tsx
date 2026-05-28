@@ -31,7 +31,7 @@ export function TreasuryTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 size={24} className="text-cyan-400 animate-spin" />
+        <Loader2 size={24} className="text-accent animate-spin" />
       </div>
     );
   }
@@ -40,7 +40,7 @@ export function TreasuryTab() {
     <div className="space-y-5">
       <div className="grid grid-cols-2 gap-3">
         {[
-          { label: 'Total Volume', value: stats ? `${parseFloat(stats.totalVolume).toLocaleString()} VFIDE` : '—', icon: <TrendingUp size={14} className="text-cyan-400" /> },
+          { label: 'Total Volume', value: stats ? `${parseFloat(stats.totalVolume).toLocaleString()} VFIDE` : '—', icon: <TrendingUp size={14} className="text-accent" /> },
           { label: 'Total Transactions', value: stats?.totalTransactions.toLocaleString() ?? '—', icon: <Activity size={14} className="text-purple-400" /> },
           { label: 'Total Burned', value: stats ? `${parseFloat(stats.totalBurned).toLocaleString()} VFIDE` : '—', icon: <Flame size={14} className="text-orange-400" /> },
           { label: 'Total Donated', value: stats ? `${parseFloat(stats.totalDonated).toLocaleString()} VFIDE` : '—', icon: <Heart size={14} className="text-red-400" /> },

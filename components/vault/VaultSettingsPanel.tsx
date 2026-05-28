@@ -50,7 +50,7 @@ export function VaultSettingsPanel() {
 
       <div className="bg-gray-900 border border-gray-700 rounded-2xl p-8">
         <div className="flex items-start gap-3">
-          <Shield className="w-6 h-6 text-cyan-400 mt-0.5 flex-shrink-0" />
+          <Shield className="w-6 h-6 text-accent mt-0.5 flex-shrink-0" />
           <div className="space-y-3 min-w-0">
             <div>
               <h3 className="text-lg font-bold text-white">CardBound Vault Mode Active</h3>

@@ -60,7 +60,7 @@ interface InvoiceSummary {
 const STATUS_META: Record<InvoiceStatus, { label: string; icon: typeof CheckCircle2; color: string; bg: string }> = {
   draft:     { label: 'Draft',     icon: FileText,      color: 'text-zinc-300',    bg: 'bg-zinc-700/30 border-zinc-600/30' },
   sent:      { label: 'Sent',      icon: Mail,          color: 'text-blue-300',    bg: 'bg-blue-500/10 border-blue-500/30' },
-  viewed:    { label: 'Viewed',    icon: Clock,         color: 'text-cyan-300',    bg: 'bg-cyan-500/10 border-accent/30' },
+  viewed:    { label: 'Viewed',    icon: Clock,         color: 'text-accent',    bg: 'bg-cyan-500/10 border-accent/30' },
   paid:      { label: 'Paid',      icon: CheckCircle2,  color: 'text-emerald-300', bg: 'bg-emerald-500/10 border-emerald-500/30' },
   overdue:   { label: 'Overdue',   icon: AlertTriangle, color: 'text-amber-300',   bg: 'bg-amber-500/10 border-amber-500/30' },
   cancelled: { label: 'Cancelled', icon: XCircle,       color: 'text-zinc-400',    bg: 'bg-zinc-800/40 border-zinc-700/40' },
@@ -135,7 +135,7 @@ export default function MerchantInvoicesPage() {
         </div>
         <section className="py-12 relative">
           <div className="container mx-auto max-w-6xl px-4">
-            <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200 text-sm">
+            <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-accent hover:text-accent text-sm">
               <ArrowLeft size={16} /> Back to Merchant Hub
             </Link>
 
@@ -146,7 +146,7 @@ export default function MerchantInvoicesPage() {
                 </div>
                 <h1 className="text-4xl font-bold mb-2">
                   <span className="bg-gradient-to-r from-cyan-400 via-emerald-400 to-blue-400 bg-clip-text text-transparent flex items-center gap-3">
-                    <FileText size={32} className="text-cyan-400" />Send invoices, get paid in VFIDE
+                    <FileText size={32} className="text-accent" />Send invoices, get paid in VFIDE
                   </span>
                 </h1>
                 <p className="mt-2 max-w-3xl text-white/50">
@@ -156,7 +156,7 @@ export default function MerchantInvoicesPage() {
               <button
                 onClick={() => setShowCreate(true)}
                 disabled={!address}
-                className="px-5 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90"
+                className="px-5 py-3 bg-gradient-to-r from-accent to-blue-500 rounded-xl font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90"
               >
                 <Plus size={18} /> New invoice
               </button>
@@ -201,7 +201,7 @@ export default function MerchantInvoicesPage() {
                     <div className="p-12 text-center text-zinc-400">Loading invoices…</div>
                   ) : invoices.length === 0 ? (
                     <div className="p-12 text-center text-zinc-400">
-                      No invoices yet. Click <span className="text-cyan-300">New invoice</span> to create your first.
+                      No invoices yet. Click <span className="text-accent">New invoice</span> to create your first.
                     </div>
                   ) : (
                     <div className="divide-y divide-white/5">
@@ -400,7 +400,7 @@ function CreateInvoiceModal({
               <span className="text-sm font-medium">Line items</span>
               <button
                 onClick={() => setItems((i) => [...i, { description: '', quantity: 1, unit_price: 0 }])}
-                className="text-xs text-cyan-300 hover:text-cyan-200 inline-flex items-center gap-1"
+                className="text-xs text-accent hover:text-accent inline-flex items-center gap-1"
               >
                 <Plus size={12} /> Add item
               </button>
@@ -474,7 +474,7 @@ function CreateInvoiceModal({
             <span>Send immediately (otherwise saves as draft)</span>
           </label>
 
-          <button onClick={submit} disabled={!canSubmit} className="w-full px-5 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
+          <button onClick={submit} disabled={!canSubmit} className="w-full px-5 py-3 bg-gradient-to-r from-accent to-blue-500 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
             {creating ? 'Creating…' : 'Create invoice'}
           </button>
         </div>

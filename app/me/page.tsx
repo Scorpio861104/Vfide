@@ -114,12 +114,12 @@ export default function MeHubPage() {
           </div>
           <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
           <div className="relative container mx-auto max-w-3xl px-4 py-20 text-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-cyan-500/10 px-3 py-1 text-sm text-cyan-300 mb-6">
+            <div className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-cyan-500/10 px-3 py-1 text-sm text-accent mb-6">
               <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
               Account Hub
             </div>
             <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-6">
-              <User size={28} className="text-cyan-300" />
+              <User size={28} className="text-accent" />
             </div>
             <h1 className="mb-3 text-4xl font-black text-white tracking-tight">Your VFIDE</h1>
             <p className="mb-8 max-w-md mx-auto text-gray-400 text-lg">
@@ -188,7 +188,7 @@ export default function MeHubPage() {
                     <Numeric value={score ?? 0} format="score" size="2xl" weight={700} className="text-white" />
                   )}
                   {!isLoading && (
-                    <span className="text-sm text-cyan-300">{tierName}</span>
+                    <span className="text-sm text-accent">{tierName}</span>
                   )}
                 </div>
                 <div className="mt-0.5 text-[11px] text-gray-500">
@@ -222,7 +222,7 @@ export default function MeHubPage() {
           {/* Quick "what to do next" suggestion based on score tier */}
           {!isLoading && (
             <div className="mt-12 glass-card-premium border-accent/20 bg-cyan-500/5 p-5">
-              <div className="mb-2 text-xs uppercase tracking-widest text-cyan-300">Next step</div>
+              <div className="mb-2 text-xs uppercase tracking-widest text-accent">Next step</div>
               <NextStep score={score ?? 0} />
             </div>
           )}
@@ -242,7 +242,7 @@ function NextStep({ score }: { score: number }) {
     return (
       <p className="text-gray-300">
         Build your trust score by completing a few payments and{' '}
-        <Link href="/quests" className="text-cyan-300 hover:text-cyan-200">
+        <Link href="/quests" className="text-accent hover:text-accent">
           taking on a quest <ArrowRight size={12} className="inline" />
         </Link>
         . Most new users cross into Neutral after their first 5\u201310 confirmed transactions.
@@ -253,7 +253,7 @@ function NextStep({ score }: { score: number }) {
     return (
       <p className="text-gray-300">
         Almost at Governance tier. A few more confirmed payments unlocks the ability to{' '}
-        <Link href="/governance" className="text-cyan-300 hover:text-cyan-200">
+        <Link href="/governance" className="text-accent hover:text-accent">
           vote on proposals <ArrowRight size={12} className="inline" />
         </Link>
         .
@@ -264,7 +264,7 @@ function NextStep({ score }: { score: number }) {
     return (
       <p className="text-gray-300">
         You can vote now — try{' '}
-        <Link href="/governance" className="text-cyan-300 hover:text-cyan-200">
+        <Link href="/governance" className="text-accent hover:text-accent">
           the active proposals <ArrowRight size={12} className="inline" />
         </Link>
         . At 5,600 you also unlock merchant registration.
@@ -275,11 +275,11 @@ function NextStep({ score }: { score: number }) {
     return (
       <p className="text-gray-300">
         You&apos;re a Trusted user. Consider{' '}
-        <Link href="/merchant/setup" className="text-cyan-300 hover:text-cyan-200">
+        <Link href="/merchant/setup" className="text-accent hover:text-accent">
           opening a store <ArrowRight size={12} className="inline" />
         </Link>{' '}
         or building a higher ProofScore through{' '}
-        <Link href="/quests" className="text-cyan-300 hover:text-cyan-200">
+        <Link href="/quests" className="text-accent hover:text-accent">
           quests <ArrowRight size={12} className="inline" />
         </Link>
         .
@@ -291,7 +291,7 @@ function NextStep({ score }: { score: number }) {
       <p className="text-gray-300">
         Council-eligible. If you&apos;re active in the community, watch{' '}
         {/* NAV-5: /elections now redirects to /governance?tab=elections */}
-        <Link href="/governance?tab=elections" className="text-cyan-300 hover:text-cyan-200">
+        <Link href="/governance?tab=elections" className="text-accent hover:text-accent">
           upcoming elections <ArrowRight size={12} className="inline" />
         </Link>{' '}
         for a chance to stand for council.
@@ -301,7 +301,7 @@ function NextStep({ score }: { score: number }) {
   return (
     <p className="text-gray-300">
       Elite tier. You can{' '}
-      <Link href="/profile" className="text-cyan-300 hover:text-cyan-200">
+      <Link href="/profile" className="text-accent hover:text-accent">
         endorse other users <ArrowRight size={12} className="inline" />
       </Link>{' '}
       to help them build trust, and you&apos;re paying the minimum 0.25% fee on every payment.

@@ -628,7 +628,7 @@ export function GroupMessaging() {
                             {new Date(msg.timestamp).toLocaleTimeString()}
                           </p>
                           {isMe && msg.readBy.length > 1 && (
-                            <CheckCheck className="w-3 h-3 text-cyan-400" />
+                            <CheckCheck className="w-3 h-3 text-accent" />
                           )}
                         </div>
                       </div>

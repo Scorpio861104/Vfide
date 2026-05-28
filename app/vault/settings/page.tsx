@@ -82,7 +82,7 @@ export default function VaultSettingsPage() {
               transition={{ delay: 0.05 }}
             >
               <div className="flex items-center gap-2 mb-4">
-                <Sliders className="w-6 h-6 text-cyan-400" />
+                <Sliders className="w-6 h-6 text-accent" />
                 <h2 className="text-2xl font-bold">Spend Limits</h2>
               </div>
               <ErrorBoundary>
@@ -128,7 +128,7 @@ export default function VaultSettingsPage() {
                 <div className="w-16 h-16 mx-auto mb-3 bg-cyan-600/20 border-2 border-cyan-500 rounded-xl flex items-center justify-center">
                   <span className="text-3xl">🔑</span>
                 </div>
-                <div className="font-bold text-cyan-400 mb-2">Wallet Rotation</div>
+                <div className="font-bold text-accent mb-2">Wallet Rotation</div>
                 <div className="text-xs text-gray-400">
                   Move the active signer for the vault to a new wallet address with guardian approval and a timelock
                 </div>

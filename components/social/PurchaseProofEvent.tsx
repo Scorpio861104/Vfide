@@ -39,9 +39,9 @@ export function PurchaseProofEvent({
               <Zap size={9} />{buyer.proofScore}
             </span>
             {' '}bought{' '}
-            <span className="text-cyan-400">{productName}</span>
+            <span className="text-accent">{productName}</span>
             {' '}from{' '}
-            <Link href={`/store/${merchant.slug}`} className="text-white font-medium hover:text-cyan-400 transition-colors">
+            <Link href={`/store/${merchant.slug}`} className="text-white font-medium hover:text-accent transition-colors">
               {merchant.name}
             </Link>
             <span className="text-emerald-400 text-xs ml-1.5 inline-flex items-center gap-0.5">

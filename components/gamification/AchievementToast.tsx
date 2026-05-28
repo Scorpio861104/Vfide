@@ -53,7 +53,7 @@ const colorMap = {
   badge: 'from-blue-500 to-purple-500',
   level_up: 'from-yellow-500 to-orange-500',
   achievement: 'from-purple-500 to-pink-500',
-  quest: 'from-cyan-500 to-blue-500',
+  quest: 'from-accent to-blue-500',
   streak: 'from-orange-500 to-red-500',
   reward: 'from-green-500 to-teal-500',
   combo: 'from-pink-500 to-yellow-500'
@@ -350,7 +350,7 @@ function AchievementToast({ notification, onDismiss, position }: ToastProps) {
               <div className="relative">
                 <button
                   onClick={() => setShowShare(!showShare)}
-                  className="p-1.5 text-zinc-400 hover:text-cyan-400 hover:bg-cyan-400/10 rounded-lg transition-colors"
+                  className="p-1.5 text-zinc-400 hover:text-accent hover:bg-cyan-400/10 rounded-lg transition-colors"
                 >
                   <Share2 className="w-4 h-4" />
                 </button>

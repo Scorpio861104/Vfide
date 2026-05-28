@@ -374,7 +374,7 @@ export function TabNavigation({
               onClick={() => onChange(tab.id)}
               className={`
                 relative flex items-center gap-2 px-6 py-4 font-medium transition-colors
-                ${activeTab === tab.id ? 'text-cyan-400' : 'text-zinc-400 hover:text-zinc-100'}
+                ${activeTab === tab.id ? 'text-accent' : 'text-zinc-400 hover:text-zinc-100'}
               `}
             >
               {tab.icon}

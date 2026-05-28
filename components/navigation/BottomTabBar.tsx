@@ -61,7 +61,7 @@ export function BottomTabBar() {
                 className={cn(
                   'flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all min-w-0',
                   isActive
-                    ? 'text-cyan-400'
+                    ? 'text-accent'
                     : 'text-zinc-500 hover:text-zinc-300'
                 )}
               >

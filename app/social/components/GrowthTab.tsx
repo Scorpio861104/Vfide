@@ -56,12 +56,12 @@ export function GrowthTab() {
     <div className="space-y-6">
       <div className="bg-white/3 border border-white/10 rounded-2xl p-5">
         <div className="flex items-center gap-2 mb-5">
-          <TrendingUp size={16} className="text-cyan-400" />
+          <TrendingUp size={16} className="text-accent" />
           <h3 className="text-white font-semibold text-sm">Weekly Activity Trend</h3>
         </div>
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 size={20} className="text-cyan-400 animate-spin" />
+            <Loader2 size={20} className="text-accent animate-spin" />
           </div>
         ) : weeks.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-center">

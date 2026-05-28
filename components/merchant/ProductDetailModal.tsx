@@ -94,7 +94,7 @@ export function ProductDetailModal({ productId, onClose, onAddToCart }: ProductD
                 <div className="md:w-1/2 p-6 flex flex-col">
                   {product.product_type && (
                     <div className="flex items-center gap-2 mb-3">
-                      <span className="text-xs px-2 py-0.5 bg-cyan-500/10 border border-accent/20 rounded text-cyan-400 capitalize flex items-center gap-1">
+                      <span className="text-xs px-2 py-0.5 bg-cyan-500/10 border border-accent/20 rounded text-accent capitalize flex items-center gap-1">
                         {(() => { const Icon = typeIcons[product.product_type]; return <Icon size={10} />; })()}
                         {typeLabels[product.product_type]}
                       </span>
@@ -115,7 +115,7 @@ export function ProductDetailModal({ productId, onClose, onAddToCart }: ProductD
                   )}
 
                   <div className="flex items-baseline gap-3 mb-4">
-                    <span className="text-3xl font-bold text-cyan-400 font-mono">${parseFloat(activePrice).toFixed(2)}</span>
+                    <span className="text-3xl font-bold text-accent font-mono">${parseFloat(activePrice).toFixed(2)}</span>
                     {hasDiscount && <span className="text-lg text-gray-500 line-through font-mono">${parseFloat(product.compare_at_price!).toFixed(2)}</span>}
                   </div>
 
@@ -127,7 +127,7 @@ export function ProductDetailModal({ productId, onClose, onAddToCart }: ProductD
                       <div className="flex flex-wrap gap-2">
                         {product.variants.map(v => (
                           <button key={v.id} onClick={() => setSelectedVariant(v.id)}
-                            className={`px-3 py-1.5 rounded-lg text-sm transition-all border ${selectedVariant === v.id ? 'bg-accent/15 border-accent/40 text-cyan-400' : 'bg-white/3 border-white/10 text-gray-400 hover:border-white/20'}`}>
+                            className={`px-3 py-1.5 rounded-lg text-sm transition-all border ${selectedVariant === v.id ? 'bg-accent/15 border-accent/40 text-accent' : 'bg-white/3 border-white/10 text-gray-400 hover:border-white/20'}`}>
                             {v.label}
                           </button>
                         ))}
@@ -142,7 +142,7 @@ export function ProductDetailModal({ productId, onClose, onAddToCart }: ProductD
                       <button onClick={() => setQuantity(q => q + 1)} className="px-3 py-2 text-gray-400 hover:text-white"><Plus size={14} /></button>
                     </div>
                     <button onClick={handleAddToCart} disabled={!inStock}
-                      className={`flex-1 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all ${addedToCart ? 'bg-emerald-500 text-white' : inStock ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:scale-[1.01]' : 'bg-white/5 text-gray-500 cursor-not-allowed'}`}>
+                      className={`flex-1 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all ${addedToCart ? 'bg-emerald-500 text-white' : inStock ? 'bg-gradient-to-r from-accent to-blue-500 text-white hover:scale-[1.01]' : 'bg-white/5 text-gray-500 cursor-not-allowed'}`}>
                       {addedToCart ? <><CheckCircle2 size={16} /> Added!</> : inStock ? <><ShoppingCart size={16} /> Add to cart</> : 'Out of stock'}
                     </button>
                     <button onClick={() => setIsWishlisted(!isWishlisted)} className="p-2.5 rounded-xl border border-white/10 hover:border-red-500/30">
@@ -190,7 +190,7 @@ export function ProductDetailModal({ productId, onClose, onAddToCart }: ProductD
                             : <div className="w-full h-full flex items-center justify-center"><Package size={20} className="text-gray-600" /></div>}
                         </div>
                         <div className="text-xs text-white truncate">{r.name}</div>
-                        <div className="text-xs text-cyan-400 font-mono">${parseFloat(r.price).toFixed(2)}</div>
+                        <div className="text-xs text-accent font-mono">${parseFloat(r.price).toFixed(2)}</div>
                       </div>
                     ))}
                   </div>

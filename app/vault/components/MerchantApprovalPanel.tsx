@@ -181,7 +181,7 @@ export function MerchantApprovalPanel({ vaultAddress }: MerchantApprovalPanelPro
 
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white/70">
               <div>MerchantPortal spender</div>
-              <div className="mt-1 break-all font-mono text-xs text-cyan-300">
+              <div className="mt-1 break-all font-mono text-xs text-accent">
                 {merchantPortalReady ? merchantPortalAddress : 'Not configured'}
               </div>
             </div>

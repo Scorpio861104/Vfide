@@ -118,7 +118,7 @@ export function VaultHeader({
                     onClick={openConnectModal}
                     disabled={!mounted}
                     aria-label="Connect your wallet"
-                    className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25 disabled:opacity-50"
+                    className="px-6 py-3 bg-gradient-to-r from-accent to-blue-600 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25 disabled:opacity-50"
                   >
                     Connect Wallet
                   </motion.button>
@@ -193,8 +193,8 @@ export function VaultHeader({
             <motion.div variants={itemVariants}>
               <GlassCard className="p-5 border-accent/30" gradient="cyan">
                 <div className="flex items-center gap-3 mb-2">
-                  <Key className="text-cyan-400" size={24} />
-                  <span className="text-cyan-400 font-bold">Wallet Rotation</span>
+                  <Key className="text-accent" size={24} />
+                  <span className="text-accent font-bold">Wallet Rotation</span>
                 </div>
                 <p className="text-white/60 text-sm">
                   Lost wallet? Guardians approve a signer rotation so you regain control of the vault.

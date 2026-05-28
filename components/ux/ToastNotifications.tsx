@@ -322,8 +322,8 @@ function ToastItem({
     error: <AlertCircle className="w-5 h-5 text-red-400" />,
     warning: <AlertTriangle className="w-5 h-5 text-yellow-400" />,
     info: <Info className="w-5 h-5 text-blue-400" />,
-    loading: <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />,
-    promise: <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />,
+    loading: <Loader2 className="w-5 h-5 text-accent animate-spin" />,
+    promise: <Loader2 className="w-5 h-5 text-accent animate-spin" />,
   };
 
   const bgColors = {
@@ -426,7 +426,7 @@ function ToastItem({
                     href={toast.link.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm font-medium text-cyan-400 hover:text-cyan-300 flex items-center gap-1"
+                    className="text-sm font-medium text-accent hover:text-accent flex items-center gap-1"
                   >
                     {toast.link.label}
                     <ExternalLink className="w-3 h-3" />

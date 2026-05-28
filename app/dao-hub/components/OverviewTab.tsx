@@ -26,7 +26,7 @@ export function OverviewTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 size={24} className="text-cyan-400 animate-spin" />
+        <Loader2 size={24} className="text-accent animate-spin" />
       </div>
     );
   }
@@ -47,7 +47,7 @@ export function OverviewTab() {
   const totalVotesAgainst = proposals.reduce((s, p) => s + (p.votes_against ?? 0), 0);
 
   const stats = [
-    { label: 'Total Proposals', value: total, color: 'text-cyan-400' },
+    { label: 'Total Proposals', value: total, color: 'text-accent' },
     { label: 'Active', value: active, color: 'text-green-400' },
     { label: 'Passed', value: passed, color: 'text-blue-400' },
     { label: 'Failed', value: failed, color: 'text-red-400' },

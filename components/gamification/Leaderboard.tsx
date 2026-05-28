@@ -210,7 +210,7 @@ export function Leaderboard() {
               </div>
             </div>
             <div className="text-right">
-              <p className="text-sm font-bold text-cyan-400">{getCategoryValue(currentUserRank)}</p>
+              <p className="text-sm font-bold text-accent">{getCategoryValue(currentUserRank)}</p>
               <p className="text-xs text-zinc-500">Level {currentUserRank.level}</p>
             </div>
           </div>
@@ -274,7 +274,7 @@ export function Leaderboard() {
                     <p className="text-sm font-semibold text-zinc-100 truncate">
                       {entry.alias || `${entry.address.slice(0, 6)}...${entry.address.slice(-4)}`}
                       {isCurrentUser && (
-                        <span className="ml-2 text-xs text-cyan-400">(You)</span>
+                        <span className="ml-2 text-xs text-accent">(You)</span>
                       )}
                     </p>
                     <p className="text-xs text-zinc-500">Level {entry.level}</p>

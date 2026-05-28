@@ -206,7 +206,7 @@ export function MoreSheet({ open, onClose, variant = 'bottom' }: MoreSheetProps)
               <Link
                 href="/me"
                 onClick={onClose}
-                className="inline-flex items-center gap-1 text-xs text-cyan-300 hover:text-cyan-200"
+                className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent"
               >
                 Open full hub <ArrowUpRight size={11} />
               </Link>

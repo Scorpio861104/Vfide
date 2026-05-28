@@ -100,7 +100,7 @@ export default function DashboardPage() {
                 className="flex items-center gap-3 flex-wrap"
               >
                 <div className="glass-card-premium px-4 py-2.5 flex items-center gap-2.5">
-                  <TrendingUp size={15} className="text-cyan-400" />
+                  <TrendingUp size={15} className="text-accent" />
                   <div>
                     <p className="text-[10px] text-zinc-500 uppercase tracking-wider">ProofScore</p>
                     <p className="text-lg font-bold text-glow-cyan leading-none">{proofScore!.toLocaleString()}</p>

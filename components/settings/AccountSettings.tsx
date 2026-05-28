@@ -125,7 +125,7 @@ export function AccountSettings() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-zinc-100 flex items-center gap-2">
-            <User className="w-6 h-6 text-cyan-400" />
+            <User className="w-6 h-6 text-accent" />
             Account Settings
           </h2>
           <p className="text-sm text-zinc-400 mt-1">
@@ -191,7 +191,7 @@ export function AccountSettings() {
         {/* Username */}
         <div>
           <label className="block text-sm font-semibold text-zinc-100 mb-2 flex items-center gap-2">
-            <AtSign className="w-4 h-4 text-cyan-400" />
+            <AtSign className="w-4 h-4 text-accent" />
             Username
           </label>
           <div className="relative">
@@ -237,7 +237,7 @@ export function AccountSettings() {
           )}
           {!editing && profile?.username && (
             <p className="text-xs text-zinc-400 mt-1">
-              Your username: <span className="text-cyan-400">@{profile.username}</span>
+              Your username: <span className="text-accent">@{profile.username}</span>
             </p>
           )}
         </div>

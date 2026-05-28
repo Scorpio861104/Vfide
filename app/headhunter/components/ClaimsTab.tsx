@@ -186,7 +186,7 @@ export function ClaimsTab() {
 
       {loading && (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="animate-spin text-cyan-400" size={32} aria-hidden="true" />
+          <Loader2 className="animate-spin text-accent" size={32} aria-hidden="true" />
         </div>
       )}
 
@@ -221,7 +221,7 @@ export function ClaimsTab() {
                   <div className="text-sm text-zinc-400 mt-1 flex flex-wrap gap-x-4 gap-y-1">
                     <span>
                       Points:{' '}
-                      <span className="font-mono text-cyan-300">{q.referrerPoints}</span>
+                      <span className="font-mono text-accent">{q.referrerPoints}</span>
                     </span>
                     <span>
                       Pool:{' '}
@@ -236,7 +236,7 @@ export function ClaimsTab() {
                           <CheckCircle size={12} aria-hidden="true" /> Claimed
                         </span>
                       ) : q.quarterEnded ? (
-                        <span className="text-cyan-300">Eligible</span>
+                        <span className="text-accent">Eligible</span>
                       ) : (
                         <span className="text-amber-400">Quarter in progress</span>
                       )}

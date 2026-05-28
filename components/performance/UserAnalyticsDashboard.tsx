@@ -85,12 +85,12 @@ export function UserAnalyticsDashboard({ analytics }: UserAnalyticsDashboardProp
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-400 mb-1">Avg Session Duration</p>
-              <p className="text-3xl font-bold text-cyan-400">
+              <p className="text-3xl font-bold text-accent">
                 {(analytics.averageSessionDuration / 60000).toFixed(1)}
               </p>
               <p className="text-xs text-slate-400">minutes</p>
             </div>
-            <Clock className="w-8 h-8 text-cyan-400 opacity-50" />
+            <Clock className="w-8 h-8 text-accent opacity-50" />
           </div>
         </motion.div>
 
@@ -143,7 +143,7 @@ export function UserAnalyticsDashboard({ analytics }: UserAnalyticsDashboardProp
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-bold text-cyan-400">
+                  <p className="text-sm font-bold text-accent">
                     {page.views} views
                   </p>
                 </div>

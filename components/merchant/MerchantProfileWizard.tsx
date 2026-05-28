@@ -247,7 +247,7 @@ export function MerchantProfileWizard({
             <GlassCard hover={false} className="p-6 md:p-8">
               <div className="mb-6">
                 <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                  <Store className="text-cyan-400" size={24} />
+                  <Store className="text-accent" size={24} />
                   {introTitle ?? (isEditing ? 'Edit your business profile' : 'Tell customers who you are')}
                 </h2>
                 <p className="mt-1 text-gray-400">
@@ -432,7 +432,7 @@ export function MerchantProfileWizard({
                       <button
                         onClick={addLink}
                         type="button"
-                        className="rounded-xl border border-dashed border-white/10 bg-white/5 backdrop-blur-sm px-3 py-2 text-sm text-gray-400 hover:border-accent/30 hover:text-cyan-300 hover:bg-cyan-500/5 transition-colors"
+                        className="rounded-xl border border-dashed border-white/10 bg-white/5 backdrop-blur-sm px-3 py-2 text-sm text-gray-400 hover:border-accent/30 hover:text-accent hover:bg-cyan-500/5 transition-colors"
                       >
                         + Add link
                       </button>
@@ -498,7 +498,7 @@ export function MerchantProfileWizard({
                   <div className="flex-1 min-w-0">
                     <div className="text-lg font-bold text-white">{nameTrimmed || '—'}</div>
                     {category && (
-                      <div className="text-xs text-cyan-300 capitalize">{category}</div>
+                      <div className="text-xs text-accent capitalize">{category}</div>
                     )}
                     {bio && <p className="mt-1 text-sm text-gray-300">{bio}</p>}
                     {links.filter((l) => l.url).length > 0 && (
@@ -508,7 +508,7 @@ export function MerchantProfileWizard({
                           .map((l, i) => (
                             <span
                               key={i}
-                              className="inline-flex items-center gap-1 rounded-md bg-white/10 backdrop-blur-sm px-2 py-1 text-xs text-cyan-300 border border-white/10"
+                              className="inline-flex items-center gap-1 rounded-md bg-white/10 backdrop-blur-sm px-2 py-1 text-xs text-accent border border-white/10"
                             >
                               <ExternalLink size={10} /> {l.label || l.url}
                             </span>
@@ -552,7 +552,7 @@ export function MerchantProfileWizard({
 
               {/* In-flight + error — glassmorphic status panels */}
               {hookStep !== 'idle' && !error && (
-                <div className="mb-4 rounded-xl border border-accent/30 bg-cyan-500/10 backdrop-blur-md px-4 py-3 text-sm text-cyan-200">
+                <div className="mb-4 rounded-xl border border-accent/30 bg-cyan-500/10 backdrop-blur-md px-4 py-3 text-sm text-accent">
                   {hookStep === 'uploading-avatar' && 'Uploading avatar…'}
                   {hookStep === 'storing-profile' && 'Saving profile…'}
                   {hookStep === 'awaiting-signature' && 'Please confirm the transaction in your wallet.'}

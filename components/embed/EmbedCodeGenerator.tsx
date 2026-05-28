@@ -95,7 +95,7 @@ export function EmbedCodeGenerator({ slug, merchantName }: EmbedCodeGeneratorPro
         <div className="flex items-center justify-between mb-2">
           <label className="text-xs text-gray-500">Embed Code</label>
           <button onClick={copyCode}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-500/20 border border-accent/30 rounded-lg text-cyan-400 text-xs font-bold hover:bg-cyan-500/30 transition-colors">
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-500/20 border border-accent/30 rounded-lg text-accent text-xs font-bold hover:bg-cyan-500/30 transition-colors">
             {copied ? <><Check size={12} /> Copied!</> : <><Copy size={12} /> Copy</>}
           </button>
         </div>

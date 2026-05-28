@@ -123,7 +123,7 @@ export function ProfileSettings() {
               Wallet Address
             </label>
             <div className="flex items-center gap-2 px-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg">
-              <Shield className="w-4 h-4 text-cyan-400" />
+              <Shield className="w-4 h-4 text-accent" />
               <span className="text-sm text-zinc-100 font-mono">{address}</span>
             </div>
             <p className="text-xs text-zinc-500 mt-1">Your wallet address cannot be changed</p>
@@ -299,7 +299,7 @@ export function ProfileSettings() {
         <div className="bg-zinc-900 rounded-xl border border-zinc-700 p-8">
           <div className="mb-6 flex items-center gap-3">
             <div className="p-2 bg-cyan-500/20 rounded-lg">
-              <Wallet className="w-5 h-5 text-cyan-400" />
+              <Wallet className="w-5 h-5 text-accent" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-zinc-100">Wallet Settings</h2>

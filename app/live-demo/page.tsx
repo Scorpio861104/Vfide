@@ -166,7 +166,7 @@ export default function LiveDemoPage() {
               >
                 <button
                   onClick={() => handleDemoTransaction('transfer')}
-                  className="bg-gradient-to-r from-cyan-400 to-blue-500 text-white font-bold py-2 sm:py-3 px-2 sm:px-4 rounded-lg hover:scale-105 transition-transform text-xs sm:text-sm"
+                  className="bg-gradient-to-r from-accent to-blue-500 text-white font-bold py-2 sm:py-3 px-2 sm:px-4 rounded-lg hover:scale-105 transition-transform text-xs sm:text-sm"
                 >
                   Send VFIDE
                 </button>
@@ -199,13 +199,13 @@ export default function LiveDemoPage() {
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 md:gap-4 justify-center items-center">
               <Link
                 href="/vault"
-                className="w-full sm:w-auto bg-gradient-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold py-2 sm:py-3 md:py-4 px-4 sm:px-6 md:px-8 rounded-xl hover:scale-105 transition-transform text-sm sm:text-base md:text-lg text-center"
+                className="w-full sm:w-auto bg-gradient-to-r from-emerald-400 to-accent text-zinc-950 font-bold py-2 sm:py-3 md:py-4 px-4 sm:px-6 md:px-8 rounded-xl hover:scale-105 transition-transform text-sm sm:text-base md:text-lg text-center"
               >
                 Create Your Vault
               </Link>
               <Link
                 href="/docs"
-                className="w-full sm:w-auto bg-zinc-950 border-2 border-cyan-400 text-cyan-400 font-bold py-2 sm:py-3 md:py-4 px-4 sm:px-6 md:px-8 rounded-xl hover:scale-105 transition-transform text-sm sm:text-base md:text-lg text-center"
+                className="w-full sm:w-auto bg-zinc-950 border-2 border-cyan-400 text-accent font-bold py-2 sm:py-3 md:py-4 px-4 sm:px-6 md:px-8 rounded-xl hover:scale-105 transition-transform text-sm sm:text-base md:text-lg text-center"
               >
                 Read Docs
               </Link>

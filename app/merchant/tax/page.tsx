@@ -119,7 +119,7 @@ export default function MerchantTaxPage() {
         <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         <section className="py-12">
           <div className="container mx-auto max-w-6xl px-4">
-            <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200">
+            <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-accent hover:text-accent">
               <ArrowLeft size={16} /> Back to Merchant Hub
             </Link>
 
@@ -134,7 +134,7 @@ export default function MerchantTaxPage() {
                   Tax is in basis points (1% = 100 bps) so 7.25% sales tax is <code className="bg-zinc-900 px-1 rounded">725</code>.
                 </p>
               </div>
-              <button onClick={() => setShowCreate(true)} disabled={!address} className="px-5 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90">
+              <button onClick={() => setShowCreate(true)} disabled={!address} className="px-5 py-3 bg-gradient-to-r from-accent to-blue-500 rounded-xl font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90">
                 <Plus size={18} /> New tax rate
               </button>
             </div>
@@ -153,7 +153,7 @@ export default function MerchantTaxPage() {
                   <div className="p-12 text-center text-zinc-400">Loading…</div>
                 ) : rates.length === 0 ? (
                   <div className="p-12 text-center text-zinc-400">
-                    No tax rates configured. Click <span className="text-cyan-300">New tax rate</span> to add your first.
+                    No tax rates configured. Click <span className="text-accent">New tax rate</span> to add your first.
                   </div>
                 ) : (
                   <div className="divide-y divide-white/5">
@@ -217,7 +217,7 @@ function TaxRateRow({ rate, onMakeDefault, onToggleEnabled, onDelete }: {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1 flex-wrap">
           <span className="font-medium">{rate.name}</span>
-          <span className="font-mono text-cyan-300">{formatRate(rate.rate_bps)}</span>
+          <span className="font-mono text-accent">{formatRate(rate.rate_bps)}</span>
           {rate.is_default && (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded border border-purple-500/30 bg-purple-500/10 text-purple-300">
               <Star size={11} fill="currentColor" /> Default
@@ -387,7 +387,7 @@ function CreateTaxRateModal({ onClose, onCreated, onError }: { onClose: () => vo
             </div>
           </label>
 
-          <button onClick={submit} disabled={!canSubmit} className="w-full px-5 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
+          <button onClick={submit} disabled={!canSubmit} className="w-full px-5 py-3 bg-gradient-to-r from-accent to-blue-500 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
             {submitting ? 'Creating…' : 'Create tax rate'}
           </button>
         </div>

@@ -287,7 +287,7 @@ export function CashOutModal({ token, availableWei, onClose, onSubmitted }: Cash
                   type="button"
                   onClick={() => setAmount(availableHuman)}
                   disabled={submitting || availableWei === 0n}
-                  className="text-xs text-cyan-300 hover:text-cyan-200 disabled:opacity-40"
+                  className="text-xs text-accent hover:text-accent disabled:opacity-40"
                 >
                   Use full balance
                 </button>

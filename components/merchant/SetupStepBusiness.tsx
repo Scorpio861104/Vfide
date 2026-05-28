@@ -23,7 +23,7 @@ export function SetupStepBusiness({
     <motion.div key="step1" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-          <Store className="text-cyan-400" size={24} /> Your business
+          <Store className="text-accent" size={24} /> Your business
         </h2>
         <p className="text-gray-400 mt-1">Tell us about your business. You can change these later.</p>
       </div>
@@ -55,7 +55,7 @@ export function SetupStepBusiness({
             {CATEGORIES.map(cat => (
               <button key={cat.value} type="button" onClick={() => setCategory(cat.value)}
                 className={`p-3 rounded-xl text-center text-sm transition-all border ${
-                  category === cat.value ? 'bg-accent/15 border-accent/40 text-cyan-400' : 'bg-white/3 border-white/10 text-gray-400 hover:border-white/20'
+                  category === cat.value ? 'bg-accent/15 border-accent/40 text-accent' : 'bg-white/3 border-white/10 text-gray-400 hover:border-white/20'
                 }`}>
                 <div className="text-lg mb-1">{cat.emoji}</div>
                 <div className="text-xs leading-tight">{cat.label}</div>
@@ -118,7 +118,7 @@ export function SetupStepBusiness({
       <div className="mt-8 flex justify-end">
         <button disabled={!isValid} onClick={onNext}
           className={`px-8 py-3 rounded-xl font-bold flex items-center gap-2 transition-all ${
-            isValid ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:scale-[1.02]' : 'bg-white/5 text-gray-500 cursor-not-allowed'
+            isValid ? 'bg-gradient-to-r from-accent to-blue-500 text-white hover:scale-[1.02]' : 'bg-white/5 text-gray-500 cursor-not-allowed'
           }`}>
           Add products <ArrowRight size={18} />
         </button>

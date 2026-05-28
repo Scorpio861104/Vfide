@@ -210,7 +210,7 @@ export function MerchantApprovalChapter({ onComplete, onSkip }: MerchantApproval
         </div>
 
         <div className="flex items-start gap-2 rounded-xl border border-white/10 bg-white/[0.02] p-3 text-xs text-white/70">
-          <Info className="mt-0.5 flex-shrink-0 text-cyan-300" size={14} aria-hidden />
+          <Info className="mt-0.5 flex-shrink-0 text-accent" size={14} aria-hidden />
           You don&rsquo;t need this if you intend to pay merchants from your wallet (the default
           checkout flow). Skip if unsure — you can come back later.
         </div>

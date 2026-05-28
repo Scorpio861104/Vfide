@@ -118,7 +118,7 @@ export default function MerchantSubscriptionsPage() {
         <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         <section className="py-12">
           <div className="container mx-auto max-w-6xl px-4">
-            <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200">
+            <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-accent hover:text-accent">
               <ArrowLeft size={16} /> Back to Merchant Hub
             </Link>
 
@@ -132,7 +132,7 @@ export default function MerchantSubscriptionsPage() {
                   Charge customers on a schedule. Memberships, classes, monthly support plans — whatever your model is.
                 </p>
               </div>
-              <button onClick={() => setShowCreate(true)} disabled={!address} className="px-5 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90">
+              <button onClick={() => setShowCreate(true)} disabled={!address} className="px-5 py-3 bg-gradient-to-r from-accent to-blue-500 rounded-xl font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90">
                 <Plus size={18} /> New plan
               </button>
             </div>
@@ -335,7 +335,7 @@ function CreatePlanModal({ onClose, onCreated, onError }: { onClose: () => void;
               <input type="number" min={1} step={1} value={maxSubs} onChange={(e) => setMaxSubs(e.target.value === '' ? '' : Number(e.target.value))} placeholder="Unlimited" className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm" />
             </label>
           </div>
-          <button onClick={submit} disabled={!canSubmit} className="w-full px-5 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
+          <button onClick={submit} disabled={!canSubmit} className="w-full px-5 py-3 bg-gradient-to-r from-accent to-blue-500 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
             {submitting ? 'Creating…' : 'Create plan'}
           </button>
         </div>

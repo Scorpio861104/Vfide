@@ -145,7 +145,7 @@ export function ReportTab() {
     <div className="space-y-6 max-w-2xl">
       {/* Eligibility status banner */}
       <div className="bg-zinc-800 border border-zinc-700 rounded-2xl p-4 flex items-start gap-3">
-        <Wallet className="text-cyan-400 shrink-0 mt-0.5" size={18} />
+        <Wallet className="text-accent shrink-0 mt-0.5" size={18} />
         <div className="flex-1 text-sm">
           {!address ? (
             <>

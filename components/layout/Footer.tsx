@@ -84,7 +84,7 @@ export function Footer() {
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-xl bg-white/4 border border-white/8 flex items-center justify-center text-zinc-400 hover:text-cyan-400 hover:border-cyan-400/25 hover:bg-cyan-400/5 transition-all"
+                  className="w-9 h-9 rounded-xl bg-white/4 border border-white/8 flex items-center justify-center text-zinc-400 hover:text-accent hover:border-cyan-400/25 hover:bg-cyan-400/5 transition-all"
                   aria-label={social.label}
                 >
                   <social.icon className="w-4 h-4" />
@@ -187,7 +187,7 @@ export function Footer() {
             <strong className="text-zinc-400">DISCLAIMER:</strong> VFIDE tokens are utility tokens for governance and
             payments, NOT investment securities. No guarantee of profits or returns. Cryptocurrency involves risk of
             total loss. Not financial, legal, or tax advice. See{" "}
-            <Link href="/legal" className="text-cyan-400/70 hover:text-cyan-400 underline underline-offset-2 transition-colors">
+            <Link href="/legal" className="text-accent/70 hover:text-accent underline underline-offset-2 transition-colors">
               Legal & Terms
             </Link>{" "}
             for full details.

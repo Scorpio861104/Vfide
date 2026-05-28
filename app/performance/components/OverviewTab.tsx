@@ -34,7 +34,7 @@ export function OverviewTab({
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="rounded-lg border border-accent/20 bg-cyan-500/10 p-6">
-            <p className="mb-2 text-sm text-cyan-400">Live User Sessions</p>
+            <p className="mb-2 text-sm text-accent">Live User Sessions</p>
             <p className="text-3xl font-bold text-white">{activeUsers}</p>
           </motion.div>
 

@@ -240,7 +240,7 @@ export default function StakingPage() {
             </div>
             <h1 className="text-4xl font-bold mb-2">
               <span className="bg-gradient-to-r from-cyan-400 via-emerald-400 to-blue-400 bg-clip-text text-transparent flex items-center gap-3">
-                <Coins size={32} className="text-cyan-400" />Staking
+                <Coins size={32} className="text-accent" />Staking
               </span>
             </h1>
             <p className="text-white/50">Coordinate liquidity across protocol pools. This is a liquidity coordination pool — no yield or token rewards are distributed (Howey-compliant design).</p>
@@ -248,7 +248,7 @@ export default function StakingPage() {
 
           {poolsLoading && (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="animate-spin text-cyan-400" size={32} aria-hidden="true" />
+              <Loader2 className="animate-spin text-accent" size={32} aria-hidden="true" />
             </div>
           )}
 
@@ -317,7 +317,7 @@ export default function StakingPage() {
                       void refetchStake();
                       void refetchAllowance();
                     }}
-                    className="text-zinc-400 hover:text-cyan-400 transition-colors"
+                    className="text-zinc-400 hover:text-accent transition-colors"
                   >
                     <RefreshCw size={14} aria-hidden="true" />
                   </button>
@@ -331,7 +331,7 @@ export default function StakingPage() {
                   </div>
                   <div>
                     <div className="text-xs text-zinc-400">Duration</div>
-                    <div className="text-2xl font-bold text-cyan-300 font-mono">
+                    <div className="text-2xl font-bold text-accent font-mono">
                       {userStake ? formatDuration(userStake.stakeDuration) : '—'}
                     </div>
                   </div>
@@ -376,7 +376,7 @@ export default function StakingPage() {
                         type="button"
                         onClick={() => setAmount(formatUnits(lpBalance, 18))}
                         disabled={lpBalance === 0n}
-                        className="text-cyan-400 hover:text-cyan-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 rounded"
+                        className="text-accent hover:text-accent disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 rounded"
                       >
                         Max
                       </button>

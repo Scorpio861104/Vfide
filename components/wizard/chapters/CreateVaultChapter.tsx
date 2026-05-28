@@ -59,7 +59,7 @@ export function CreateVaultChapter({ onComplete }: CreateVaultChapterProps) {
         notice={{ tone: 'info', text: 'Connect your wallet to create a vault.' }}
       >
         <div className="flex flex-col items-center gap-3 py-4 text-center">
-          <Wallet className="text-cyan-300" size={32} aria-hidden />
+          <Wallet className="text-accent" size={32} aria-hidden />
           <p className="text-sm text-white/70">
             Your vault is owned by your wallet. We&apos;ll never custody your funds.
           </p>
@@ -141,7 +141,7 @@ export function CreateVaultChapter({ onComplete }: CreateVaultChapterProps) {
         primaryDisabled
       >
         <div className="flex items-center gap-2 text-sm text-white/70">
-          <Loader2 className="animate-spin text-cyan-300" size={18} aria-hidden />
+          <Loader2 className="animate-spin text-accent" size={18} aria-hidden />
           Checking VaultHub for an existing vault…
         </div>
       </ChapterShell>
@@ -181,15 +181,15 @@ export function CreateVaultChapter({ onComplete }: CreateVaultChapterProps) {
     >
       <ul className="space-y-2 text-sm text-white/80">
         <li className="flex items-start gap-2">
-          <ShieldAlert className="mt-0.5 flex-shrink-0 text-cyan-300" size={16} aria-hidden />
+          <ShieldAlert className="mt-0.5 flex-shrink-0 text-accent" size={16} aria-hidden />
           You stay in control. The vault is owned by your wallet — VFIDE cannot freeze, seize, or recover it without you.
         </li>
         <li className="flex items-start gap-2">
-          <ShieldAlert className="mt-0.5 flex-shrink-0 text-cyan-300" size={16} aria-hidden />
+          <ShieldAlert className="mt-0.5 flex-shrink-0 text-accent" size={16} aria-hidden />
           Calling <code className="rounded bg-black/30 px-1.5 py-0.5 text-xs">VaultHub.ensureVault()</code> is idempotent — running it again later is a no-op.
         </li>
         <li className="flex items-start gap-2">
-          <ShieldAlert className="mt-0.5 flex-shrink-0 text-cyan-300" size={16} aria-hidden />
+          <ShieldAlert className="mt-0.5 flex-shrink-0 text-accent" size={16} aria-hidden />
           One transaction, paid by you. Your wallet will prompt for the signature.
         </li>
       </ul>

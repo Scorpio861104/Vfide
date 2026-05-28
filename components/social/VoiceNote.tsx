@@ -149,7 +149,7 @@ export function VoiceNotePlayer({ audioUrl, duration, fromSelf = false }: VoiceN
           <div className="h-full bg-cyan-400 rounded-full transition-all" style={{ width: `${progress * 100}%` }} />
         </div>
       </div>
-      <span className={`text-[10px] font-mono ${fromSelf ? 'text-cyan-400' : 'text-gray-500'}`}>{Math.floor(duration)}s</span>
+      <span className={`text-[10px] font-mono ${fromSelf ? 'text-accent' : 'text-gray-500'}`}>{Math.floor(duration)}s</span>
     </div>
   );
 }

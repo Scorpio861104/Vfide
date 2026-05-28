@@ -367,7 +367,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
         {/* Status indicator */}
         <div className="flex items-center gap-2">
           {encryptionStatus === 'encrypting' && (
-            <div className="flex items-center gap-1 text-xs text-cyan-400">
+            <div className="flex items-center gap-1 text-xs text-accent">
               <Shield className="w-3 h-3 animate-pulse" />
               Encrypting...
             </div>
@@ -441,7 +441,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
                 <p className="text-xs text-zinc-400 mb-2">Create a vault to send and request crypto payments in messages.</p>
                 <a
                   href="/vault"
-                  className="inline-flex items-center gap-1 text-xs text-cyan-400 hover:underline"
+                  className="inline-flex items-center gap-1 text-xs text-accent hover:underline"
                   onClick={() => analytics.trackVaultFunnel('clicked_create')}
                 >
                   Create Vault →
@@ -465,7 +465,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <div className="w-16 h-16 rounded-full bg-cyan-400/10 flex items-center justify-center mb-4">
-              <Lock className="w-8 h-8 text-cyan-400" />
+              <Lock className="w-8 h-8 text-accent" />
             </div>
             <h3 className="text-lg font-bold text-zinc-100 mb-2">No messages yet</h3>
             <p className="text-sm text-zinc-500 max-w-xs">
@@ -545,7 +545,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
                       {isOwn && (
                         message.read ? (
                           <span title="Read">
-                            <CheckCheck className="w-3 h-3 text-cyan-400" />
+                            <CheckCheck className="w-3 h-3 text-accent" />
                           </span>
                         ) : (
                           <span title="Sent">

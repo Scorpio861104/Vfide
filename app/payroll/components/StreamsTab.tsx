@@ -70,7 +70,7 @@ export function StreamsTab() {
 
       {loading ? (
         <div className="flex items-center justify-center py-10">
-          <Loader2 size={22} className="text-cyan-400 animate-spin" />
+          <Loader2 size={22} className="text-accent animate-spin" />
         </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-14 text-center bg-white/3 border border-white/10 rounded-2xl">
@@ -102,7 +102,7 @@ export function StreamsTab() {
                 </div>
                 <div className="flex items-center gap-2 mb-1">
                   <div className="flex-1 bg-white/5 rounded-full h-1.5">
-                    <div className="h-1.5 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500" style={{ width: `${progress}%` }} />
+                    <div className="h-1.5 rounded-full bg-gradient-to-r from-accent to-blue-500" style={{ width: `${progress}%` }} />
                   </div>
                   <p className="text-xs text-gray-500 flex-shrink-0">{progress.toFixed(0)}%</p>
                 </div>

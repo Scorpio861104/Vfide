@@ -131,13 +131,13 @@ export function ActiveTab() {
       {/* As buyer */}
       <div className="bg-white/3 border border-white/10 rounded-2xl p-5">
         <div className="flex items-center gap-2 mb-4">
-          <ShoppingBag size={16} className="text-cyan-400" />
+          <ShoppingBag size={16} className="text-accent" />
           <h3 className="text-white font-semibold text-sm">As buyer</h3>
           <span className="ml-auto text-xs text-gray-500">{activeBuyer.length}</span>
         </div>
         {buyerLoading ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 size={20} className="text-cyan-400 animate-spin" />
+            <Loader2 size={20} className="text-accent animate-spin" />
           </div>
         ) : activeBuyer.length === 0 ? (
           <p className="text-gray-500 text-xs py-4 text-center">No active escrows as buyer.</p>
@@ -188,7 +188,7 @@ export function ActiveTab() {
 
       {!isLoadingAny && activeBuyer.length === 0 && activeMerchant.length === 0 && (
         <p className="text-gray-600 text-xs text-center pt-2">
-          No active escrows. Use the <span className="text-cyan-400">Create</span> tab to start one.
+          No active escrows. Use the <span className="text-accent">Create</span> tab to start one.
         </p>
       )}
 

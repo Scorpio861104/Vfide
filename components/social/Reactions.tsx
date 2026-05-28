@@ -46,7 +46,7 @@ export function ReactionsBar({ reactions, onReact, compact = false }: ReactionsB
             r.reacted ? 'bg-cyan-500/15 border border-accent/30' : 'bg-white/5 border border-white/5'
           }`}>
           <span className={compact ? 'text-[10px]' : 'text-xs'}>{r.emoji}</span>
-          <span className={`font-bold ${r.reacted ? 'text-cyan-400' : 'text-gray-500'} ${compact ? 'text-[9px]' : 'text-[10px]'}`}>{r.count}</span>
+          <span className={`font-bold ${r.reacted ? 'text-accent' : 'text-gray-500'} ${compact ? 'text-[9px]' : 'text-[10px]'}`}>{r.count}</span>
         </motion.button>
       ))}
 

@@ -199,7 +199,7 @@ export function SmartQR({
         {/* Center logo overlay */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="w-10 h-10 bg-zinc-950 rounded-lg flex items-center justify-center border border-white/10">
-            <span className="text-cyan-400 font-black text-xs">V</span>
+            <span className="text-accent font-black text-xs">V</span>
           </div>
         </div>
       </motion.div>

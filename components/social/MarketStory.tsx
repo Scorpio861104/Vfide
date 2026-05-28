@@ -178,10 +178,10 @@ export function MarketStory({ story, onBuy, onWhatsApp, onView, compact = false 
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-cyan-400 font-mono font-bold text-sm">{product.currency}{product.price}</span>
+                    <span className="text-accent font-mono font-bold text-sm">{product.currency}{product.price}</span>
                     {product.inStock && onBuy && (
                       <button onClick={() => { setSelectedProduct(product.id); onBuy(product.id); }}
-                        className="px-3 py-1.5 bg-cyan-500/20 border border-accent/30 text-cyan-400 rounded-lg text-xs font-bold">
+                        className="px-3 py-1.5 bg-cyan-500/20 border border-accent/30 text-accent rounded-lg text-xs font-bold">
                         Buy
                       </button>
                     )}
@@ -208,7 +208,7 @@ export function MarketStory({ story, onBuy, onWhatsApp, onView, compact = false 
         <button onClick={handleWhatsApp} className="p-1.5 rounded-lg text-gray-500 hover:text-emerald-400 hover:bg-emerald-500/10" aria-label="Send via WhatsApp">
           <MessageCircle size={16} />
         </button>
-        <button onClick={() => setShowProducts(!showProducts)} className="p-1.5 rounded-lg text-gray-500 hover:text-cyan-400 hover:bg-cyan-500/10">
+        <button onClick={() => setShowProducts(!showProducts)} className="p-1.5 rounded-lg text-gray-500 hover:text-accent hover:bg-cyan-500/10">
           <ShoppingCart size={16} />
         </button>
       </div>

@@ -184,7 +184,7 @@ export function VaultSetupWizard({ forceOpen = false, onClose }: VaultSetupWizar
           {/* Header */}
           <header className="flex items-center justify-between border-b border-white/10 px-5 py-4">
             <div className="min-w-0">
-              <p id="vfide-wizard-title" className="text-xs uppercase tracking-[0.18em] text-cyan-300/80">
+              <p id="vfide-wizard-title" className="text-xs uppercase tracking-[0.18em] text-accent/80">
                 VFIDE setup
               </p>
               <p className="truncate text-sm font-semibold text-white">
@@ -207,8 +207,8 @@ export function VaultSetupWizard({ forceOpen = false, onClose }: VaultSetupWizar
           {!isConnected && (
             <div className="flex items-center justify-between gap-3 border-b border-white/10 bg-cyan-500/8 px-5 py-2.5">
               <div className="flex items-center gap-2 min-w-0">
-                <Wallet size={14} className="text-cyan-300 flex-shrink-0" aria-hidden />
-                <span className="text-xs text-cyan-100/80 truncate">
+                <Wallet size={14} className="text-accent flex-shrink-0" aria-hidden />
+                <span className="text-xs text-accent/80 truncate">
                   Connect your wallet to continue
                 </span>
               </div>
@@ -219,7 +219,7 @@ export function VaultSetupWizard({ forceOpen = false, onClose }: VaultSetupWizar
           {/* Progress bar */}
           <div className="h-1 w-full bg-white/5">
             <motion.div
-              className="h-full bg-gradient-to-r from-cyan-400 to-blue-500"
+              className="h-full bg-gradient-to-r from-accent to-blue-500"
               animate={{
                 width: `${Math.min(100, ((currentIndex + (showContinuePrompt ? 1 : 0)) / (CHAPTER_ORDER.length - 1)) * 100)}%`,
               }}
@@ -288,7 +288,7 @@ function ContinuePrompt({
         <button
           type="button"
           onClick={onContinue}
-          className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-cyan-500/25 hover:scale-[1.01]"
+          className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-accent to-blue-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-cyan-500/25 hover:scale-[1.01]"
         >
           <Play size={16} aria-hidden />
           Continue to {nextMeta?.shortLabel ?? 'next chapter'}

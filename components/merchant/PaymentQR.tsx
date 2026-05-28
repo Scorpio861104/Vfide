@@ -185,7 +185,7 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
       {/* Header */}
       <div className="bg-gradient-to-br from-cyan-400/10 to-blue-500/10 border-2 border-accent/30 rounded-xl p-6">
         <div className="flex items-center gap-3 mb-2">
-          <QrCode className="w-8 h-8 text-cyan-400" />
+          <QrCode className="w-8 h-8 text-accent" />
           <div>
             <h2 className="text-xl font-bold text-zinc-100">Payment QR Code</h2>
             <p className="text-zinc-400 text-sm">QR scans default to instant settlement</p>
@@ -217,7 +217,7 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
               />
             ) : (
               <div className="w-[200px] h-[200px] flex flex-col items-center justify-center text-xs text-zinc-600 text-center gap-2">
-                <ShieldCheck className="w-8 h-8 text-cyan-500" />
+                <ShieldCheck className="w-8 h-8 text-accent" />
                 <span>Sign payment details to generate a tamper-proof QR</span>
               </div>
             )}
@@ -226,7 +226,7 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
           {/* Amount Display */}
           {amount && (
             <div className="text-center mb-4">
-              <div className="text-3xl font-bold text-cyan-400">
+              <div className="text-3xl font-bold text-accent">
                 {parseFloat(amount).toLocaleString()} VFIDE
               </div>
               <div className="text-zinc-400 text-sm">

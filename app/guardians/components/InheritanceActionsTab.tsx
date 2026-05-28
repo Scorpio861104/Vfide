@@ -413,7 +413,7 @@ function VaultInheritanceCard({
                 <span>State: <span className="text-white/80 font-bold">{STATE_LABELS[currentState]}</span></span>
                 {heirCount > 0 && <span>Configured heirs: <span className="text-white/80">{heirCount}</span></span>}
                 {windowEnd > 0n && <span>Window: <span className="text-white/80">{formatCountdown(windowEnd)}</span></span>}
-                {isGuardianBool && <span className="text-cyan-400 font-bold">✓ You are a guardian</span>}
+                {isGuardianBool && <span className="text-accent font-bold">✓ You are a guardian</span>}
                 {isHeir && <span className="text-pink-400 font-bold">✓ You are an heir</span>}
               </div>
 

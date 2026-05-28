@@ -83,7 +83,7 @@ export default function BudgetsPage() {
       <div className="relative container mx-auto px-4 max-w-4xl space-y-6">
         {/* Device-only notice */}
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl border border-accent/20 bg-cyan-500/5 p-3 text-xs text-cyan-200">
+          className="rounded-2xl border border-accent/20 bg-cyan-500/5 p-3 text-xs text-accent">
           Budgets are saved on this device only — they won&apos;t appear on other devices you sign in from.
           Spending totals are still computed from your full transaction history.
         </motion.div>
@@ -170,7 +170,7 @@ export default function BudgetsPage() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
           className="glass-card-premium p-5">
           <h3 className="font-semibold text-white mb-4 flex items-center gap-2">
-            <BarChart3 size={16} className="text-cyan-400" />Spending by Category
+            <BarChart3 size={16} className="text-accent" />Spending by Category
           </h3>
           {spendingByCategory.length === 0 ? (
             <div className="text-center py-8 text-white/40 text-sm">No spending data yet</div>

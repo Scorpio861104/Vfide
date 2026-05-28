@@ -35,8 +35,8 @@ export default function CryptoDashboard() {
           <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
           <div className="relative flex items-center justify-center min-h-[calc(100vh-4.5rem)] p-4">
             <div className="glass-card-premium p-8 max-w-md w-full text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-cyan-500/20 to-violet-500/20 border border-accent/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Wallet className="w-8 h-8 text-cyan-300" />
+              <div className="w-16 h-16 bg-gradient-to-br from-accent/20 to-violet-500/20 border border-accent/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Wallet className="w-8 h-8 text-accent" />
               </div>
               <div className="badge-live mb-4 justify-center">
                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> Wallet Required
@@ -90,7 +90,7 @@ export default function CryptoDashboard() {
             >
               <div className="flex items-center justify-between mb-4">
                 <span className="text-gray-400 text-sm">ETH Balance</span>
-                <Wallet className="w-5 h-5 text-cyan-400" />
+                <Wallet className="w-5 h-5 text-accent" />
               </div>
               <div className="text-white text-3xl font-black mb-1">{formattedBalance}</div>
               <div className="text-gray-400 text-sm">

@@ -65,7 +65,7 @@ export function SubmitTab() {
         <p className="text-gray-400 text-sm mb-6">Your appeal has been received. The SEER committee will review it within 3–5 business days.</p>
         <button
           onClick={() => setSuccess(false)}
-          className="px-4 py-2 rounded-lg bg-accent/20 hover:bg-accent/30 text-cyan-400 text-sm font-semibold transition-colors"
+          className="px-4 py-2 rounded-lg bg-accent/20 hover:bg-accent/30 text-accent text-sm font-semibold transition-colors"
         >
           Submit Another
         </button>
@@ -77,7 +77,7 @@ export function SubmitTab() {
     <div className="space-y-6">
       <div className="bg-white/3 border border-white/10 rounded-2xl p-6">
         <div className="flex items-center gap-2 mb-5">
-          <FileText size={16} className="text-cyan-400" />
+          <FileText size={16} className="text-accent" />
           <h3 className="text-white font-semibold">Submit an Appeal</h3>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -133,7 +133,7 @@ export function SubmitTab() {
           <button
             type="submit"
             disabled={submitting}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent/20 hover:bg-accent/30 text-cyan-400 text-sm font-semibold transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent/20 hover:bg-accent/30 text-accent text-sm font-semibold transition-colors disabled:opacity-50"
           >
             {submitting ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
             {submitting ? 'Submitting…' : 'Submit Appeal'}

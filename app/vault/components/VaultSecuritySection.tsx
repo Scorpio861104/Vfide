@@ -73,7 +73,7 @@ export function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${stri
                 {isQuarantined ? (
                   <Lock className="w-8 h-8 text-red-400" />
                 ) : (
-                  <Shield className="w-8 h-8 text-cyan-400" />
+                  <Shield className="w-8 h-8 text-accent" />
                 )}
               </motion.div>
               <div className="min-w-0">

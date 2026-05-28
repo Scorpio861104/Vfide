@@ -9,7 +9,7 @@ export function LivePriceDisplay() {
     <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
       <h3 className="text-xl font-bold text-zinc-100 mb-4">Current Rate</h3>
       <div className="text-center py-4">
-        <div className="text-3xl sm:text-4xl font-bold text-cyan-400">
+        <div className="text-3xl sm:text-4xl font-bold text-accent">
           {isLoading ? (
             <span className="animate-pulse">Loading...</span>
           ) : (

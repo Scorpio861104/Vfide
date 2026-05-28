@@ -120,7 +120,7 @@ export function ElectionsTabContent() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
           { label: 'Council Size',    value: electionInfo.councilSize,                      color: 'text-violet-400'  },
-          { label: 'Term Length',     value: `${electionInfo.termDays}d`,                   color: 'text-cyan-400'    },
+          { label: 'Term Length',     value: `${electionInfo.termDays}d`,                   color: 'text-accent'    },
           { label: 'Min ProofScore',  value: electionInfo.minScore.toLocaleString(),         color: 'text-amber-400'   },
           { label: 'Term End',        value: termEndDate,                                    color: 'text-emerald-400' },
         ].map(({ label, value, color }) => (
@@ -207,7 +207,7 @@ export function ElectionsTabContent() {
       ) : !loading && proposals.length > 0 && (
         <div>
           <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-            <Shield size={18} className="text-cyan-400" /> Recent Proposals
+            <Shield size={18} className="text-accent" /> Recent Proposals
           </h3>
           <div className="space-y-2">
             {proposals.map((p) => (

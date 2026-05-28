@@ -80,7 +80,7 @@ export default function InviteFriendsPage() {
       icon: Zap,
       title: 'Boost ProofScore',
       description: 'Increase your ProofScore with every successful invite',
-      color: 'text-cyan-400',
+      color: 'text-accent',
     },
   ]
 
@@ -195,7 +195,7 @@ export default function InviteFriendsPage() {
             <QrCode className="w-5 h-5 text-gray-400" />
             <p className="text-sm text-gray-400">
               Visit{' '}
-              <Link href="/profile" className="text-cyan-400 hover:underline">
+              <Link href="/profile" className="text-accent hover:underline">
                 your profile
               </Link>{' '}
               to generate a QR code for this invite link
@@ -252,7 +252,7 @@ export default function InviteFriendsPage() {
               <p className="text-sm text-gray-400 mt-1">Badges</p>
             </div>
             <div className="text-center">
-              <p className="text-3xl font-bold text-cyan-400">0</p>
+              <p className="text-3xl font-bold text-accent">0</p>
               <p className="text-sm text-gray-400 mt-1">Points</p>
             </div>
           </div>
