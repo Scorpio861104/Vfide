@@ -47,7 +47,7 @@ export function useProofScore(userAddress?: `0x${string}`) {
   
   // Calculate burn fee based on ProofScore
   // Contract: minTotalBps=25 (0.25%) at score≥8000, maxTotalBps=500 (5%) at score≤4000
-  // Neutral score (5000) sits at the midpoint → 2.5%
+  // Neutral score (5000): 500 − ((5000−4000)×475)/4000 = 381.25 bps = 3.8125%
   // Linear interpolation matching ProofScoreBurnRouter.sol computeFees():
   //   score ≤ 4000 (LOW_SCORE_THRESHOLD) → maxTotalBps = 500 bps = 5.00%
   //   score ≥ 8000 (HIGH_SCORE_THRESHOLD) → minTotalBps = 25 bps = 0.25%

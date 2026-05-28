@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { CreditCard, Loader2, Shield } from 'lucide-react';
+import { useProofScore, getScoreTierObject } from '@/hooks/useProofScore';
 import { useAccount } from 'wagmi';
 import { isAddress, verifyMessage } from 'viem';
 
@@ -64,13 +65,19 @@ export function PayContent() {
   const { isConnected, address } = useAccount();
   const isVfideTokenAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.VFIDEToken);
   const { priceUsd, isLoading: priceLoading } = useVfidePrice();
+  const { score: buyerScore, tier: buyerTier, burnFee: buyerBurnFee } = useProofScore(address);
   const { payMerchant, isPaying, isSuccess: instantSuccess, error: instantError } = usePayMerchant();
   const { createEscrow, loading: isEscrowLoading, isSuccess: escrowSuccess, error: escrowError } = useEscrow();
 
   const amountVfide = safeParseFloat(requestedAmount, 0);
   const hasValidAmount = amountVfide > 0;
-  // Midpoint fee estimate for display only; actual burn depends on ProofScore and contract logic.
-  const estimatedBurnFeeVfide = amountVfide * 0.03;
+  // Display fee: use live ProofScore rate if available, else neutral (3.8125% = 382 bps at score 5000).
+  // Neutral formula: maxBps(500) − ((5000−4000)×475)/4000 = 381.25 bps → 3.8125%
+  const NEUTRAL_BURN_RATE = 0.038125; // 381.25 bps — ProofScoreBurnRouter at score 5000
+  const activeBurnRate = (buyerBurnFee !== null && buyerBurnFee !== undefined)
+    ? buyerBurnFee / 100
+    : NEUTRAL_BURN_RATE;
+  const estimatedBurnFeeVfide = amountVfide * activeBurnRate;
   const usdEstimate = amountVfide * priceUsd;
   const effectiveProcessing = isProcessing || isPaying || isEscrowLoading;
   const combinedError = instantError || escrowError;
@@ -309,9 +316,22 @@ export function PayContent() {
               </div>
               <div className="mt-2 text-xs text-gray-400">Order: <span className="font-mono text-gray-300">{orderId}</span></div>
               <div className="flex flex-wrap items-center gap-2 mt-2">
-                <div className="px-3 py-1 bg-accent/20 border border-accent/30 rounded-lg text-accent text-sm font-bold">
-                  TRUSTED • ProofScore 845
-                </div>
+                {isConnected && buyerScore !== null && buyerTier ? (
+                  <div className={`px-3 py-1 rounded-lg text-sm font-bold border ${
+                    buyerScore >= 8000 ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300' :
+                    buyerScore >= 7000 ? 'bg-emerald-500/15 border-emerald-500/25 text-emerald-400' :
+                    buyerScore >= 5600 ? 'bg-green-500/20 border-green-500/30 text-green-300' :
+                    buyerScore >= 5000 ? 'bg-yellow-500/20 border-yellow-500/30 text-yellow-300' :
+                    buyerScore >= 4000 ? 'bg-orange-500/20 border-orange-500/30 text-orange-300' :
+                    'bg-red-500/20 border-red-500/30 text-red-300'
+                  }`}>
+                    {buyerTier.label} • ProofScore {buyerScore.toLocaleString()}
+                  </div>
+                ) : isConnected ? (
+                  <div className="px-3 py-1 bg-zinc-700/40 border border-zinc-600/30 rounded-lg text-zinc-400 text-sm animate-pulse">
+                    Loading score…
+                  </div>
+                ) : null}
                 <div className={`px-3 py-1 rounded-lg text-sm font-bold ${
                   settlement === "instant"
                     ? "bg-emerald-500/20 border border-emerald-500/30 text-emerald-300"
@@ -368,8 +388,8 @@ export function PayContent() {
               <div className="space-y-3">
                 {[
                   { id: 'vfide' as const, label: 'VFIDE Token', desc: `0.25-5% burn fee (ProofScore-based) • ${settlementTone.method}` },
-                  { id: 'usdc' as const, label: 'USDC', desc: 'Stablecoin • Supported on this checkout route' },
-                  { id: 'usdt' as const, label: 'USDT', desc: 'Stablecoin • Supported on this checkout route' },
+                  { id: 'usdc' as const, label: 'USDC', desc: 'Stablecoin • Phase 2 (select VFIDE for now)' },
+                  { id: 'usdt' as const, label: 'USDT', desc: 'Stablecoin • Phase 2 (select VFIDE for now)' },
                 ].map((method) => (
                   <motion.button 
                     key={method.id}
@@ -403,7 +423,11 @@ export function PayContent() {
                 <span className="text-white">{amountVfide.toLocaleString(undefined, { maximumFractionDigits: 6 })} VFIDE</span>
               </div>
               <div className="flex justify-between items-center mb-2">
-                <span className="text-gray-400">Estimated burn fee (3% avg)</span>
+                <span className="text-gray-400">
+                  Estimated burn fee ({buyerBurnFee !== null && buyerBurnFee !== undefined
+                    ? `${(buyerBurnFee).toFixed(2)}% at your score`
+                    : '~3.81% at neutral score'})
+                </span>
                 <span className="text-white">{estimatedBurnFeeVfide.toLocaleString(undefined, { maximumFractionDigits: 6 })} VFIDE</span>
               </div>
               <div className="border-t border-white/10 my-3" />

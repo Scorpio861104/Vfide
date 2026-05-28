@@ -70,7 +70,7 @@ export function CheckoutPanel({
   merchantAddress,
   merchantName,
   merchantProofScore,
-  buyerFeeBps = 100,  // Default 1% for new users
+  buyerFeeBps = 382,  // Default 3.82% neutral rate (ProofScoreBurnRouter score=5000; range 25–500 bps)
   tokenPrice,
   onComplete,
   onCancel,
