@@ -9,8 +9,9 @@ import {
  Shield, Lock, Eye, Key, Activity, 
  Smartphone, Globe, ChevronRight, CheckCircle2, 
   XCircle, LogOut
-} from 'lucide-react';
+, ShieldCheck } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
+import VerifierTabContent from './components/VerifierTabContent';
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { useLocale } from '@/hooks/useLocale';
 import { SECURITY_CENTER_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
@@ -20,6 +21,7 @@ const tabs = [
   { id: 'sessions', label: 'Sessions', icon: Globe },
   { id: 'keys',     label: 'Signing Keys', icon: Key },
   { id: 'activity', label: 'Activity Log', icon: Activity },
+  { id: 'verifier',  label: 'Verifier',     icon: ShieldCheck },
 ] as const;
 type TabId = typeof tabs[number]['id'];
 
@@ -228,6 +230,9 @@ export default function SecurityCenterPage() {
           </AnimatePresence>
         </div>
       </div>
+      {/* Verifier tab */}
+      {activeTab === 'verifier' && <VerifierTabContent />}
+
       <Footer />
     </>
   );

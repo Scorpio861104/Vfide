@@ -33,6 +33,7 @@ import {
   BarChart2,
   Sparkles,
   Users,
+  Camera,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -54,6 +55,14 @@ import { DiscoverTab } from '@/app/social-messaging/components/DiscoverTab';
 // Pay Friends tab — from social-payments
 import { UnifiedActivityFeed } from '@/components/social/UnifiedActivityFeed';
 
+
+// Stories tab — from social/stories components
+import nextDynamic from 'next/dynamic';
+const StoriesContent = nextDynamic(
+  () => import('@/app/stories/components/StoriesContent'),
+  { loading: () => <div className="flex items-center justify-center py-20"><div className="w-8 h-8 border-2 border-accent/30 border-t-accent rounded-full animate-spin" /></div>, ssr: false }
+);
+
 // Analytics tab — from social
 import { OverviewTab as SocialOverviewTab } from '@/app/social/components/OverviewTab';
 import { EngagementTab } from '@/app/social/components/EngagementTab';
@@ -61,13 +70,14 @@ import { GrowthTab } from '@/app/social/components/GrowthTab';
 
 // ── Tab definitions ───────────────────────────────────────────────────────────
 
-type MainTab = 'feed' | 'messages' | 'pay' | 'analytics';
+type MainTab = 'feed' | 'stories' | 'messages' | 'pay' | 'analytics';
 type FeedFilter = 'all' | 'following' | 'trending';
 type MsgTab = 'messages' | 'circles' | 'groups' | 'discover';
 type AnalyticsTab = 'overview' | 'engagement' | 'growth';
 
 const MAIN_TABS: { id: MainTab; label: string; icon: React.ElementType }[] = [
   { id: 'feed',      label: 'Feed',        icon: Hash          },
+  { id: 'stories',   label: 'Stories',     icon: Camera        },
   { id: 'messages',  label: 'Messages',    icon: MessageCircle },
   { id: 'pay',       label: 'Pay Friends', icon: Banknote      },
   { id: 'analytics', label: 'Analytics',   icon: BarChart2     },
@@ -95,7 +105,7 @@ const ANALYTICS_TABS: { id: AnalyticsTab; label: string }[] = [
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 // UX-1: Valid tab IDs for type-safe URL parsing
-const VALID_MAIN_TABS = new Set<MainTab>(['feed', 'messages', 'pay', 'analytics']);
+const VALID_MAIN_TABS = new Set<MainTab>(['feed', 'stories', 'messages', 'pay', 'analytics']);
 
 export default function SocialHubPage() {
   const { isConnected, address } = useAccount();
@@ -322,6 +332,14 @@ export default function SocialHubPage() {
             )}
 
             {/* ── ANALYTICS ── */}
+            {mainTab === 'stories' && (
+              <motion.div key="stories"
+                role="tabpanel" id="social-panel-stories" aria-labelledby="social-tab-stories"
+                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.18 }}>
+                <StoriesContent />
+              </motion.div>
+            )}
             {mainTab === 'analytics' && (
               <motion.div key="analytics"
                 role="tabpanel" id="social-panel-analytics" aria-labelledby="social-tab-analytics"
