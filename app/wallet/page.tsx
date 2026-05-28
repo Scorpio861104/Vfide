@@ -20,10 +20,19 @@ import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
 import {
   Wallet, HardDrive, FileText, Shield, Users, ArrowRight, CheckCircle2,
-  Lock, Activity, EyeOff, ArrowLeftRight,
+  Lock, Activity, EyeOff, ArrowLeftRight, Coins, Globe,
 } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 import dynamic from 'next/dynamic';
+
+const StakingTab = dynamic(
+  () => import('./components/StakingTab').then(m => ({ default: m.StakingTab })),
+  { ssr: false, loading: () => <div className="py-8 text-center text-zinc-500 text-sm">Loading…</div> }
+);
+const RemittanceTab = dynamic(
+  () => import('./components/RemittanceTab').then(m => ({ default: m.RemittanceTab })),
+  { ssr: false, loading: () => <div className="py-8 text-center text-zinc-500 text-sm">Loading…</div> }
+);
 
 const ActivityContent = dynamic(
   () => import('./components/ActivityContent').then(m => ({ default: m.ActivityContent })),
@@ -259,7 +268,7 @@ function OverviewTab() {
 }
 
 // ── Hub shell ─────────────────────────────────────────────────────────────────
-type TabId = 'overview' | 'activity' | 'private' | 'cross-chain';
+type TabId = 'overview' | 'activity' | 'private' | 'cross-chain' | 'staking' | 'remittance';
 
 const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
   { id: 'overview',    label: 'Overview',     icon: Wallet },
@@ -328,6 +337,8 @@ function WalletHubInner() {
               {activeTab === 'activity'   && <ActivityContent />}
               {activeTab === 'private'    && <StealthTab />}
               {activeTab === 'cross-chain'&& <CrossChainTab />}
+              {activeTab === 'staking'     && <StakingTab />}
+              {activeTab === 'remittance'  && <RemittanceTab />}
             </motion.div>
           </AnimatePresence>
         </div>
