@@ -32,7 +32,7 @@ export const dynamic = 'force-dynamic';
  * "can the claim be finalized right now."
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { usePublicClient } from 'wagmi';
@@ -91,7 +91,7 @@ function formatStatus(status: RecoveryClaimStatus): { label: string; color: stri
   }
 }
 
-export default function RecoveryStatusPage() {
+function RecoveryStatusPageInner() {
   const searchParams = useSearchParams();
   const publicClient = usePublicClient();
 
@@ -543,5 +543,13 @@ function RecoveryStatusBody({
         </button>
       )}
     </div>
+  );
+}
+
+export default function RecoveryStatusPage() {
+  return (
+    <Suspense fallback={null}>
+      <RecoveryStatusPageInner />
+    </Suspense>
   );
 }

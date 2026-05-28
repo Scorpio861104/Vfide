@@ -140,11 +140,16 @@ export function useRecoveryClaim({ targetVault, claimId: explicitClaimId }: UseR
     query: { enabled: !!targetVault && !explicitClaimId },
   });
   // getActiveClaimForVault returns (uint256 claimId, RecoveryClaim memory claim).
-  // viem decodes this as a tuple array; index 0 is the claimId uint256.
-  const activeClaimId: bigint =
-    Array.isArray(activeClaimIdRaw)
-      ? ((activeClaimIdRaw as any[])[0] as bigint) ?? 0n
-      : (activeClaimIdRaw as bigint | undefined) ?? 0n;
+  // viem decodes named multi-output as a plain object { claimId, claim }.
+  // Unnamed multi-output would decode as an array; we handle both defensively.
+  const activeClaimId: bigint = (() => {
+    if (!activeClaimIdRaw) return 0n;
+    if (Array.isArray(activeClaimIdRaw)) return ((activeClaimIdRaw as any[])[0] as bigint) ?? 0n;
+    if (typeof activeClaimIdRaw === 'object' && 'claimId' in (activeClaimIdRaw as object)) {
+      return ((activeClaimIdRaw as { claimId: bigint }).claimId) ?? 0n;
+    }
+    return (activeClaimIdRaw as bigint) ?? 0n;
+  })();
   const claimId = explicitClaimId ?? activeClaimId;
   const hasClaim = claimId > 0n;
 
@@ -207,12 +212,18 @@ export function useRecoveryClaim({ targetVault, claimId: explicitClaimId }: UseR
     };
   }, [viewData]);
 
-  // canFinalize returns (bool ok, string memory reason).
-  // viem decodes as a tuple array; index 0 is the bool.
+  // canFinalize returns (bool, string memory reason) — first output unnamed, second named "reason".
+  // viem typically returns as array for unnamed outputs; we handle both forms defensively.
   const canFinalizeRaw = viewData?.[1]?.result;
-  const canFinalize: boolean = Array.isArray(canFinalizeRaw)
-    ? !!((canFinalizeRaw as any[])[0])
-    : !!(canFinalizeRaw as boolean | undefined);
+  const canFinalize: boolean = (() => {
+    if (!canFinalizeRaw) return false;
+    if (Array.isArray(canFinalizeRaw)) return !!((canFinalizeRaw as any[])[0]);
+    if (typeof canFinalizeRaw === 'boolean') return canFinalizeRaw;
+    if (typeof canFinalizeRaw === 'object' && '0' in (canFinalizeRaw as object)) {
+      return !!(canFinalizeRaw as any)['0'];
+    }
+    return false;
+  })();
   const challengeTimeRemaining = (viewData?.[2]?.result as bigint | undefined) ?? 0n;
 
   // ─────────────────────────────────────────────────────────────────

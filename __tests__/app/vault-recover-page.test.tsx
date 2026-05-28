@@ -294,6 +294,15 @@ describe('Vault recover page logic pathways', () => {
   });
 
   it('finds a recoverable vault and completes claim modal step progression', async () => {
+    // Simulate a connected wallet — use a different address than the vault owner
+    // so isRecoverable = (isRecoverable && owner !== address) remains true.
+    const wagmi = require('wagmi');
+    jest.spyOn(wagmi, 'useAccount').mockReturnValue({
+      address: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      isConnected: true,
+      status: 'connected',
+      chainId: 84532,
+    });
     const foundVault = '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
     const ownerAddress = '0xcccccccccccccccccccccccccccccccccccccccc';
 

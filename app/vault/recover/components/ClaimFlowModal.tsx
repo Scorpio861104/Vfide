@@ -438,7 +438,7 @@ export function ClaimFlowModal({
                   handleSubmit();
                 }
               }}
-              disabled={isWritePending || (step === 2 && (!recoveryId || !reason))}
+              disabled={isWritePending || (step === 2 && (!recoveryId || !reason || !newWalletAddress))}
               className="px-8 py-3 bg-gradient-to-r from-accent to-blue-500 rounded-xl font-bold text-white flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-accent/30 relative overflow-hidden group"
             >
               <span className="relative z-10 flex items-center gap-2">
