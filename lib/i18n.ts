@@ -180,3 +180,51 @@ export const SECURITY_CENTER_TRANSLATIONS: TranslationMap<SecurityCenterCopy> = 
   'ar-SA': _en_security, 'fil-PH': _en_security, 'hi-IN': _en_security, 'id-ID': _en_security,
   'th-TH': _en_security, 'ja-JP': _en_security, 'zh-CN': _en_security,
 };
+
+export interface DashboardCopy { heading: string; subtitle: string; }
+const _en_dashboard: DashboardCopy = { heading: 'Dashboard', subtitle: 'Your VFIDE activity at a glance.' };
+export const DASHBOARD_TRANSLATIONS: TranslationMap<DashboardCopy> = {
+  'en-US': _en_dashboard, 'en-GB': _en_dashboard, 'es-ES': { heading: 'Panel de control', subtitle: 'Tu actividad VFIDE de un vistazo.' },
+  'fr-FR': { heading: 'Tableau de bord', subtitle: 'Votre activité VFIDE en un coup d\'œil.' },
+  'de-DE': { heading: 'Dashboard', subtitle: 'Ihre VFIDE-Aktivität auf einen Blick.' },
+  'ar-SA': { heading: 'لوحة التحكم', subtitle: 'نشاطك في VFIDE بنظرة واحدة.' },
+  'fil-PH': { heading: 'Dashboard', subtitle: 'Ang iyong aktibidad sa VFIDE sa isang tingin.' },
+  'hi-IN': { heading: 'डैशबोर्ड', subtitle: 'एक नजर में आपकी VFIDE गतिविधि।' },
+  'id-ID': { heading: 'Dasbor', subtitle: 'Aktivitas VFIDE Anda sekilas.' },
+  'th-TH': { heading: 'แดชบอร์ด', subtitle: 'กิจกรรม VFIDE ของคุณในมุมมองเดียว' },
+  'ja-JP': { heading: 'ダッシュボード', subtitle: 'VFIDEの活動を一目で確認。' },
+  'zh-CN': { heading: '仪表板', subtitle: '一览您的 VFIDE 活动。' },
+};
+
+export interface BenefitsCopy { heading: string; subtitle: string; }
+const _en_benefits: BenefitsCopy = { heading: 'Benefits & Rewards', subtitle: 'Earn more as your ProofScore grows.' };
+export const BENEFITS_TRANSLATIONS: TranslationMap<BenefitsCopy> = {
+  'en-US': _en_benefits, 'en-GB': _en_benefits,
+  'es-ES': { heading: 'Beneficios y recompensas', subtitle: 'Gana más a medida que crece tu ProofScore.' },
+  'fr-FR': { heading: 'Avantages et récompenses', subtitle: 'Gagnez plus à mesure que votre ProofScore augmente.' },
+  'de-DE': { heading: 'Vorteile & Belohnungen', subtitle: 'Verdiene mehr, je höher dein ProofScore steigt.' },
+  'ar-SA': { heading: 'المزايا والمكافآت', subtitle: 'اكسب أكثر كلما نما رصيد الإثبات الخاص بك.' },
+  'fil-PH': { heading: 'Mga Benepisyo at Gantimpala', subtitle: 'Kumita ng higit pa habang lumalaki ang iyong ProofScore.' },
+  'hi-IN': { heading: 'लाभ और पुरस्कार', subtitle: 'आपका ProofScore बढ़ने के साथ अधिक कमाएं।' },
+  'id-ID': { heading: 'Manfaat & Hadiah', subtitle: 'Dapatkan lebih banyak seiring ProofScore Anda bertumbuh.' },
+  'th-TH': { heading: 'สิทธิประโยชน์และรางวัล', subtitle: 'รับมากขึ้นเมื่อ ProofScore ของคุณเติบโต' },
+  'ja-JP': { heading: 'ベネフィットと報酬', subtitle: 'ProofScoreが上がるほど多く獲得できます。' },
+  'zh-CN': { heading: '福利与奖励', subtitle: '随着 ProofScore 提升获得更多收益。' },
+};
+
+export interface GovernanceCopy { heading: string; subtitle: string; }
+const _en_governance: GovernanceCopy = { heading: 'Governance', subtitle: 'Vote on proposals. Shape the protocol.' };
+export const GOVERNANCE_TRANSLATIONS: TranslationMap<GovernanceCopy> = {
+  'en-US': _en_governance, 'en-GB': _en_governance,
+  'es-ES': { heading: 'Gobernanza', subtitle: 'Vota propuestas. Da forma al protocolo.' },
+  'fr-FR': { heading: 'Gouvernance', subtitle: 'Votez les propositions. Façonnez le protocole.' },
+  'de-DE': { heading: 'Governance', subtitle: 'Stimme über Vorschläge ab. Gestalte das Protokoll.' },
+  'ar-SA': { heading: 'الحوكمة', subtitle: 'صوّت على المقترحات. شكّل البروتوكول.' },
+  'fil-PH': { heading: 'Pamamahala', subtitle: 'Bumoto sa mga panukala. Hubugin ang protokol.' },
+  'hi-IN': { heading: 'शासन', subtitle: 'प्रस्तावों पर मतदान करें। प्रोटोकॉल को आकार दें।' },
+  'id-ID': { heading: 'Tata Kelola', subtitle: 'Voting proposal. Bentuk protokolnya.' },
+  'th-TH': { heading: 'การกำกับดูแล', subtitle: 'ลงคะแนนข้อเสนอ กำหนดทิศทางโปรโตคอล' },
+  'ja-JP': { heading: 'ガバナンス', subtitle: '提案に投票してプロトコルを形成する。' },
+  'zh-CN': { heading: '治理', subtitle: '对提案投票，塑造协议走向。' },
+};
+

@@ -1,16 +1,15 @@
 'use client';
 
 /**
- * FeeFlowRiver — live SVG of the canonical 35/20/15/20/10 fee split.
+ * FeeFlowRiver — live SVG of the FeeDistributor default 35/20/15/20/10 fee split.
  *
  * What it shows: transactions arrive on the left as particles, get
  * struck by the split point in the middle, and fan out into five
  * labeled pools on the right with running totals. The pools are the
  * five real contracts that inherit ServicePool in the on-chain
- * Composite end-to-end fee split (ProofScoreBurnRouter + FeeDistributor):
- *   ProofScoreBurnRouter: 40% direct burn | 10% Sanctum | 50% → FeeDistributor
- *   FeeDistributor splits its 50% slice: 35% burn | 20% Sanctum | 15% payroll | 20% merchant | 10% headhunter
- *   Net of total fee: 57.5% burn | 20% Sanctum | 7.5% DAO payroll | 10% merchant | 5% headhunter
+ * FeeDistributor default split (FeeDistributor.sol L279, DAO-adjustable within protocol bounds):
+ *   burnBps=3500 (35%) | sanctumBps=2000 (20%) | daoPayrollBps=1500 (15%)
+ *   merchantPoolBps=2000 (20%) | headhunterPoolBps=1000 (10%)
  *
  * Why this matters on the landing page: most "fee distribution" charts
  * are a static pie hidden in a whitepaper. Showing the splits as a
@@ -51,11 +50,11 @@ interface Pool {
 }
 
 const POOLS: Pool[] = [
-  { id: 'burn',     label: 'Burn',          short: 'Burn',     pct: 57.5, hex: '#f97316', y: 0.10 }, // 40% direct + 35%×50% via FeeDistributor
-  { id: 'sanctum',  label: 'Sanctum Fund',  short: 'Sanctum',  pct: 20,   hex: '#ec4899', y: 0.30 }, // 10% direct + 20%×50% via FeeDistributor
-  { id: 'merchant', label: 'Merchant pool', short: 'Merchants', pct: 10,   hex: '#10b981', y: 0.50 }, // 20%×50% via FeeDistributor
-  { id: 'payroll',  label: 'DAO payroll',   short: 'Payroll',  pct: 7.5,  hex: '#06b6d4', y: 0.70 }, // 15%×50% via FeeDistributor
-  { id: 'headhunt', label: 'Referral pool', short: 'Referrals', pct: 5,    hex: '#a855f7', y: 0.90 }, // 10%×50% via FeeDistributor
+  { id: 'burn',     label: 'Burn',          short: 'Burn',     pct: 35,   hex: '#f97316', y: 0.10 }, // FeeDistributor burnBps=3500
+  { id: 'sanctum',  label: 'Sanctum Fund',  short: 'Sanctum',  pct: 20,   hex: '#ec4899', y: 0.30 }, // FeeDistributor sanctumBps=2000
+  { id: 'merchant', label: 'Merchant pool', short: 'Merchants', pct: 20,   hex: '#10b981', y: 0.50 }, // FeeDistributor merchantPoolBps=2000
+  { id: 'payroll',  label: 'DAO payroll',   short: 'Payroll',  pct: 15,   hex: '#06b6d4', y: 0.70 }, // FeeDistributor daoPayrollBps=1500
+  { id: 'headhunt', label: 'Referral pool', short: 'Referrals', pct: 10,   hex: '#a855f7', y: 0.90 }, // FeeDistributor headhunterPoolBps=1000
 ];
 
 interface Particle {
@@ -242,7 +241,7 @@ export function FeeFlowRiver() {
           </div>
           <h3 className="text-2xl font-bold text-white">Every fee is accounted for</h3>
           <p className="mt-1 max-w-2xl text-sm text-gray-400">
-            VFIDE collects fees from buyers, never merchants. Each fee splits five ways into pools that work for the network.
+            VFIDE collects fees from buyers, never merchants. The FeeDistributor routes each fee into five pools that work for the network.
           </p>
         </div>
         <div className="space-y-3 mt-4">
@@ -270,7 +269,7 @@ export function FeeFlowRiver() {
           </div>
           <h3 className="text-2xl font-bold text-white">Every fee is accounted for</h3>
           <p className="mt-1 max-w-2xl text-sm text-gray-400">
-            VFIDE collects fees from buyers, never merchants. Each fee splits five ways into pools that work for the network — supply burn, charity, top merchants, council pay, and referral rewards.
+            VFIDE collects fees from buyers, never merchants. The FeeDistributor routes each fee into five pools — supply burn, charity, top merchants, council pay, and referral rewards.
           </p>
         </div>
       </div>
@@ -402,7 +401,7 @@ export function FeeFlowRiver() {
       <div className="mt-4 flex items-start gap-2 text-[11px] text-gray-500">
         <Activity size={12} className="mt-0.5 flex-shrink-0" />
         <span>
-          Live demo with illustrative numbers — pre-mainnet. Composite end-to-end split across ProofScoreBurnRouter + FeeDistributor. Once VFIDE is live, this animates against real on-chain events.
+          Live demo with illustrative numbers — pre-mainnet. Reflects FeeDistributor.sol default allocation (DAO-adjustable). Once VFIDE is live, this animates against real on-chain events.
         </span>
       </div>
     </div>

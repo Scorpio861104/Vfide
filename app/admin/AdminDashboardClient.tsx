@@ -1411,7 +1411,7 @@ export default function AdminPanel() {
               <button
                 onClick={exportQrTelemetryCsv}
                 disabled={!qrEvents.length}
-                className="bg-accent-dark hover:bg-accent disabled:bg-gray-700 disabled:text-gray-400 text-white text-xs font-bold py-2 px-3 rounded-lg transition-colors"
+                className="bg-cyan-600 hover:bg-cyan-700 disabled:bg-gray-700 disabled:text-gray-400 text-white text-xs font-bold py-2 px-3 rounded-lg transition-colors"
               >
                 Export QR CSV
               </button>

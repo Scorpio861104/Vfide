@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Scale, Lock, FileText } from "lucide-react";
+import { PageSkeleton } from '@/components/layout/PageSkeleton';
 
 type TabType = 'legal' | 'privacy' | 'terms';
 
@@ -258,7 +259,7 @@ function TermsOfServiceTab() {
 
 export default function LegalPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-zinc-950" />}>
+    <Suspense fallback={<PageSkeleton />}>
       <LegalPageContent />
     </Suspense>
   );

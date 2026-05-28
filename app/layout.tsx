@@ -45,7 +45,7 @@ import '@/lib/ssr-animations.css';
 // and layout reflow on first wallet-connect click.
 import '@rainbow-me/rainbowkit/styles.css';
 import { CoreProviders } from '@/lib/providers/CoreProviders';
-import { getHtmlLang, normalizeLocale } from '@/lib/i18n';
+import { getHtmlLang, normalizeLocale, SUPPORTED_LOCALES } from '@/lib/i18n';
 
 // JetBrains Mono backs every numeric value across the product via the
 // <Numeric> component and the .font-numeric utility. Subsetted to latin
@@ -68,13 +68,13 @@ export const metadata: Metadata = {
     description:
       'Zero merchant fees. You hold your keys. A reputation that lowers your fees the more you use it.',
     type: 'website',
-    images: [{ url: '/og-image.svg', width: 1200, height: 630, alt: 'VFIDE — Zero merchant fees. You hold your keys.' }],
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'VFIDE — Zero merchant fees. You hold your keys.' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'VFIDE — Self-custodial payments and commerce on Base',
     description: 'Zero merchant fees. You hold your keys. A reputation that lowers your fees the more you use it.',
-    images: ['/og-image.svg'],
+    images: ['/og-image.png'],
   },
   manifest: '/manifest.json',
   icons: {
@@ -100,9 +100,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const cookieStore = await cookies();
   const localeCookie = cookieStore.get('vfide_locale')?.value ?? '';
   const serverLang = getHtmlLang(normalizeLocale(localeCookie));
+  // RTL direction: Arabic is the only RTL locale currently supported
+  const serverDir = serverLang === 'ar' ? 'rtl' : 'ltr';
 
   return (
-    <html lang={serverLang} suppressHydrationWarning data-csp-nonce={nonce || undefined} className={`${jetbrainsMono.variable} ${notoSansJP.variable} ${notoSansSC.variable} ${notoSansThai.variable}`}>
+    <html lang={serverLang} dir={serverDir} suppressHydrationWarning data-csp-nonce={nonce || undefined} className={`${jetbrainsMono.variable} ${notoSansJP.variable} ${notoSansSC.variable} ${notoSansThai.variable}`}>
       <body className="bg-zinc-950 text-white antialiased">
         {/* Skip-to-content: accessibility — visible on focus for keyboard users */}
         <a href="#main" className="skip-to-content">

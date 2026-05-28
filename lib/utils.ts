@@ -326,8 +326,8 @@ export function formatUSD(amount: number): string {
  *   TRUSTED    ≥5600  — Emerald
  *   GOVERNANCE ≥5400  — Cyan
  *   NEUTRAL    ≥5000  — Blue
- *   LOW TRUST  ≥3500  — Yellow
- *   RISKY       <3500 — Red
+ *   LOW TRUST  ≥4000  — Yellow
+ *   RISKY       <4000 — Red
  */
 export function getScoreTierColor(score: number): string {
   if (score >= 8000) return '#F59E0B' // ELITE      — Amber
@@ -335,7 +335,7 @@ export function getScoreTierColor(score: number): string {
   if (score >= 5600) return '#10B981' // TRUSTED    — Emerald
   if (score >= 5400) return '#00F0FF' // GOVERNANCE — Cyan
   if (score >= 5000) return '#3B82F6' // NEUTRAL    — Blue
-  if (score >= 3500) return '#EAB308' // LOW TRUST  — Yellow
+  if (score >= 4000) return '#EAB308' // LOW TRUST  — Yellow
   return '#EF4444'                    // RISKY      — Red
 }
 

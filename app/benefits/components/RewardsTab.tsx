@@ -9,7 +9,7 @@ export function RewardsTab({ isConnected: _isConnected = false }: { isConnected?
       color: 'border-emerald-500/40 bg-emerald-500/5',
       labelColor: 'text-emerald-400',
       title: 'Fee Discounts',
-      description: 'Earn up to 12% off transaction fees by leveling up through quests and daily activity.',
+      description: 'Complete quests to raise your ProofScore — a higher score means a lower buyer fee, all the way down to 0.25% at Elite tier.',
       cta: { label: 'Start Quests', href: '/quests' },
     },
     {

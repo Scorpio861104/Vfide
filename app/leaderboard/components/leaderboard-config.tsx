@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 /**
  * Tier color config aligned with the 7-tier ProofScore system per VFIDE Manual v1.0.
  * Tiers: Elite(≥8000) / Council(≥7000) / Trusted(≥5600) / Governance(≥5400)
- *        / Neutral(≥5000) / Low Trust(≥3500) / Risky(<3500)
+ *        / Neutral(≥5000) / Low Trust(≥4000) / Risky(<4000)
  */
 export const tierColors: Record<string, { gradient: string; text: string; glow: string; bg: string; border: string }> = {
   'ELITE':      { gradient: 'from-emerald-400 to-[#00CC6A]',   text: 'text-emerald-400',  glow: 'shadow-emerald-400/30',  bg: 'bg-emerald-400/20',  border: 'border-emerald-400/30' },

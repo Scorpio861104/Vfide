@@ -3,20 +3,22 @@
 export const dynamic = 'force-dynamic';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { Clock, History, Zap } from 'lucide-react';
+import { History, Info, Users, Zap } from 'lucide-react';
 import { useState } from 'react';
 
 import { Footer } from '@/components/layout/Footer';
 
-import { ActiveTab } from './components/ActiveTab';
+import { LendersTab } from './components/LendersTab';
+import { BorrowInfoTab } from './components/BorrowInfoTab';
 import { BorrowTab } from './components/BorrowTab';
 import { HistoryTab } from './components/HistoryTab';
 
-type TabId = 'borrow' | 'active' | 'history';
+type TabId = 'borrow' | 'lenders' | 'info' | 'history';
 
 const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
   { id: 'borrow',  label: 'Borrow',       icon: Zap     },
-  { id: 'active',  label: 'Active Loans', icon: Clock   },
+  { id: 'lenders', label: 'Lenders',      icon: Users   },
+  { id: 'info',    label: 'How It Works', icon: Info    },
   { id: 'history', label: 'History',      icon: History },
 ];
 
@@ -83,7 +85,8 @@ export default function FlashLoansPage() {
             initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}>
             {activeTab === 'borrow'  && <BorrowTab />}
-            {activeTab === 'active'  && <ActiveTab />}
+            {activeTab === 'lenders' && <LendersTab />}
+            {activeTab === 'info'    && <BorrowInfoTab />}
             {activeTab === 'history' && <HistoryTab />}
           </motion.div>
         </AnimatePresence>

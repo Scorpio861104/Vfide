@@ -18,6 +18,7 @@ import { LiveSystemStats } from '@/components/stats/LiveSystemStats'
 import { TransactionNotification, useTransactionNotifications } from '@/components/wallet/TransactionNotification'
 import { motion } from 'framer-motion'
 import { useAccount } from 'wagmi'
+import { DemoDataBanner } from '@/components/layout/DemoDataBanner';
 
 export default function LiveDemoPage() {
   const { address, isConnected } = useAccount()
@@ -44,6 +45,7 @@ export default function LiveDemoPage() {
   
   return (
     <>
+      <DemoDataBanner />
       <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] px-3 sm:px-4 overflow-x-hidden relative">
       {/* Ambient orbs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">

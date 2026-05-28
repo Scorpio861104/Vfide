@@ -61,7 +61,7 @@ function getTierFromScore(score: number): string {
   if (score >= 5600) return 'TRUSTED';
   if (score >= 5400) return 'GOVERNANCE';
   if (score >= 5000) return 'NEUTRAL';
-  if (score >= 3500) return 'LOW TRUST';
+  if (score >= 4000) return 'LOW TRUST';
   return 'RISKY';
 }
 

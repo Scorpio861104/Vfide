@@ -23,6 +23,7 @@ import { useWizardState } from '@/components/wizard';
 import { CHAPTERS } from '@/components/wizard';
 import { useLocale } from '@/hooks/useLocale';
 import { ONBOARDING_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
+import { PageSkeleton } from '@/components/layout/PageSkeleton';
 
 function OnboardingPageContent() {
   const router = useRouter();
@@ -150,7 +151,7 @@ export default function OnboardingPage() {
   const [locale] = useLocale();
   const _copy = pickLocaleCopy(ONBOARDING_TRANSLATIONS, locale); // onboarding page i18n
   return (
-    <Suspense fallback={<div className="min-h-screen bg-zinc-950" />}>
+    <Suspense fallback={<PageSkeleton />}>
       <OnboardingPageContent />
     </Suspense>
   );

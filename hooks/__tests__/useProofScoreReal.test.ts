@@ -92,13 +92,13 @@ describe('useProofScore - Comprehensive Tests', () => {
       expect(getScoreTier(6999)).toBe('Trusted')
     })
 
-    it('should return Low Trust for score >= 3500 and < 5000', () => {
-      expect(getScoreTier(3500)).toBe('Low Trust')
+    it('should return Low Trust for score >= 4000 and < 5000', () => {
+      expect(getScoreTier(4000)).toBe('Low Trust')
       expect(getScoreTier(4000)).toBe('Low Trust')
       expect(getScoreTier(4999)).toBe('Low Trust')
     })
 
-    it('should return Risky for score < 3500', () => {
+    it('should return Risky for score < 4000', () => {
       expect(getScoreTier(0)).toBe('Risky')
       expect(getScoreTier(1000)).toBe('Risky')
       expect(getScoreTier(3499)).toBe('Risky')
@@ -284,7 +284,7 @@ describe('useProofScore - Comprehensive Tests', () => {
 
       expect(result.current.minForGovernance).toBe(5400)
       expect(result.current.minForMerchant).toBe(5600)
-      expect(result.current.lowTrustThreshold).toBe(3500)
+      expect(result.current.lowTrustThreshold).toBe(4000)
       expect(result.current.highTrustThreshold).toBe(8000)
     })
   })
