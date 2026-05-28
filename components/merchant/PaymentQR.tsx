@@ -38,7 +38,9 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
   const { address } = useAccount()
   const merchantInfo = useIsMerchant(address)
   const [amount, setAmount] = useState(defaultAmount || '')
-  const [orderId, setOrderId] = useState(defaultOrderId || '')
+  const [orderId, setOrderId] = useState(
+    () => defaultOrderId?.trim() || `QR-${Math.floor(Date.now() / 1000)}`
+  )
   const [copiedTarget, setCopiedTarget] = useState<'link' | 'address' | null>(null)
   const [signature, setSignature] = useState<`0x${string}` | null>(null)
   const [expiresAt, setExpiresAt] = useState<number | null>(null)
@@ -89,6 +91,8 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
 
   const signQrPayload = async () => {
     if (!address) return
+    const parsedAmount = parseFloat(amount)
+    if (!amount || isNaN(parsedAmount) || parsedAmount <= 0) return
     setSignatureError(null)
 
     try {
@@ -261,8 +265,9 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
 
           <button
             onClick={signQrPayload}
-            disabled={isSigning}
-            className="w-full mb-4 flex items-center justify-center gap-2 px-4 py-3 bg-emerald-500 hover:bg-emerald-600 rounded-lg text-white font-bold transition-colors disabled:opacity-60"
+            disabled={isSigning || !amount || parseFloat(amount) <= 0}
+            title={!amount || parseFloat(amount) <= 0 ? 'Enter an amount before signing' : undefined}
+            className="w-full mb-4 flex items-center justify-center gap-2 px-4 py-3 bg-emerald-500 hover:bg-emerald-600 rounded-lg text-white font-bold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {isSigning ? <Loader2 className="animate-spin" size={18} /> : <ShieldCheck size={18} />}
             {isSigning ? 'Signing...' : securePayloadReady ? 'Re-sign QR' : 'Sign & Lock QR'}
