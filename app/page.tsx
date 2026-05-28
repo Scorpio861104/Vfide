@@ -101,7 +101,7 @@ export default function Home() {
         {/* ════════════════════════════════════════
             HERO SECTION — Cinematic
         ════════════════════════════════════════ */}
-        <section ref={heroRef} className="hero-section relative isolate pt-28 pb-24 sm:pt-36 sm:pb-32 overflow-hidden">
+        <section ref={heroRef} className="hero-section relative isolate pt-20 pb-16 sm:pt-36 sm:pb-32 overflow-hidden">
           {/* Animated mesh background */}
           <div className="hero-mesh-bg" aria-hidden="true">
             <div className="mesh-orb-cyan" style={{ width: '60%', height: '60%', top: '-15%', left: '-10%' }} />
@@ -118,7 +118,7 @@ export default function Home() {
             style={{ y: heroY, opacity: heroOpacity }}
             className="container mx-auto px-4 max-w-6xl relative"
           >
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 items-center">
               {/* Text column */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -141,18 +141,18 @@ export default function Home() {
                   <span className="gradient-text-hero">not platforms.</span>
                 </h1>
 
-                <p className="text-lg sm:text-xl text-zinc-300 mb-3 max-w-md leading-relaxed">
+                <p className="text-lg sm:text-xl text-zinc-300 mb-6 sm:mb-3 max-w-md leading-relaxed">
                   VFIDE is a payments app — like PayPal or Stripe, but{' '}
                   <span className="text-white font-semibold">sellers pay zero fees</span>,
                   and no company can freeze your account or reverse your transaction.
                   Ever.
                 </p>
-                <p className="text-base text-zinc-400 mb-2 max-w-md leading-relaxed">
+                <p className="hidden sm:block text-base text-zinc-400 mb-2 max-w-md leading-relaxed">
                   Built because billions of people have been failed by traditional
                   financial systems — through extraction, exclusion, and gatekeeping.
                   No bank account required. No middleman. No permission needed.
                 </p>
-                <p className="text-base text-zinc-400 mb-8 max-w-md leading-relaxed">
+                <p className="hidden sm:block text-base text-zinc-400 mb-8 max-w-md leading-relaxed">
                   Buyers pay a small fee that drops automatically as their reputation
                   grows — down to 0.25% at the highest trust level. Sellers pay nothing.
                 </p>
@@ -196,7 +196,7 @@ export default function Home() {
                       initial={{ opacity: 0, x: -15 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.5, delay: 0.3 + i * 0.08 }}
-                      className="flex items-center gap-2 text-sm text-zinc-400"
+                      className={`${i >= 2 ? 'hidden sm:flex' : 'flex'} items-center gap-2 text-sm text-zinc-400`}
                     >
                       <CheckCircle2 size={14} className="text-accent shrink-0" aria-hidden="true" />
                       {point}
@@ -416,7 +416,7 @@ export default function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.7 }}
-              className="cta-gradient-bg p-12 text-center"
+              className="cta-gradient-bg p-8 sm:p-12 text-center"
             >
               <div className="badge-live mb-6 w-fit mx-auto">
                 Zero fees. Open source. Self-custody.

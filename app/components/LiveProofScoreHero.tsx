@@ -271,8 +271,8 @@ export function LiveProofScoreHero() {
 
           <div className="space-y-2">
             {allocations.map((a) => (
-              <div key={a.id} className="flex items-center gap-3">
-                <div className="w-20 text-xs text-gray-400">{a.label}</div>
+              <div key={a.id} className="flex items-center gap-2">
+                <div className="w-16 shrink-0 text-xs text-gray-400 truncate">{a.label}</div>
                 <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-white/5">
                   <motion.div
                     className="absolute inset-y-0 left-0 rounded-full"
@@ -281,10 +281,10 @@ export function LiveProofScoreHero() {
                     transition={{ type: 'spring', stiffness: 180, damping: 22 }}
                   />
                 </div>
-                <div className="w-20 text-right">
+                <div className="w-16 shrink-0 text-right">
                   <Numeric value={a.amount} format="currency" size="xs" weight={500} tone="neutral" />
                 </div>
-                <div className="w-10 text-right">
+                <div className="w-8 shrink-0 text-right">
                   <Numeric value={a.pct} format="integer" size="xs" tone="muted" weight={500} />
                   <span className="text-[10px] text-gray-500">%</span>
                 </div>
