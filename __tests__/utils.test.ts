@@ -154,8 +154,8 @@ describe('getScoreTierColor', () => {
     expect(getScoreTierColor(6999)).toBe('#10B981')
   })
 
-  it('returns yellow for LOW TRUST (>=3500)', () => {
-    expect(getScoreTierColor(3500)).toBe('#EAB308')
+  it('returns yellow for LOW TRUST (>=4000, <5000)', () => {
+    expect(getScoreTierColor(4500)).toBe('#EAB308')
     expect(getScoreTierColor(4999)).toBe('#EAB308')
   })
 

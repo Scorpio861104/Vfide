@@ -343,10 +343,17 @@ describe('Guardians page Next of Kin inbox', () => {
   it('navigates to the Inheritance tab and shows empty-state watchlist', async () => {
     renderGuardiansPage();
 
+    await waitFor(() => {
+      const inheritanceTabs = screen.getAllByRole('tab', { name: /Inheritance/i });
+      expect(inheritanceTabs.length).toBeGreaterThan(0);
+    }, { timeout: 5000 });
+
     const inheritanceTabs = screen.getAllByRole('tab', { name: /Inheritance/i });
     fireEvent.click(inheritanceTabs[0]);
 
-    expect(await screen.findByText(/No vaults tracked yet/i)).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByText(/No vaults tracked yet/i)).toBeTruthy();
+    }, { timeout: 5000 });
   });
 
   it('renders the guardians page with correct tab structure', () => {

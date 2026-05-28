@@ -130,7 +130,7 @@ describe('useProofScore - Comprehensive Tests', () => {
 
       expect(result.current.score).toBe(7500)
       expect(result.current.tier.label).toBe('Council')
-      expect(result.current.burnFee).toBe(1.0)
+      expect(result.current.burnFee).toBeCloseTo(0.84375)
       expect(result.current.color).toBe('#00F0FF')
       expect(result.current.canVote).toBe(true)
       expect(result.current.canMerchant).toBe(true)
@@ -146,7 +146,7 @@ describe('useProofScore - Comprehensive Tests', () => {
 
       expect(result.current.score).toBe(6000)
       expect(result.current.tier.label).toBe('Trusted')
-      expect(result.current.burnFee).toBe(2.5)
+      expect(result.current.burnFee).toBeCloseTo(2.625)
       expect(result.current.color).toBe('#FFD700')
       expect(result.current.canVote).toBe(true)
       expect(result.current.canMerchant).toBe(true)
@@ -160,7 +160,7 @@ describe('useProofScore - Comprehensive Tests', () => {
 
       expect(result.current.score).toBe(4500)
       expect(result.current.tier.label).toBe('Low Trust')
-      expect(result.current.burnFee).toBe(3.5)
+      expect(result.current.burnFee).toBeCloseTo(4.40625)
       expect(result.current.color).toBe('#FFA500')
       expect(result.current.canVote).toBe(false)
       expect(result.current.canMerchant).toBe(false)
@@ -363,25 +363,25 @@ describe('useProofScore - Comprehensive Tests', () => {
       expect(result.current.burnFee).toBe(0.25)
     })
 
-    it('should return 1.0% fee for score >= 7000 and < 8000', () => {
+    it('should return ~0.25% fee at score 7999 (linear formula)', () => {
       mockScore(BigInt(7999))
 
       const { result } = renderHook(() => useProofScore())
-      expect(result.current.burnFee).toBe(1.0)
+      expect(result.current.burnFee).toBeCloseTo(0.25119)
     })
 
-    it('should return 2.5% fee for score >= 5000 and < 7000', () => {
+    it('should return ~3.81% fee at score 5000 (linear formula)', () => {
       mockScore(BigInt(5000))
 
       const { result } = renderHook(() => useProofScore())
-      expect(result.current.burnFee).toBe(2.5)
+      expect(result.current.burnFee).toBeCloseTo(3.8125)
     })
 
-    it('should return 3.5% fee for score >= 4000 and < 5000', () => {
+    it('should return ~3.81% fee at score 4999 (linear formula)', () => {
       mockScore(BigInt(4999))
 
       const { result } = renderHook(() => useProofScore())
-      expect(result.current.burnFee).toBe(3.5)
+      expect(result.current.burnFee).toBeCloseTo(3.81369)
     })
 
     it('should return 5.0% fee for score < 4000', () => {

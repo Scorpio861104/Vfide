@@ -138,7 +138,7 @@ describe('Home page pathways', () => {
     // translator card that anchors the rewrite.
     expect(screen.getAllByText(/Merchant fee/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Self-custody/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Buyer-protection pool/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Sanctum Fund/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/VFIDE in plain English/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Get started in/i).length).toBeGreaterThan(0);
   });

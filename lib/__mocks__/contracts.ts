@@ -12,6 +12,8 @@ export const CONTRACT_ADDRESSES = {
   VFIDEToken: addr(1),
   StablecoinRegistry: addr(2),
   MerchantPortal: addr(4),
+  MerchantPortalViewer: addr(43),
+  VFIDEAccessControl: addr(44),
   VaultHub: addr(5),
   Seer: addr(6),
   SeerView: addr(9),

@@ -42,6 +42,8 @@ describe('lib/validateProduction strict production chain checks', () => {
     NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS: '0xc0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0',
     NEXT_PUBLIC_ECOSYSTEM_VAULT_VIEW_ADDRESS: '0xd0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0d0',
     NEXT_PUBLIC_CARD_BOUND_VAULT_DEPLOYER_ADDRESS: '0xe0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0',
+    NEXT_PUBLIC_MERCHANT_PORTAL_VIEWER_ADDRESS: '0xf0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0',
+    NEXT_PUBLIC_VFIDE_ACCESS_CONTROL_ADDRESS: '0xf1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1',
     NEXT_PUBLIC_APP_URL: 'https://vfide.example',
     APP_ORIGIN: 'https://vfide.example',
     DATABASE_URL: 'postgresql://postgres:postgres@localhost:5432/vfide_dev',

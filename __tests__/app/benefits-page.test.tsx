@@ -159,9 +159,9 @@ describe('Benefits page pathways', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Membership Tiers/i }));
 
-    expect(screen.getByRole('heading', { name: /Membership Tiers/i })).toBeTruthy();
-    expect(screen.getByText(/Bronze/i)).toBeTruthy();
-    expect(screen.getByText(/Platinum/i)).toBeTruthy();
+    expect(screen.getByRole('heading', { name: /ProofScore Tiers/i })).toBeTruthy();
+    expect(screen.getAllByText(/Risky/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Elite/i).length).toBeGreaterThan(0);
   });
 
   it('switches to rewards and stats tabs with connect-state stats', () => {

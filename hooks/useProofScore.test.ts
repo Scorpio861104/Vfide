@@ -54,7 +54,7 @@ describe('useProofScore hook', () => {
 describe('tier helpers', () => {
   test('getScoreTierObject covers all ranges', () => {
     expect(getScoreTierObject(1000)).toBe(PROOF_SCORE_TIERS.RISKY)
-    expect(getScoreTier(3600)).toBe(PROOF_SCORE_TIERS.LOW_TRUST.label)
+    expect(getScoreTier(4200)).toBe(PROOF_SCORE_TIERS.LOW_TRUST.label)
     expect(getScoreTierObject(5400)).toBe(PROOF_SCORE_TIERS.GOVERNANCE)
     expect(getScoreTier(7500)).toBe(PROOF_SCORE_TIERS.COUNCIL.label)
     expect(getScoreTierObject(9999)).toBe(PROOF_SCORE_TIERS.ELITE)
@@ -72,7 +72,7 @@ describe('contract helper hooks', () => {
     const { result } = renderHook(() => useSeerThresholds())
     expect(result.current.minForGovernance).toBe(PROOF_SCORE_PERMISSIONS.MIN_FOR_GOVERNANCE)
     expect(result.current.minForMerchant).toBe(PROOF_SCORE_PERMISSIONS.MIN_FOR_MERCHANT)
-    expect(result.current.lowTrustThreshold).toBe(3500)
+    expect(result.current.lowTrustThreshold).toBe(4000)
     expect(result.current.highTrustThreshold).toBe(8000)
   })
 

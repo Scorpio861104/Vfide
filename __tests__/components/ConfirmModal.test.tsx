@@ -172,7 +172,7 @@ describe('ConfirmModal', () => {
   it('applies info variant styling', () => {
     render(<ConfirmModal {...defaultProps} variant="info" />)
     // Info variant has cyan background styling - use proper escaped selector
-    const iconContainers = document.querySelectorAll('[class*="bg-cyan-400"]')
+    const iconContainers = document.querySelectorAll('[class*="bg-accent"]')
     expect(iconContainers.length).toBeGreaterThan(0)
   })
 
