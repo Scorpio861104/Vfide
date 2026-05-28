@@ -9,6 +9,66 @@ import { LiveProofScoreProvider } from '@/components/navigation/LiveProofScorePr
 import { RealtimeProvider, UserProvider } from '@/lib/data';
 import { WizardMount } from '@/components/wizard/WizardMount';
 import { WizardStateProvider } from '@/components/wizard/useWizardState';
+import { MonumentBackdrop } from '@/app/components/MonumentBackdrop';
+import { useProofScore } from '@/hooks/useProofScore';
+import { PROOF_SCORE_TIERS } from '@/lib/constants';
+
+// Routes where the fixed monument should be hidden (it would clash with their
+// own MonumentBackdrop or be visually distracting on narrow-focus pages).
+const MONUMENT_BLACKLIST = new Set([
+  '/',        // landing page renders its own hero/full variants already
+]);
+
+/**
+ * GlobalMonument — renders the fixed viewport-locked MonumentBackdrop.
+ * Intensity is wired to the connected user's ProofScore so the vertex
+ * glow brightens as reputation grows. Fades to near-invisible on scroll
+ * so it never competes with body content.
+ */
+function GlobalMonument({ pathname }: { pathname: string }) {
+  const { score } = useProofScore();
+
+  // Hide on blacklisted routes (they manage their own monument)
+  if (MONUMENT_BLACKLIST.has(pathname)) return null;
+
+  // Map score (0–10000) to intensity (0.1..0.9).
+  // Min 0.1 so disconnected visitors still see a faint mark.
+  const intensity = score === null
+    ? undefined  // autonomous pulse for disconnected visitors
+    : Math.max(0.1, Math.min(0.9, score / 10000));
+
+  // Derive vertex hex from tier colour so it shifts cyan→violet→green
+  // as the user climbs tiers.
+  const TIER_HEX: Record<string, string> = {
+    Risky:      '#FF4444',
+    'Low Trust':'#FFA500',
+    Neutral:    '#17E8F0',
+    Governance: '#60A5FA',
+    Trusted:    '#34D399',
+    Council:    '#A78BFA',
+    Elite:      '#00FF88',
+  };
+  const tierName =
+    score === null ? 'Neutral'
+    : score >= 8000 ? 'Elite'
+    : score >= 7000 ? 'Council'
+    : score >= 5600 ? 'Trusted'
+    : score >= 5400 ? 'Governance'
+    : score >= 5000 ? 'Neutral'
+    : score >= 3500 ? 'Low Trust'
+    : 'Risky';
+
+  const vertexHex = TIER_HEX[tierName] ?? '#17E8F0';
+
+  return (
+    <MonumentBackdrop
+      variant="fixed"
+      intensity={intensity}
+      vertexHex={vertexHex}
+      scrollFade
+    />
+  );
+}
 
 interface ClientLayoutProps {
   children: ReactNode;
@@ -51,6 +111,8 @@ export function ClientLayout({ children }: ClientLayoutProps) {
       <UserProvider address={address}>
         <LiveProofScoreProvider>
           <WizardStateProvider>
+            {/* Global fixed monument — follows the user through every page */}
+            <GlobalMonument pathname={pathname} />
             <AppShell>{children}</AppShell>
             <Suspense fallback={null}><WizardMount /></Suspense>
           </WizardStateProvider>
