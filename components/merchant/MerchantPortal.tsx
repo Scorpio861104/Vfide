@@ -1792,16 +1792,20 @@ function ProductsSection({ merchantAddress }: { merchantAddress: string }) {
     const payload: Record<string, unknown> = { ...form, price: Number(form.price) };
     if (form.platform_category_id) payload.platform_category_id = Number(form.platform_category_id);
     else delete payload.platform_category_id;
-    const res = await fetch('/api/merchant/products', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    if (res.ok) {
-      const d = await res.json();
-      setProducts(prev => [d.product, ...prev]);
-      setForm({ name: '', price: '', description: '', product_type: 'physical', platform_category_id: '' });
-      setShowAdd(false);
+    try {
+      const res = await fetch('/api/merchant/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        const d = await res.json();
+        setProducts(prev => [d.product, ...prev]);
+        setForm({ name: '', price: '', description: '', product_type: 'physical', platform_category_id: '' });
+        setShowAdd(false);
+      }
+    } catch {
+      // Network error — product not saved, form stays open
     }
   };
 
@@ -1878,13 +1882,17 @@ function OrdersSection({ merchantAddress }: { merchantAddress: string }) {
   }, [merchantAddress]);
 
   const updateStatus = async (id: string, status: string) => {
-    const res = await fetch('/api/merchant/orders', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ order_id: id, status }),
-    });
-    if (res.ok) {
-      setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
+    try {
+      const res = await fetch('/api/merchant/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_id: id, status }),
+      });
+      if (res.ok) {
+        setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
+      }
+    } catch {
+      // Network error — order status unchanged
     }
   };
 

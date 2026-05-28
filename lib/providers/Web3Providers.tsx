@@ -9,6 +9,7 @@
 'use client';
 
 import React, { ReactNode, useEffect, useRef, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { WagmiProvider, useAccount } from 'wagmi';
 import { RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -143,7 +144,23 @@ const queryClient = new QueryClient({
 });
 
 // ── Root export ──────────────────────────────────────────────────────────────
+// Marketing routes that render without any Web3/wallet context.
+// These pages don't connect wallets — loading wagmi/RainbowKit adds ~65KB gz for nothing.
+const MARKETING_PREFIXES = ['/about', '/seer-academy', '/merchants'];
+
+function isMarketingRoute(path: string): boolean {
+  return MARKETING_PREFIXES.some((prefix) => path === prefix || path.startsWith(prefix + '/'));
+}
+
 export function Web3Providers({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+
+  // Skip the entire wallet stack for pure-marketing pages.
+  // Children render normally; they just won't have wallet context.
+  if (isMarketingRoute(pathname ?? '')) {
+    return <>{children}</>;
+  }
+
   return (
     // FIX PERF-1: reconnectOnMount=false — useWalletPersistence handles
     // reconnection; having both active caused duplicate RPC calls.

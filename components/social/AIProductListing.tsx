@@ -73,26 +73,20 @@ export function AIProductListing({ onPublish, onClose }: AIProductListingProps) 
         reader.readAsDataURL(blob);
       });
 
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      // Route through the server-side proxy — keeps the Anthropic API key
+      // out of the browser bundle and handles CORS.
+      const response = await fetch('/api/ai/product-listing', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1000,
-          messages: [{
-            role: 'user',
-            content: [
-              { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64 } },
-              { type: 'text', text: 'You are a product listing assistant for a marketplace serving market sellers in West Africa. Analyze this product photo and return ONLY a JSON object with: name (string), description (1-2 sentences), suggestedPrice (number in USD), currency (string, "$"), category (string), tags (array of 3-5 discovery tags). No markdown, no backticks, just JSON.' }
-            ]
-          }],
-        }),
+        body: JSON.stringify({ base64, mediaType: 'image/jpeg' }),
       });
 
+      if (!response.ok) {
+        throw new Error(`Listing service error: ${response.status}`);
+      }
+
       const data = await response.json();
-      const text = data.content?.find((c: any) => c.type === 'text')?.text || '{}';
-      const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
-      setListing(parsed);
+      setListing(data.listing);
     } catch {
       setListing({ name: 'Product', description: 'A great product from the market', suggestedPrice: 10, currency: '$', category: 'General', tags: ['market', 'handmade'] });
     } finally { setGenerating(false); }
