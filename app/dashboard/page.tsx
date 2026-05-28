@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Home, BarChart3, Award, Calculator, Activity, Wallet2, TrendingUp, Zap } from 'lucide-react';
-import { ProofScoreRing, ProofScoreTierProgress } from '@/components/proofscore';
+import { ProofScoreRing, ProofScoreTierProgress, getTier } from '@/components/proofscore';
 import { FeeSavingsCard } from '@/components/fees';
 import { OnboardingProgressBar } from '@/components/onboarding';
 import { NonCustodialNotice } from '@/components/compliance';
@@ -40,6 +40,19 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const { address } = useAccount();
   const { score: proofScore, burnFee: feeRate, isDisconnected: _scoreDisconnected } = useProofScore();
+
+  // ── Tier-responsive colour for ambient orbs + hero header ──────────────
+  const TIER_HEX: Record<string, string> = {
+    Risky:      '#FF4444',
+    'Low Trust':'#FFA500',
+    Neutral:    '#17E8F0',
+    Governance: '#60A5FA',
+    Trusted:    '#34D399',
+    Council:    '#A78BFA',
+    Elite:      '#00FF88',
+  };
+  const tierName = proofScore !== null ? getTier(proofScore ?? 0).name : 'Neutral';
+  const tierHex  = TIER_HEX[tierName] ?? '#17E8F0';
   const [txCount, setTxCount] = useState(0);
   const [totalVolume, setTotalVolume] = useState(0);
 
@@ -64,16 +77,25 @@ export default function DashboardPage() {
       <OnboardingProgressBar />
 
       <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] relative">
-        {/* Ambient orbs */}
+        {/* Ambient orbs — colour tracks the user's ProofScore tier */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
-            style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
-          <div className="absolute top-1/2 -right-32 w-[500px] h-[500px] rounded-full opacity-[0.05]"
-            style={{ background: 'radial-gradient(circle, #8b5cf6 0%, transparent 70%)' }} />
+          <div
+            className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full transition-all duration-1000"
+            style={{ opacity: 0.07, background: `radial-gradient(circle, ${tierHex} 0%, transparent 70%)` }}
+          />
+          <div
+            className="absolute top-1/2 -right-32 w-[500px] h-[500px] rounded-full transition-all duration-1000"
+            style={{ opacity: 0.04, background: `radial-gradient(circle, ${tierHex} 0%, transparent 70%)` }}
+          />
         </div>
         <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         {/* ── Dashboard hero header ── */}
-        <div className="relative dashboard-hero-bg border-b border-white/5">
+        <div
+          className="relative border-b border-white/5 transition-all duration-1000"
+          style={{
+            background: `linear-gradient(135deg, ${tierHex}08 0%, ${tierHex}04 50%, transparent 100%)`,
+          }}
+        >
           <div className="container mx-auto px-4 max-w-6xl py-10">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
@@ -107,7 +129,7 @@ export default function DashboardPage() {
                   <TrendingUp size={15} className="text-accent" />
                   <div>
                     <p className="text-[10px] text-zinc-500 uppercase tracking-wider">ProofScore</p>
-                    <p className="text-lg font-bold text-glow-cyan leading-none">{proofScore!.toLocaleString()}</p>
+                    <p className="text-lg font-bold leading-none" style={{ color: tierHex }}>{(proofScore ?? 0).toLocaleString()}</p>
                   </div>
                 </div>
                 <div className="glass-card-premium px-4 py-2.5 flex items-center gap-2.5">
