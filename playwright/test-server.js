@@ -282,6 +282,187 @@ const paymentsPage = () => wrap('Send Payment — VFIDE', `
   </form>
 `, '/payments')
 
+
+// ─── /qr-sign ────────────────────────────────────────────────────────────────
+// Simulates the PaymentQR.tsx sign-side UI for Playwright round-trip tests.
+// Accepts ?signed=true&amount=<n> to pre-render a "signed" state.
+const qrSignPage = (qs = '') => {
+  const params = new URLSearchParams(qs)
+  const signed = params.get('signed') === 'true'
+  const amount = params.get('amount') || ''
+  const orderId = params.get('orderId') || `QR-${Math.floor(Date.now() / 1000)}`
+  const expTime = signed ? new Date(Date.now() + 15 * 60 * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''
+
+  return wrap('QR Payment Sign — VFIDE', `
+    <div data-testid="qr-sign-root" aria-label="Payment QR generator">
+      <h1>Payment QR Code</h1>
+
+      <label for="qr-amount">Amount (VFIDE) — required to sign</label>
+      <input
+        id="qr-amount"
+        data-testid="qr-amount-input"
+        type="number"
+        step="0.01"
+        min="0"
+        value="${amount}"
+        placeholder="0.00 — required to sign"
+        aria-label="Payment amount in VFIDE"
+        oninput="handleAmountChange(this.value)"
+      />
+
+      <label for="qr-orderid">Order ID / Reference</label>
+      <input
+        id="qr-orderid"
+        data-testid="qr-orderid-input"
+        type="text"
+        value="${orderId}"
+        placeholder="Auto-generated — edit to customise"
+        aria-label="Order ID"
+        oninput="handleOrderChange(this.value)"
+      />
+
+      <!-- Payment link — blank until signed -->
+      <label for="qr-link">Payment Link</label>
+      <input
+        id="qr-link"
+        data-testid="qr-link-input"
+        type="text"
+        readonly
+        aria-label="Secure payment link"
+        value="${signed ? 'https://vfide.com/pay?merchant=0xABC&amount=' + amount + '&sig=0xMOCK&exp=9999' : ''}"
+        placeholder="${signed ? '' : 'Sign the QR to generate a shareable link'}"
+      />
+
+      <!-- Signed badge — only shown when signed -->
+      ${signed ? `<div data-testid="qr-signed-badge" role="status" aria-label="QR signed" style="color:#10b981">
+        ✓ Signed QR active • expires ${expTime}
+      </div>` : ''}
+
+      <!-- Sign button — disabled when amount empty/zero -->
+      <button
+        data-testid="qr-sign-btn"
+        aria-label="Sign and lock QR"
+        onclick="handleSign()"
+        ${(!amount || parseFloat(amount) <= 0) ? 'disabled' : ''}
+      >
+        ${signed ? 'Re-sign QR' : 'Sign &amp; Lock QR'}
+      </button>
+
+      <script>
+        var _amount = "${amount}";
+        var _orderId = "${orderId}";
+        var _signed = ${signed ? 'true' : 'false'};
+
+        function setSignedState(isSigned) {
+          _signed = isSigned;
+          var badge = document.querySelector('[data-testid="qr-signed-badge"]');
+          var linkInput = document.querySelector('[data-testid="qr-link-input"]');
+          var signBtn = document.querySelector('[data-testid="qr-sign-btn"]');
+
+          if (isSigned) {
+            if (!badge) {
+              badge = document.createElement('div');
+              badge.setAttribute('data-testid', 'qr-signed-badge');
+              badge.setAttribute('role', 'status');
+              badge.style.color = '#10b981';
+              signBtn.parentNode.insertBefore(badge, signBtn);
+            }
+            badge.textContent = '\u2713 Signed QR active';
+            badge.style.display = '';
+            linkInput.value = 'https://vfide.com/pay?merchant=0xABC&amount=' + _amount + '&sig=0xMOCK';
+            linkInput.placeholder = '';
+          } else {
+            if (badge) badge.style.display = 'none';
+            linkInput.value = '';
+            linkInput.placeholder = 'Sign the QR to generate a shareable link';
+          }
+        }
+
+        function handleAmountChange(val) {
+          _amount = val;
+          var btn = document.querySelector('[data-testid="qr-sign-btn"]');
+          var parsed = parseFloat(val);
+          if (!val || isNaN(parsed) || parsed <= 0) {
+            btn.disabled = true;
+          } else {
+            btn.disabled = false;
+          }
+          // Changing amount clears signed state
+          setSignedState(false);
+        }
+
+        function handleOrderChange(val) {
+          _orderId = val;
+          setSignedState(false);
+        }
+
+        function handleSign() {
+          if (!_amount || parseFloat(_amount) <= 0) return;
+          setSignedState(true);
+        }
+      </script>
+    </div>
+  `, '/qr-sign')
+}
+
+
+// ─── /pay ────────────────────────────────────────────────────────────────────
+// Simulates the PayContent.tsx pay-side UI for Playwright round-trip tests.
+// sigState query param drives UI: valid | missing | invalid | expired | verifying
+const payPage = (qs = '') => {
+  const params = new URLSearchParams(qs)
+  const source = params.get('source') || 'checkout'
+  const amount = params.get('amount') || ''
+  const orderId = params.get('orderId') || ''
+  const merchant = params.get('merchant') || ''
+  const sigState = params.get('sigState') || (source === 'qr' ? 'missing' : 'valid')
+  const settlement = params.get('settlement') || 'escrow'
+
+  const isQr = source === 'qr'
+  const sigValid = sigState === 'valid'
+  const amountOk = parseFloat(amount) > 0
+  const payEnabled = sigValid && amountOk
+
+  let sigWarningText = ''
+  if (isQr && sigState === 'missing')  sigWarningText = 'QR signature missing — request a newly signed QR code.'
+  if (isQr && sigState === 'expired')  sigWarningText = 'QR has expired — ask the merchant to re-sign.'
+  if (isQr && sigState === 'invalid')  sigWarningText = 'QR signature invalid — do not pay this link.'
+
+  return wrap('Pay — VFIDE', `
+    <div data-testid="pay-root" aria-label="Payment page">
+      <h1>Pay ${merchant ? merchant.slice(0, 8) + '…' : 'Merchant'}</h1>
+
+      ${orderId ? `<div data-testid="pay-order-display" aria-label="Order ID">Order: ${orderId}</div>` : ''}
+
+      <p>Amount: <strong>${amount || '0'} VFIDE</strong></p>
+      <p>Settlement: <strong>${settlement}</strong></p>
+
+      ${sigWarningText ? `
+        <div
+          data-testid="sig-warning"
+          role="alert"
+          aria-live="assertive"
+          style="color:#f87171;border:1px solid #f87171;padding:8px;border-radius:4px"
+        >${sigWarningText}</div>
+      ` : ''}
+
+      ${sigValid && isQr ? `
+        <div data-testid="sig-badge-valid" role="status" style="color:#10b981">
+          ✓ QR signature verified
+        </div>
+      ` : ''}
+
+      <button
+        data-testid="pay-submit-btn"
+        aria-label="${settlement === 'escrow' ? 'Fund escrow' : 'Send instant payment'}"
+        ${payEnabled ? '' : 'disabled'}
+      >
+        ${settlement === 'escrow' ? 'Fund Escrow' : 'Pay Now'}
+      </button>
+    </div>
+  `, '/pay')
+}
+
 // ── Router ────────────────────────────────────────────────────────────────
 const routes = {
   '/':          homePage,
@@ -293,7 +474,21 @@ const routes = {
 }
 
 const server = http.createServer((req, res) => {
-  const url = (req.url || '/').split('?')[0]
+  const rawUrl = req.url || '/'
+  const url = rawUrl.split('?')[0]
+  const qs = rawUrl.includes('?') ? rawUrl.split('?')[1] : ''
+
+  // Dynamic routes that need query-string context
+  if (url === '/qr-sign') {
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+    res.end(qrSignPage(qs))
+    return
+  }
+  if (url === '/pay') {
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+    res.end(payPage(qs))
+    return
+  }
 
   if (url === '/api/health') {
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' })
