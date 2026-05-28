@@ -26,7 +26,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   Vote, PlusCircle, Users, BarChart2, Clock,
   Crown, ScrollText, Gavel, Landmark, LayoutDashboard,
-} from 'lucide-react';
+  AlertTriangle, Flag } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -58,12 +58,15 @@ import { ElectionsTabContent } from './components/ElectionsTabContent';
 
 // Disputes content — extracted tab component
 import { DisputesTabContent } from './components/DisputesTabContent';
+import AppealsTabContent from './components/AppealsTabContent';
+import FraudTabContent from './components/FraudTabContent';
+
 import { useLocale } from '@/hooks/useLocale';
 import { GOVERNANCE_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
 
 // ── Tab groups ────────────────────────────────────────────────────────────────
 
-type MainTab = 'proposals' | 'dao' | 'council' | 'elections' | 'disputes';
+type MainTab = 'proposals' | 'dao' | 'council' | 'elections' | 'disputes' | 'appeals' | 'fraud';
 
 const MAIN_TABS: { id: MainTab; label: string; icon: React.ElementType }[] = [
   { id: 'proposals', label: 'Proposals', icon: Vote           },
@@ -71,6 +74,8 @@ const MAIN_TABS: { id: MainTab; label: string; icon: React.ElementType }[] = [
   { id: 'council',   label: 'Council',   icon: Crown          },
   { id: 'elections', label: 'Elections', icon: ScrollText     },
   { id: 'disputes',  label: 'Disputes',  icon: Gavel          },
+  { id: 'appeals',   label: 'Appeals',   icon: AlertTriangle  },
+  { id: 'fraud',     label: 'Fraud',     icon: Flag           },
 ];
 
 type ProposalSub = 'list' | 'create' | 'stats' | 'history';
@@ -78,7 +83,7 @@ type DaoSub      = 'overview' | 'members' | 'treasury';
 type CouncilSub  = 'overview' | 'members' | 'salary' | 'voting';
 
 // UX-1: Valid tab IDs for type-safe URL parsing
-const VALID_MAIN_TABS = new Set<MainTab>(['proposals', 'dao', 'council', 'elections', 'disputes']);
+const VALID_MAIN_TABS = new Set<MainTab>(['proposals', 'dao', 'council', 'elections', 'disputes', 'appeals', 'fraud']);
 const VALID_DAO_SUBS  = new Set<DaoSub>(['overview', 'members', 'treasury']);
 
 export default function GovernancePage() {
@@ -285,6 +290,26 @@ export default function GovernancePage() {
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.18 }}>
               <DisputesTabContent />
+            </motion.div>
+          )}
+
+          {/* ── APPEALS ── */}
+          {mainTab === 'appeals' && (
+            <motion.div key="appeals"
+              role="tabpanel" id="gov-panel-appeals" aria-labelledby="gov-tab-appeals"
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.18 }}>
+              <AppealsTabContent />
+            </motion.div>
+          )}
+
+          {/* ── FRAUD ── */}
+          {mainTab === 'fraud' && (
+            <motion.div key="fraud"
+              role="tabpanel" id="gov-panel-fraud" aria-labelledby="gov-tab-fraud"
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.18 }}>
+              <FraudTabContent />
             </motion.div>
           )}
         </AnimatePresence>
