@@ -28,7 +28,8 @@
     --warning: #F59E0B;
     --info: #3B82F6;
     
-    /* Theme Manager Compatibility - Primary Colors */
+    /* Legacy aliases — left for any third-party integrations referencing theme-manager tokens.
+       Not consumed by Tailwind config or any current component. Correctly bridge to live vars. */
     --color-primary-500: var(--accent);
     --color-primary-600: var(--accent-dark);
     --color-secondary-500: var(--accent-purple);
@@ -57,10 +58,10 @@
     
     /* Border Colors */
     --border: #1F1F2A;
-    --border-accent: rgba(0, 240, 255, 0.2); /* overwritten by applyTokens via --accent-subtle */
+    --border-accent: rgba(0, 240, 255, 0.2); /* theme bridge block below overrides this via var(--accent-subtle) */
     
     /* Shadows */
-    --shadow-glow: 0 0 60px -12px rgba(0, 240, 255, 0.4);
+    --shadow-glow: 0 0 60px -12px rgba(0, 240, 255, 0.4); /* theme bridge block below overrides this */
     --shadow-card: 0 8px 32px -8px rgba(0, 0, 0, 0.5);
     --shadow-elevated: 0 24px 80px -20px rgba(0, 0, 0, 0.6);
     
@@ -1453,9 +1454,11 @@
  * whenever the user switches preset or customises a token.
  * ──────────────────────────────────────────────────────────────────────────── */
 :root {
-  /* ── VFIDE theme engine — primary source of truth ── */
+  /* ── VFIDE theme engine — internal state (useTheme React hook reads these) ──
+     applyTokens() writes these AND the live --accent family below.
+     Components should use --accent / Tailwind classes, NOT --vf-accent directly. */
   --vf-accent:           #06b6d4;
-  --vf-accent-fg:        #09090b;
+  --vf-accent-fg:        #09090b;  /* used only in PreviewTab inline styles via effectiveTokens.accentFg */
   --vf-accent-secondary: #6366f1;
   --vf-border-radius:    0.75rem;
   --vf-card-bg:          rgba(255, 255, 255, 0.03);
@@ -1465,18 +1468,20 @@
   /* ── Bridge to Tailwind accent utilities ── */
   /* JS (useTheme.applyTokens) writes --accent directly; these fallbacks
      ensure the correct value is present on SSR before hydration. */
-  --accent:        var(--vf-accent,           #06b6d4);
-  --accent-light:  #5BFAFF;    /* overwritten by applyTokens on hydration */
-  --accent-dark:   #0080FF;
-  --accent-glow:   rgba(0, 182, 212, 0.30);
-  --accent-subtle: rgba(0, 182, 212, 0.08);
+  --accent:        var(--vf-accent,          #06b6d4);
+  /* SSR fallback values match Default Dark preset computed by applyTokens.hexToRgb(#06b6d4): */
+  --accent-light:  rgb(66, 242, 255);        /* #06b6d4 + 60 brightness */
+  --accent-dark:   rgb(0, 152, 182);         /* #06b6d4 - 30 brightness */
+  --accent-glow:   rgba(6, 182, 212, 0.30);
+  --accent-subtle: rgba(6, 182, 212, 0.08);
 
   /* Secondary accent (overwritten by applyTokens to --vf-accent-secondary) */
   --accent-purple:      var(--vf-accent-secondary, #6366f1);
   --accent-purple-glow: rgba(99, 102, 241, 0.30);
 
-  /* Border accent — driven from accent-subtle */
-  --border-accent: var(--accent-subtle, rgba(0, 182, 212, 0.20));
+  /* These are also written directly by applyTokens so they update with accent colour: */
+  --border-accent: rgba(6, 182, 212, 0.20); /* = accent at 20% opacity */
+  --shadow-glow:   0 0 60px -12px rgba(6, 182, 212, 0.40); /* = accent at 40% */
 }
 
 /* Apply font scale to root so em-based sizing cascades correctly */

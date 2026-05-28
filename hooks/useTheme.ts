@@ -68,11 +68,15 @@ function findPreset(id: string): ThemePreset {
   return THEME_PRESETS.find(p => p.id === id) ?? DEFAULT_PRESET;
 }
 
-/** Parse a #rrggbb hex string into [r, g, b] integers. */
+/** Parse a #rrggbb or #rgb hex string into [r, g, b] integers. Returns null for non-hex (rgba, hsl, etc). */
 function hexToRgb(hex: string): [number, number, number] | null {
-  const m = /^#([0-9a-f]{6})$/i.exec(hex.trim());
-  if (!m) return null;
-  const n = parseInt(m[1]!, 16);
+  const s = hex.trim();
+  // Expand 3-char shorthand: #abc → #aabbcc
+  const m3 = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/i.exec(s);
+  if (m3) return [parseInt(m3[1]!+m3[1]!, 16), parseInt(m3[2]!+m3[2]!, 16), parseInt(m3[3]!+m3[3]!, 16)];
+  const m6 = /^#([0-9a-f]{6})$/i.exec(s);
+  if (!m6) return null;
+  const n = parseInt(m6[1]!, 16);
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
 
@@ -111,6 +115,15 @@ function applyTokens(tokens: ThemeTokens) {
   if (rgb2) {
     const [r2, g2, b2] = rgb2;
     root.style.setProperty('--accent-purple-glow', `rgba(${r2}, ${g2}, ${b2}, 0.30)`);
+  }
+
+  // Derived semantic vars that reference the accent colour
+  if (rgb) {
+    const [r, g, b] = rgb;
+    // --shadow-glow: large ambient glow used on hero cards and active states
+    root.style.setProperty('--shadow-glow',   `0 0 60px -12px rgba(${r}, ${g}, ${b}, 0.40)`);
+    // --border-accent: thin glowing border ring on interactive cards
+    root.style.setProperty('--border-accent', `rgba(${r}, ${g}, ${b}, 0.20)`);
   }
 }
 
