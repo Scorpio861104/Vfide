@@ -8,7 +8,7 @@
  */
 
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { 
   X, 
   CheckCircle, 
@@ -353,7 +353,7 @@ function ToastItem({
   }, [toast.progress, toast.duration]);
 
   return (
-    <motion.div
+    <m.div
       layout
       initial={reducedMotion ? { opacity: 0 } : { 
         opacity: 0, 
@@ -458,7 +458,7 @@ function ToastItem({
           />
         </div>
       )}
-    </motion.div>
+    </m.div>
   );
 }
 

@@ -10,7 +10,7 @@
 'use client';
 
 import React, { useState, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Upload, Camera, X, Check, AlertCircle, Loader2, Image as ImageIcon } from 'lucide-react';
 import NextImage from 'next/image';
 import { useAccount } from 'wagmi';
@@ -196,13 +196,13 @@ export function AvatarUpload({
                 className="w-full h-full object-cover"
               />
               {preview && !isUploading && (
-                <motion.button
+                <m.button
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   onClick={handleCancel}
                   className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors" aria-label="Close">
                   <X className="w-4 h-4" />
-                </motion.button>
+                </m.button>
               )}
               {isUploading && (
                 <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
@@ -220,7 +220,7 @@ export function AvatarUpload({
         {/* Upload Progress */}
         <AnimatePresence>
           {isUploading && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
@@ -231,21 +231,21 @@ export function AvatarUpload({
                 <span>{uploadProgress}%</span>
               </div>
               <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
-                <motion.div
+                <m.div
                   initial={{ width: 0 }}
                   animate={{ width: `${uploadProgress}%` }}
                   transition={{ duration: 0.3 }}
                   className="h-full bg-gradient-to-r from-accent to-blue-500"
                 />
               </div>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
 
         {/* Error Message */}
         <AnimatePresence>
           {error && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
@@ -255,7 +255,7 @@ export function AvatarUpload({
                 <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
                 <p className="text-xs text-red-400">{error}</p>
               </div>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
 

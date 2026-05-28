@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Sparkles, X } from 'lucide-react';
 
 interface FirstTimeUserBannerProps {
@@ -43,7 +43,7 @@ export function FirstTimeUserBanner({
   return (
     <AnimatePresence>
       {!isDismissed && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
@@ -79,7 +79,7 @@ export function FirstTimeUserBanner({
               </button>
             </div>
           </div>
-        </motion.div>
+        </m.div>
       )}
     </AnimatePresence>
   );

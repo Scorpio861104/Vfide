@@ -20,7 +20,7 @@ import { useState, useCallback } from 'react';
 import { useReadContract, useWriteContract } from 'wagmi';
 import { useAccount } from 'wagmi';
 import { keccak256, toBytes, isAddress, encodeAbiParameters, parseAbiParameters } from 'viem';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import {
   Shield,
   Heart,
@@ -401,7 +401,7 @@ function VaultInheritanceCard({
       {/* Expanded body */}
       <AnimatePresence>
         {expanded && (
-          <motion.div
+          <m.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
@@ -581,7 +581,7 @@ function VaultInheritanceCard({
               {/* Tx status */}
               <AnimatePresence>
                 {txStatus !== 'idle' && (
-                  <motion.div
+                  <m.div
                     initial={{ opacity: 0, y: 4 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
@@ -600,11 +600,11 @@ function VaultInheritanceCard({
                         <XCircle size={14} />
                       </button>
                     )}
-                  </motion.div>
+                  </m.div>
                 )}
               </AnimatePresence>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>
@@ -632,19 +632,19 @@ export function InheritanceActionsTab({ isConnected }: { isConnected: boolean })
 
   if (!isConnected) {
     return (
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-16">
-        <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }}>
+      <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-16">
+        <m.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }}>
           <Heart className="w-16 h-16 mx-auto mb-4 text-pink-400" />
-        </motion.div>
+        </m.div>
         <h2 className="text-2xl font-bold text-white mb-4">Connect Wallet</h2>
         <p className="text-gray-400">Connect your wallet to see inheritance actions</p>
         <div className="mt-6 flex justify-center"><VfideConnectButton size="md" /></div>
-      </motion.div>
+      </m.div>
     );
   }
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 max-w-4xl mx-auto">
+    <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 max-w-4xl mx-auto">
       {/* Header */}
       <div className="bg-gradient-to-br from-pink-500/10 to-purple-500/10 border border-pink-500/30 rounded-2xl p-6">
         <h2 className="text-xl font-bold text-pink-400 mb-2 flex items-center gap-3">
@@ -701,6 +701,6 @@ export function InheritanceActionsTab({ isConnected }: { isConnected: boolean })
           )}
         </div>
       )}
-    </motion.div>
+    </m.div>
   );
 }

@@ -22,7 +22,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Pencil, Trash2, AlertTriangle, CheckCircle2, X, Loader2, Save } from 'lucide-react';
 import { useIsMerchant } from '@/lib/vfide-hooks';
 import { useMerchantSelfAdmin } from '@/hooks/useMerchantSelfAdmin';
@@ -143,7 +143,7 @@ export function MerchantSelfAdminSection() {
 
         <AnimatePresence>
           {editing && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
@@ -207,7 +207,7 @@ export function MerchantSelfAdminSection() {
                 (avatar, bio, links) is managed separately from the{' '}
                 <span className="text-accent">Edit profile</span> link.
               </p>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
 
@@ -264,7 +264,7 @@ export function MerchantSelfAdminSection() {
 
         <AnimatePresence>
           {showDeregister && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
@@ -323,7 +323,7 @@ export function MerchantSelfAdminSection() {
                   </button>
                 </div>
               </div>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
 

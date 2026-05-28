@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import React, { useState, useRef } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { m, useReducedMotion } from 'framer-motion';
 import { X, Camera, Type, Image as ImageIcon } from 'lucide-react';
 import { createTextStory, createMediaStory, STORY_BACKGROUNDS, Story } from '@/lib/storiesSystem';
 import { toast } from '@/lib/toast';
@@ -103,13 +103,13 @@ export function StoryCreator({
   };
 
   return (
-    <motion.div 
+    <m.div 
       initial={shouldReduceMotion ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={shouldReduceMotion ? { opacity: 1 } : { opacity: 0 }}
       className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4"
     >
-      <motion.div 
+      <m.div 
         initial={shouldReduceMotion ? false : { scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={shouldReduceMotion ? { opacity: 1 } : { scale: 0.9, opacity: 0 }}
@@ -290,8 +290,8 @@ export function StoryCreator({
             Share Story
           </button>
         </div>
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 }
 

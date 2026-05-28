@@ -7,7 +7,7 @@
 
 import { useProofScore, useBadgeNFTs, useScoreBreakdown } from '@/lib/vfide-hooks'
 import { getBadgeById } from '@/lib/badge-registry'
-import { motion, useSpring } from 'framer-motion'
+import { m, useSpring } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { BadgeDisplay } from '../badge/BadgeDisplay'
 import { EndorsementStats } from './EndorsementStats'
@@ -85,14 +85,14 @@ export function ProofScoreVisualizer({
       )}
       
       {/* Circular Score Display */}
-      <motion.div
+      <m.div
         className="relative"
         initial={{ scale: 0, rotate: -180 }}
         animate={{ scale: 1, rotate: 0 }}
         transition={{ type: 'spring', stiffness: 200, damping: 20 }}
       >
         {/* Glow effect */}
-        <motion.div
+        <m.div
           className={`absolute inset-0 ${sizeClasses[size]} rounded-full blur-2xl`}
           style={{ backgroundColor: color }}
           animate={{
@@ -115,7 +115,7 @@ export function ProofScoreVisualizer({
           />
           
           {/* Progress circle */}
-          <motion.circle
+          <m.circle
             cx="50"
             cy="50"
             r="45"
@@ -153,24 +153,24 @@ export function ProofScoreVisualizer({
         
         {/* Rotating ring effect for Elite */}
         {isElite && (
-          <motion.div
+          <m.div
             className={`absolute inset-0 ${sizeClasses[size]} rounded-full border-2`}
             style={{ borderColor: color }}
             animate={{ rotate: 360 }}
             transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
           />
         )}
-      </motion.div>
+      </m.div>
       
       {showDetails && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
           className="text-center space-y-2"
         >
           {/* Tier Badge */}
-          <motion.div
+          <m.div
             className={`inline-block px-4 py-1 rounded-full font-bold ${detailSizes[size]}`}
             style={{
               backgroundColor: `${color}20`,
@@ -181,7 +181,7 @@ export function ProofScoreVisualizer({
             whileHover={{ scale: 1.05 }}
           >
             {tier}
-          </motion.div>
+          </m.div>
           
           {/* Benefits */}
           <div className={`space-y-1 ${detailSizes[size]} text-zinc-100/70`}>
@@ -195,27 +195,27 @@ export function ProofScoreVisualizer({
             {/* Access Badges */}
             <div className="flex gap-2 justify-center flex-wrap mt-2">
               {canVote && (
-                <motion.span
+                <m.span
                   className="px-2 py-0.5 rounded bg-accent/20 text-accent text-xs"
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.4 }}
                 >
                   🗳️ Voting
-                </motion.span>
+                </m.span>
               )}
               {canMerchant && (
-                <motion.span
+                <m.span
                   className="px-2 py-0.5 rounded bg-amber-400/20 text-amber-400 text-xs"
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.5 }}
                 >
                   Merchant
-                </motion.span>
+                </m.span>
               )}
               {isElite && (
-                <motion.span
+                <m.span
                   className="px-2 py-0.5 rounded bg-emerald-400/20 text-emerald-400 text-xs"
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
@@ -223,16 +223,16 @@ export function ProofScoreVisualizer({
                   whileHover={{ scale: 1.1 }}
                 >
                   Elite
-                </motion.span>
+                </m.span>
               )}
             </div>
           </div>
-        </motion.div>
+        </m.div>
       )}
       
       {/* Badge Display Section */}
       {showBadges && tokenIds.length && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
@@ -250,14 +250,14 @@ export function ProofScoreVisualizer({
               if (!badge) return null
               
               return (
-                <motion.div
+                <m.div
                   key={badgeId.toString()}
                   initial={{ scale: 0, rotate: -180 }}
                   animate={{ scale: 1, rotate: 0 }}
                   transition={{ delay: 0.6 + idx * 0.1 }}
                 >
                   <BadgeDisplay badgeId={badgeIdHex} size="sm" />
-                </motion.div>
+                </m.div>
               )
             })}
           </div>
@@ -267,12 +267,12 @@ export function ProofScoreVisualizer({
               +{tokenIds.length - 3} more
             </div>
           )}
-        </motion.div>
+        </m.div>
       )}
       
       {/* Score Breakdown Section */}
       {showBreakdown && breakdown && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
@@ -342,7 +342,7 @@ export function ProofScoreVisualizer({
               <span style={{ color }}>{breakdown.totalScore}</span>
             </div>
           </div>
-        </motion.div>
+        </m.div>
       )}
 
       {/* Endorsement Card - shown in profile/detailed view */}

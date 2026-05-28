@@ -4,7 +4,7 @@
  * Re-uses the existing /payroll component tree via dynamic imports.
  */
 import { useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import { History, LayoutDashboard, PlusCircle, Waves } from 'lucide-react';
 import nextDynamic from 'next/dynamic';
 
@@ -49,7 +49,7 @@ export function PayrollTab() {
       </div>
 
       <AnimatePresence mode="wait">
-        <motion.div
+        <m.div
           key={activeTab}
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
@@ -60,7 +60,7 @@ export function PayrollTab() {
           {activeTab === 'streams'   && <StreamsTab />}
           {activeTab === 'create'    && <CreateTab />}
           {activeTab === 'history'   && <HistoryTab />}
-        </motion.div>
+        </m.div>
       </AnimatePresence>
     </div>
   );

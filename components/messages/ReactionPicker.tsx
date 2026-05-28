@@ -7,7 +7,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Smile, Image as ImageIcon, X } from 'lucide-react';
 import Image from 'next/image';
 
@@ -105,7 +105,7 @@ export function ReactionPicker({ onSelect, onClose, customImages = [] }: Reactio
   }, [activeTab]);
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, scale: 0.9, y: 10 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.9, y: 10 }}
@@ -150,7 +150,7 @@ export function ReactionPicker({ onSelect, onClose, customImages = [] }: Reactio
       <div className="p-3" ref={containerRef} onKeyDown={handleKeyDown}>
         <AnimatePresence mode="wait">
           {activeTab === 'emoji' && (
-            <motion.div
+            <m.div
               key="emoji"
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
@@ -177,11 +177,11 @@ export function ReactionPicker({ onSelect, onClose, customImages = [] }: Reactio
                   {emoji}
                 </button>
               ))}
-            </motion.div>
+            </m.div>
           )}
 
           {activeTab === 'custom' && (
-            <motion.div
+            <m.div
               key="custom"
               initial={{ opacity: 0, x: 10 }}
               animate={{ opacity: 1, x: 0 }}
@@ -224,11 +224,11 @@ export function ReactionPicker({ onSelect, onClose, customImages = [] }: Reactio
                   </p>
                 </div>
               )}
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -273,7 +273,7 @@ export function ReactionDisplay({ reactions, currentUserAddress, onToggle }: Rea
         const count = reaction.users.length;
 
         return (
-          <motion.button
+          <m.button
             key={key}
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
@@ -303,7 +303,7 @@ export function ReactionDisplay({ reactions, currentUserAddress, onToggle }: Rea
               />
             )}
             <span className="font-medium">{count}</span>
-          </motion.button>
+          </m.button>
         );
       })}
     </div>

@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Footer } from '@/components/layout/Footer';
 import Link from 'next/link';
 import { ArrowRight, Clock, Code2, Rocket, Wallet, Users } from 'lucide-react';
@@ -21,7 +21,7 @@ function DeveloperPortalTab() {
   const [locale] = useLocale();
   const _copy = pickLocaleCopy(STUB_TRANSLATIONS, locale);
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+    <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
       className="glass-card-premium p-10 max-w-2xl text-center mx-auto"
     >
       <div className="text-6xl mb-6" aria-hidden="true">🛠️</div>
@@ -52,13 +52,13 @@ function DeveloperPortalTab() {
           Go back
         </Link>
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 
 function TokenLaunchTab() {
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+    <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
       className="glass-card-premium p-10 max-w-2xl text-center mx-auto"
     >
       <div className="text-6xl mb-6" aria-hidden="true">🚀</div>
@@ -83,7 +83,7 @@ function TokenLaunchTab() {
         className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-accent hover:bg-accent-light text-zinc-900 font-bold rounded-xl transition-colors text-sm">
         <Wallet size={14} /> View full roadmap <ArrowRight size={14} />
       </Link>
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -128,7 +128,7 @@ function DeveloperHubInner() {
           </div>
 
           <AnimatePresence mode="wait">
-            <motion.div key={activeTab}
+            <m.div key={activeTab}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
@@ -136,7 +136,7 @@ function DeveloperHubInner() {
               {activeTab === 'portal'       && <DeveloperPortalTab />}
               {activeTab === 'token-launch' && <TokenLaunchTab />}
               {activeTab === 'splitter'     && <SplitterTab />}
-            </motion.div>
+            </m.div>
           </AnimatePresence>
         </div>
       </div>

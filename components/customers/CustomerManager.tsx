@@ -10,7 +10,7 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Users, Search, Plus, Star, Clock, DollarSign, MessageCircle, Tag, TrendingUp, UserPlus } from 'lucide-react';
 import { Address } from '@/components/ui/Address';
 import { useLocale } from '@/lib/locale/LocaleProvider';
@@ -181,7 +181,7 @@ export function CustomerManager({ customers = [], customerOrders = {}, isLoading
       )}
 
       {detail && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]"
@@ -287,7 +287,7 @@ export function CustomerManager({ customers = [], customerOrders = {}, isLoading
               </div>
             )}
           </div>
-        </motion.div>
+        </m.div>
       )}
 
       <PromptModal

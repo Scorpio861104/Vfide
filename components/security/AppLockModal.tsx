@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Fingerprint, KeyRound, X, Loader2 } from 'lucide-react';
 import { thresholdWeiToVfide, AppLockMethod } from '@/lib/security/appLock';
 
@@ -96,7 +96,7 @@ export function AppLockModal({
 
   return (
     <AnimatePresence>
-      <motion.div
+      <m.div
         className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/70 backdrop-blur-sm"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -105,7 +105,7 @@ export function AppLockModal({
         aria-modal="true"
         aria-label="Confirm transaction with App Lock"
       >
-        <motion.div
+        <m.div
           className="relative w-full max-w-sm rounded-2xl border border-accent/30 bg-gray-900 p-6 shadow-2xl"
           initial={{ y: 24, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -234,8 +234,8 @@ export function AppLockModal({
               Cancel transaction
             </button>
           </div>
-        </motion.div>
-      </motion.div>
+        </m.div>
+      </m.div>
     </AnimatePresence>
   );
 }

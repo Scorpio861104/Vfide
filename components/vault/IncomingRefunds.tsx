@@ -31,7 +31,7 @@
  *   address with reasonable history. For Base mainnet this is fine.
  */
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { formatEther } from 'viem';
 import { Inbox, CheckCircle2, Clock, AlertTriangle, RotateCcw } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
@@ -102,7 +102,7 @@ export function IncomingRefunds() {
   if (isLoading) return null;
 
   return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+    <m.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
       <GlassCard hover={false} className="p-5">
         <div className="flex items-start gap-3 mb-4">
           <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center shrink-0">
@@ -176,6 +176,6 @@ export function IncomingRefunds() {
           out to the DAO.
         </p>
       </GlassCard>
-    </motion.div>
+    </m.div>
   );
 }

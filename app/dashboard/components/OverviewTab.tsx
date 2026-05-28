@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { useReadContract } from 'wagmi';
 import {
   ArrowUpRight,
@@ -68,8 +68,8 @@ export function OverviewTab({
   ];
 
   return (
-    <motion.div variants={containerVariants} initial="hidden" animate="show" className="space-y-8">
-      <motion.div variants={itemVariants}>
+    <m.div variants={containerVariants} initial="hidden" animate="show" className="space-y-8">
+      <m.div variants={itemVariants}>
         <GlassCard className="p-6" hover={false}>
           <h2 className="mb-6 flex items-center gap-2 text-xl font-bold text-white">
             <Zap className="text-amber-400" size={24} />
@@ -85,9 +85,9 @@ export function OverviewTab({
             <QuickAction icon={Gift} label="Rewards" href="/rewards" />
           </div>
         </GlassCard>
-      </motion.div>
+      </m.div>
 
-      <motion.div variants={itemVariants}>
+      <m.div variants={itemVariants}>
         <GlassCard className="p-6" hover={false}>
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
             <h2 className="flex items-center gap-2 text-xl font-bold text-white">
@@ -118,10 +118,10 @@ export function OverviewTab({
             ))}
           </div>
         </GlassCard>
-      </motion.div>
+      </m.div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <motion.div variants={itemVariants}>
+        <m.div variants={itemVariants}>
           <GlassCard className="p-6" hover={false}>
             <h2 className="mb-6 flex items-center gap-2 text-xl font-bold text-white">
               <TrendingUp className="text-accent" size={24} />
@@ -130,20 +130,20 @@ export function OverviewTab({
             <div className="flex flex-col items-center py-6">
               <ProofScoreRing score={proofscore} size="lg" />
               <div className="mt-6 text-center">
-                <motion.div
+                <m.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: 'spring', delay: 0.5 }}
                   className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/20 px-4 py-2"
                 >
                   <span className="font-bold text-emerald-400">{feeRate.toFixed(2)}% transfer fee</span>
-                </motion.div>
+                </m.div>
               </div>
             </div>
           </GlassCard>
-        </motion.div>
+        </m.div>
 
-        <motion.div variants={itemVariants}>
+        <m.div variants={itemVariants}>
           <GlassCard className="p-6" hover={false}>
             <h2 className="mb-6 flex items-center gap-2 text-xl font-bold text-white">
               <Star className="text-amber-400" size={24} />
@@ -151,7 +151,7 @@ export function OverviewTab({
             </h2>
             <div className="space-y-4">
               {breakdownRows.map((item, index) => (
-                <motion.div
+                <m.div
                   key={item.label}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -165,7 +165,7 @@ export function OverviewTab({
                     </span>
                   </div>
                   <div className="h-2 overflow-hidden rounded-full bg-white/5">
-                    <motion.div
+                    <m.div
                       initial={{ width: 0 }}
                       animate={{ width: `${(item.value / item.max) * 100}%` }}
                       transition={{ duration: 1, delay: index * 0.1 }}
@@ -176,7 +176,7 @@ export function OverviewTab({
                       }`}
                     />
                   </div>
-                </motion.div>
+                </m.div>
               ))}
             </div>
             {hasVault !== null && (
@@ -194,12 +194,12 @@ export function OverviewTab({
               </div>
             </div>
           </GlassCard>
-        </motion.div>
+        </m.div>
       </div>
 
-      <motion.div variants={itemVariants}>
+      <m.div variants={itemVariants}>
         <RecentActivitySection />
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 }

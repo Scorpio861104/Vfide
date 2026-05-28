@@ -7,7 +7,7 @@
  */
 
 import { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { useNotificationHub } from '@/hooks/useNotificationHub';
 import { NotificationList } from '@/components/notifications/NotificationList';
 import { NotificationPreferences } from '@/components/notifications/NotificationPreferences';
@@ -100,7 +100,7 @@ export function NotificationsTabInline() {
       {/* Content */}
       <AnimatePresence mode="wait">
         {(activeTab === 'all' || activeTab === 'unread') ? (
-          <motion.div key={`tab-${activeTab}`}
+          <m.div key={`tab-${activeTab}`}
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             className="space-y-5">
             <ErrorBoundary>
@@ -154,9 +154,9 @@ export function NotificationsTabInline() {
                 onDismiss={dismissNotification}
               />
             </ErrorBoundary>
-          </motion.div>
+          </m.div>
         ) : (
-          <motion.div key="tab-preferences"
+          <m.div key="tab-preferences"
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             className="glass-card-premium p-6">
             <ErrorBoundary>
@@ -166,7 +166,7 @@ export function NotificationsTabInline() {
                 onReset={resetPreferences}
               />
             </ErrorBoundary>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

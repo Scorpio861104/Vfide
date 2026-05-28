@@ -8,7 +8,7 @@
  * Removed — those paths are unreachable in this build.
  */
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Key, Timer, Users, CheckCircle2, ArrowRightCircle, Lock } from 'lucide-react';
 
 const TIMELINE_STEPS = [
@@ -57,7 +57,7 @@ const TIMELINE_STEPS = [
 export function RecoveryTimeline() {
   return (
     <>
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
@@ -68,7 +68,7 @@ export function RecoveryTimeline() {
           <div className="absolute left-4 top-8 bottom-8 w-0.5 bg-gradient-to-b from-accent/50 via-yellow-500/50 to-green-500/50" />
           <div className="space-y-6">
             {TIMELINE_STEPS.map((step, i) => (
-              <motion.div
+              <m.div
                 key={step.title}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -84,13 +84,13 @@ export function RecoveryTimeline() {
                   <div className="text-white font-bold text-sm">{step.title}</div>
                   <div className="text-gray-400 text-xs">{step.desc}</div>
                 </div>
-              </motion.div>
+              </m.div>
             ))}
           </div>
         </div>
-      </motion.div>
+      </m.div>
 
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
@@ -105,7 +105,7 @@ export function RecoveryTimeline() {
           signer changes, and the vault remains in place while authority rotates. For inheritance
           configuration and heir management, see the Inheritance tab.
         </p>
-      </motion.div>
+      </m.div>
     </>
   );
 }

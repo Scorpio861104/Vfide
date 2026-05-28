@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import {
   X, Star, Package, ShoppingCart, Plus, Minus, ChevronRight,
@@ -66,14 +66,14 @@ export function ProductDetailModal({ productId, onClose, onAddToCart }: ProductD
 
   return (
     <AnimatePresence>
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         role="dialog"
         aria-modal="true"
         aria-label="Product details"
         tabIndex={-1}
         onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
         className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/70 backdrop-blur-sm py-8 px-4" onClick={onClose}>
-        <motion.div initial={{ opacity: 0, y: 30, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 30, scale: 0.98 }}
+        <m.div initial={{ opacity: 0, y: 30, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 30, scale: 0.98 }}
           className="bg-zinc-900 border border-white/10 rounded-2xl w-full max-w-4xl overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}>
           <button onClick={onClose} className="absolute top-4 right-4 z-10 p-2 bg-black/50 rounded-full text-gray-400 hover:text-white transition-colors" aria-label="Close"><X size={20} /></button>
 
@@ -198,8 +198,8 @@ export function ProductDetailModal({ productId, onClose, onAddToCart }: ProductD
               )}
             </>
           )}
-        </motion.div>
-      </motion.div>
+        </m.div>
+      </m.div>
     </AnimatePresence>
   );
 }

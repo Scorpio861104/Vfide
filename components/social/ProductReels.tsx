@@ -11,7 +11,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Heart, MessageCircle, Share2, ShoppingCart, Shield, Music2, Bookmark, Volume2, VolumeX, Play } from 'lucide-react';
 
 export interface ReelData {
@@ -104,7 +104,7 @@ export function ProductReel({ reel, isActive, onLike, onBuy, onComment, onShare,
       {/* Double-tap heart */}
       <AnimatePresence>
         {showHeart && (
-          <motion.div
+          <m.div
             initial={{ scale: 0, opacity: 1 }}
             animate={{ scale: 1.5, opacity: 0 }}
             exit={{ opacity: 0 }}
@@ -112,7 +112,7 @@ export function ProductReel({ reel, isActive, onLike, onBuy, onComment, onShare,
             className="absolute inset-0 flex items-center justify-center pointer-events-none"
           >
             <Heart size={80} fill="#EC4899" stroke="#EC4899" />
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 
@@ -179,7 +179,7 @@ export function ProductReel({ reel, isActive, onLike, onBuy, onComment, onShare,
 
         {/* Product card (if shoppable) */}
         {reel.product && (
-          <motion.button
+          <m.button
             whileTap={{ scale: 0.97 }}
             onClick={() => onBuy?.(reel.product!.id)}
             className="flex items-center gap-2 px-3 py-2 bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl"
@@ -190,7 +190,7 @@ export function ProductReel({ reel, isActive, onLike, onBuy, onComment, onShare,
               <div className="text-gray-300 text-[10px]">{reel.product.inStock ? 'In stock' : 'Sold out'}</div>
             </div>
             <span className="text-accent font-mono font-bold text-sm">{reel.product.currency}{reel.product.price}</span>
-          </motion.button>
+          </m.button>
         )}
 
         {/* Sound */}

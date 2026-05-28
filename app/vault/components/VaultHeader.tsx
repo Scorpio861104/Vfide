@@ -3,7 +3,7 @@
 import { GlassCard } from '@/components/ui/GlassCard';
 import { containerVariants, itemVariants } from '@/lib/motion-presets';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Shield, Plus, Key } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
 import { devLog } from '@/lib/utils';
@@ -32,24 +32,24 @@ export function VaultHeader({
   return (
     <section className="relative py-12 border-b border-white/5">
       <div className="container mx-auto px-4 max-w-6xl">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <div className="badge-live mb-4">
             <Shield size={12} /> Self-Custody Vault
           </div>
           <h1 className="text-4xl md:text-5xl font-black text-white mb-3 flex items-center gap-3 tracking-tight">
             <span className="bg-gradient-to-r from-white to-emerald-300 bg-clip-text text-transparent">Vault Manager</span>
-            <motion.span animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 2, repeat: Infinity, repeatDelay: 5 }}>
+            <m.span animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 2, repeat: Infinity, repeatDelay: 5 }}>
               <Shield className="text-emerald-400" size={36} />
-            </motion.span>
+            </m.span>
           </h1>
           <p className="text-xl text-white/60 mb-6">
             Self-custody with guardian-backed wallet rotation, recovery, and queued transfer protection
           </p>
-        </motion.div>
+        </m.div>
 
         {/* No Vault */}
         {!hasVault && !isLoadingVault && address && isOnCorrectChain && isContractConfigured !== false && (
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
+          <m.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
             <GlassCard className="p-6 border-amber-500/30" gradient="gold" hover={false}>
               <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
@@ -61,7 +61,7 @@ export function VaultHeader({
                     <p className="text-white/60">Create your vault to start using VFIDE securely on {expectedChainName ?? 'Base'}</p>
                   </div>
                 </div>
-                <motion.button
+                <m.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={async () => {
@@ -84,17 +84,17 @@ export function VaultHeader({
                   className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold shadow-lg shadow-amber-500/25 disabled:opacity-50"
                 >
                   {isCreatingVault ? 'Creating…' : 'Create Vault'}
-                </motion.button>
+                </m.button>
               </div>
             </GlassCard>
-          </motion.div>
+          </m.div>
         )}
 
         {/* Loading */}
         {isLoadingVault && (
           <GlassCard className="p-6" hover={false}>
             <div className="flex items-center justify-center gap-3 py-4">
-              <motion.div
+              <m.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                 className="w-6 h-6 border-2 border-accent/20 border-t-accent rounded-full"
@@ -112,7 +112,7 @@ export function VaultHeader({
               <p className="text-white/60">Please connect your wallet to view your vault</p>
               <ConnectButton.Custom>
                 {({ openConnectModal, mounted }) => (
-                  <motion.button
+                  <m.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={openConnectModal}
@@ -121,7 +121,7 @@ export function VaultHeader({
                     className="px-6 py-3 bg-gradient-to-r from-accent to-blue-600 text-white rounded-xl font-bold shadow-lg shadow-accent/25 disabled:opacity-50"
                   >
                     Connect Wallet
-                  </motion.button>
+                  </m.button>
                 )}
               </ConnectButton.Custom>
             </div>
@@ -139,7 +139,7 @@ export function VaultHeader({
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <motion.button
+                <m.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={async () => {
@@ -155,7 +155,7 @@ export function VaultHeader({
                   className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold shadow-lg shadow-amber-500/25 disabled:opacity-50"
                 >
                   {isSwitchingChain ? 'Switching…' : `Switch to ${expectedChainName ?? 'Network'}`}
-                </motion.button>
+                </m.button>
                 {/* Fallback: open RainbowKit's chain modal for users whose wallet doesn't support programmatic switching */}
                 <ConnectButton.Custom>
                   {({ openChainModal, mounted }) => (
@@ -189,8 +189,8 @@ export function VaultHeader({
 
         {/* Feature Cards */}
         {hasVault && (
-          <motion.div variants={containerVariants} initial="hidden" animate="show" className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-            <motion.div variants={itemVariants}>
+          <m.div variants={containerVariants} initial="hidden" animate="show" className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+            <m.div variants={itemVariants}>
               <GlassCard className="p-5 border-accent/30" gradient="cyan">
                 <div className="flex items-center gap-3 mb-2">
                   <Key className="text-accent" size={24} />
@@ -200,8 +200,8 @@ export function VaultHeader({
                   Lost wallet? Guardians approve a signer rotation so you regain control of the vault.
                 </p>
               </GlassCard>
-            </motion.div>
-            <motion.div variants={itemVariants}>
+            </m.div>
+            <m.div variants={itemVariants}>
               <GlassCard className="p-5 border-amber-500/30" gradient="gold">
                 <div className="flex items-center gap-3 mb-2">
                   <Shield className="text-amber-400" size={24} />
@@ -211,8 +211,8 @@ export function VaultHeader({
                   Guardian setup, queued withdrawal review, and transfer guardrails protect your vault from unauthorized drain.
                 </p>
               </GlassCard>
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         )}
       </div>
     </section>

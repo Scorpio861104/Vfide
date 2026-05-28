@@ -22,7 +22,7 @@ import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { useState } from 'react';
 import { useAccount } from 'wagmi';
 import { isAddress, parseUnits, keccak256, stringToBytes, type Address } from 'viem';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Lock, ShieldCheck, Loader2, AlertCircle, CheckCircle2, Info } from 'lucide-react';
 import { useCommerceEscrow } from '@/hooks/useCommerceEscrow';
 import { useMerchantRegistry } from '@/hooks/useMerchantRegistry';
@@ -203,14 +203,14 @@ export function CreateTab() {
           </div>
         )}
         {successMessage && !error && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-200 flex items-start gap-2"
           >
             <CheckCircle2 size={12} className="shrink-0 mt-0.5" />
             <span>{successMessage}</span>
-          </motion.div>
+          </m.div>
         )}
 
         <button

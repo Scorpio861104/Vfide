@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Heart, Package, Star } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 
 type ProductImage = { url: string; alt?: string };
 
@@ -36,7 +36,7 @@ export function ProductGridCard({ product, wishlisted, onWishlist }: { product: 
   const lowStock = product.track_inventory && (product.inventory_count ?? 0) > 0 && (product.inventory_count ?? 0) <= 5;
 
   return (
-    <motion.div className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white transition-shadow hover:shadow-lg dark:border-gray-700 dark:bg-gray-800" whileHover={{ y: -3 }}>
+    <m.div className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white transition-shadow hover:shadow-lg dark:border-gray-700 dark:bg-gray-800" whileHover={{ y: -3 }}>
       <button
         onClick={(event) => {
           event.preventDefault();
@@ -88,6 +88,6 @@ export function ProductGridCard({ product, wishlisted, onWishlist }: { product: 
           {product.track_inventory && (product.inventory_count ?? 0) <= 0 && <p className="mt-1 text-[10px] font-medium text-red-500">Out of stock</p>}
         </div>
       </Link>
-    </motion.div>
+    </m.div>
   );
 }

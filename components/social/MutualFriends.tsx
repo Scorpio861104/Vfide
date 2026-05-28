@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Share2 } from 'lucide-react';
 import { Friend } from '@/types/messaging';
 import { formatAddress } from '@/lib/messageEncryption';
@@ -73,7 +73,7 @@ export function MutualFriends({ userAddress, currentUserAddress }: MutualFriends
   }
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className="p-4 bg-zinc-950 border border-zinc-800 rounded-xl"
@@ -127,6 +127,6 @@ export function MutualFriends({ userAddress, currentUserAddress }: MutualFriends
           </p>
         </div>
       )}
-    </motion.div>
+    </m.div>
   );
 }

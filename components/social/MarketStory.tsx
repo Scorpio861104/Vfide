@@ -16,7 +16,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Shield, ShoppingCart, MessageCircle, ChevronUp, ChevronDown, MapPin } from 'lucide-react';
 import { safeWindowOpen } from '@/lib/security/urlValidation';
 
@@ -80,7 +80,7 @@ export function MarketStory({ story, onBuy, onWhatsApp, onView, compact = false 
 
   if (compact) {
     return (
-      <motion.div
+      <m.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         className="w-32 shrink-0 cursor-pointer"
@@ -96,12 +96,12 @@ export function MarketStory({ story, onBuy, onWhatsApp, onView, compact = false 
             <div className="text-gray-400 text-[9px]">{story.products.length} items · {timeUntilExpiry(story.expiresAt)}</div>
           </div>
         </div>
-      </motion.div>
+      </m.div>
     );
   }
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       className="bg-white/3 border border-white/10 rounded-2xl overflow-hidden"
@@ -151,7 +151,7 @@ export function MarketStory({ story, onBuy, onWhatsApp, onView, compact = false 
       {/* Product list (expandable) */}
       <AnimatePresence>
         {showProducts && (
-          <motion.div
+          <m.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
@@ -197,7 +197,7 @@ export function MarketStory({ story, onBuy, onWhatsApp, onView, compact = false 
                 <MessageCircle size={14} />Share on WhatsApp
               </button>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 
@@ -212,7 +212,7 @@ export function MarketStory({ story, onBuy, onWhatsApp, onView, compact = false 
           <ShoppingCart size={16} />
         </button>
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 

@@ -13,7 +13,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Clock, MapPin, Shield, RotateCcw, Check, Sparkles } from 'lucide-react';
 
 interface VibePost {
@@ -143,7 +143,7 @@ export function MarketVibeCard({ vibe, onReact }: MarketVibeCardProps) {
   const scoreColor = vibe.author.proofScore >= 8000 ? '#10B981' : '#06B6D4';
 
   return (
-    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="rounded-2xl overflow-hidden border border-white/10">
+    <m.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="rounded-2xl overflow-hidden border border-white/10">
       {/* Dual image */}
       <div
         role="button"
@@ -204,6 +204,6 @@ export function MarketVibeCard({ vibe, onReact }: MarketVibeCardProps) {
           </button>
         ))}
       </div>
-    </motion.div>
+    </m.div>
   );
 }

@@ -7,7 +7,7 @@ import {
   useWatchContractEvent,
   useWriteContract,
 } from 'wagmi';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { isAddress, formatUnits } from 'viem';
 import {
   Lock,
@@ -91,7 +91,7 @@ export function LockVaultPanel() {
 
 function PanelShell({ children }: { children: React.ReactNode }) {
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       className="rounded-2xl border border-red-500/40 bg-gradient-to-br from-red-950/30 to-gray-900/60 backdrop-blur-xl p-6 space-y-6"
@@ -108,7 +108,7 @@ function PanelShell({ children }: { children: React.ReactNode }) {
         </div>
       </div>
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 

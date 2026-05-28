@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import { ReactNode } from 'react';
 
@@ -48,7 +48,7 @@ export function LoadingButton({
   const loading = isLoading || isPending;
 
   return (
-    <motion.button
+    <m.button
       whileHover={!loading && !disabled ? { scale: 1.02 } : {}}
       whileTap={!loading && !disabled ? { scale: 0.98 } : {}}
       disabled={loading || disabled}
@@ -71,6 +71,6 @@ export function LoadingButton({
       ) : (
         children
       )}
-    </motion.button>
+    </m.button>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import { History, LayoutDashboard, PlusCircle, Waves } from 'lucide-react';
 import { useState } from 'react';
 
@@ -33,7 +33,7 @@ export default function PayrollPage() {
         <div className="grid-pattern absolute inset-0 opacity-[0.03]" />
       </div>
       <div className="relative container mx-auto px-4 max-w-6xl py-8">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <div className="flex items-center gap-3 mb-3">
             <span className="badge-live"><span className="badge-live-dot" />Team Payments</span>
           </div>
@@ -41,7 +41,7 @@ export default function PayrollPage() {
             <span className="bg-gradient-to-r from-accent via-teal-400 to-emerald-400 bg-clip-text text-transparent">Payroll</span>
           </h1>
           <p className="text-white/50 text-lg">Manage team payments, streaming salaries, and payment history.</p>
-        </motion.div>
+        </m.div>
         <div className="sticky top-7 md:top-[5.25rem] z-30 -mx-4 px-4 py-3 backdrop-blur-xl border-b border-white/5 mb-8"
           style={{ background: 'rgba(9,9,11,0.85)' }}>
           <div className="flex gap-2 overflow-x-auto scrollbar-hide">
@@ -54,14 +54,14 @@ export default function PayrollPage() {
           </div>
         </div>
         <AnimatePresence mode="wait">
-          <motion.div key={activeTab}
+          <m.div key={activeTab}
             initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}>
             {activeTab === 'dashboard' && <DashboardTab />}
             {activeTab === 'streams'   && <StreamsTab />}
             {activeTab === 'create'    && <CreateTab />}
             {activeTab === 'history'   && <HistoryTab />}
-          </motion.div>
+          </m.div>
         </AnimatePresence>
       </div>
       <Footer />

@@ -28,7 +28,7 @@ export const dynamic = 'force-dynamic';
 
 import { useAccount } from 'wagmi';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import {
   User,
   Shield,
@@ -152,7 +152,7 @@ export default function MeHubPage() {
         <div className="relative container mx-auto max-w-5xl px-4 pb-16">
 
           {/* Header: tier badge + name + ProofScore snapshot */}
-          <motion.header
+          <m.header
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
@@ -208,7 +208,7 @@ export default function MeHubPage() {
                 </div>
               </div>
             </div>
-          </motion.header>
+          </m.header>
 
           {/* Discoverable map of everything under "Me" */}
           <div className="space-y-10">

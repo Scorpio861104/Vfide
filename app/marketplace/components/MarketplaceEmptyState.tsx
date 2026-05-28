@@ -18,7 +18,7 @@
  */
 
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import {
   Store, ArrowRight, Package, Laptop, Wrench,
   Shirt, Music, Globe, Sparkles,
@@ -61,7 +61,7 @@ export function MarketplaceEmptyState({ hasQuery }: Props) {
     <div className="py-8">
 
       {/* Testnet notice */}
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -77,7 +77,7 @@ export function MarketplaceEmptyState({ hasQuery }: Props) {
             marketplace when we go live. Listing is free — sellers never pay a fee.
           </p>
         </div>
-      </motion.div>
+      </m.div>
 
       {/* What can be sold here */}
       <div className="mb-10">
@@ -88,7 +88,7 @@ export function MarketplaceEmptyState({ hasQuery }: Props) {
           {CATEGORY_TILES.map((tile, i) => {
             const Icon = tile.icon;
             return (
-              <motion.div
+              <m.div
                 key={tile.label}
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -104,14 +104,14 @@ export function MarketplaceEmptyState({ hasQuery }: Props) {
                 </div>
                 <p className="text-sm font-semibold text-white mb-0.5">{tile.label}</p>
                 <p className="text-xs text-zinc-500">{tile.example}</p>
-              </motion.div>
+              </m.div>
             );
           })}
         </div>
       </div>
 
       {/* CTA */}
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.55 }}
@@ -132,7 +132,7 @@ export function MarketplaceEmptyState({ hasQuery }: Props) {
         >
           How selling works →
         </Link>
-      </motion.div>
+      </m.div>
     </div>
   );
 }

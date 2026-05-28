@@ -5,7 +5,7 @@ import { containerVariants, fadeSlideUp as itemVariants } from "@/lib/motion-pre
 
 import { useState } from "react";
 import { Footer } from "@/components/layout/Footer";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import {
   Search, Shield, Mail, User, Users, AlertCircle, ChevronRight,
   Sparkles, Fingerprint, Unlock, Radar, Scan, RefreshCw, Zap
@@ -125,33 +125,33 @@ export default function VaultRecoveryPage() {
       {/* Hero */}
       <section className="relative pt-28 pb-8">
         <div className="container mx-auto px-4 max-w-5xl">
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}
+          <m.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
+            <m.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-accent/20 to-purple-500/20 border border-accent/30 mb-8">
-              <motion.div animate={{ rotate: 360 }} transition={{ duration: 10, repeat: Infinity, ease: "linear" }}>
+              <m.div animate={{ rotate: 360 }} transition={{ duration: 10, repeat: Infinity, ease: "linear" }}>
                 <Sparkles className="h-4 w-4 text-accent" />
-              </motion.div>
+              </m.div>
               <span className="text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-accent to-purple-400">Industry First: Wallet Recovery Without Seed Phrases</span>
-            </motion.div>
-            <motion.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="text-4xl md:text-5xl lg:text-6xl font-black mb-6">
+            </m.div>
+            <m.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="text-4xl md:text-5xl lg:text-6xl font-black mb-6">
               <span className="text-white">Find & Recover</span><br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent via-blue-400 to-purple-400">Your Vault</span>
-            </motion.h2>
-            <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
+            </m.h2>
+            <m.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
               Lost your wallet? No problem. Search for your vault using your <span className="text-accent"> recovery ID</span>, <span className="text-purple-400"> email</span>, <span className="text-amber-400"> username</span>, or through your <span className="text-emerald-400"> guardians</span>.
-            </motion.p>
-          </motion.div>
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.4 }} className="mb-10">
+            </m.p>
+          </m.div>
+          <m.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.4 }} className="mb-10">
             <VaultKeyVisualization isSearching={isSearching} />
-          </motion.div>
+          </m.div>
         </div>
       </section>
 
       {/* Search Section */}
       <section className="relative py-8">
         <div className="container mx-auto px-4 max-w-5xl">
-          <motion.div variants={containerVariants} initial="hidden" animate="show" className="space-y-8">
-            <motion.div variants={itemVariants}>
+          <m.div variants={containerVariants} initial="hidden" animate="show" className="space-y-8">
+            <m.div variants={itemVariants}>
               <h3 className="text-lg font-bold text-white mb-5 flex items-center gap-2"><Radar className="h-5 w-5 text-accent" /> Select Search Method</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <SearchMethodButton icon={Fingerprint} title="Recovery ID" description="Your secret phrase" active={searchMethod === "recoveryId"} onClick={() => setSearchMethod("recoveryId")} gradient="cyan" badge="Best" />
@@ -159,9 +159,9 @@ export default function VaultRecoveryPage() {
                 <SearchMethodButton icon={User} title="Username" description="Your VFide username" active={searchMethod === "username"} onClick={() => setSearchMethod("username")} gradient="gold" />
                 <SearchMethodButton icon={Users} title="Guardian" description="Through your guardian" active={searchMethod === "guardian"} onClick={() => setSearchMethod("guardian")} gradient="green" />
               </div>
-            </motion.div>
+            </m.div>
 
-            <motion.div variants={itemVariants}>
+            <m.div variants={itemVariants}>
               <GlassCard className="p-8" hover={false} glow gradient="cyan">
                 <div className="flex flex-col md:flex-row gap-4">
                   <div className="flex-1 relative">
@@ -170,51 +170,51 @@ export default function VaultRecoveryPage() {
                      
                       className="w-full pl-14 pr-6 py-5 rounded-2xl bg-white/5 border-2 border-white/10 text-white  focus:outline-none focus:border-accent/50 text-lg transition-all" />
                   </div>
-                  <motion.button onClick={handleSearch} disabled={isSearching} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                  <m.button onClick={handleSearch} disabled={isSearching} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                     className="w-full sm:w-auto px-6 sm:px-10 py-4 sm:py-5 bg-gradient-to-r from-accent via-blue-500 to-purple-500 rounded-2xl font-bold text-white flex items-center justify-center gap-3 disabled:opacity-50 sm:min-w-50 shadow-lg shadow-accent/30 relative overflow-hidden group">
-                    {isSearching ? (<><motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}><RefreshCw className="h-5 w-5" /></motion.div><span>Searching...</span></>) : (<><Scan className="h-5 w-5" /><span>Search Vault</span></>)}
-                    <motion.div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                  </motion.button>
+                    {isSearching ? (<><m.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}><RefreshCw className="h-5 w-5" /></m.div><span>Searching...</span></>) : (<><Scan className="h-5 w-5" /><span>Search Vault</span></>)}
+                    <m.div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                  </m.button>
                 </div>
                 <AnimatePresence>
                   {error && (
-                    <motion.div initial={{ opacity: 0, y: -10, height: 0 }} animate={{ opacity: 1, y: 0, height: 'auto' }} exit={{ opacity: 0, y: -10, height: 0 }} className="mt-4 p-4 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center gap-3">
+                    <m.div initial={{ opacity: 0, y: -10, height: 0 }} animate={{ opacity: 1, y: 0, height: 'auto' }} exit={{ opacity: 0, y: -10, height: 0 }} className="mt-4 p-4 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center gap-3">
                       <AlertCircle className="h-5 w-5 text-red-400 shrink-0" /><p className="text-red-400">{error}</p>
-                    </motion.div>
+                    </m.div>
                   )}
                 </AnimatePresence>
               </GlassCard>
-            </motion.div>
+            </m.div>
 
             <AnimatePresence>
               {searchResult && <SearchResultCard vault={searchResult} onClaimClick={() => setShowClaimModal(true)} />}
             </AnimatePresence>
-          </motion.div>
+          </m.div>
         </div>
       </section>
 
       {/* How It Works */}
       <section className="relative py-20">
         <div className="container mx-auto px-4 max-w-5xl">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
-            <motion.div initial={{ scale: 0 }} whileInView={{ scale: 1 }} viewport={{ once: true }} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/20 border border-purple-500/30 mb-4">
+          <m.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
+            <m.div initial={{ scale: 0 }} whileInView={{ scale: 1 }} viewport={{ once: true }} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/20 border border-purple-500/30 mb-4">
               <Zap className="h-4 w-4 text-purple-400" /><span className="text-sm text-purple-400 font-medium">Secure Process</span>
-            </motion.div>
+            </m.div>
             <h2 className="text-4xl font-bold text-white mb-4">How Recovery Works</h2>
             <p className="text-gray-400 text-lg">A secure, multi-step process to protect against fraud</p>
-          </motion.div>
+          </m.div>
           <div className="grid md:grid-cols-3 gap-8">
             {RECOVERY_STEPS.map((item, index) => (
-              <motion.div key={item.step} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * 0.15 }}>
+              <m.div key={item.step} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * 0.15 }}>
                 <GlassCard className="p-8 h-full" gradient={item.gradient} glow>
                   <div className="flex items-center gap-4 mb-6">
-                    <motion.div whileHover={{ rotate: 360 }} transition={{ duration: 0.5 }} className="w-14 h-14 rounded-2xl bg-gradient-to-br from-white/20 to-white/5 flex items-center justify-center text-2xl font-black text-white border border-white/20">{item.step}</motion.div>
+                    <m.div whileHover={{ rotate: 360 }} transition={{ duration: 0.5 }} className="w-14 h-14 rounded-2xl bg-gradient-to-br from-white/20 to-white/5 flex items-center justify-center text-2xl font-black text-white border border-white/20">{item.step}</m.div>
                     <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center border border-white/10"><item.icon className="h-6 w-6 text-white" /></div>
                   </div>
                   <h3 className="text-xl font-bold text-white mb-3">{item.title}</h3>
                   <p className="text-gray-400 leading-relaxed">{item.description}</p>
                 </GlassCard>
-              </motion.div>
+              </m.div>
             ))}
           </div>
         </div>
@@ -223,23 +223,23 @@ export default function VaultRecoveryPage() {
       {/* CTA */}
       <section className="relative py-16">
         <div className="container mx-auto px-4 max-w-4xl">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+          <m.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <GlassCard className="p-10 text-center relative overflow-hidden" gradient="gold" glow hover={false}>
-              <motion.div animate={{ rotate: 360 }} transition={{ duration: 60, repeat: Infinity, ease: "linear" }} className="absolute -top-20 -right-20 w-64 h-64 bg-gradient-to-br from-amber-500/20 to-transparent rounded-full blur-3xl" />
+              <m.div animate={{ rotate: 360 }} transition={{ duration: 60, repeat: Infinity, ease: "linear" }} className="absolute -top-20 -right-20 w-64 h-64 bg-gradient-to-br from-amber-500/20 to-transparent rounded-full blur-3xl" />
               <div className="relative z-10">
-                <motion.div animate={{ y: [-5, 5, -5] }} transition={{ duration: 3, repeat: Infinity }} className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
+                <m.div animate={{ y: [-5, 5, -5] }} transition={{ duration: 3, repeat: Infinity }} className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
                   <Shield className="h-10 w-10 text-white" />
-                </motion.div>
+                </m.div>
                 <h2 className="text-3xl font-bold text-white mb-3">Set Up Your Recovery Now</h2>
                 <p className="text-gray-400 mb-8 max-w-lg mx-auto">Don&apos;t wait until you lose your wallet. Configure your recovery options today.</p>
                 <Link href="/vault/settings">
-                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="px-10 py-4 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl font-bold text-white inline-flex items-center gap-3 shadow-lg shadow-amber-500/30">
+                  <m.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="px-10 py-4 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl font-bold text-white inline-flex items-center gap-3 shadow-lg shadow-amber-500/30">
                     Configure Recovery <ChevronRight className="h-5 w-5" />
-                  </motion.button>
+                  </m.button>
                 </Link>
               </div>
             </GlassCard>
-          </motion.div>
+          </m.div>
         </div>
       </section>
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 
 const COLOR_STYLES = {
   blue: 'from-blue-500/15 to-accent/10 border-blue-500/30 text-blue-300',
@@ -25,7 +25,7 @@ export function ComparisonRow({
   const tone = COLOR_STYLES[color] ?? COLOR_STYLES.blue;
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 12 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
@@ -43,6 +43,6 @@ export function ComparisonRow({
           {fee}
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 }

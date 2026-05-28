@@ -13,7 +13,7 @@
  *                         or user-vault-multi-sig (architectural design review needed)
  */
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Clock, CheckCircle, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { Footer } from '@/components/layout/Footer';
@@ -183,7 +183,7 @@ export default function RoadmapPage() {
 
         <div className="relative container mx-auto max-w-3xl px-4 py-16">
           {/* Header */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-12 text-center">
+          <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-12 text-center">
             <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs text-amber-300 mb-4">
               <Clock size={10} /> In development
             </div>
@@ -194,7 +194,7 @@ export default function RoadmapPage() {
               <code className="text-xs text-zinc-500">PRODUCTION_SET.md</code>.
               No speculative promises — only what&apos;s built or actively in progress.
             </p>
-          </motion.div>
+          </m.div>
 
           {/* V1 — ships at launch */}
           <Section title="V1 — Mainnet launch" features={v1} phaseMeta={PHASE_META['v1']} />
@@ -238,7 +238,7 @@ function Section({ title, features, phaseMeta }: SectionProps) {
       </div>
       <div className="space-y-5">
         {features.map((f, i) => (
-          <motion.div
+          <m.div
             key={f.slug}
             id={f.slug}
             initial={{ opacity: 0, y: 16 }}
@@ -270,7 +270,7 @@ function Section({ title, features, phaseMeta }: SectionProps) {
                 {f.cta.label} <ArrowRight size={13} aria-hidden="true" />
               </Link>
             </div>
-          </motion.div>
+          </m.div>
         ))}
       </div>
     </div>

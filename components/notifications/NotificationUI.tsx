@@ -1,6 +1,6 @@
 'use client';
 
-import { motion, AnimatePresence, PanInfo } from 'framer-motion';
+import { m, AnimatePresence, PanInfo } from 'framer-motion';
 import { useCallback, useState, useEffect } from 'react';
 import { 
   X, 
@@ -121,7 +121,7 @@ export function NotificationToast({
   }, [onDismiss]);
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: -50, scale: 0.9 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, x: isDragging ? 0 : 300, scale: 0.9 }}
@@ -200,7 +200,7 @@ export function NotificationToast({
 
       {/* Swipe hint */}
       <div className="absolute inset-y-0 right-0 w-1 bg-gradient-to-l from-white/5 to-transparent pointer-events-none" />
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -273,7 +273,7 @@ export function NotificationItem({
   }, [onArchive, onRead]);
 
   return (
-    <motion.div
+    <m.div
       className="relative overflow-hidden"
       drag="x"
       dragConstraints={{ left: -100, right: 100 }}
@@ -292,7 +292,7 @@ export function NotificationItem({
       </div>
 
       {/* Content */}
-      <motion.div
+      <m.div
         style={{ x: swipeX }}
         className={`
           relative ${colors.bg} border-b border-white/5
@@ -387,8 +387,8 @@ export function NotificationItem({
             </div>
           )}
         </div>
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 }
 
@@ -418,7 +418,7 @@ export function GroupedNotification({
   const unreadCount = group.notifications.filter(n => !n.read).length;
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className={`
@@ -496,7 +496,7 @@ export function GroupedNotification({
           </button>
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -621,7 +621,7 @@ export function NotificationDropdown({ isOpen, onClose }: NotificationDropdownPr
       {isOpen && (
         <>
           {/* Backdrop */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -630,7 +630,7 @@ export function NotificationDropdown({ isOpen, onClose }: NotificationDropdownPr
           />
 
           {/* Dropdown */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: -10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
@@ -802,7 +802,7 @@ export function NotificationDropdown({ isOpen, onClose }: NotificationDropdownPr
                 Clear archived
               </button>
             </div>
-          </motion.div>
+          </m.div>
         </>
       )}
     </AnimatePresence>

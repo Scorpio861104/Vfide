@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Trophy, Zap, Award, AlertTriangle } from 'lucide-react';
 import { useGamification, ACHIEVEMENTS, LEVEL_PERKS, XP_PROOF_SCORE_BONUS_PER_LEVEL, xpLevelToProofScoreBonus, type AchievementId } from '@/lib/gamification';
 
@@ -38,7 +38,7 @@ export function UserStatsWidget({ userAddress, compact = false }: UserStatsWidge
           <span className="text-sm font-bold text-zinc-100">Lv.{progress.level}</span>
         </div>
         <div className="h-4 w-16 bg-zinc-950 rounded-full overflow-hidden">
-          <motion.div
+          <m.div
             initial={{ width: 0 }}
             animate={{ width: `${xpProgress}%` }}
             className="h-full bg-gradient-to-r from-accent to-violet-400"
@@ -49,7 +49,7 @@ export function UserStatsWidget({ userAddress, compact = false }: UserStatsWidge
   }
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className="bg-gradient-to-br from-zinc-900 to-zinc-950 border border-zinc-700 rounded-xl p-4"
@@ -88,7 +88,7 @@ export function UserStatsWidget({ userAddress, compact = false }: UserStatsWidge
 
       {/* Penalty Warning */}
       {(progress.penaltyXP ?? 0) > 0 && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: -4 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex items-start gap-2 bg-red-950/40 border border-red-500/30 rounded-lg p-3 mb-3 text-xs"
@@ -99,12 +99,12 @@ export function UserStatsWidget({ userAddress, compact = false }: UserStatsWidge
             Perks and governance rights use your <em>effective</em> level ({progress.effectiveLevel ?? progress.level}), 
             which cannot be restored by earning more XP.
           </span>
-        </motion.div>
+        </m.div>
       )}
 
       {/* Progress Bar */}
       <div className="relative h-3 bg-zinc-950 rounded-full overflow-hidden mb-4">
-        <motion.div
+        <m.div
           initial={{ width: 0 }}
           animate={{ width: `${xpProgress}%` }}
           transition={{ duration: 1, ease: 'easeOut' }}
@@ -139,7 +139,7 @@ export function UserStatsWidget({ userAddress, compact = false }: UserStatsWidge
         const nextPerk = LEVEL_PERKS.find(p => p.level > effectiveLvl);
         if (!nextPerk) return null;
         return (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
@@ -153,12 +153,12 @@ export function UserStatsWidget({ userAddress, compact = false }: UserStatsWidge
                 <div className="text-xs text-zinc-400">{nextPerk.description}</div>
               </div>
             </div>
-          </motion.div>
+          </m.div>
         );
       })()}
 
       {/* XP → ProofScore connection */}
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 4 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
@@ -179,8 +179,8 @@ export function UserStatsWidget({ userAddress, compact = false }: UserStatsWidge
           </span>{' '}
           of a possible +1,400.
         </p>
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 }
 
@@ -223,7 +223,7 @@ export function AchievementsList({ userAddress }: { userAddress: string }) {
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {unlockedAchievements.map((achievement, index) => (
-              <motion.div
+              <m.div
                 key={achievement.id}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -244,7 +244,7 @@ export function AchievementsList({ userAddress }: { userAddress: string }) {
                     </div>
                   </div>
                 </div>
-              </motion.div>
+              </m.div>
             ))}
           </div>
         </div>
@@ -302,7 +302,7 @@ export function AchievementUnlockNotification({
   }, [onClose]);
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, x: 50, scale: 0.9 }}
       animate={{ opacity: 1, x: 0, scale: 1 }}
       exit={{ opacity: 0, x: 50, scale: 0.9 }}
@@ -324,6 +324,6 @@ export function AchievementUnlockNotification({
           </div>
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 }

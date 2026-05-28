@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import {
   ArrowUpRight,
   ArrowDownLeft,
@@ -92,7 +92,7 @@ export function TransactionHistory({ transactions = [], loading = false }: Trans
 
   const renderTransactionRow = (tx: Transaction, idx: number, padded = false) => {
     const content = (
-      <motion.div
+      <m.div
         key={tx.id}
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
@@ -152,7 +152,7 @@ export function TransactionHistory({ transactions = [], loading = false }: Trans
             <ExternalLink size={12} />
           </a>
         </div>
-      </motion.div>
+      </m.div>
     );
 
     return padded ? <div className="h-full pb-3">{content}</div> : content;

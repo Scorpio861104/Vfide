@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import { Footer } from '@/components/layout/Footer';
 import { useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { useAccount } from 'wagmi';
 import { FaqTab } from './components/FaqTab';
 import { TicketsTab } from './components/TicketsTab';
@@ -249,7 +249,7 @@ export default function SupportPage() {
         <div className="grid-pattern absolute inset-0 opacity-[0.03]" />
       </div>
       <div className="relative container mx-auto px-4 max-w-6xl py-8 space-y-6">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <div className="flex items-center gap-3 mb-3">
             <span className="badge-live"><span className="badge-live-dot" />Support Center</span>
           </div>
@@ -275,7 +275,7 @@ export default function SupportPage() {
               </select>
             </div>
           </div>
-        </motion.div>
+        </m.div>
 
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
             {TAB_IDS.map((id) => (

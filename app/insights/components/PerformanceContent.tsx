@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic';
 
 import { useMemo, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Activity, AlertTriangle, BarChart3, FileText, RefreshCcw, Users } from 'lucide-react';
 import { calculateHealthScore } from '@/config/performance-dashboard';
 import { useErrorTracking } from '@/hooks/useErrorTracking';
@@ -67,7 +67,7 @@ export default function PerformanceContent() {
 
       <div className="relative container mx-auto max-w-6xl px-4">
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
           className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <div className="flex items-center gap-3 mb-3">
@@ -84,10 +84,10 @@ export default function PerformanceContent() {
             className="btn-premium-ghost flex items-center gap-2 self-start">
             <RefreshCcw size={16} />Refresh
           </button>
-        </motion.div>
+        </m.div>
 
         {/* Stats */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
           className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-4">
           <div className="analytics-card p-5">
             <div className="mb-2 flex items-center gap-2 text-accent"><Activity size={16} /><span className="text-sm font-semibold">Health Score</span></div>
@@ -105,7 +105,7 @@ export default function PerformanceContent() {
             <div className="mb-2 flex items-center gap-2 text-amber-300"><BarChart3 size={16} /><span className="text-sm font-semibold">Avg Response</span></div>
             <div className="text-3xl font-bold text-white">{avgResponseTime.toFixed(0)}ms</div>
           </div>
-        </motion.div>
+        </m.div>
 
         {/* Sticky tab bar */}
         <div className="sticky top-7 md:top-[5.25rem] z-30 backdrop-blur-xl bg-zinc-950/80 border-b border-white/5 -mx-4 px-4 mb-8 py-3">
@@ -121,7 +121,7 @@ export default function PerformanceContent() {
 
         {/* Tab content */}
         <AnimatePresence mode="wait">
-          <motion.div key={activeTab}
+          <m.div key={activeTab}
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}>
             {activeTab === 'overview' && (
@@ -137,7 +137,7 @@ export default function PerformanceContent() {
             {activeTab === 'pages' && (
               <PagesTab pageMetrics={pageMetrics} apiMetrics={apiMetrics} isLoading={pageMetricsLoading} />
             )}
-          </motion.div>
+          </m.div>
         </AnimatePresence>
       </div>
 

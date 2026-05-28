@@ -1,5 +1,5 @@
 'use client';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import {
   Activity,
   Award,
@@ -44,7 +44,7 @@ export function SearchMethodButton({
   const color = colors[gradient];
   
   return (
-    <motion.button
+    <m.button
       onClick={onClick}
       whileHover={{ scale: 1.03, y: -4 }}
       whileTap={{ scale: 0.97 }}
@@ -56,7 +56,7 @@ export function SearchMethodButton({
     >
       {/* Background glow */}
       {active && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className={`absolute inset-0 bg-gradient-to-br ${color.glow} to-transparent`}
@@ -65,22 +65,22 @@ export function SearchMethodButton({
       
       <div className="relative z-10">
         <div className="flex items-start justify-between mb-3">
-          <motion.div 
+          <m.div 
             animate={active ? { rotate: [0, -10, 10, 0] } : {}}
             transition={{ duration: 0.5 }}
             className={`w-12 h-12 rounded-xl ${active ? color.bg : 'bg-white/10'} flex items-center justify-center border ${active ? color.border : 'border-white/10'}`}
           >
             <Icon className={`h-6 w-6 ${active ? color.text : 'text-gray-400'}`} />
-          </motion.div>
+          </m.div>
           
           {badge && active && (
-            <motion.span 
+            <m.span 
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               className={`text-[10px] font-bold px-2 py-1 rounded-full ${color.bg} ${color.text} ${color.border} border`}
             >
               {badge}
-            </motion.span>
+            </m.span>
           )}
         </div>
         
@@ -90,17 +90,17 @@ export function SearchMethodButton({
       
       {/* Active glow bar */}
       {active && (
-        <motion.div
+        <m.div
           layoutId="searchMethodActive"
           className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent ${color.glow} to-transparent`}
         />
       )}
       
       {/* Hover shine */}
-      <motion.div
+      <m.div
         className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"
       />
-    </motion.button>
+    </m.button>
   );
 }
 
@@ -124,7 +124,7 @@ export function SearchResultCard({
   onClaimClick: () => void;
 }) {
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, scale: 0.95, y: 20 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ type: "spring" as const, stiffness: 100 }}
@@ -132,16 +132,16 @@ export function SearchResultCard({
       <GlassCard className="p-8" gradient="cyan" glow>
         {/* Success header */}
         <div className="flex items-center gap-4 mb-6">
-          <motion.div
+          <m.div
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: "spring" as const, stiffness: 200, delay: 0.2 }}
             className="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent to-blue-600 flex items-center justify-center shadow-lg shadow-accent/30"
           >
             <ShieldCheck className="h-8 w-8 text-white" />
-          </motion.div>
+          </m.div>
           <div className="flex-1">
-            <motion.div 
+            <m.div 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
@@ -149,19 +149,19 @@ export function SearchResultCard({
             >
               <Sparkles className="h-4 w-4 text-accent" />
               <span className="text-sm text-accent font-semibold">Vault Found!</span>
-            </motion.div>
-            <motion.h3 
+            </m.div>
+            <m.h3 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 }}
               className="text-2xl font-bold text-white"
             >
               Recovery Available
-            </motion.h3>
+            </m.h3>
           </div>
           
           {vault.isRecoverable ? (
-            <motion.button
+            <m.button
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.5 }}
@@ -172,10 +172,10 @@ export function SearchResultCard({
             >
               <Key className="h-5 w-5" />
               <span>Claim Vault</span>
-              <motion.div
+              <m.div
                 className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"
               />
-            </motion.button>
+            </m.button>
           ) : (
             <div className="px-6 py-3 bg-red-500/20 border-2 border-red-500/50 rounded-xl text-red-400 flex items-center gap-2">
               <Lock className="h-5 w-5" />
@@ -186,7 +186,7 @@ export function SearchResultCard({
         
         {/* Vault details */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <motion.div 
+          <m.div 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
@@ -198,9 +198,9 @@ export function SearchResultCard({
             <p className="font-mono text-sm text-accent">
               {vault.address.slice(0, 10)}...{vault.address.slice(-8)}
             </p>
-          </motion.div>
+          </m.div>
           
-          <motion.div 
+          <m.div 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
@@ -212,11 +212,11 @@ export function SearchResultCard({
             <p className="font-mono text-sm text-gray-300">
               {vault.originalOwner.slice(0, 10)}...{vault.originalOwner.slice(-8)}
             </p>
-          </motion.div>
+          </m.div>
         </div>
         
         {/* Stats grid */}
-        <motion.div 
+        <m.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.7 }}
@@ -255,9 +255,9 @@ export function SearchResultCard({
             <p className="text-sm font-bold text-white">{vault.lastActive}</p>
             <p className="text-[10px] text-gray-500">Last Active</p>
           </div>
-        </motion.div>
+        </m.div>
       </GlassCard>
-    </motion.div>
+    </m.div>
   );
 }
 

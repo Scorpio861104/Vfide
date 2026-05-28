@@ -19,7 +19,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { ShoppingCart, Store, Check, X, Sparkles } from 'lucide-react';
 
 // ── Types ───────────────────────────────────────────────────────────────────
@@ -176,7 +176,7 @@ export function OnboardingPathChooser() {
   if (state.path !== 'undecided') return null;
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="max-w-lg mx-auto text-center py-12 px-4"
@@ -185,7 +185,7 @@ export function OnboardingPathChooser() {
       <p className="text-gray-400 mb-8">What brings you here?</p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <motion.button
+        <m.button
           whileHover={{ scale: 1.02, y: -2 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => choosePath('buyer')}
@@ -194,9 +194,9 @@ export function OnboardingPathChooser() {
           <ShoppingCart size={32} className="text-accent mb-3" />
           <div className="text-white font-bold text-lg mb-1">I want to buy</div>
           <div className="text-gray-400 text-sm">Shop from trusted sellers with lower fees than any payment platform.</div>
-        </motion.button>
+        </m.button>
 
-        <motion.button
+        <m.button
           whileHover={{ scale: 1.02, y: -2 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => choosePath('seller')}
@@ -205,9 +205,9 @@ export function OnboardingPathChooser() {
           <Store size={32} className="text-emerald-400 mb-3" />
           <div className="text-white font-bold text-lg mb-1">I want to sell</div>
           <div className="text-gray-400 text-sm">Set up your store in 60 seconds. Zero merchant fees. Get paid directly.</div>
-        </motion.button>
+        </m.button>
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -221,7 +221,7 @@ export function OnboardingProgressBar() {
   const currentStep = steps.find(s => s.current);
 
   return (
-    <motion.div
+    <m.div
       initial={{ y: -60 }}
       animate={{ y: 0 }}
       exit={{ y: -60 }}
@@ -259,7 +259,7 @@ export function OnboardingProgressBar() {
           <button onClick={dismiss} className="p-1 text-gray-500 hover:text-white" aria-label="Close"><X size={16} /></button>
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -275,21 +275,21 @@ export function OnboardingComplete({ path }: { path: UserPath }) {
   const msg = messages[path];
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       className="text-center py-12 px-4"
     >
-      <motion.div
+      <m.div
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ type: 'spring', stiffness: 200, delay: 0.2 }}
         className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center shadow-lg shadow-emerald-500/30"
       >
         <Sparkles size={40} className="text-white" />
-      </motion.div>
+      </m.div>
       <h2 className="text-3xl font-bold text-white mb-2">{msg.title}</h2>
       <p className="text-gray-400 max-w-md mx-auto">{msg.subtitle}</p>
-    </motion.div>
+    </m.div>
   );
 }

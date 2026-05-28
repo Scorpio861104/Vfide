@@ -8,7 +8,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { useAccount, useWatchContractEvent, useSignMessage } from 'wagmi'
 import { QRCodeSVG } from 'qrcode.react'
 import { formatEther } from 'viem'
@@ -571,7 +571,7 @@ export function MerchantPOS() {
                 {/* Product Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {filteredProducts.map(product => (
-                    <motion.button
+                    <m.button
                       key={product.id}
                       onClick={() => addToCart(product)}
                       whileHover={{ scale: 1.05 }}
@@ -582,7 +582,7 @@ export function MerchantPOS() {
                       <h3 className="font-bold text-zinc-100 mb-1">{product.name}</h3>
                       <p className="text-sm text-zinc-100/60 mb-2">{product.description}</p>
                       <p className="text-xl font-bold text-emerald-400">${product.price.toFixed(2)}</p>
-                    </motion.button>
+                    </m.button>
                   ))}
                 </div>
               </div>
@@ -644,7 +644,7 @@ export function MerchantPOS() {
               
               {/* Totals */}
               {cart.length > 0 && (
-                <motion.div
+                <m.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-accent/20 space-y-4"
@@ -703,7 +703,7 @@ export function MerchantPOS() {
                       </div>
                     </div>
                     
-                    <motion.div
+                    <m.div
                       animate={{ scale: [1, 1.02, 1] }}
                       transition={{ duration: 2, repeat: Infinity }}
                       className="bg-emerald-400/10 border border-emerald-400/30 rounded px-3 py-2 text-center"
@@ -712,7 +712,7 @@ export function MerchantPOS() {
                         Save ${Math.max(processorFees.stripe, processorFees.square, processorFees.clover, processorFees.paypal).toFixed(2)}!
                       </p>
                       <p className="text-xs text-zinc-100/60">vs most expensive</p>
-                    </motion.div>
+                    </m.div>
                   </div>
 
                   {!hasQuotedVfideAmount && (
@@ -750,7 +750,7 @@ export function MerchantPOS() {
                       {priceError ? 'Unable to fetch a live VFIDE quote right now.' : 'Waiting for a live VFIDE quote before enabling QR checkout.'}
                     </p>
                   )}
-                </motion.div>
+                </m.div>
               )}
             </div>
           </div>
@@ -830,7 +830,7 @@ export function MerchantPOS() {
               ) : (
                 <div className="space-y-3">
                   {salesHistory.slice(0, 10).map(sale => (
-                    <motion.div
+                    <m.div
                       key={sale.id}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -859,7 +859,7 @@ export function MerchantPOS() {
                           <p className="text-xs text-zinc-100/60">{sale.vfideAmount} VFIDE</p>
                         </div>
                       </div>
-                    </motion.div>
+                    </m.div>
                   ))}
                 </div>
               )}
@@ -871,14 +871,14 @@ export function MerchantPOS() {
       {/* Add Product Modal */}
       <AnimatePresence>
         {showAddProduct && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onClick={() => setShowAddProduct(false)}
           >
-            <motion.div
+            <m.div
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
@@ -948,22 +948,22 @@ export function MerchantPOS() {
                   </button>
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         )}
       </AnimatePresence>
       
       {/* QR Payment Modal */}
       <AnimatePresence>
         {showQRPayment && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onClick={() => setShowQRPayment(false)}
           >
-            <motion.div
+            <m.div
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
@@ -1059,7 +1059,7 @@ export function MerchantPOS() {
                   </div>
                 </div>
                 
-                <motion.div
+                <m.div
                   animate={{ scale: [1, 1.05, 1] }}
                   transition={{ duration: 2, repeat: Infinity }}
                   className="bg-emerald-400/20 border border-emerald-400 rounded-lg p-3 text-center"
@@ -1067,21 +1067,21 @@ export function MerchantPOS() {
                   <p className="text-emerald-400 font-bold text-lg">
                     You Save Up To ${(Math.max(processorFees.stripe, processorFees.square, processorFees.clover, processorFees.paypal) - processorFees.vfide).toFixed(2)}!
                   </p>
-                </motion.div>
+                </m.div>
               </div>
               
               {/* Waiting for payment indicator */}
               <div className="mb-4">
                 {qrSignature && qrExpiresAt ? (
                   <>
-                    <motion.div
+                    <m.div
                       animate={{ opacity: [0.5, 1, 0.5] }}
                       transition={{ duration: 1.5, repeat: Infinity }}
                       className="flex items-center justify-center gap-2 text-accent"
                     >
                       <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
                       <span className="text-sm">Waiting for blockchain confirmation...</span>
-                    </motion.div>
+                    </m.div>
                     <p className="text-xs text-center text-zinc-100/40 mt-2">
                       Payment will auto-confirm when detected on-chain
                     </p>
@@ -1103,22 +1103,22 @@ export function MerchantPOS() {
                   Cancel Payment
                 </button>
               </div>
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         )}
       </AnimatePresence>
       
       {/* Email Opt-in Modal */}
       <AnimatePresence>
         {showEmailPrompt && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onClick={() => setShowEmailPrompt(false)}
           >
-            <motion.div
+            <m.div
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
@@ -1179,22 +1179,22 @@ export function MerchantPOS() {
                   </button>
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         )}
       </AnimatePresence>
       
       {/* Receipt Modal */}
       <AnimatePresence>
         {showReceipt && currentSale && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onClick={() => setShowReceipt(false)}
           >
-            <motion.div
+            <m.div
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
@@ -1286,8 +1286,8 @@ export function MerchantPOS() {
                   </button>
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

@@ -35,7 +35,7 @@
  */
 
 import { useAccount } from 'wagmi';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import Link from 'next/link';
 import { Store, AlertTriangle, ExternalLink, CheckCircle2, Ban, Pause } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
@@ -165,7 +165,7 @@ export function MerchantStatusCard() {
   })();
 
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+    <m.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
       <GlassCard hover={false} className="p-5">
         <div className="flex items-start justify-between gap-4 mb-4">
           <div className="flex items-center gap-3">
@@ -247,6 +247,6 @@ export function MerchantStatusCard() {
           </p>
         )}
       </GlassCard>
-    </motion.div>
+    </m.div>
   );
 }

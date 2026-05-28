@@ -16,7 +16,7 @@ import { LiveActivityFeed } from '@/components/trust/LiveActivityFeed'
 import { FeeSavingsCalculator } from '@/components/commerce/FeeSavingsCalculator'
 import { LiveSystemStats } from '@/components/stats/LiveSystemStats'
 import { TransactionNotification, useTransactionNotifications } from '@/components/wallet/TransactionNotification'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { useAccount } from 'wagmi'
 import { DemoDataBanner } from '@/components/layout/DemoDataBanner';
 
@@ -62,7 +62,7 @@ export default function LiveDemoPage() {
       
       <div className="relative max-w-7xl mx-auto space-y-6 sm:space-y-8 md:space-y-12 py-10">
         {/* Hero */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center space-y-2 sm:space-y-4"
@@ -81,23 +81,23 @@ export default function LiveDemoPage() {
             <span className="text-emerald-400 font-bold">excited</span> and want to be{' '}
             <span className="text-amber-400 font-bold">all in</span> on VFIDE
           </p>
-        </motion.div>
+        </m.div>
         
         {/* Network Stats - Full Width */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2 }}
         >
           <LiveSystemStats />
-        </motion.div>
+        </m.div>
         
         {/* Two Column Layout */}
         <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
           {/* Left Column */}
           <div className="space-y-4 sm:space-y-6 md:space-y-8">
             {/* ProofScore Visualizer */}
-            <motion.div
+            <m.div
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
@@ -116,7 +116,7 @@ export default function LiveDemoPage() {
               </div>
               
               {isConnected && (
-                <motion.div
+                <m.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.5 }}
@@ -134,23 +134,23 @@ export default function LiveDemoPage() {
                   >
                     Vote on DAO Proposal
                   </button>
-                </motion.div>
+                </m.div>
               )}
-            </motion.div>
+            </m.div>
             
             {/* Fee Calculator */}
-            <motion.div
+            <m.div
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 }}
               className="bg-zinc-950/50 backdrop-blur-xl rounded-2xl p-4 sm:p-6 md:p-8 border border-accent/20"
             >
               <FeeSavingsCalculator />
-            </motion.div>
+            </m.div>
           </div>
           
           {/* Right Column - Activity Feed */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.5 }}
@@ -160,7 +160,7 @@ export default function LiveDemoPage() {
             
             {/* Quick Actions */}
             {isConnected && (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.7 }}
@@ -178,13 +178,13 @@ export default function LiveDemoPage() {
                 >
                   Pay Merchant
                 </button>
-              </motion.div>
+              </m.div>
             )}
-          </motion.div>
+          </m.div>
         </div>
         
         {/* Bottom CTA */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
@@ -213,7 +213,7 @@ export default function LiveDemoPage() {
               </Link>
             </div>
           </div>
-        </motion.div>
+        </m.div>
       </div>
     </div>
     <Footer />

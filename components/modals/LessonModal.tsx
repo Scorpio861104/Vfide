@@ -2,7 +2,7 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { X, Clock, CheckCircle, BookOpen } from "lucide-react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 
 export interface LessonContent {
   title: string;
@@ -53,7 +53,7 @@ export default function LessonModal({ isOpen, onClose, lesson }: LessonModalProp
         <div className="mt-6 space-y-6">
           {/* Lesson Sections */}
           {lesson.sections.map((section, idx) => (
-            <motion.div
+            <m.div
               key={idx}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -75,7 +75,7 @@ export default function LessonModal({ isOpen, onClose, lesson }: LessonModalProp
                   ))}
                 </ul>
               )}
-            </motion.div>
+            </m.div>
           ))}
 
           {/* Key Takeaways */}

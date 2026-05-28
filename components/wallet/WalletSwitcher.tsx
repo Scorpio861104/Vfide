@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { Wallet, Plus, Check, Trash2, Edit2, X } from 'lucide-react';
 import { getLinkedWallets, unlinkWallet, updateWalletLabel, setPrimaryWallet } from '@/lib/biometricAuth';
@@ -122,7 +122,7 @@ export function WalletSwitcher() {
           const isEditing = editingId === wallet.address;
 
           return (
-            <motion.div
+            <m.div
               key={wallet.address}
               layout
               className={`p-3 rounded-lg border transition-colors ${
@@ -238,7 +238,7 @@ export function WalletSwitcher() {
                   Set as primary wallet
                 </button>
               )}
-            </motion.div>
+            </m.div>
           );
         })}
 

@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic';
 
 import { Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Sparkles, ArrowRight, Power, ExternalLink, Smartphone, Key, ShieldCheck } from 'lucide-react';
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { useAccount } from 'wagmi';
@@ -57,7 +57,7 @@ function OnboardingPageContent() {
 
   return (
     <>
-      <motion.div
+      <m.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="min-h-screen bg-zinc-950 md:pt-[3.5rem] relative overflow-hidden"
@@ -72,7 +72,7 @@ function OnboardingPageContent() {
         <div className="grid-pattern pointer-events-none absolute inset-0 opacity-30" aria-hidden="true" />
 
         <div className="container mx-auto max-w-3xl px-4 pt-16 pb-16 relative z-10">
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="glass-card-premium p-8"
@@ -171,9 +171,9 @@ function OnboardingPageContent() {
                 )}
               </div>
             )}
-          </motion.div>
+          </m.div>
         </div>
-      </motion.div>
+      </m.div>
       <Footer />
     </>
   );

@@ -22,7 +22,7 @@
 'use client';
 
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, XCircle, AlertCircle, X } from 'lucide-react';
 import { subscribeToToasts } from '@/lib/toast';
 
@@ -93,7 +93,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       <div className="fixed top-20 right-4 z-50 flex flex-col gap-2 max-w-md">
         <AnimatePresence>
           {toasts.map((t) => (
-            <motion.div
+            <m.div
               key={t.id}
               initial={{ opacity: 0, y: -20, x: 100 }}
               animate={{ opacity: 1, y: 0, x: 0 }}
@@ -117,7 +117,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               >
                 <X size={16} />
               </button>
-            </motion.div>
+            </m.div>
           ))}
         </AnimatePresence>
       </div>

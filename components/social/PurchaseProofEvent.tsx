@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { ShoppingCart, Shield, Zap } from 'lucide-react';
 import Link from 'next/link';
 
@@ -23,7 +23,7 @@ export function PurchaseProofEvent({
   const timeAgo = formatTimeAgo(timestamp);
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className={`bg-gradient-to-r from-emerald-500/5 to-accent/5 border border-emerald-500/20 rounded-2xl p-4 ${className}`}
@@ -54,7 +54,7 @@ export function PurchaseProofEvent({
           </div>
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { useThemeManager } from '@/hooks/useThemeManager';
 import { Trash2, Download, Upload, Plus, Check } from 'lucide-react';
 import { toast } from '@/lib/toast';
@@ -82,7 +82,7 @@ export function SavedThemesManager() {
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-white">Saved Themes</h3>
         <div className="flex gap-2">
-          <motion.button
+          <m.button
             onClick={handleExport}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -90,8 +90,8 @@ export function SavedThemesManager() {
           >
             <Download className="w-4 h-4" />
             Export
-          </motion.button>
-          <motion.button
+          </m.button>
+          <m.button
             onClick={handleImport}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -99,8 +99,8 @@ export function SavedThemesManager() {
           >
             <Upload className="w-4 h-4" />
             Import
-          </motion.button>
-          <motion.button
+          </m.button>
+          <m.button
             onClick={() => setShowSaveDialog(true)}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -108,14 +108,14 @@ export function SavedThemesManager() {
           >
             <Plus className="w-4 h-4" />
             Save Current
-          </motion.button>
+          </m.button>
         </div>
       </div>
 
       {/* Save Dialog */}
       <AnimatePresence>
         {showSaveDialog && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
@@ -136,24 +136,24 @@ export function SavedThemesManager() {
               className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white  focus:outline-none focus:border-blue-500"
             />
             <div className="flex gap-2">
-              <motion.button
+              <m.button
                 onClick={handleSaveTheme}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-white font-medium transition-colors"
               >
                 Save
-              </motion.button>
-              <motion.button
+              </m.button>
+              <m.button
                 onClick={() => setShowSaveDialog(false)}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="flex-1 px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-medium transition-colors"
               >
                 Cancel
-              </motion.button>
+              </m.button>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 
@@ -167,7 +167,7 @@ export function SavedThemesManager() {
           </div>
         ) : (
           savedThemes.map((theme) => (
-            <motion.div
+            <m.div
               key={theme.id}
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
@@ -188,15 +188,15 @@ export function SavedThemesManager() {
                 </div>
 
                 <div className="flex gap-2 shrink-0">
-                  <motion.button
+                  <m.button
                     onClick={() => loadSavedTheme(theme.id)}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     className="px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded text-xs text-white transition-colors"
                   >
                     Load
-                  </motion.button>
-                  <motion.button
+                  </m.button>
+                  <m.button
                     onClick={() => handleCopyTheme(theme.id)}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -214,18 +214,18 @@ export function SavedThemesManager() {
                     ) : (
                       'Copy'
                     )}
-                  </motion.button>
-                  <motion.button
+                  </m.button>
+                  <m.button
                     onClick={() => deleteSavedTheme(theme.id)}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     className="px-2 py-1 bg-red-600/20 hover:bg-red-600/30 rounded text-xs text-red-300 transition-colors"
                   >
                     <Trash2 className="w-3 h-3" />
-                  </motion.button>
+                  </m.button>
                 </div>
               </div>
-            </motion.div>
+            </m.div>
           ))
         )}
       </div>

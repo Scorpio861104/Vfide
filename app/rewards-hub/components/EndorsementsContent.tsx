@@ -4,7 +4,7 @@ import { useMemo } from 'react'
 import { useAccount, useReadContract } from 'wagmi'
 import { Calendar, Users, Star, Award } from 'lucide-react'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts'
 import { SeerSocialABI, SeerViewABI } from '@/lib/abis'
 import { formatDistanceToNow } from 'date-fns'
@@ -64,7 +64,7 @@ export default function EndorsementsContent() {
 
       <div className="relative max-w-5xl mx-auto px-4">
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <div className="flex items-center gap-3 mb-3">
             <span className="badge-live"><span className="badge-live-dot" />Trust Network</span>
           </div>
@@ -74,29 +74,29 @@ export default function EndorsementsContent() {
             </span>
           </h1>
           <p className="text-white/50">Network of trust and reputation through peer endorsements</p>
-        </motion.div>
+        </m.div>
 
         {/* Stats */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
           className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
           {[
             { value: safeBigIntToNumber(stats?.[0], 0), label: 'Total Endorsements', color: 'cyan', icon: Award },
             { value: activeEndorsements.length, label: 'Active Endorsements', color: 'emerald', icon: Users },
             { value: safeBigIntToNumber(stats?.[1], 0), label: 'Active Bonus', color: 'amber', icon: Star },
           ].map((stat, idx) => (
-            <motion.div key={stat.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.1 }}
+            <m.div key={stat.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.1 }}
               className="analytics-card p-5">
               <div className={`text-3xl font-bold ${stat.color === 'cyan' ? 'text-accent' : stat.color === 'emerald' ? 'text-emerald-400' : 'text-amber-400'} mb-1`}>
                 {stat.value}
               </div>
               <div className="text-sm text-white/50">{stat.label}</div>
-            </motion.div>
+            </m.div>
           ))}
-        </motion.div>
+        </m.div>
 
         {/* Connected notice */}
         {address && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
+          <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
             className="mb-6 rounded-2xl border border-accent/20 bg-accent/5 p-4">
             <div className="flex items-center gap-2 text-accent mb-1 text-sm font-medium">
               ✓ Logged in as {address.slice(0, 6)}...{address.slice(-4)}
@@ -104,11 +104,11 @@ export default function EndorsementsContent() {
             <p className="text-xs text-white/40">
               Your endorsements have stronger weight and value. Build reputation by endorsing trustworthy users.
             </p>
-          </motion.div>
+          </m.div>
         )}
 
         {/* Endorsements List */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
           <h2 className="text-xl font-bold mb-4 text-white">Recent Endorsements</h2>
 
           {activeEndorsements.length === 0 && (
@@ -121,7 +121,7 @@ export default function EndorsementsContent() {
 
           <div className="space-y-3">
             {activeEndorsements.map((endorsement, index) => (
-              <motion.div key={`${endorsement.endorser}-${index}`}
+              <m.div key={`${endorsement.endorser}-${index}`}
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }}
                 className="glass-card-premium p-4 hover:border-white/20 transition-all">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
@@ -146,16 +146,16 @@ export default function EndorsementsContent() {
                     </div>
                   </div>
                 </div>
-              </motion.div>
+              </m.div>
             ))}
           </div>
-        </motion.div>
+        </m.div>
 
         {/* CTA */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
+        <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
           className="text-center text-white/30 py-8 text-sm">
           Want to see more endorsements? Visit user profiles to give endorsements.
-        </motion.div>
+        </m.div>
       </div>
     </div>
   )

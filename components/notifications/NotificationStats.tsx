@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import type { NotificationStats } from '@/config/notification-hub';
 import { NotificationType } from '@/config/notification-hub';
 import { Bell, AlertCircle, TrendingUp } from 'lucide-react';
@@ -37,14 +37,14 @@ export function NotificationStats({ stats }: NotificationStatsProps) {
   };
 
   return (
-    <motion.div
+    <m.div
       className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
       variants={containerVariants}
       initial="hidden"
       animate="show"
     >
       {/* Total */}
-      <motion.div
+      <m.div
         variants={itemVariants}
         className="bg-slate-900/50 border border-slate-800 rounded-lg p-6"
       >
@@ -55,10 +55,10 @@ export function NotificationStats({ stats }: NotificationStatsProps) {
           </div>
           <Bell className="w-8 h-8 text-blue-400 opacity-50" />
         </div>
-      </motion.div>
+      </m.div>
 
       {/* Unread */}
-      <motion.div
+      <m.div
         variants={itemVariants}
         className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-6"
       >
@@ -69,10 +69,10 @@ export function NotificationStats({ stats }: NotificationStatsProps) {
           </div>
           <AlertCircle className="w-8 h-8 text-blue-400 opacity-50" />
         </div>
-      </motion.div>
+      </m.div>
 
       {/* Delivery Failures */}
-      <motion.div
+      <m.div
         variants={itemVariants}
         className={`rounded-lg p-6 border ${
           stats.deliveryFailures > 0
@@ -99,10 +99,10 @@ export function NotificationStats({ stats }: NotificationStatsProps) {
             stats.deliveryFailures > 0 ? 'text-red-400' : 'text-slate-400'
           }`} />
         </div>
-      </motion.div>
+      </m.div>
 
       {/* Top Type */}
-      <motion.div
+      <m.div
         variants={itemVariants}
         className="bg-slate-900/50 border border-slate-800 rounded-lg p-6"
       >
@@ -118,21 +118,21 @@ export function NotificationStats({ stats }: NotificationStatsProps) {
               </div>
             ))}
         </div>
-      </motion.div>
+      </m.div>
 
       {/* Type Breakdown */}
       {Object.entries(stats.byType).map(([type, count]) => (
         count > 0 && (
-          <motion.div
+          <m.div
             key={`breakdown-${type}`}
             variants={itemVariants}
             className={`rounded-lg p-4 border ${typeColors[type as NotificationType]}`}
           >
             <p className="text-sm font-medium mb-1 capitalize">{type}</p>
             <p className="text-2xl font-bold">{count}</p>
-          </motion.div>
+          </m.div>
         )
       ))}
-    </motion.div>
+    </m.div>
   );
 }

@@ -3,7 +3,7 @@
 import { Heart, PieChart, TrendingUp, Users, Wallet, AlertTriangle } from 'lucide-react';
 import { useReadContract } from 'wagmi';
 import { type Address, formatEther } from 'viem';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useEnterpriseTreasury } from '@/hooks/useEnterpriseTreasury';
 import { useSanctumVault } from '@/hooks/useSanctumVault';
@@ -94,7 +94,7 @@ export function OverviewTab() {
   const loadingAny = enterprise.loading || sanctum.charitiesLoading || feeSplitLoading;
 
   return (
-    <motion.div
+    <m.div
       variants={containerVariants}
       initial="hidden"
       animate="show"
@@ -242,7 +242,7 @@ export function OverviewTab() {
           </p>
         </GlassCard>
       )}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -270,7 +270,7 @@ function StatCard({
   live: boolean;
 }) {
   return (
-    <motion.div
+    <m.div
       variants={variants as never}
       whileHover={{ scale: 1.02, y: -4 }}
       className={`bg-gradient-to-br ${gradient} backdrop-blur-xl border ${border} rounded-2xl p-6 group`}
@@ -290,7 +290,7 @@ function StatCard({
         {value}
       </div>
       <div className="text-sm text-gray-400">{label}</div>
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -310,14 +310,14 @@ function FeeChannelCard({
   border: string;
 }) {
   return (
-    <motion.div
+    <m.div
       whileHover={{ scale: 1.02 }}
       className={`text-center p-6 bg-gradient-to-br ${bg} border ${border} rounded-2xl`}
     >
       <div className={`text-4xl font-bold ${color} mb-2 tabular-nums`}>{percent}%</div>
       <div className="text-white font-bold">{label}</div>
       <div className="text-xs text-gray-500 mt-1">{sub}</div>
-    </motion.div>
+    </m.div>
   );
 }
 

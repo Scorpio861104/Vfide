@@ -12,7 +12,7 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Wallet } from 'lucide-react';
 
 export function WalletGate({
@@ -40,7 +40,7 @@ export function WalletGate({
   if (isConnecting && !connectTimedOut) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <motion.div
+        <m.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
           className="w-8 h-8 border-2 border-accent/20 border-t-accent rounded-full"
@@ -52,7 +52,7 @@ export function WalletGate({
   if (!isConnected) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center max-w-md"
@@ -71,7 +71,7 @@ export function WalletGate({
           )}
           {!hint && <div className="mb-6" />}
           <ConnectButton />
-        </motion.div>
+        </m.div>
       </div>
     );
   }

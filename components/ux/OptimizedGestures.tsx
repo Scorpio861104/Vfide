@@ -7,7 +7,7 @@
  */
 
 import React, { useState, useCallback, useRef, type ReactNode } from 'react';
-import { motion, useMotionValue, useTransform, type PanInfo } from 'framer-motion';
+import { m, useMotionValue, useTransform, type PanInfo } from 'framer-motion';
 
 // ==================== TYPES ====================
 
@@ -74,26 +74,26 @@ export function SwipeableCard({
     <div className={`relative ${className}`}>
       {/* Left action indicator */}
       {leftAction && (
-        <motion.div
+        <m.div
           className="absolute inset-y-0 left-0 flex items-center pl-4"
           style={{ opacity: rightOpacity }}
         >
           {leftAction}
-        </motion.div>
+        </m.div>
       )}
       
       {/* Right action indicator */}
       {rightAction && (
-        <motion.div
+        <m.div
           className="absolute inset-y-0 right-0 flex items-center pr-4"
           style={{ opacity: leftOpacity }}
         >
           {rightAction}
-        </motion.div>
+        </m.div>
       )}
       
       {/* Card */}
-      <motion.div
+      <m.div
         drag
         dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
         dragElastic={0.7}
@@ -102,7 +102,7 @@ export function SwipeableCard({
         className="relative z-10 cursor-grab active:cursor-grabbing"
       >
         {children}
-      </motion.div>
+      </m.div>
     </div>
   );
 }
@@ -145,7 +145,7 @@ export function LongPress({
   }, []);
 
   return (
-    <motion.div
+    <m.div
       className={className}
       onMouseDown={startPress}
       onMouseUp={endPress}
@@ -157,22 +157,22 @@ export function LongPress({
       {children}
       {/* Progress indicator */}
       {isPressing && (
-        <motion.div
+        <m.div
           className="absolute inset-0 border-2 border-blue-500 rounded-inherit pointer-events-none"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.1 }}
         >
-          <motion.div
+          <m.div
             className="absolute inset-0 bg-blue-500/10"
             initial={{ scaleX: 0 }}
             animate={{ scaleX: 1 }}
             transition={{ duration: duration / 1000 }}
             style={{ transformOrigin: 'left' }}
           />
-        </motion.div>
+        </m.div>
       )}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -254,12 +254,12 @@ export function PinchZoom({
       onTouchEnd={handleTouchEnd}
       onDoubleClick={handleDoubleTap}
     >
-      <motion.div
+      <m.div
         animate={{ scale, x: position.x, y: position.y }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
       >
         {children}
-      </motion.div>
+      </m.div>
     </div>
   );
 }
@@ -308,7 +308,7 @@ export function DragReorder<T>({
   return (
     <div className={className}>
       {items.map((item, index) => (
-        <motion.div
+        <m.div
           key={keyExtractor(item)}
           layout
           layoutId={keyExtractor(item)}
@@ -325,7 +325,7 @@ export function DragReorder<T>({
           }}
         >
           {renderItem(item, index)}
-        </motion.div>
+        </m.div>
       ))}
     </div>
   );
@@ -422,7 +422,7 @@ export function MomentumScroll({
 
   return (
     <div ref={containerRef} className={`overflow-hidden ${className}`}>
-      <motion.div
+      <m.div
         drag="x"
         style={{ x }}
         onDragEnd={handleDragEnd}
@@ -431,7 +431,7 @@ export function MomentumScroll({
         className="flex"
       >
         {children}
-      </motion.div>
+      </m.div>
     </div>
   );
 }

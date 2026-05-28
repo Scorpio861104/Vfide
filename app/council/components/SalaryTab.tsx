@@ -1,5 +1,5 @@
 'use client';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Calendar, CheckCircle2 as CheckCircle, DollarSign } from 'lucide-react';
 import { SampleDataBanner } from '@/components/ui/SampleDataBanner';
 
@@ -13,7 +13,7 @@ export function SalaryTab({ isConnected: _isConnected }: { isConnected: boolean 
     <div className="space-y-8">
       <SampleDataBanner label="Council salary distribution requires the CouncilSalary contract, which launches in a future release. The figures below are illustrative placeholders — no salary periods have run at V1." />
       {/* Salary Overview */}
-      <motion.div 
+      <m.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500/10 to-green-500/5 backdrop-blur-xl border border-emerald-500/20 p-4 sm:p-6 md:p-8"
@@ -39,10 +39,10 @@ export function SalaryTab({ isConnected: _isConnected }: { isConnected: boolean 
             </div>
           ))}
         </div>
-      </motion.div>
+      </m.div>
 
       {/* Distribution History */}
-      <motion.div 
+      <m.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.1 }}
@@ -71,10 +71,10 @@ export function SalaryTab({ isConnected: _isConnected }: { isConnected: boolean 
             </div>
           ))}
         </div>
-      </motion.div>
+      </m.div>
 
       {/* Trigger Distribution (Admin) */}
-      <motion.div 
+      <m.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
@@ -96,7 +96,7 @@ export function SalaryTab({ isConnected: _isConnected }: { isConnected: boolean 
         >
           Distribution Not Available Yet
         </button>
-      </motion.div>
+      </m.div>
     </div>
   );
 }

@@ -13,7 +13,7 @@
  */
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Shield, Star, Zap, Users, ShoppingCart, Vote, Sparkles } from 'lucide-react';
 
 // ── Tier System ─────────────────────────────────────────────────────────────
@@ -100,7 +100,7 @@ export function ProofScoreRing({ score, size = 180, showLabel = true }: {
 
       {/* Progress ring */}
       <svg width={size} height={size} className="absolute -rotate-90">
-        <motion.circle
+        <m.circle
           cx={size / 2} cy={size / 2} r={radius}
           fill="none"
           stroke={tier.color}
@@ -115,7 +115,7 @@ export function ProofScoreRing({ score, size = 180, showLabel = true }: {
 
       {/* Center content */}
       <div className="relative text-center z-10">
-        <motion.div
+        <m.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: 'spring', stiffness: 200, delay: 0.3 }}
@@ -123,7 +123,7 @@ export function ProofScoreRing({ score, size = 180, showLabel = true }: {
           style={{ color: tier.color }}
         >
           {score.toLocaleString()}
-        </motion.div>
+        </m.div>
         {showLabel && (
           <div className="text-xs text-gray-400 mt-0.5 font-bold uppercase tracking-wider">
             {tier.name}
@@ -169,7 +169,7 @@ export function ProofScoreTierProgress({ score }: { score: number }) {
       </div>
 
       <div className="w-full h-2.5 bg-black/30 rounded-full overflow-hidden mb-2">
-        <motion.div
+        <m.div
           initial={{ width: 0 }}
           animate={{ width: `${progress}%` }}
           transition={{ duration: 1, ease: 'easeOut' }}
@@ -230,14 +230,14 @@ export function ProofScoreLevelUp({ previous, current, onDismiss }: {
 
   return (
     <AnimatePresence>
-      <motion.div
+      <m.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
         onClick={onDismiss}
       >
-        <motion.div
+        <m.div
           initial={{ scale: 0.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 200 }}
@@ -247,15 +247,15 @@ export function ProofScoreLevelUp({ previous, current, onDismiss }: {
           {/* Glow */}
           <div className="absolute inset-0 rounded-full blur-[100px] opacity-20" style={{ backgroundColor: newTier.color }} />
 
-          <motion.div
+          <m.div
             animate={{ rotate: [0, 5, -5, 0] }}
             transition={{ duration: 0.5, repeat: 3 }}
             className="text-6xl mb-4"
           >
             {newTier.icon}
-          </motion.div>
+          </m.div>
 
-          <motion.div
+          <m.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3 }}
@@ -273,9 +273,9 @@ export function ProofScoreLevelUp({ previous, current, onDismiss }: {
               <span className="text-gray-600">→</span>
               <span className="font-bold" style={{ color: newTier.color }}>{newTier.name} {newTier.icon}</span>
             </div>
-          </motion.div>
+          </m.div>
 
-          <motion.button
+          <m.button
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1 }}
@@ -284,9 +284,9 @@ export function ProofScoreLevelUp({ previous, current, onDismiss }: {
             style={{ backgroundColor: newTier.color }}
           >
             Continue
-          </motion.button>
-        </motion.div>
-      </motion.div>
+          </m.button>
+        </m.div>
+      </m.div>
     </AnimatePresence>
   );
 }
@@ -308,7 +308,7 @@ export function ProofScoreBreakdown({ sources }: { sources: ScoreSource[] }) {
       {sources.sort((a, b) => b.points - a.points).map((source, i) => {
         const pct = total > 0 ? (source.points / total) * 100 : 0;
         return (
-          <motion.div
+          <m.div
             key={source.label}
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -322,7 +322,7 @@ export function ProofScoreBreakdown({ sources }: { sources: ScoreSource[] }) {
                 <span className="text-white font-mono text-sm font-bold">+{source.points.toLocaleString()}</span>
               </div>
               <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
-                <motion.div
+                <m.div
                   initial={{ width: 0 }}
                   animate={{ width: `${pct}%` }}
                   transition={{ duration: 0.8, delay: 0.2 + i * 0.05 }}
@@ -330,7 +330,7 @@ export function ProofScoreBreakdown({ sources }: { sources: ScoreSource[] }) {
                 />
               </div>
             </div>
-          </motion.div>
+          </m.div>
         );
       })}
     </div>

@@ -5,7 +5,7 @@ import { getBadgeById, getAllBadges, getBadgesByCategory, getBadgeCategories } f
 import { BadgeDisplay } from './BadgeDisplay'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { useTransactionSounds } from '@/hooks/useTransactionSounds'
 import { Trophy, Lock, Sparkles, Star, Zap } from 'lucide-react'
 
@@ -73,7 +73,7 @@ export function BadgeGallery({ address, showAll = false, compact = false }: Badg
   if (loadingBadges) {
     return (
       <div className="flex items-center justify-center py-12">
-        <motion.div
+        <m.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
           className="w-12 h-12 rounded-full border-4 border-zinc-800 border-t-yellow-500"
@@ -84,12 +84,12 @@ export function BadgeGallery({ address, showAll = false, compact = false }: Badg
   
   if (!showAll && badgesToDisplay.length === 0) {
     return (
-      <motion.div 
+      <m.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="text-center py-12"
       >
-        <motion.div
+        <m.div
           animate={{ 
             scale: [1, 1.1, 1],
             rotate: [0, 5, -5, 0]
@@ -97,12 +97,12 @@ export function BadgeGallery({ address, showAll = false, compact = false }: Badg
           transition={{ duration: 2, repeat: Infinity }}
         >
           <Trophy className="w-16 h-16 mx-auto mb-4 text-amber-400" />
-        </motion.div>
+        </m.div>
         <div className="text-lg font-semibold mb-2 text-gray-100">No Badges Yet</div>
         <div className="text-sm text-gray-400">
           Start participating to earn your first badge!
         </div>
-      </motion.div>
+      </m.div>
     )
   }
   
@@ -110,7 +110,7 @@ export function BadgeGallery({ address, showAll = false, compact = false }: Badg
     <div className="space-y-6">
       {/* Header Stats */}
       {!compact && (
-        <motion.div 
+        <m.div 
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-zinc-900 to-zinc-900 border border-zinc-800"
@@ -120,14 +120,14 @@ export function BadgeGallery({ address, showAll = false, compact = false }: Badg
               <Trophy className="w-6 h-6 text-black" />
             </div>
             <div>
-              <motion.div 
+              <m.div 
                 key={earnedBadges.length}
                 initial={{ scale: 1.2 }}
                 animate={{ scale: 1 }}
                 className="text-2xl font-bold text-gray-100"
               >
                 {earnedBadges.length} Badges Earned
-              </motion.div>
+              </m.div>
               <div className="text-sm text-gray-400 flex items-center gap-2">
                 <Sparkles className="w-3 h-3" />
                 {nftCount} minted as NFTs
@@ -141,12 +141,12 @@ export function BadgeGallery({ address, showAll = false, compact = false }: Badg
               <div className="text-xs text-gray-500">collected</div>
             </div>
           )}
-        </motion.div>
+        </m.div>
       )}
       
       {/* Category Tabs */}
       {showAll && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.1 }}
@@ -174,11 +174,11 @@ export function BadgeGallery({ address, showAll = false, compact = false }: Badg
               })}
             </TabsList>
           </Tabs>
-        </motion.div>
+        </m.div>
       )}
       
       {/* Badge Grid */}
-      <motion.div 
+      <m.div 
         layout
         className={`grid gap-4 ${compact ? 'grid-cols-4 sm:grid-cols-6 md:grid-cols-8' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'}`}
       >
@@ -190,7 +190,7 @@ export function BadgeGallery({ address, showAll = false, compact = false }: Badg
             const points = badge.points || 0
             
             return (
-              <motion.div
+              <m.div
                 key={badge.id}
                 layout
                 initial={{ opacity: 0, scale: 0.8, y: 20 }}
@@ -230,7 +230,7 @@ export function BadgeGallery({ address, showAll = false, compact = false }: Badg
                 
                 {/* Locked overlay */}
                 {!isEarned && showAll && (
-                  <motion.div 
+                  <m.div 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]"
@@ -238,12 +238,12 @@ export function BadgeGallery({ address, showAll = false, compact = false }: Badg
                     <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center">
                       <Lock className="w-5 h-5 text-gray-500" />
                     </div>
-                  </motion.div>
+                  </m.div>
                 )}
 
                 {/* Rarity indicator */}
                 {isEarned && points >= 200 && (
-                  <motion.div
+                  <m.div
                     initial={{ opacity: 0, scale: 0 }}
                     animate={{ opacity: 1, scale: 1 }}
                     className="absolute top-1 right-1"
@@ -257,27 +257,27 @@ export function BadgeGallery({ address, showAll = false, compact = false }: Badg
                         <Zap className="w-3 h-3 text-white" />
                       </div>
                     )}
-                  </motion.div>
+                  </m.div>
                 )}
 
                 {/* Shimmer effect on hover */}
                 {isHovered && isEarned && (
-                  <motion.div
+                  <m.div
                     initial={{ x: '-100%' }}
                     animate={{ x: '200%' }}
                     transition={{ duration: 0.6 }}
                     className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none"
                   />
                 )}
-              </motion.div>
+              </m.div>
             )
           })}
         </AnimatePresence>
-      </motion.div>
+      </m.div>
       
       {/* Total Points */}
       {!compact && (
-        <motion.div 
+        <m.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
@@ -290,7 +290,7 @@ export function BadgeGallery({ address, showAll = false, compact = false }: Badg
               </div>
               <span className="text-sm text-gray-400">Total Badge Points</span>
             </div>
-            <motion.span 
+            <m.span 
               key={totalPoints}
               initial={{ scale: 1.3, color: '#FFD700' }}
               animate={{ scale: 1, color: '#FFFFFF' }}
@@ -298,9 +298,9 @@ export function BadgeGallery({ address, showAll = false, compact = false }: Badg
               className="text-2xl font-bold"
             >
               +{totalPoints.toLocaleString()}
-            </motion.span>
+            </m.span>
           </div>
-        </motion.div>
+        </m.div>
       )}
     </div>
   )

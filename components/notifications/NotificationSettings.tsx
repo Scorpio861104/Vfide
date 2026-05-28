@@ -13,7 +13,7 @@ import {
     useNotificationPreferences,
     usePushNotifications,
 } from '@/lib/pushNotifications';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import {
     AlertCircle,
     AtSign,
@@ -298,7 +298,7 @@ export function NotificationSettings({ userId }: NotificationSettingsProps) {
                 preferences.quietHours.enabled ? 'bg-blue-600' : 'bg-gray-600'
               }`}
             >
-              <motion.div
+              <m.div
                 className="w-5 h-5 bg-white rounded-full absolute top-0.5"
                 animate={{ left: preferences.quietHours.enabled ? '24px' : '2px' }}
                 transition={{ type: 'spring', stiffness: 500, damping: 30 }}
@@ -388,7 +388,7 @@ function NotificationTypeToggle({
           enabled ? 'bg-blue-600' : 'bg-gray-600'
         }`}
       >
-        <motion.div
+        <m.div
           className="w-5 h-5 bg-white rounded-full absolute top-0.5"
           animate={{ left: enabled ? '24px' : '2px' }}
           transition={{ type: 'spring', stiffness: 500, damping: 30 }}

@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Notification, NotificationStatus, formatTimeAgo, getSeverityColor, getNotificationIcon } from '@/config/notification-hub';
 import { Check, X, ChevronRight } from 'lucide-react';
 // F-FE-005 FIX: validate notification.actionUrl before rendering as <a href>.
@@ -36,25 +36,25 @@ export function NotificationList({
 
   if (notifications.length === 0) {
     return (
-      <motion.div
+      <m.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="text-center py-12 text-slate-400"
       >
         <p>No notifications</p>
-      </motion.div>
+      </m.div>
     );
   }
 
   return (
-    <motion.div
+    <m.div
       className="space-y-2"
       variants={containerVariants}
       initial="hidden"
       animate="show"
     >
       {notifications.map((notification) => (
-        <motion.div
+        <m.div
           key={notification.id}
           variants={itemVariants}
           className={`group relative rounded-lg border p-4 backdrop-blur-sm transition-all hover:shadow-lg ${
@@ -134,8 +134,8 @@ export function NotificationList({
           {notification.status !== NotificationStatus.READ && (
             <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
           )}
-        </motion.div>
+        </m.div>
       ))}
-    </motion.div>
+    </m.div>
   );
 }

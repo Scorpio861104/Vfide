@@ -26,7 +26,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import {
   ArrowRight, AlertTriangle, Check, X,
   Fuel, Eye, ChevronDown, Info, Loader2,
@@ -119,13 +119,13 @@ export function TransactionPreview(props: TransactionPreviewProps) {
   };
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
     >
-      <motion.div
+      <m.div
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         className="bg-zinc-900 border border-white/10 rounded-2xl w-full max-w-md overflow-hidden"
@@ -214,14 +214,14 @@ export function TransactionPreview(props: TransactionPreviewProps) {
 
           <AnimatePresence>
             {showDetails && (
-              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+              <m.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
                 className="bg-black/30 rounded-xl p-3 text-xs font-mono text-gray-500 space-y-1 overflow-hidden">
                 <div>Token: {token}</div>
                 <div>Amount: {tknAmount} ({tknTotal} with fee)</div>
                 <div>To: {toAddress}</div>
                 {gasEstimate && <div>Gas limit: {gasEstimate}</div>}
                 <div>Fee tier: {feeBps} bps ({(feeBps / 100).toFixed(2)}%)</div>
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
 
@@ -240,7 +240,7 @@ export function TransactionPreview(props: TransactionPreviewProps) {
             </button>
           </div>
         </div>
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 }

@@ -11,7 +11,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAccount } from 'wagmi';
-import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
+import { m, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import { 
   CheckCircle2, Circle, ArrowRight, 
   Wallet, Shield, Users, MessageSquare, 
@@ -31,7 +31,7 @@ function Confetti({ count = 50 }: { count?: number }) {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
       {particles.map((p) => (
-        <motion.div
+        <m.div
           key={p.id}
           className="absolute w-2 h-2 rounded-full"
           style={{ left: `${p.x}%`, backgroundColor: p.color }}
@@ -54,7 +54,7 @@ function AnimatedCounter({ value, className }: { value: number; className?: stri
     return controls.stop;
   }, [value, count]);
   
-  return <motion.span className={className}>{rounded}</motion.span>;
+  return <m.span className={className}>{rounded}</m.span>;
 }
 
 interface ChecklistItem {
@@ -196,7 +196,7 @@ export default function OnboardingChecklist() {
 
   if (isMinimized) {
     return (
-      <motion.button
+      <m.button
         onClick={() => {
           setIsMinimized(false);
           playNotification();
@@ -207,19 +207,19 @@ export default function OnboardingChecklist() {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
-        <motion.div
+        <m.div
           animate={{ rotate: [0, -10, 10, -10, 0] }}
           transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 2 }}
         >
           <Trophy className="w-5 h-5" />
-        </motion.div>
+        </m.div>
         Getting Started ({completedCount}/{totalCount})
-      </motion.button>
+      </m.button>
     );
   }
 
   return (
-    <motion.div
+    <m.div
       className="fixed bottom-24 right-6 z-40 w-96 bg-zinc-900 border-2 border-amber-400 rounded-xl shadow-2xl overflow-hidden"
       initial={{ y: 100, opacity: 0, scale: 0.9 }}
       animate={{ y: 0, opacity: 1, scale: 1 }}
@@ -256,28 +256,28 @@ export default function OnboardingChecklist() {
             <span className="text-white font-semibold">
               <AnimatedCounter value={completedCount} /> of {totalCount} completed
             </span>
-            <motion.span 
+            <m.span 
               className="text-amber-400 font-bold"
               key={progress}
               initial={{ scale: 1.3 }}
               animate={{ scale: 1 }}
             >
               {Math.round(progress)}%
-            </motion.span>
+            </m.span>
           </div>
           <div className="w-full bg-zinc-800 rounded-full h-3 overflow-hidden">
-            <motion.div 
+            <m.div 
               className="bg-gradient-to-r from-amber-400 to-orange-500 h-3 rounded-full relative"
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
               transition={{ type: 'spring', stiffness: 100, damping: 15 }}
             >
-              <motion.div
+              <m.div
                 className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
                 animate={{ x: ['-100%', '100%'] }}
                 transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 1 }}
               />
-            </motion.div>
+            </m.div>
           </div>
         </div>
       </div>
@@ -286,7 +286,7 @@ export default function OnboardingChecklist() {
       <div className="max-h-96 overflow-y-auto p-4 space-y-2">
         <AnimatePresence mode="popLayout">
           {items.map((item, index) => (
-            <motion.div
+            <m.div
               key={item.id}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -294,7 +294,7 @@ export default function OnboardingChecklist() {
               transition={{ delay: index * 0.05, type: 'spring', stiffness: 300 }}
             >
               <ChecklistItemCard item={item} onComplete={() => playSuccess()} />
-            </motion.div>
+            </m.div>
           ))}
         </AnimatePresence>
       </div>
@@ -302,22 +302,22 @@ export default function OnboardingChecklist() {
       {/* Footer */}
       <AnimatePresence>
         {completedCount === totalCount && totalCount > 0 && (
-          <motion.div 
+          <m.div 
             className="bg-emerald-500/10 border-t border-emerald-500/30 p-4 text-center"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
           >
-            <motion.div 
+            <m.div 
               className="text-4xl mb-2"
               animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }}
               transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 2 }}
             >
               🎉
-            </motion.div>
+            </m.div>
             <div className="text-lg font-bold text-white mb-1">All Done!</div>
             <div className="text-sm text-zinc-400 mb-3">You&apos;ve completed the onboarding checklist</div>
-            <motion.button 
+            <m.button 
               className="w-full px-4 py-2 bg-gradient-to-r from-amber-400 to-orange-500 text-zinc-950 rounded-lg font-bold"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -326,17 +326,17 @@ export default function OnboardingChecklist() {
             >
               <Sparkles className="w-4 h-4 inline mr-2" />
               Claim Bonus Reward
-            </motion.button>
-          </motion.div>
+            </m.button>
+          </m.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </m.div>
   );
 }
 
 function ChecklistItemCard({ item, onComplete: _onComplete }: { item: ChecklistItem; onComplete?: () => void }) {
   return (
-    <motion.div 
+    <m.div 
       className={`rounded-lg p-3 ${
         item.completed 
           ? 'bg-emerald-500/10 border border-emerald-500/30' 
@@ -346,7 +346,7 @@ function ChecklistItemCard({ item, onComplete: _onComplete }: { item: ChecklistI
       transition={{ type: 'spring', stiffness: 400 }}
     >
       <div className="flex items-start gap-3 mb-2">
-        <motion.div 
+        <m.div 
           className={`mt-0.5 ${item.completed ? 'text-emerald-500' : 'text-zinc-400'}`}
           initial={false}
           animate={item.completed ? { scale: [1, 1.3, 1], rotate: [0, 360] } : {}}
@@ -357,7 +357,7 @@ function ChecklistItemCard({ item, onComplete: _onComplete }: { item: ChecklistI
           ) : (
             <Circle className="w-5 h-5" />
           )}
-        </motion.div>
+        </m.div>
         <div className="flex-1 min-w-0">
           <h4 className={`font-bold mb-1 ${item.completed ? 'text-white' : 'text-white'}`}>
             {item.title}
@@ -367,43 +367,43 @@ function ChecklistItemCard({ item, onComplete: _onComplete }: { item: ChecklistI
           {/* Rewards */}
           <div className="flex items-center gap-2 mb-2 flex-wrap">
             {item.reward.xp && (
-              <motion.span 
+              <m.span 
                 className="text-xs bg-purple-600/20 text-purple-600 px-2 py-1 rounded"
                 whileHover={{ scale: 1.1, y: -2 }}
               >
                 +{item.reward.xp} XP
-              </motion.span>
+              </m.span>
             )}
             {item.reward.badge && (
-              <motion.span 
+              <m.span 
                 className="text-xs bg-blue-500/20 text-blue-500 px-2 py-1 rounded"
                 whileHover={{ scale: 1.1, y: -2 }}
                 animate={{ boxShadow: ['0 0 0px #3B82F6', '0 0 8px #3B82F6', '0 0 0px #3B82F6'] }}
                 transition={{ duration: 2, repeat: Infinity }}
               >
                 🏆 {item.reward.badge}
-              </motion.span>
+              </m.span>
             )}
           </div>
 
           {/* Action Button */}
           {!item.completed && (
-            <motion.a
+            <m.a
               href={item.action.link}
               className="inline-flex items-center gap-1 text-sm font-semibold text-amber-400"
               whileHover={{ x: 5 }}
             >
               {item.action.label}
-              <motion.div
+              <m.div
                 animate={{ x: [0, 5, 0] }}
                 transition={{ duration: 1, repeat: Infinity }}
               >
                 <ArrowRight className="w-4 h-4" />
-              </motion.div>
-            </motion.a>
+              </m.div>
+            </m.a>
           )}
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 }

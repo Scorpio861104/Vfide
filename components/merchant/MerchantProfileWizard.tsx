@@ -18,7 +18,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { useAccount } from 'wagmi';
 import { ArrowLeft, ArrowRight, Check, Store, Upload, X, AlertCircle, ExternalLink } from 'lucide-react';
 import { useMerchantProfile, type ProfileSubmitInput } from '@/hooks/useMerchantProfile';
@@ -243,7 +243,7 @@ export function MerchantProfileWizard({
       <AnimatePresence mode="wait">
         {/* ─── Step 1: Basics ───────────────────────────────────────── */}
         {step === 'basics' && (
-          <motion.div key="basics" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
+          <m.div key="basics" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
             <GlassCard hover={false} className="p-6 md:p-8">
               <div className="mb-6">
                 <h2 className="text-2xl font-bold text-white flex items-center gap-2">
@@ -324,12 +324,12 @@ export function MerchantProfileWizard({
                 </button>
               </div>
             </GlassCard>
-          </motion.div>
+          </m.div>
         )}
 
         {/* ─── Step 2: Identity ─────────────────────────────────────── */}
         {step === 'identity' && (
-          <motion.div key="identity" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
+          <m.div key="identity" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
             <GlassCard hover={false} className="p-6 md:p-8">
               <div className="mb-6">
                 <h2 className="text-2xl font-bold text-white">Visual identity</h2>
@@ -460,12 +460,12 @@ export function MerchantProfileWizard({
                 </button>
               </div>
             </GlassCard>
-          </motion.div>
+          </m.div>
         )}
 
         {/* ─── Step 3: Review + Privacy + Submit ─────────────────────── */}
         {step === 'review' && (
-          <motion.div key="review" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
+          <m.div key="review" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
             <GlassCard hover={false} className="p-6 md:p-8">
               <div className="mb-6">
                 <h2 className="text-2xl font-bold text-white">Review &amp; publish</h2>
@@ -587,7 +587,7 @@ export function MerchantProfileWizard({
                 </button>
               </div>
             </GlassCard>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

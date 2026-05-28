@@ -2,7 +2,7 @@
 
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import {
   User,
   Edit2,
@@ -162,7 +162,7 @@ export function AccountSettings() {
       </div>
 
       {saved && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0 }}
@@ -170,7 +170,7 @@ export function AccountSettings() {
         >
           <Check className="w-5 h-5" />
           <span className="font-semibold">Profile saved successfully!</span>
-        </motion.div>
+        </m.div>
       )}
 
       {/* Profile Form */}

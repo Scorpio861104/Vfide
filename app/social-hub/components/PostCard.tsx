@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import {
   Bookmark,
   Flag,
@@ -85,7 +85,7 @@ export function PostCard({ post, onLike, onBookmark }: { post: SocialPost; onLik
   };
 
   return (
-    <motion.article
+    <m.article
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-2xl overflow-hidden"
@@ -222,6 +222,6 @@ export function PostCard({ post, onLike, onBookmark }: { post: SocialPost; onLik
           <Share2 className="w-5 h-5" />
         </button>
       </div>
-    </motion.article>
+    </m.article>
   );
 }

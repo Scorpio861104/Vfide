@@ -1,10 +1,10 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 
 export function Step({ number, title, description }: { number: number; title: string; description: string }) {
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, x: -12 }}
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true }}
@@ -18,6 +18,6 @@ export function Step({ number, title, description }: { number: number; title: st
         <h4 className="mb-1 font-semibold text-white">{title}</h4>
         <p className="text-sm text-gray-400">{description}</p>
       </div>
-    </motion.div>
+    </m.div>
   );
 }

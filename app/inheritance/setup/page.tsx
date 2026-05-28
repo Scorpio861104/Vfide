@@ -29,7 +29,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useChainId } from 'wagmi';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import {
   Users,
   Shield,
@@ -282,7 +282,7 @@ export default function InheritanceSetupPage() {
 
       <AnimatePresence mode="wait">
         {step === 1 && (
-          <motion.div
+          <m.div
             key="step-1"
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -305,11 +305,11 @@ export default function InheritanceSetupPage() {
                 setStep(2);
               }}
             />
-          </motion.div>
+          </m.div>
         )}
 
         {step === 2 && (
-          <motion.div
+          <m.div
             key="step-2"
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -329,11 +329,11 @@ export default function InheritanceSetupPage() {
                 setStep(3);
               }}
             />
-          </motion.div>
+          </m.div>
         )}
 
         {step === 3 && (
-          <motion.div
+          <m.div
             key="step-3"
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -352,11 +352,11 @@ export default function InheritanceSetupPage() {
               onBack={() => setStep(2)}
               onNext={() => setStep(4)}
             />
-          </motion.div>
+          </m.div>
         )}
 
         {step === 4 && (
-          <motion.div
+          <m.div
             key="step-4"
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -375,7 +375,7 @@ export default function InheritanceSetupPage() {
               onBack={() => setStep(3)}
               nextHidden
             />
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

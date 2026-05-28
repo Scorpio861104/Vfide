@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import {
   HelpCircle,
   X,
@@ -143,7 +143,7 @@ export function HelpCenter() {
 
       <AnimatePresence>
         {isOpen && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, x: 320 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 320 }}
@@ -186,7 +186,7 @@ export function HelpCenter() {
 
                   <AnimatePresence>
                     {expandedId === topic.id && (
-                      <motion.div
+                      <m.div
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
@@ -206,13 +206,13 @@ export function HelpCenter() {
                             </li>
                           ))}
                         </ul>
-                      </motion.div>
+                      </m.div>
                     )}
                   </AnimatePresence>
                 </div>
               ))}
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </>

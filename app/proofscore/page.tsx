@@ -6,6 +6,7 @@ import { ScoreStoryFeed } from '@/app/proofscore/components/ScoreStoryFeed'
 import { ProofScoreVisualizer } from '@/components/trust/ProofScoreVisualizer'
 import { useLocale } from '@/hooks/useLocale';
 import { PROOFSCORE_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
+import { Footer } from '@/components/layout/Footer';
 
 // Canonical 7-tier system — 0–10,000 scale (matches Seer contract + ScoringConstants.sol)
 // LOW_FEE_FLOOR=4000, NEUTRAL=5000, MIN_GOVERNANCE=5400, MIN_MERCHANT=5600, HIGH_FEE_CEIL=8000
@@ -25,6 +26,7 @@ export default function ProofScorePage() {
   const { address, isConnected } = useAccount()
 
   return (
+    <>
     <div className="min-h-screen bg-[#070813] text-white">
       {/* ── Hero ── */}
       <section className="flex flex-col items-center pt-10 pb-6">
@@ -87,5 +89,7 @@ export default function ProofScorePage() {
 
       {/* ── Deep-dive sections ── */}
     </div>
+    <Footer />
+    </>
   )
 }

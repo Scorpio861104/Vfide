@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Search, TrendingUp, Users, Activity, ArrowRight } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { Footer } from '@/components/layout/Footer'
 
 const ETHEREUM_ADDRESS_LENGTH = 42
@@ -38,7 +38,7 @@ export default function ExplorerPage() {
 
   return (
     <>
-      <motion.div
+      <m.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="min-h-screen bg-zinc-950 md:pt-[3.5rem] relative overflow-hidden text-white"
@@ -54,7 +54,7 @@ export default function ExplorerPage() {
 
       <div className="max-w-7xl mx-auto px-4 py-8 md:py-12 relative z-10">
         {/* Header */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
@@ -66,10 +66,10 @@ export default function ExplorerPage() {
           <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
             Explore transactions, addresses, and activity on the VFIDE network
           </p>
-        </motion.div>
+        </m.div>
 
         {/* Search Bar */}
-        <motion.form
+        <m.form
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.1 }}
@@ -86,11 +86,11 @@ export default function ExplorerPage() {
               className="w-full bg-zinc-900/60 border border-white/10 rounded-xl pl-12 pr-4 py-4 text-white placeholder-zinc-600 focus:outline-none focus:border-accent/50 transition-colors"
             />
           </div>
-        </motion.form>
+        </m.form>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
@@ -104,9 +104,9 @@ export default function ExplorerPage() {
             </div>
             <p className="text-3xl font-bold text-white">-</p>
             <p className="text-sm text-accent mt-2">Live indexer data unavailable</p>
-          </motion.div>
+          </m.div>
 
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
@@ -120,9 +120,9 @@ export default function ExplorerPage() {
             </div>
             <p className="text-3xl font-bold text-white">-</p>
             <p className="text-sm text-purple-400 mt-2">Live indexer data unavailable</p>
-          </motion.div>
+          </m.div>
 
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
@@ -136,11 +136,11 @@ export default function ExplorerPage() {
             </div>
             <p className="text-3xl font-bold text-white">-</p>
             <p className="text-sm text-green-400 mt-2">Live indexer data unavailable</p>
-          </motion.div>
+          </m.div>
         </div>
 
         {/* Recent Activity */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
@@ -157,7 +157,7 @@ export default function ExplorerPage() {
               </div>
             ) : null}
             {recentActivity.map((activity, index) => (
-              <motion.div
+              <m.div
                 key={activity.id}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -198,13 +198,13 @@ export default function ExplorerPage() {
                   </p>
                   <p className="text-xs text-green-400 capitalize">{activity.status}</p>
                 </div>
-              </motion.div>
+              </m.div>
             ))}
           </div>
-        </motion.div>
+        </m.div>
 
         {/* Top Addresses */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
@@ -221,7 +221,7 @@ export default function ExplorerPage() {
               </div>
             ) : null}
             {topAddresses.map((addr, index) => (
-              <motion.div
+              <m.div
                 key={addr.address}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -247,12 +247,12 @@ export default function ExplorerPage() {
                     <p className="font-bold text-white">{addr.transactions}</p>
                   </div>
                 </div>
-              </motion.div>
+              </m.div>
             ))}
           </div>
-        </motion.div>
+        </m.div>
       </div>
-      </motion.div>
+      </m.div>
       <Footer />
     </>
   )

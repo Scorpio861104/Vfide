@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Loader2, Plus, Trash2, Users } from 'lucide-react';
 
 export interface Beneficiary {
@@ -123,7 +123,7 @@ export function BeneficiaryManager({ selectedId, onSelect }: BeneficiaryManagerP
         <input value={form.relationship} onChange={(event) =>  setForm({ ...form, relationship: event.target.value })} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white" />
       </div>
 
-      <motion.button
+      <m.button
         whileTap={{ scale: 0.98 }}
         onClick={handleSave}
         disabled={saving || !form.name.trim() || !form.phone.trim()}
@@ -131,7 +131,7 @@ export function BeneficiaryManager({ selectedId, onSelect }: BeneficiaryManagerP
       >
         {saving ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
         Save beneficiary
-      </motion.button>
+      </m.button>
 
       {loading ? (
         <div className="flex items-center gap-2 text-sm text-gray-400"><Loader2 size={14} className="animate-spin" /> Loading beneficiaries…</div>

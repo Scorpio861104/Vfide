@@ -40,7 +40,7 @@ export const dynamic = 'force-dynamic';
 import { useState } from 'react';
 import Link from 'next/link';
 import { useAccount } from 'wagmi';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { parseEther, formatEther, isAddress, type Address } from 'viem';
 import {
   ArrowLeft,
@@ -243,7 +243,7 @@ export default function MerchantRefundsPage() {
 
           {/* Start-refund form */}
           {showStartForm && (
-            <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+            <m.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
               <GlassCard hover={false} className="p-5">
                 <div className="flex items-start justify-between gap-4 mb-4">
                   <h3 className="text-sm font-bold text-white">Start a new refund</h3>
@@ -336,7 +336,7 @@ export default function MerchantRefundsPage() {
                   </div>
                 </div>
               </GlassCard>
-            </motion.div>
+            </m.div>
           )}
 
           {actionMessage && (
@@ -388,7 +388,7 @@ export default function MerchantRefundsPage() {
           {address && !isLoading && entries.length > 0 && (
             <div className="space-y-3">
               {entries.map((entry, idx) => (
-                <motion.div
+                <m.div
                   key={`${entry.orderId}-${entry.initiatedBlock}`}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -444,7 +444,7 @@ export default function MerchantRefundsPage() {
                       </div>
                     )}
                   </GlassCard>
-                </motion.div>
+                </m.div>
               ))}
             </div>
           )}

@@ -8,7 +8,7 @@
  */
 
 import React, { useState, useCallback, forwardRef } from 'react';
-import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'framer-motion';
+import { m, AnimatePresence, useMotionValue, useTransform, useSpring } from 'framer-motion';
 import { triggerHaptic, playSound, usePrefersReducedMotion } from '@/lib/ux/uxUtils';
 
 // ==================== TYPES ====================
@@ -95,7 +95,7 @@ export const InteractiveButton = forwardRef<HTMLButtonElement, InteractiveButton
   };
 
   return (
-    <motion.button
+    <m.button
       ref={ref}
       type={type}
       disabled={disabled || loading}
@@ -118,7 +118,7 @@ export const InteractiveButton = forwardRef<HTMLButtonElement, InteractiveButton
       {/* Press effect overlay */}
       <AnimatePresence>
         {isPressed && !reducedMotion && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.1 }}
             exit={{ opacity: 0 }}
@@ -130,7 +130,7 @@ export const InteractiveButton = forwardRef<HTMLButtonElement, InteractiveButton
       {/* Loading spinner */}
       {loading ? (
         <div className="flex items-center justify-center gap-2">
-          <motion.div
+          <m.div
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
             className="w-4 h-4 border-2 border-current border-t-transparent rounded-full"
@@ -140,7 +140,7 @@ export const InteractiveButton = forwardRef<HTMLButtonElement, InteractiveButton
       ) : (
         children
       )}
-    </motion.button>
+    </m.button>
   );
 });
 
@@ -182,7 +182,7 @@ export function RippleButton({
     >
       {children}
       {ripples.map((ripple) => (
-        <motion.span
+        <m.span
           key={ripple.id}
           initial={{ scale: 0, opacity: 0.5 }}
           animate={{ scale: 4, opacity: 0 }}
@@ -230,14 +230,14 @@ export function TiltCard({
   };
 
   return (
-    <motion.div
+    <m.div
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={reducedMotion ? {} : { rotateX, rotateY, transformStyle: 'preserve-3d' }}
       className={`transform-gpu ${className}`}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -276,26 +276,26 @@ export function SwipeAction({
     <div className={`relative overflow-hidden ${className}`}>
       {/* Left action background */}
       {rightContent && (
-        <motion.div
+        <m.div
           style={{ opacity: rightOpacity }}
           className="absolute inset-y-0 left-0 flex items-center px-4 bg-green-500"
         >
           {rightContent}
-        </motion.div>
+        </m.div>
       )}
 
       {/* Right action background */}
       {leftContent && (
-        <motion.div
+        <m.div
           style={{ opacity: leftOpacity }}
           className="absolute inset-y-0 right-0 flex items-center px-4 bg-red-500"
         >
           {leftContent}
-        </motion.div>
+        </m.div>
       )}
 
       {/* Swipeable content */}
-      <motion.div
+      <m.div
         drag="x"
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={0.2}
@@ -305,7 +305,7 @@ export function SwipeAction({
         className={`relative bg-gray-900 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
       >
         {children}
-      </motion.div>
+      </m.div>
     </div>
   );
 }
@@ -340,20 +340,20 @@ export function PullToRefresh({
   return (
     <div className={`relative overflow-hidden ${className}`}>
       {/* Pull indicator */}
-      <motion.div
+      <m.div
         style={{ opacity: spinnerOpacity }}
         className="absolute top-0 left-1/2 -translate-x-1/2 p-4 z-10"
       >
-        <motion.div
+        <m.div
           style={{ rotate: isRefreshing ? undefined : spinnerRotation }}
           animate={isRefreshing ? { rotate: 360 } : {}}
           transition={isRefreshing ? { duration: 1, repeat: Infinity, ease: 'linear' } : {}}
           className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full"
         />
-      </motion.div>
+      </m.div>
 
       {/* Content */}
-      <motion.div
+      <m.div
         drag="y"
         dragConstraints={{ top: 0, bottom: 0 }}
         dragElastic={{ top: 0.5, bottom: 0 }}
@@ -361,7 +361,7 @@ export function PullToRefresh({
         onDragEnd={handleDragEnd}
       >
         {children}
-      </motion.div>
+      </m.div>
     </div>
   );
 }
@@ -372,7 +372,7 @@ export function SuccessAnimation({ show, onComplete }: { show: boolean; onComple
   return (
     <AnimatePresence>
       {show && (
-        <motion.div
+        <m.div
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0, opacity: 0 }}
@@ -383,7 +383,7 @@ export function SuccessAnimation({ show, onComplete }: { show: boolean; onComple
           }}
           className="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center"
         >
-          <motion.svg
+          <m.svg
             viewBox="0 0 24 24"
             className="w-10 h-10 text-green-500"
             fill="none"
@@ -392,14 +392,14 @@ export function SuccessAnimation({ show, onComplete }: { show: boolean; onComple
             strokeLinecap="round"
             strokeLinejoin="round"
           >
-            <motion.path
+            <m.path
               d="M5 13l4 4L19 7"
               initial={{ pathLength: 0 }}
               animate={{ pathLength: 1 }}
               transition={{ duration: 0.4, delay: 0.2 }}
             />
-          </motion.svg>
-        </motion.div>
+          </m.svg>
+        </m.div>
       )}
     </AnimatePresence>
   );
@@ -419,7 +419,7 @@ export function ErrorShake({
   const reducedMotion = usePrefersReducedMotion();
 
   return (
-    <motion.div
+    <m.div
       animate={trigger && !reducedMotion ? {
         x: [-10, 10, -10, 10, -5, 5, 0],
         transition: { duration: 0.5 },
@@ -430,7 +430,7 @@ export function ErrorShake({
       className={className}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -461,9 +461,9 @@ export function NumberTicker({
   }, [value, springValue]);
 
   return (
-    <motion.span className={className}>
+    <m.span className={className}>
       {display}
-    </motion.span>
+    </m.span>
   );
 }
 
@@ -490,7 +490,7 @@ export function ConfettiBurst({ trigger }: { trigger: boolean }) {
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden z-50">
       {particles.map((particle) => (
-        <motion.div
+        <m.div
           key={particle.id}
           initial={{ 
             x: '50%', 

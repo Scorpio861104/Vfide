@@ -38,7 +38,7 @@ import {
   isAddress
 } from 'viem';
 import { GlassCard } from '@/components/ui/GlassCard';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import {
   Heart,
   UserPlus,
@@ -544,7 +544,7 @@ export function VaultInheritancePanel({ vaultAddress, userAddress }: VaultInheri
           {/* Active claim alert */}
           <AnimatePresence>
             {isActiveClaim && (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
@@ -579,7 +579,7 @@ export function VaultInheritancePanel({ vaultAddress, userAddress }: VaultInheri
                     </button>
                   </div>
                 </div>
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
 
@@ -679,7 +679,7 @@ export function VaultInheritancePanel({ vaultAddress, userAddress }: VaultInheri
 
                 <AnimatePresence>
                   {showProposeForm && (
-                    <motion.div
+                    <m.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
@@ -776,7 +776,7 @@ export function VaultInheritancePanel({ vaultAddress, userAddress }: VaultInheri
                           Propose Config
                         </button>
                       </div>
-                    </motion.div>
+                    </m.div>
                   )}
                 </AnimatePresence>
               </div>
@@ -860,7 +860,7 @@ export function VaultInheritancePanel({ vaultAddress, userAddress }: VaultInheri
           {/* Tx status */}
           <AnimatePresence>
             {txStatus !== 'idle' && (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
@@ -879,7 +879,7 @@ export function VaultInheritancePanel({ vaultAddress, userAddress }: VaultInheri
                     <XCircle size={14} />
                   </button>
                 )}
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
         </GlassCard>

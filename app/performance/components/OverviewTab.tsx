@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { PerformanceMetricsGrid } from '@/components/performance/PerformanceMetricsGrid';
 
 interface OverviewTabProps {
@@ -24,26 +24,26 @@ export function OverviewTab({
 
   return (
     <div className="space-y-6">
-      <motion.div key="overview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
+      <m.div key="overview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
         <PerformanceMetricsGrid metrics={metrics} isLoading={isLoading} />
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="rounded-lg border border-red-500/20 bg-red-500/10 p-6">
+          <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="rounded-lg border border-red-500/20 bg-red-500/10 p-6">
             <p className="mb-2 text-sm text-red-400">Unresolved Error Queue</p>
             <p className="text-3xl font-bold text-white">{errorCount}</p>
-          </motion.div>
+          </m.div>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="rounded-lg border border-accent/20 bg-accent/10 p-6">
+          <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="rounded-lg border border-accent/20 bg-accent/10 p-6">
             <p className="mb-2 text-sm text-accent">Live User Sessions</p>
             <p className="text-3xl font-bold text-white">{activeUsers}</p>
-          </motion.div>
+          </m.div>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="rounded-lg border border-green-500/20 bg-green-500/10 p-6">
+          <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="rounded-lg border border-green-500/20 bg-green-500/10 p-6">
             <p className="mb-2 text-sm text-green-400">Mean Response Time</p>
             <p className="text-3xl font-bold text-white">{averageResponse.toFixed(0)}ms</p>
-          </motion.div>
+          </m.div>
         </div>
-      </motion.div>
+      </m.div>
     </div>
   );
 }

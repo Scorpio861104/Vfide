@@ -7,7 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAccount, useReadContract } from 'wagmi';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Vote, Users, Shield, Star, Award, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
 import { isConfiguredContractAddress, ZERO_ADDRESS } from '@/lib/contracts';
 import { CouncilElectionABI } from '@/lib/abis/future';
@@ -186,11 +186,11 @@ export function ElectionsTabContent() {
                 </div>
                 <AnimatePresence>
                   {expandedCandidate === c.address && c.platform && (
-                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
+                    <m.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }}
                       className="overflow-hidden mt-3 pt-3 border-t border-white/10 text-sm text-white/60">
                       {c.platform}
-                    </motion.div>
+                    </m.div>
                   )}
                 </AnimatePresence>
               </div>

@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { motion, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
+import { m, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
 import { BarChart3, TrendingUp, PiggyBank, FileText, BarChart2, Bell } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 import nextDynamic from 'next/dynamic';
@@ -64,7 +64,7 @@ function InsightsInner() {
 
       <div className="relative container mx-auto px-4">
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8 pt-6">
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8 pt-6">
           <div className="flex items-center gap-3 mb-3">
             <span className="badge-live"><span className="badge-live-dot" />Financial Intelligence</span>
           </div>
@@ -77,7 +77,7 @@ function InsightsInner() {
             <TrendingUp size={14} className="text-emerald-400" />
             Track treasury, revenue, and token momentum in real time.
           </p>
-        </motion.div>
+        </m.div>
 
         {/* Primary tab bar */}
         <div
@@ -106,7 +106,7 @@ function InsightsInner() {
         {/* Tab content */}
         <LazyMotion features={domAnimation}>
           <AnimatePresence mode="wait">
-            <motion.div
+            <m.div
               key={activeTab}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -142,7 +142,7 @@ function InsightsInner() {
                   </div>
                 )}
               </Suspense>
-            </motion.div>
+            </m.div>
           </AnimatePresence>
         </LazyMotion>
       </div>

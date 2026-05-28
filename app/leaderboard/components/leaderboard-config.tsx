@@ -1,5 +1,5 @@
 import { Crown, Medal, ChevronUp, ChevronDown, Minus } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 
 /**
  * Tier color config aligned with the 7-tier ProofScore system per VFIDE Manual v1.0.
@@ -26,18 +26,18 @@ export function getRankIcon(rank: number) {
 export function getChangeIndicator(change: number) {
   if (change > 0) {
     return (
-      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="flex items-center gap-1 text-emerald-500 text-sm font-bold">
+      <m.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="flex items-center gap-1 text-emerald-500 text-sm font-bold">
         <ChevronUp size={16} strokeWidth={3} />
         <span>{change}</span>
-      </motion.div>
+      </m.div>
     );
   }
   if (change < 0) {
     return (
-      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="flex items-center gap-1 text-red-500 text-sm font-bold">
+      <m.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="flex items-center gap-1 text-red-500 text-sm font-bold">
         <ChevronDown size={16} strokeWidth={3} />
         <span>{Math.abs(change)}</span>
-      </motion.div>
+      </m.div>
     );
   }
   return <Minus className="w-4 h-4 text-zinc-500" />;

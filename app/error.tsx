@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { AlertTriangle, RefreshCw, Home } from "lucide-react";
 import { logger } from '@/lib/logger';
 
@@ -20,13 +20,13 @@ export default function Error({
 
   return (
     <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="text-center max-w-2xl"
       >
         {/* Error Icon */}
-        <motion.div
+        <m.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: "spring", delay: 0.1 }}
@@ -35,10 +35,10 @@ export default function Error({
           <div className="w-24 h-24 mx-auto bg-red-600/20 border-2 border-red-600 rounded-full flex items-center justify-center">
             <AlertTriangle className="w-12 h-12 text-red-600" />
           </div>
-        </motion.div>
+        </m.div>
 
         {/* Message */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
@@ -54,10 +54,10 @@ export default function Error({
               Error ID: {error.digest}
             </p>
           )}
-        </motion.div>
+        </m.div>
 
         {/* Action Buttons */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
@@ -77,10 +77,10 @@ export default function Error({
             <Home className="w-5 h-5" />
             Go Home
           </Link>
-        </motion.div>
+        </m.div>
 
         {/* Help Text */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.7 }}
@@ -98,8 +98,8 @@ export default function Error({
             </a>{" "}
             or contact support.
           </p>
-        </motion.div>
-      </motion.div>
+        </m.div>
+      </m.div>
     </div>
   );
 }

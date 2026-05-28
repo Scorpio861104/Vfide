@@ -8,7 +8,7 @@
  */
 
 import React, { useState, useCallback, type ReactNode } from 'react';
-import { motion, useSpring, useTransform, type MotionValue } from 'framer-motion';
+import { m, useSpring, useTransform, type MotionValue } from 'framer-motion';
 
 // ==================== MAGNETIC EFFECT ====================
 
@@ -35,7 +35,7 @@ export function Magnetic({ children, strength = 0.3, className = '' }: MagneticP
   }, []);
 
   return (
-    <motion.div
+    <m.div
       className={className}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
@@ -43,7 +43,7 @@ export function Magnetic({ children, strength = 0.3, className = '' }: MagneticP
       transition={{ type: 'spring', stiffness: 350, damping: 15 }}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -58,7 +58,7 @@ export interface BounceButtonProps {
 
 export function BounceButton({ children, onClick, className = '', disabled = false }: BounceButtonProps) {
   return (
-    <motion.button
+    <m.button
       onClick={onClick}
       disabled={disabled}
       className={className}
@@ -67,7 +67,7 @@ export function BounceButton({ children, onClick, className = '', disabled = fal
       transition={{ type: 'spring', stiffness: 400, damping: 17 }}
     >
       {children}
-    </motion.button>
+    </m.button>
   );
 }
 
@@ -105,12 +105,12 @@ export function ElasticSlider({
         className="absolute w-full h-2 opacity-0 cursor-pointer z-10"
       />
       <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-        <motion.div
+        <m.div
           className="h-full bg-blue-500 rounded-full"
           style={{ width: springValue as unknown as MotionValue<string> }}
         />
       </div>
-      <motion.div
+      <m.div
         className="absolute w-5 h-5 bg-white border-2 border-blue-500 rounded-full shadow-md"
         style={{ 
           left: `calc(${percentage}% - 10px)`,
@@ -143,14 +143,14 @@ export function GlowCard({ children, className = '', glowColor = 'rgba(59, 130, 
   }, []);
 
   return (
-    <motion.div
+    <m.div
       className={`relative overflow-hidden ${className}`}
       onMouseMove={handleMouseMove}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Glow effect */}
-      <motion.div
+      <m.div
         className="absolute inset-0 pointer-events-none"
         animate={{
           opacity: isHovered ? 1 : 0,
@@ -160,7 +160,7 @@ export function GlowCard({ children, className = '', glowColor = 'rgba(59, 130, 
       />
       {/* Content */}
       <div className="relative z-10">{children}</div>
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -185,7 +185,7 @@ export function MorphText({ texts, interval = 3000, className = '' }: MorphTextP
   return (
     <div className={`relative ${className}`}>
       {texts.map((text, index) => (
-        <motion.span
+        <m.span
           key={index}
           className={`${index === currentIndex ? 'relative' : 'absolute inset-0'}`}
           initial={{ opacity: 0, y: 20 }}
@@ -196,7 +196,7 @@ export function MorphText({ texts, interval = 3000, className = '' }: MorphTextP
           transition={{ duration: 0.5, ease: 'easeOut' }}
         >
           {text}
-        </motion.span>
+        </m.span>
       ))}
     </div>
   );
@@ -230,7 +230,7 @@ export function HoverCard({ children, className = '', rotateAmount = 5 }: HoverC
   }, []);
 
   return (
-    <motion.div
+    <m.div
       className={className}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
@@ -242,7 +242,7 @@ export function HoverCard({ children, className = '', rotateAmount = 5 }: HoverC
       style={{ perspective: 1000, transformStyle: 'preserve-3d' }}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -277,7 +277,7 @@ export function AnimatedCounter({
     springValue.set(value);
   }, [value, springValue]);
 
-  return <motion.span className={className}>{display}</motion.span>;
+  return <m.span className={className}>{display}</m.span>;
 }
 
 // ==================== LIQUID BUTTON ====================
@@ -298,7 +298,7 @@ export function LiquidButton({
   const [isHovered, setIsHovered] = useState(false);
 
   return (
-    <motion.button
+    <m.button
       onClick={onClick}
       className={`relative overflow-hidden ${className}`}
       onHoverStart={() => setIsHovered(true)}
@@ -306,7 +306,7 @@ export function LiquidButton({
       whileTap={{ scale: 0.98 }}
     >
       {/* Liquid blob effect */}
-      <motion.div
+      <m.div
         className="absolute inset-0"
         initial={{ scale: 0, opacity: 0 }}
         animate={{
@@ -321,7 +321,7 @@ export function LiquidButton({
         }}
       />
       <span className="relative z-10">{children}</span>
-    </motion.button>
+    </m.button>
   );
 }
 
@@ -356,7 +356,7 @@ export function FlipCard({
       onMouseLeave={() => flipOnHover && setIsFlipped(false)}
       onClick={handleClick}
     >
-      <motion.div
+      <m.div
         className="relative w-full h-full"
         animate={{ rotateY: isFlipped ? 180 : 0 }}
         transition={{ duration: 0.6, ease: 'easeInOut' }}
@@ -379,7 +379,7 @@ export function FlipCard({
         >
           {back}
         </div>
-      </motion.div>
+      </m.div>
     </div>
   );
 }
@@ -433,7 +433,7 @@ export function Typewriter({
     <span className={className}>
       {displayedText}
       {cursor && (
-        <motion.span
+        <m.span
           animate={{ opacity: showCursor ? 1 : 0 }}
           className="inline-block w-0.5 h-[1.2em] bg-current ml-0.5 align-middle"
         />

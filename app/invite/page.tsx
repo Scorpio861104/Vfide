@@ -4,7 +4,7 @@ import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 export const dynamic = 'force-dynamic';
 
 import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { useAccount } from 'wagmi'
 import {
   Copy,
@@ -112,7 +112,7 @@ export default function InviteFriendsPage() {
     <div className="min-h-screen bg-gradient-to-b from-black via-zinc-900 to-black text-white">
       <div className="max-w-4xl mx-auto px-4 py-8 md:py-12">
         {/* Header */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
@@ -126,17 +126,17 @@ export default function InviteFriendsPage() {
           <p className="text-gray-400 text-lg">
             Share VFIDE with your network and grow the governance community
           </p>
-        </motion.div>
+        </m.div>
 
         {/* Rewards Section */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
           className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12"
         >
           {rewards.map((reward, index) => (
-            <motion.div
+            <m.div
               key={reward.title}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -148,12 +148,12 @@ export default function InviteFriendsPage() {
               </div>
               <h3 className="text-lg font-bold mb-2">{reward.title}</h3>
               <p className="text-sm text-gray-400">{reward.description}</p>
-            </motion.div>
+            </m.div>
           ))}
-        </motion.div>
+        </m.div>
 
         {/* Referral Link Section */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
@@ -201,10 +201,10 @@ export default function InviteFriendsPage() {
               to generate a QR code for this invite link
             </p>
           </div>
-        </motion.div>
+        </m.div>
 
         {/* Share Methods */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
@@ -213,7 +213,7 @@ export default function InviteFriendsPage() {
           <h2 className="text-2xl font-bold mb-6">Share Via</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {shareMethod.map((method) => (
-              <motion.button
+              <m.button
                 key={method.id}
                 onClick={() => {
                   setSelectedMethod(method.id)
@@ -225,13 +225,13 @@ export default function InviteFriendsPage() {
               >
                 <method.icon className="w-8 h-8 text-white" />
                 <span className="font-semibold text-white">{method.label}</span>
-              </motion.button>
+              </m.button>
             ))}
           </div>
-        </motion.div>
+        </m.div>
 
         {/* Stats Section */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
@@ -256,10 +256,10 @@ export default function InviteFriendsPage() {
               <p className="text-sm text-gray-400 mt-1">Points</p>
             </div>
           </div>
-        </motion.div>
+        </m.div>
 
         {/* Footer Note */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.7 }}
@@ -272,7 +272,7 @@ export default function InviteFriendsPage() {
             <div className="mt-6 flex justify-center">
               <VfideConnectButton size="md" />
             </div>
-        </motion.div>
+        </m.div>
       </div>
     </div>
   )

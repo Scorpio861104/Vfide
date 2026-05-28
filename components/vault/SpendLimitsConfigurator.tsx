@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useAccount, useReadContract, useWriteContract } from 'wagmi';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Shield, Zap, Lock, Clock, Info, Check } from 'lucide-react';
 import { formatUnits, parseUnits } from 'viem';
 import CardBoundVaultABI from '@/lib/abis/CardBoundVault.json';
@@ -143,11 +143,11 @@ export function SpendLimitsConfigurator({
   // Validation
   const validationError = useMemo(() => {
     try {
-      const m = parseUnits(activeValues.maxPerTransfer || '0', 18);
+      const maxVal = parseUnits(activeValues.maxPerTransfer || '0', 18);
       const d = parseUnits(activeValues.dailyLimit || '0', 18);
-      if (m === 0n) return 'Max per transfer must be greater than 0.';
+      if (maxVal === 0n) return 'Max per transfer must be greater than 0.';
       if (d === 0n) return 'Daily limit must be greater than 0.';
-      if (m > d) return 'Max per transfer cannot exceed daily limit.';
+      if (maxVal > d) return 'Max per transfer cannot exceed daily limit.';
       if (activeValues.largeThreshold) {
         const l = parseUnits(activeValues.largeThreshold, 18);
         if (l === 0n) return 'Large-transfer threshold must be greater than 0.';
@@ -213,7 +213,7 @@ export function SpendLimitsConfigurator({
     );
   }
 
-  const Wrapper = compact ? 'div' : motion.div;
+  const Wrapper = compact ? 'div' : m.div;
   const wrapperProps = compact
     ? {}
     : { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 } };

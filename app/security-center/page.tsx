@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import { useState } from 'react';
 import { useAccount } from 'wagmi';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import {
  Shield, Lock, Eye, Key, Activity, 
  Smartphone, Globe, ChevronRight, CheckCircle2, 
@@ -120,7 +120,7 @@ export default function SecurityCenterPage() {
 
           <AnimatePresence mode="wait">
             {activeTab === 'overview' && (
-              <motion.div key="overview" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <m.div key="overview" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
                 <div className="grid md:grid-cols-3 gap-6">
                   {/* Score */}
                   <div className="glass-card-premium p-6 flex flex-col items-center gap-4 md:col-span-1">
@@ -177,11 +177,11 @@ export default function SecurityCenterPage() {
                     );
                   })}
                 </div>
-              </motion.div>
+              </m.div>
             )}
 
             {activeTab === 'sessions' && (
-              <motion.div key="sessions" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <m.div key="sessions" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
                 <div className="glass-card-premium p-6">
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="font-semibold text-white">Active sessions</h3>
@@ -208,11 +208,11 @@ export default function SecurityCenterPage() {
                   </div>
                   <p className="text-xs text-zinc-600 mt-4">Session data is fetched from your on-chain token revocation registry at each login.</p>
                 </div>
-              </motion.div>
+              </m.div>
             )}
 
             {(activeTab === 'keys' || activeTab === 'activity') && (
-              <motion.div key={activeTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <m.div key={activeTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
                 <div className="glass-card-premium p-10 text-center">
                   <Eye size={40} className="text-zinc-600 mx-auto mb-4" />
                   <h3 className="font-semibold text-white mb-2">
@@ -225,7 +225,7 @@ export default function SecurityCenterPage() {
                     }
                   </p>
                 </div>
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
         </div>

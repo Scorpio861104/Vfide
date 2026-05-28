@@ -17,7 +17,7 @@
  */
 
 import { useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Sliders, AlertCircle } from 'lucide-react';
 
 import { GlassCard, containerVariants, itemVariants } from './shared';
@@ -105,8 +105,8 @@ export function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
   const currentTier = getTier(currentScore);
 
   return (
-    <motion.div variants={containerVariants} initial="hidden" animate="show" className="mx-auto max-w-3xl space-y-6">
-      <motion.div variants={itemVariants}>
+    <m.div variants={containerVariants} initial="hidden" animate="show" className="mx-auto max-w-3xl space-y-6">
+      <m.div variants={itemVariants}>
         <GlassCard className="p-8" hover={false}>
           <h2 className="mb-2 flex items-center gap-3 text-2xl font-bold text-white">
             <Sliders className="text-accent" size={28} />
@@ -220,7 +220,7 @@ export function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
             </div>
           </div>
         </GlassCard>
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 }

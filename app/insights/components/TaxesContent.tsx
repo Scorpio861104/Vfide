@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import React, { useState } from 'react';
 import { useFinancialIntelligence } from '@/lib/financialIntelligence';
 import { useAccount } from 'wagmi';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { FileText, AlertTriangle, Download, Calculator } from 'lucide-react';
 
 export default function TaxesContent() {
@@ -34,7 +34,7 @@ export default function TaxesContent() {
 
       <div className="relative container mx-auto px-4 max-w-4xl space-y-6">
         {/* Tax accuracy disclaimer */}
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+        <m.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
           className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm">
           <strong className="text-amber-300">Not tax advice.</strong>{' '}
           <span className="text-amber-100">
@@ -42,10 +42,10 @@ export default function TaxesContent() {
             It does not include off-platform activity, transfers on other chains, cost-basis adjustments,
             or jurisdiction-specific rules. Use it as a starting point and consult a qualified tax professional before filing.
           </span>
-        </motion.div>
+        </m.div>
 
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
           className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-3 mb-2">
@@ -64,10 +64,10 @@ export default function TaxesContent() {
             <option value={2025}>2025</option>
             <option value={2024}>2024</option>
           </select>
-        </motion.div>
+        </m.div>
 
         {/* Summary cards */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
           className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="analytics-card p-4">
             <div className="text-xs text-white/40 mb-1">Short-Term Gains</div>
@@ -87,10 +87,10 @@ export default function TaxesContent() {
               {taxSummary.netGain >= 0 ? '+' : '-'}${Math.abs(taxSummary.netGain).toFixed(2)}
             </div>
           </div>
-        </motion.div>
+        </m.div>
 
         {/* Disclaimer */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
           className="glass-card-premium p-4 flex items-start gap-3">
           <AlertTriangle size={18} className="text-amber-400 shrink-0 mt-0.5" />
           <div>
@@ -100,10 +100,10 @@ export default function TaxesContent() {
               Consult a qualified tax professional for accurate tax advice. VFIDE is not a tax advisor.
             </p>
           </div>
-        </motion.div>
+        </m.div>
 
         {/* Events List */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
           className="glass-card-premium overflow-hidden">
           <div className="p-4 border-b border-white/5 flex items-center justify-between">
             <h3 className="font-semibold text-white flex items-center gap-2">
@@ -166,10 +166,10 @@ export default function TaxesContent() {
               ))
             )}
           </div>
-        </motion.div>
+        </m.div>
 
         {/* Cost Basis Method */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
           className="glass-card-premium p-5">
           <h3 className="font-semibold text-white mb-3">Cost Basis Method</h3>
           <div className="flex gap-2 mb-2">
@@ -185,7 +185,7 @@ export default function TaxesContent() {
             FIFO (First In, First Out) is the default and currently the only method implemented.
             LIFO and HIFO are placeholders pending a per-method calculation rewrite.
           </p>
-        </motion.div>
+        </m.div>
       </div>
     </div>
   );

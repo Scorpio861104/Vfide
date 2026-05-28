@@ -11,7 +11,7 @@
  */
 
 import { ReactNode } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 
 import { CHAPTER_ORDER, CHAPTERS, ChapterId } from './useWizardState';
@@ -50,7 +50,7 @@ export function ChapterShell({
   const totalForBar = CHAPTER_ORDER.length - 1; // exclude "done" from progress denominator
 
   return (
-    <motion.div
+    <m.div
       key={chapter}
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
@@ -121,6 +121,6 @@ export function ChapterShell({
           {primaryLabel}
         </button>
       </footer>
-    </motion.div>
+    </m.div>
   );
 }

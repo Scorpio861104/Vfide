@@ -9,7 +9,7 @@
 
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import {
     ArrowDownLeft,
     ArrowUpRight,
@@ -371,7 +371,7 @@ export function UnifiedActivityFeed({
   return (
     <div className={`space-y-3 ${className}`}>
       {activities.map((activity, idx) => (
-        <motion.div
+        <m.div
           key={activity.id}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -427,7 +427,7 @@ export function UnifiedActivityFeed({
               </div>
             </div>
           )}
-        </motion.div>
+        </m.div>
       ))}
 
       {activities.length === 0 && (

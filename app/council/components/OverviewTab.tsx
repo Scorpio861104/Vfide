@@ -18,7 +18,7 @@
 
 import Link from 'next/link';
 import { GlassCard } from '@/components/ui/GlassCard';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import {
   DollarSign,
   Shield,
@@ -53,7 +53,7 @@ export function OverviewTab() {
       </GlassCard>
 
       {/* What's parameterized but not yet deployed */}
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
@@ -93,7 +93,7 @@ export function OverviewTab() {
             text: 'text-purple-400',
           },
         ].map((stat) => (
-          <motion.div
+          <m.div
             key={stat.label}
             whileHover={{ scale: 1.02, y: -2 }}
             className={`bg-gradient-to-br ${stat.gradient} backdrop-blur-xl border ${stat.border} rounded-2xl p-6 text-center`}
@@ -101,9 +101,9 @@ export function OverviewTab() {
             <div className={`text-3xl font-bold ${stat.text} tabular-nums`}>{stat.value}</div>
             <div className="text-sm text-gray-400 mt-1">{stat.label}</div>
             <div className="text-xs text-gray-500 mt-1">{stat.sub}</div>
-          </motion.div>
+          </m.div>
         ))}
-      </motion.div>
+      </m.div>
 
       {/* How governance works at V1 */}
       <GlassCard className="p-6">
@@ -171,7 +171,7 @@ export function OverviewTab() {
               desc: 'Drive partnerships, integrations, and community expansion',
             },
           ].map((item) => (
-            <motion.div
+            <m.div
               key={item.title}
               whileHover={{ scale: 1.02 }}
               className={`flex items-start gap-4 p-4 rounded-xl bg-gradient-to-br ${item.bg} border ${item.border}`}
@@ -181,7 +181,7 @@ export function OverviewTab() {
                 <h4 className="text-white font-bold mb-1">{item.title}</h4>
                 <p className="text-gray-400 text-sm">{item.desc}</p>
               </div>
-            </motion.div>
+            </m.div>
           ))}
         </div>
       </GlassCard>

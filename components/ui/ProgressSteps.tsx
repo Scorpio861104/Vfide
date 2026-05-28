@@ -1,7 +1,7 @@
 'use client';
 
 import { Check } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 
 interface Step {
   id: string | number;
@@ -30,7 +30,7 @@ export function ProgressSteps({ steps, currentStep, className = '' }: ProgressSt
           <div key={step.id} className="flex-1 flex items-center">
             {/* Step circle */}
             <div className="flex flex-col items-center">
-              <motion.div
+              <m.div
                 initial={false}
                 animate={{
                   scale: isCurrent ? 1.1 : 1,
@@ -49,7 +49,7 @@ export function ProgressSteps({ steps, currentStep, className = '' }: ProgressSt
                     {index + 1}
                   </span>
                 )}
-              </motion.div>
+              </m.div>
               
               {/* Step label */}
               <div className="mt-2 text-center">

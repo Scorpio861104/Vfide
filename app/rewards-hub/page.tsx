@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { motion, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
+import { m, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
 import {
   Target, Award, Star, Crown, Medal, Tag, Search, Info,
 } from 'lucide-react';
@@ -102,7 +102,7 @@ function RewardsHubInner() {
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8 pt-6">
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8 pt-6">
           <div className="flex items-center gap-3 mb-3">
             <span className="badge-live"><span className="badge-live-dot" />Reputation & Engagement</span>
           </div>
@@ -114,7 +114,7 @@ function RewardsHubInner() {
           <p className="text-white/50 text-base">
             Earn recognition through participation — not speculation.
           </p>
-        </motion.div>
+        </m.div>
 
         {/* Tab bar */}
         <div
@@ -143,7 +143,7 @@ function RewardsHubInner() {
         {/* Tab content */}
         <LazyMotion features={domAnimation}>
           <AnimatePresence mode="wait">
-            <motion.div
+            <m.div
               key={activeTab}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -166,7 +166,7 @@ function RewardsHubInner() {
               {activeTab === 'benefits' && <BenefitsOverviewTab />}
               {activeTab === 'referrals' && <HeadhunterDashboardTab />}
               {activeTab === 'about' && <AboutRewardsContent />}
-            </motion.div>
+            </m.div>
           </AnimatePresence>
         </LazyMotion>
       </div>

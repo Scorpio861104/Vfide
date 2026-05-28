@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { HelpCircle, X } from 'lucide-react';
 import { analytics } from '@/lib/socialAnalytics';
 
@@ -63,7 +63,7 @@ export function VaultInfoTooltip({
 
       <AnimatePresence>
         {isOpen && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, scale: 0.95, y: position === 'bottom' ? -10 : 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: position === 'bottom' ? -10 : 10 }}
@@ -141,7 +141,7 @@ export function VaultInfoTooltip({
                 }`}
               />
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

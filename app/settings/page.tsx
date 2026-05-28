@@ -21,7 +21,7 @@ import type React from 'react';
  * /setup redirects here. /notifications redirects here.
  */
 
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import { Bell, Lock, Settings, Shield, User } from 'lucide-react';
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -68,7 +68,7 @@ export default function SettingsPage() {
 
       <div className="relative container mx-auto max-w-5xl px-4 py-8">
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <div className="badge-live mb-4">
             <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
             Account Controls
@@ -82,7 +82,7 @@ export default function SettingsPage() {
           <p className="text-white/60 text-lg max-w-2xl">
             Manage your account, vault, security, and notification preferences.
           </p>
-        </motion.div>
+        </m.div>
 
         {/* Sticky tab bar */}
         <div className="sticky top-7 md:top-[5.25rem] z-30 -mx-4 px-4 py-3 backdrop-blur-xl border-b border-white/5 mb-8"
@@ -105,7 +105,7 @@ export default function SettingsPage() {
         {/* Tab content */}
         <AnimatePresence mode="wait">
           {/* A11Y-1: role=tabpanel so AT can navigate to the active panel */}
-          <motion.div key={activeTab}
+          <m.div key={activeTab}
             role="tabpanel"
             id={`settings-panel-${activeTab}`}
             aria-labelledby={`settings-tab-${activeTab}`}
@@ -115,7 +115,7 @@ export default function SettingsPage() {
             {activeTab === 'vault'         && <VaultTab />}
             {activeTab === 'security'      && <SecurityTab />}
             {activeTab === 'notifications' && <NotificationsTabInline />}
-          </motion.div>
+          </m.div>
         </AnimatePresence>
       </div>
       <Footer />

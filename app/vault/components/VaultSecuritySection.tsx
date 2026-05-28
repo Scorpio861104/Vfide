@@ -15,7 +15,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import { AlertTriangle, Clock, Lock, Shield } from 'lucide-react';
 
 import { GlassCard } from '@/components/ui/GlassCard';
@@ -65,7 +65,7 @@ export function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${stri
         >
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div className="flex items-center gap-4 min-w-0">
-              <motion.div
+              <m.div
                 animate={isQuarantined ? { scale: [1, 1.1, 1] } : {}}
                 transition={{ duration: 2, repeat: Infinity }}
                 className={`p-4 rounded-2xl flex-shrink-0 ${isQuarantined ? 'bg-red-500/20' : 'bg-accent/20'}`}
@@ -75,7 +75,7 @@ export function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${stri
                 ) : (
                   <Shield className="w-8 h-8 text-accent" />
                 )}
-              </motion.div>
+              </m.div>
               <div className="min-w-0">
                 <h3 className="text-xl font-bold text-white">
                   {isQuarantined ? 'Vault Quarantined' : 'Emergency Security'}
@@ -97,7 +97,7 @@ export function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${stri
 
             <AnimatePresence mode="wait">
               {!showPanicConfirm ? (
-                <motion.button
+                <m.button
                   key="panic-btn"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -116,9 +116,9 @@ export function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${stri
                 >
                   {isQuarantined ? <Lock size={18} /> : <AlertTriangle size={18} />}
                   {isQuarantined ? 'Already Locked' : 'Panic Button'}
-                </motion.button>
+                </m.button>
               ) : (
-                <motion.div
+                <m.div
                   key="panic-confirm"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -141,13 +141,13 @@ export function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${stri
                   >
                     Cancel
                   </button>
-                </motion.div>
+                </m.div>
               )}
             </AnimatePresence>
           </div>
 
           {isQuarantined && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               className="mt-4 pt-4 border-t border-white/10"
@@ -165,7 +165,7 @@ export function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${stri
                   <span className="text-sm">Manual unpause required to resume withdrawals and transfers.</span>
                 </div>
               )}
-            </motion.div>
+            </m.div>
           )}
         </GlassCard>
       </div>

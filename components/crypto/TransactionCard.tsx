@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { type Transaction } from '@/lib/crypto';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Check, Clock, ExternalLink, FileText, XCircle } from 'lucide-react';
 import { shortAddress as formatAddress } from '@/lib/format';
 import { renderIconForType, getTransactionLabel, getStatusColor } from './transaction-helpers';
@@ -37,7 +37,7 @@ export const TransactionCard = React.memo(function TransactionCard({ transaction
   };
 
   return (
-    <motion.div
+    <m.div
       layout
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
@@ -48,7 +48,7 @@ export const TransactionCard = React.memo(function TransactionCard({ transaction
     >
       <div className="flex items-center gap-4">
         {/* Icon */}
-        <motion.div
+        <m.div
           whileHover={{ scale: 1.1, rotate: 5 }}
           className={`relative w-12 h-12 rounded-xl flex items-center justify-center ${
             isSent
@@ -59,7 +59,7 @@ export const TransactionCard = React.memo(function TransactionCard({ transaction
           {renderIconForType(transaction.type, "w-5 h-5")}
           
           {/* Status indicator */}
-          <motion.div
+          <m.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center ring-2 ring-zinc-900 ${
@@ -68,17 +68,17 @@ export const TransactionCard = React.memo(function TransactionCard({ transaction
             }`}
           >
             {transaction.status === 'pending' ? (
-              <motion.div
+              <m.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
               >
                 <Clock className="w-3 h-3 text-black" />
-              </motion.div>
+              </m.div>
             ) : (
               renderStatusIcon()
             )}
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
 
         {/* Details */}
         <div className="flex-1 min-w-0">
@@ -86,13 +86,13 @@ export const TransactionCard = React.memo(function TransactionCard({ transaction
             <span className="text-white font-medium">
               {getTransactionLabel(transaction.type, isSent)}
             </span>
-            <motion.span
+            <m.span
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor}`}
             >
               {transaction.status}
-            </motion.span>
+            </m.span>
           </div>
 
           <div className="text-sm text-gray-400 truncate">
@@ -113,7 +113,7 @@ export const TransactionCard = React.memo(function TransactionCard({ transaction
 
         {/* Amount */}
         <div className="text-right">
-          <motion.div
+          <m.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             className={`text-lg font-bold ${
@@ -122,9 +122,9 @@ export const TransactionCard = React.memo(function TransactionCard({ transaction
           >
             {isSent ? '-' : '+'}
             {transaction.amount} {transaction.currency}
-          </motion.div>
+          </m.div>
           {transaction.txHash && (
-            <motion.a
+            <m.a
               whileHover={{ scale: 1.05 }}
               href={getExplorerLink(chainId, transaction.txHash, 'tx')}
               target="_blank"
@@ -133,11 +133,11 @@ export const TransactionCard = React.memo(function TransactionCard({ transaction
             >
               <span>Etherscan</span>
               <ExternalLink className="w-3 h-3" />
-            </motion.a>
+            </m.a>
           )}
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 });
 
