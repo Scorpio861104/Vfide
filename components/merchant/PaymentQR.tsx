@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * PaymentQR - Generate QR codes for customers to scan and pay
  */

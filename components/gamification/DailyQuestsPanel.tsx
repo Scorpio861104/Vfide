@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * DAILY QUESTS PANEL - Enhanced
  * 

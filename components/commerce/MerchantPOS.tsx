@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * VFIDE Point of Sale System
  * Complete POS with product management, QR payments, and live calculations

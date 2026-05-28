@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Advanced Merchant Portal Component
  * Payment requests, revenue analytics, bulk payments, and API key management

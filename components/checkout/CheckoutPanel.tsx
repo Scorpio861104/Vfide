@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Multi-Currency Checkout
  * 

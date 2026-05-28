@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Profile Settings Component
  * 

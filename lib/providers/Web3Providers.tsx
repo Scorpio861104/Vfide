@@ -1,14 +1,14 @@
 /**
  * Tier 2 Providers — Web3 + Wallet + Security
- * 
+ *
  * Loaded in (auth), (finance), (commerce), (governance), (social),
  * (security), (gamification) route group layouts.
- * 
+ *
  * NOT loaded in (marketing) — those are pure RSC with zero client JS.
  */
 'use client';
 
-import { ReactNode, useEffect, useRef } from 'react';
+import React, { ReactNode, useEffect, useRef, useState } from 'react';
 import { WagmiProvider, useAccount } from 'wagmi';
 import { RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -18,49 +18,81 @@ import { SecurityProvider } from '@/providers/SecurityProvider';
 import { useWalletPersistence } from '@/hooks/useWalletPersistence';
 import { useAuth } from '@/hooks/useAPI';
 
-// VFIDE custom RainbowKit dark theme — matches zinc-950 background + cyan-400 accent
-const vfideDarkTheme = darkTheme({
-  accentColor: '#22d3ee',        // cyan-400
-  accentColorForeground: '#030712', // zinc-950
-  borderRadius: 'large',
-  fontStack: 'system',
-  overlayBlur: 'large',
-});
+// ── Dynamic RainbowKit theme ─────────────────────────────────────────────────
+// Reads --accent CSS var on mount and whenever the user switches theme presets,
+// so the modal accent colour always matches the active VFIDE theme instead of
+// being pinned to the hardcoded default cyan-400 (#22d3ee).
+function useRainbowKitTheme() {
+  // SSR-safe default — will be replaced on first client paint
+  const [accentColor, setAccentColor] = useState('#22d3ee');
 
+  useEffect(() => {
+    function syncAccent() {
+      const raw = getComputedStyle(document.documentElement)
+        .getPropertyValue('--accent')
+        .trim();
+      if (raw) setAccentColor(raw);
+    }
+    syncAccent();
+
+    // Re-sync whenever a theme switch writes new vars onto <html style="…">
+    const mo = new MutationObserver(syncAccent);
+    mo.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['style'],
+    });
+    return () => mo.disconnect();
+  }, []);
+
+  return darkTheme({
+    accentColor,
+    accentColorForeground: '#030712', // zinc-950
+    borderRadius: 'large',
+    fontStack: 'system',
+    overlayBlur: 'large',
+  });
+}
+
+// Separate component so the hook runs inside the already-client-bounded tree
+function ThemedRainbowKitProvider({ children }: { children: ReactNode }) {
+  const theme = useRainbowKitTheme();
+  return (
+    <RainbowKitProvider theme={theme} initialChain={CURRENT_CHAIN_ID}>
+      {children}
+    </RainbowKitProvider>
+  );
+}
+
+// ── WalletPersistenceManager ─────────────────────────────────────────────────
 function WalletPersistenceManager({ children }: { children: ReactNode }) {
   useWalletPersistence();
   return <>{children}</>;
 }
 
+// ── WalletAuthManager (SIWE) ─────────────────────────────────────────────────
 /**
  * Triggers SIWE challenge-sign when a wallet connects for the first time
  * in the session. Re-runs if address changes (account switch).
  *
- * Important behaviors:
- *   1. Waits for `isCheckingSession` to clear before triggering — otherwise
- *      users with a valid httpOnly cookie get re-prompted on every page
- *      reload while the cookie check is still in flight.
- *   2. Tracks the last attempted address so a single failed/refused signin
- *      doesn't loop. The user must explicitly retry by disconnecting and
- *      reconnecting (or by triggering a manual sign-in flow).
- *   3. FIX UX-4: 1.5s settle delay before SIWE prompt — lets wagmi reconnect
- *      fully stabilise so users don't see an immediate sign-request flash on
- *      every page load when their wallet is already connected.
+ * Key behaviours:
+ *   1. Waits for isCheckingSession to clear — users with a valid httpOnly
+ *      cookie must not be re-prompted on every page reload.
+ *   2. Tracks the last attempted address to avoid looping on refusal.
+ *   3. FIX UX-4: 1.5 s settle delay before SIWE — lets wagmi reconnect
+ *      fully stabilise so the sign popup never appears mid-page-load.
  */
 function WalletAuthManager() {
   const { isConnected, address } = useAccount();
-  const { authenticate, isAuthenticated, isCheckingSession, isAuthenticating } = useAuth();
+  const { authenticate, isAuthenticated, isCheckingSession, isAuthenticating } =
+    useAuth();
   const lastAttemptAddress = useRef<string | undefined>(undefined);
   const settleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    // Wait for the initial verifyToken() round-trip; if the cookie is
-    // valid we'll already be authenticated by the time this resolves.
     if (isCheckingSession) return;
     if (isAuthenticating) return;
     if (!isConnected) {
       lastAttemptAddress.current = undefined;
-      // Cancel any pending settle timer on disconnect
       if (settleTimerRef.current) {
         clearTimeout(settleTimerRef.current);
         settleTimerRef.current = null;
@@ -69,14 +101,10 @@ function WalletAuthManager() {
     }
     if (!address) return;
     if (isAuthenticated) return;
-    // Already tried for this address in this session — don't loop.
     if (lastAttemptAddress.current === address) return;
 
     lastAttemptAddress.current = address;
 
-    // Settle delay: wait 1.5s before triggering SIWE so that:
-    // a) wagmi's reconnect flow fully resolves first
-    // b) users don't see an immediate sign popup on page reload
     settleTimerRef.current = setTimeout(() => {
       settleTimerRef.current = null;
       void authenticate();
@@ -88,49 +116,53 @@ function WalletAuthManager() {
         settleTimerRef.current = null;
       }
     };
-  }, [isConnected, address, isAuthenticated, isCheckingSession, isAuthenticating, authenticate]);
+  }, [
+    isConnected,
+    address,
+    isAuthenticated,
+    isCheckingSession,
+    isAuthenticating,
+    authenticate,
+  ]);
 
   return null;
 }
 
-// Single QueryClient instance — shared across all authenticated routes.
-// FIX PERF-3: staleTime raised to 60s (was 30s); refetchOnWindowFocus disabled
-// for contract reads — window-focus refetches flood the RPC on every tab switch.
+// ── QueryClient ──────────────────────────────────────────────────────────────
+// Single instance shared across all authenticated routes.
+// FIX PERF-3: staleTime=60 s; refetchOnWindowFocus disabled to stop RPC floods
+// on tab-switch.
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 60_000,
-      // Disable automatic refetch on window focus globally — individual queries
-      // that need live data should opt-in explicitly via refetchInterval instead.
       refetchOnWindowFocus: false,
       retry: 2,
     },
   },
 });
 
+// ── Root export ──────────────────────────────────────────────────────────────
 export function Web3Providers({ children }: { children: ReactNode }) {
   return (
-    // FIX PERF-1: reconnectOnMount=false — useWalletPersistence already handles
-    // reconnection with its own session-aware logic. Having both active caused
-    // two simultaneous reconnect attempts on every page load (one from WagmiProvider,
-    // one from the hook), which triggered duplicate RPC calls and delayed the
-    // connected state by an extra round-trip.
+    // FIX PERF-1: reconnectOnMount=false — useWalletPersistence handles
+    // reconnection; having both active caused duplicate RPC calls.
     <WagmiProvider config={wagmiConfig} reconnectOnMount={false}>
       <QueryClientProvider client={queryClient}>
         {/*
-          FIX UX-2: vfideDarkTheme applied — RainbowKit modal now matches VFIDE's
-          zinc-950 background and cyan-400 accent instead of the default rainbow palette.
+          FIX UX-2: ThemedRainbowKitProvider reads --accent dynamically via
+          MutationObserver so the modal matches the user's active theme.
           Wallet stack intentionally remains RainbowKit.
           Do not swap to VFIDEWalletProvider until:
           1) authenticateWithProvider is wired to a real SDK
           2) ensureVaultExists is implemented against VaultHub
         */}
-        <RainbowKitProvider theme={vfideDarkTheme} initialChain={CURRENT_CHAIN_ID}>
+        <ThemedRainbowKitProvider>
           <SecurityProvider>
             <WalletAuthManager />
             <WalletPersistenceManager>{children}</WalletPersistenceManager>
           </SecurityProvider>
-        </RainbowKitProvider>
+        </ThemedRainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
   );

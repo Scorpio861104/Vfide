@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Transaction Notifications with Confetti 🎉
  * Beautiful feedback for every blockchain action

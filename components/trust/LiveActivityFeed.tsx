@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Live Activity Feed - Real-time blockchain events
  * Particle effects for each transaction type

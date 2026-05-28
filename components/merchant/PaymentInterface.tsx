@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * PaymentInterface - Customer payment UI for paying merchants
  */

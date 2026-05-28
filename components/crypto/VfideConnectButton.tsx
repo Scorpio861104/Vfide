@@ -99,7 +99,7 @@ export function VfideConnectButton({
                     type="button"
                     onClick={openConnectModal}
                     aria-label="Connect wallet"
-                    className={`inline-flex items-center gap-2 ${s.container} rounded-lg font-semibold text-zinc-950 bg-gradient-to-r from-accent to-accent hover:from-accent hover:to-accent active:scale-[0.98] shadow-lg shadow-accent/20 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950`}
+                    className={`inline-flex items-center gap-2 ${s.container} rounded-lg font-semibold text-zinc-950 bg-gradient-to-r from-accent to-accent-dark hover:from-accent-dark hover:to-accent active:scale-[0.98] shadow-lg shadow-accent/20 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950`}
                   >
                     {size !== 'sm' && <Wallet size={s.iconSize} />}
                     Connect{size === 'lg' ? ' Wallet' : ''}

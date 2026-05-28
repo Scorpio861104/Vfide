@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * MerchantQuickSetup — 3-step wizard to create a storefront in under 2 minutes
  */
