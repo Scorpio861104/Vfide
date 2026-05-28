@@ -36,6 +36,9 @@ const ADDRESS_VARS = [
   'NEXT_PUBLIC_ECOSYSTEM_VAULT_VIEW_ADDRESS',
   'NEXT_PUBLIC_ECO_TREASURY_VAULT_ADDRESS',
   'NEXT_PUBLIC_CARD_BOUND_VAULT_DEPLOYER_ADDRESS',
+  // Satellite/viewer contracts — optional on testnet, required in production
+  'NEXT_PUBLIC_MERCHANT_PORTAL_VIEWER_ADDRESS',
+  'NEXT_PUBLIC_VFIDE_ACCESS_CONTROL_ADDRESS',
   // Server-side bootstrap addresses (multisigs / sinks). These are checked
   // independently from the public ones because the deploy script binds them
   // to constructor args before any NEXT_PUBLIC_* is even known.
