@@ -87,7 +87,7 @@ function formatStatus(status: RecoveryClaimStatus): { label: string; color: stri
     case RecoveryClaimStatus.Executed:
       return { label: 'Recovery complete', color: 'text-emerald-300' };
     case RecoveryClaimStatus.Rejected:
-      return { label: 'Rejected', color: 'text-red-300' };
+      return { label: 'Challenged & rejected', color: 'text-red-300' };
     case RecoveryClaimStatus.Expired:
       return { label: 'Expired', color: 'text-gray-400' };
   }
@@ -442,17 +442,84 @@ function RecoveryStatusBody({
       )}
 
       {/* Waiting state — guardian voting */}
-      {claimStatus === RecoveryClaimStatus.Pending && (
-        <GlassCard hover={false} className="p-6">
+      {claimStatus === RecoveryClaimStatus.Pending && !challengeSuccess && (
+        <GlassCard hover={false} className="p-6 space-y-3">
           <h3 className="text-sm font-bold text-amber-300 mb-2 flex items-center gap-2">
             <Users size={16} />
             Waiting for guardians
           </h3>
-          <p className="text-sm text-gray-300">
-            Your guardians need to review and vote on this claim. They&apos;ll see the reason you
-            provided and decide whether to approve. Once enough guardians approve, the challenge
-            window begins.
-          </p>
+          {/* Claimant view */}
+          {!isOriginalOwner && (
+            <p className="text-sm text-gray-300">
+              Your guardians need to review and vote on this claim. They&apos;ll see the reason you
+              provided and decide whether to approve. Once enough guardians approve, the challenge
+              window begins.
+            </p>
+          )}
+          {/* Original owner view — veto available even during Pending */}
+          {isOriginalOwner && !showChallengeForm && (
+            <div className="space-y-3">
+              <p className="text-sm text-gray-300">
+                A recovery claim against your vault has been initiated and is waiting for guardian votes.
+                If you did <strong>not</strong> authorise this, you can veto it immediately — guardians
+                are notified and the initiator enters a 30-day cooldown.
+              </p>
+              <div className="flex gap-3 mt-1">
+                <button
+                  onClick={() => setShowChallengeForm(true)}
+                  className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-300 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors"
+                  data-testid="veto-open-btn-pending"
+                >
+                  <ShieldOff size={14} />
+                  Veto this recovery
+                </button>
+                <p className="text-xs text-gray-500 self-center">
+                  Only do this if you did not request this recovery.
+                </p>
+              </div>
+            </div>
+          )}
+          {/* Owner veto form */}
+          {isOriginalOwner && showChallengeForm && (
+            <div className="space-y-3 mt-2">
+              <p className="text-xs text-gray-400">
+                Briefly explain why you&apos;re challenging this claim. This is recorded on-chain.
+              </p>
+              <textarea
+                value={challengeReason}
+                onChange={e => setChallengeReason(e.target.value)}
+                placeholder="e.g. I have not lost access to my wallet. This claim was not authorised by me."
+                className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-gray-600 focus:outline-none focus:border-red-400/50 transition-colors resize-none text-sm"
+                rows={3}
+                disabled={isChallengeWritePending}
+                data-testid="challenge-reason-input-pending"
+              />
+              {challengeError && (
+                <p className="text-xs text-red-400">{challengeError}</p>
+              )}
+              <div className="flex gap-2">
+                <button
+                  onClick={handleChallenge}
+                  disabled={!challengeReason.trim() || isChallengeWritePending}
+                  className="px-5 py-2.5 bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-sm font-bold flex items-center gap-2 transition-colors"
+                  data-testid="challenge-submit-btn-pending"
+                >
+                  {isChallengeWritePending ? (
+                    <><Loader2 className="h-3.5 w-3.5 animate-spin" />Vetoing…</>
+                  ) : (
+                    <><ShieldOff size={14} />Confirm veto</>
+                  )}
+                </button>
+                <button
+                  onClick={() => { setShowChallengeForm(false); setChallengeReason(''); setChallengeError(null); }}
+                  disabled={isChallengeWritePending}
+                  className="px-4 py-2 text-gray-400 hover:text-white text-sm transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
         </GlassCard>
       )}
 
@@ -577,7 +644,7 @@ function RecoveryStatusBody({
       )}
 
       {/* Terminal failure states */}
-      {claimStatus === RecoveryClaimStatus.Challenged && (
+      {(claimStatus === RecoveryClaimStatus.Challenged || claimStatus === RecoveryClaimStatus.Rejected) && (
         <GlassCard hover={false} className="p-6 border border-red-500/30" data-testid="recovery-terminal-notice">
           <h3 className="text-lg font-bold text-red-300 mb-2 flex items-center gap-2">
             <XCircle size={20} />
@@ -595,19 +662,6 @@ function RecoveryStatusBody({
         </GlassCard>
       )}
 
-      {claimStatus === RecoveryClaimStatus.Rejected && (
-        <GlassCard hover={false} className="p-6 border border-red-500/30" data-testid="recovery-terminal-notice">
-          <h3 className="text-lg font-bold text-red-300 mb-2 flex items-center gap-2">
-            <XCircle size={20} />
-            Claim was rejected
-          </h3>
-          <p className="text-sm text-gray-300">
-            Guardians voted against this recovery. The most common reasons are that they
-            couldn&apos;t verify the claimant&apos;s identity, the reason given didn&apos;t match what they
-            knew about the situation, or they suspected the claim was fraudulent.
-          </p>
-        </GlassCard>
-      )}
 
       {claimStatus === RecoveryClaimStatus.Expired && (
         <GlassCard hover={false} className="p-6" data-testid="recovery-terminal-notice">
