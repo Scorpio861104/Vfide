@@ -1,28 +1,31 @@
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, jest } from '@jest/globals';
 import { render, screen } from '@testing-library/react';
 import type React from 'react';
 
-const renderCrossChainPage = () => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const pageModule = require('../../app/cross-chain/page');
-  const CrossChainPage = pageModule.default as React.ComponentType;
-  return render(<CrossChainPage />);
+jest.mock('next/navigation', () => ({
+  useSearchParams: () => ({ get: (k: string) => k === 'tab' ? 'cross-chain' : null }),
+  useRouter: () => ({ push: jest.fn() }),
+  usePathname: () => '/wallet',
+  redirect: jest.fn(),
+}));
+jest.mock('wagmi', () => ({
+  useAccount: () => ({ address: undefined, isConnected: false }),
+  useBalance: () => ({ data: undefined }),
+}));
+jest.mock('@/components/crypto/VfideConnectButton', () => ({ VfideConnectButton: () => null }));
+jest.mock('@/components/layout/Footer', () => ({ Footer: () => null }));
+jest.mock('@/components/CrossChainTransfer', () => ({ __esModule: true, default: () => <div>Cross Chain Transfer Widget</div> }));
+
+const renderPage = () => {
+  const pageModule = require('../../app/wallet/page');
+  const Page = pageModule.default as React.ComponentType;
+  return render(<Page />);
 };
 
-jest.mock('@/components/CrossChainTransfer', () => ({
-  __esModule: true,
-  default: () => <div>CrossChain Transfer Widget</div>,
-}));
-
-describe('Cross-chain page pathways', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it('renders sr-only route heading and transfer widget', () => {
-    renderCrossChainPage();
-
-    expect(screen.getByRole('heading', { name: /Cross-Chain Transfer/i })).toBeTruthy();
-    expect(screen.getByText(/CrossChain Transfer Widget/i)).toBeTruthy();
+describe('Cross-chain page (now /wallet?tab=cross-chain)', () => {
+  it('renders the wallet hub with Cross-Chain tab present', () => {
+    renderPage();
+    expect(screen.getAllByText(/Cross-Chain/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('tab').length).toBeGreaterThan(0);
   });
 });
