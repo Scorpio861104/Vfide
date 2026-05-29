@@ -158,7 +158,7 @@ export default function CheckoutPage() {
         if (typeof window !== 'undefined' && inv.merchant_address) {
           const normalized = inv.merchant_address.toLowerCase();
           const raw = window.localStorage.getItem(CHECKOUT_KNOWN_MERCHANTS_KEY);
-          const knownMerchants: string[] = raw ? JSON.parse(raw) as string[] : [];
+          let knownMerchants: string[] = []; try { knownMerchants = raw ? (JSON.parse(raw) as string[]) : []; } catch { knownMerchants = []; }
           setIsFirstTimeMerchant(!knownMerchants.includes(normalized));
         }
 
@@ -240,7 +240,7 @@ export default function CheckoutPage() {
       if (typeof window !== 'undefined' && invoice.merchant_address) {
         const normalized = invoice.merchant_address.toLowerCase();
         const raw = window.localStorage.getItem(CHECKOUT_KNOWN_MERCHANTS_KEY);
-        const knownMerchants: string[] = raw ? JSON.parse(raw) as string[] : [];
+        let knownMerchants: string[] = []; try { knownMerchants = raw ? (JSON.parse(raw) as string[]) : []; } catch { knownMerchants = []; }
         if (!knownMerchants.includes(normalized)) {
           knownMerchants.push(normalized);
           window.localStorage.setItem(CHECKOUT_KNOWN_MERCHANTS_KEY, JSON.stringify(knownMerchants));

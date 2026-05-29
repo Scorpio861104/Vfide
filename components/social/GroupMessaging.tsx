@@ -763,7 +763,7 @@ function CreateGroupModal({ onClose, onCreate, userAddress }: CreateGroupModalPr
     // Load friends
     const stored = safeLocalStorage.getItem(`vfide_friends_${userAddress}`);
     if (stored) {
-      setFriends(JSON.parse(stored));
+      try { setFriends(JSON.parse(stored)); } catch { /* corrupted storage — leave friends empty */ }
     }
   }, [userAddress]);
 
