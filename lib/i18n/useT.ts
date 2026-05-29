@@ -83,7 +83,7 @@ export interface TranslationKeys {
   merchant_loyalty: string; merchant_subscriptions: string;
   // Security / Support / ProofScore
   security_heading: string; security_subtitle: string;
-  support_heading: string; support_tab_faq: string;
+  support_heading: string; support_subtitle: string; support_tab_faq: string;
   support_tab_tickets: string; support_tab_new: string;
   proofscore_heading: string; proofscore_subtitle: string;
   // Guardians / Inheritance / Invite
