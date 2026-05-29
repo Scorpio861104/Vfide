@@ -132,7 +132,17 @@ function SocialHubPageInner() {
     setPostsLoading(true);
     fetch('/api/community/posts')
       .then((r) => (r.ok ? r.json() : { posts: [] }))
-      .then((d) => setPosts(Array.isArray(d.posts) ? d.posts : []))
+      .then((d) => {
+        const raw: SocialPost[] = Array.isArray(d.posts) ? d.posts : [];
+        const likedSet: string[]     = JSON.parse(localStorage.getItem(`vfide_liked_posts_${address    ?? 'anon'}`) ?? '[]');
+        const bookmarkSet: string[]  = JSON.parse(localStorage.getItem(`vfide_bookmarked_posts_${address ?? 'anon'}`) ?? '[]');
+        setPosts(raw.map((p) => ({
+          ...p,
+          id: String(p.id),
+          liked:      likedSet.includes(String(p.id)),
+          bookmarked: bookmarkSet.includes(String(p.id)),
+        })));
+      })
       .catch(() => setPosts([]))
       .finally(() => setPostsLoading(false));
     return () => { cancelled = true; };
@@ -170,6 +180,51 @@ function SocialHubPageInner() {
       setPostError(err instanceof Error ? err.message : 'Failed to publish post');
       setPosts((prev) => prev.filter((p) => p.id !== optimisticId));
     }
+  };
+
+  // ── Like / Bookmark handlers ──────────────────────────────────────────────
+  const getLikedKey  = () => `vfide_liked_posts_${address  ?? 'anon'}`;
+  const getBookmarkKey = () => `vfide_bookmarked_posts_${address ?? 'anon'}`;
+
+  const handleLike = async (postId: string) => {
+    const key = getLikedKey();
+    const likedSet: string[] = JSON.parse(localStorage.getItem(key) ?? '[]');
+    const alreadyLiked = likedSet.includes(postId);
+    const action = alreadyLiked ? 'unlike' : 'like';
+
+    // Optimistic update
+    setPosts((prev) => prev.map((p) =>
+      p.id === postId
+        ? { ...p, liked: !alreadyLiked, likes: Math.max(0, (p.likes ?? 0) + (alreadyLiked ? -1 : 1)) }
+        : p
+    ));
+    const next = alreadyLiked ? likedSet.filter((id) => id !== postId) : [...likedSet, postId];
+    localStorage.setItem(key, JSON.stringify(next));
+
+    // Persist to server (best-effort — numeric IDs only)
+    if (/^\d+$/.test(postId)) {
+      fetch(`/api/community/posts/${postId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action }),
+      }).then(async (res) => {
+        if (res.ok) {
+          const { likes } = await res.json();
+          setPosts((prev) => prev.map((p) => p.id === postId ? { ...p, likes } : p));
+        }
+      }).catch(() => { /* server sync failed — optimistic state stands */ });
+    }
+  };
+
+  const handleBookmark = (postId: string) => {
+    const key = getBookmarkKey();
+    const bookmarked: string[] = JSON.parse(localStorage.getItem(key) ?? '[]');
+    const already = bookmarked.includes(postId);
+    const next = already ? bookmarked.filter((id) => id !== postId) : [...bookmarked, postId];
+    localStorage.setItem(key, JSON.stringify(next));
+    setPosts((prev) => prev.map((p) =>
+      p.id === postId ? { ...p, bookmarked: !already } : p
+    ));
   };
 
   return (
@@ -280,7 +335,7 @@ function SocialHubPageInner() {
                       )}
                     </AnimatePresence>
                     {filteredPosts.map((post, i) => (
-                      <PostCard key={post.id || i} post={post} onLike={() => {}} onBookmark={() => {}} />
+                      <PostCard key={post.id || i} post={post} onLike={() => handleLike(String(post.id))} onBookmark={() => handleBookmark(String(post.id))} />
                     ))}
                     {filteredPosts.length === 0 && (
                       <div className="glass-card-premium py-16 text-center">
@@ -325,9 +380,15 @@ function SocialHubPageInner() {
                 role="tabpanel" id="social-panel-pay" aria-labelledby="social-tab-pay"
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.18 }}>
-                <div className="mb-6">
-                  <h2 className="text-xl font-bold text-white mb-1">Pay Friends</h2>
-                  <p className="text-white/40 text-sm">Send crypto to contacts, split bills, and view social payment activity.</p>
+                <div className="mb-6 flex items-center justify-between flex-wrap gap-3">
+                  <div>
+                    <h2 className="text-xl font-bold text-white mb-1">Pay Friends</h2>
+                    <p className="text-white/40 text-sm">Social payment activity from your network. Use Pay to send crypto directly.</p>
+                  </div>
+                  <a href="/pay"
+                    className="btn-premium-primary inline-flex items-center gap-2 text-sm px-4 py-2">
+                    <Banknote size={16} />Send Payment
+                  </a>
                 </div>
                 <UnifiedActivityFeed />
               </m.div>
