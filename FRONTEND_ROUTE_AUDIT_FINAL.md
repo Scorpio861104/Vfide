@@ -73,3 +73,34 @@ Files fixed:
 - `components/social/MutualFriends.tsx` (L36, L40)
 
 Pattern applied: `let x = []; try { x = JSON.parse(...); } catch { x = []; }`
+
+---
+
+## Categories 15–28 (Extended Audit)
+
+| Category | Result | Detail |
+|---|---|---|
+| 15. loading.tsx coverage | ℹ️ Info | 13 routes use root fallback (non-critical) |
+| 16. middleware.ts | ✅ Clean | Auth handled at component level (correct for dApp) |
+| 17. ConstitutionSection GitHub links | ✅ Clean | All 3 links return HTTP 200 |
+| 18. Body-level <Link> hrefs | ✅ Clean | 63 unique hrefs — 0 broken |
+| 19. next.config.ts redirects | ✅ Clean | 3 redirects, all destinations exist |
+| 20. OG image assets | ✅ Clean | og-image.png exists in /public |
+| 21. manifest.json + PWA icons | ✅ Clean | All 5 icon references resolve |
+| 22. Hardcoded localhost URLs | ✅ Clean | 1 occurrence, gated behind NODE_ENV !== 'production' |
+| 23. Broken /public asset references | ✅ Clean | 0 broken |
+| 24. next/router vs next/navigation | ✅ Clean | 0 incorrect imports |
+| 25. Server Actions | ✅ Clean | 0 'use server' files |
+| 26. Route conflicts | ✅ Clean | 0 static/dynamic conflicts |
+| 27. i18n / translation keys | ✅ Clean | All 31 used keys exist in en.json + 7 locales complete |
+| 28. Hardcoded test content | ✅ Clean | 2 flagged — both intentional (SampleDataBanner, zero-addr fallback) |
+
+## Fixes Applied — error.tsx for Critical User Paths
+
+Added per-route `error.tsx` for 4 previously uncovered critical routes:
+- `app/onboarding/error.tsx` — links to /onboarding restart
+- `app/vesting/error.tsx` — links back to /dashboard
+- `app/me/error.tsx` — links back to /dashboard
+- `app/inheritance/error.tsx` — links back to /vault (safety-aware messaging)
+
+All 4 include `'use client'`, `logger.error()` reporting, retry button, and nav link.
