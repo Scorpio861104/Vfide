@@ -186,7 +186,8 @@
     "sync-abis:check": "tsx scripts/sync-abis.ts --check",
     "validate:testnet": "hardhat run scripts/validate-testnet-ready.ts --network",
     "validate:frontend": "tsx scripts/validate-frontend-ready.ts",
-    "compile:solcjs": "node --max-old-space-size=8192 scripts/compile-with-solcjs.cjs"
+    "compile:solcjs": "node --max-old-space-size=8192 scripts/compile-with-solcjs.cjs",
+    "seed:sanctum": "hardhat run scripts/seed-sanctum.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1029.0",
