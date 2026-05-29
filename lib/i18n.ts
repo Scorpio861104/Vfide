@@ -102,9 +102,17 @@ export interface NavCopy {
 }
 const _en_nav: NavCopy = { home: 'Home', pay: 'Pay', merchant: 'Merchant', social: 'Social', more: 'More', close: 'Close', search: 'Search anywhere...', openHub: 'Open full hub' };
 export const NAV_TRANSLATIONS: TranslationMap<NavCopy> = {
-  'en-US': _en_nav, 'en-GB': _en_nav, 'es-ES': _en_nav, 'fr-FR': _en_nav, 'de-DE': _en_nav,
-  'ar-SA': _en_nav, 'fil-PH': _en_nav, 'hi-IN': _en_nav, 'id-ID': _en_nav,
-  'th-TH': _en_nav, 'ja-JP': _en_nav, 'zh-CN': _en_nav,
+  'en-US': _en_nav, 'en-GB': _en_nav,
+  'es-ES': { home: 'Inicio', pay: 'Pagar', merchant: 'Comerciante', social: 'Social', more: 'Más', close: 'Cerrar', search: 'Buscar...', openHub: 'Abrir hub completo' },
+  'fr-FR': { home: 'Accueil', pay: 'Payer', merchant: 'Marchand', social: 'Social', more: 'Plus', close: 'Fermer', search: 'Rechercher...', openHub: 'Ouvrir le hub' },
+  'de-DE': { home: 'Start', pay: 'Zahlen', merchant: 'Händler', social: 'Sozial', more: 'Mehr', close: 'Schließen', search: 'Suchen...', openHub: 'Hub öffnen' },
+  'ar-SA': { home: 'الرئيسية', pay: 'ادفع', merchant: 'التاجر', social: 'اجتماعي', more: 'المزيد', close: 'إغلاق', search: 'ابحث...', openHub: 'فتح المركز' },
+  'fil-PH': { home: 'Tahanan', pay: 'Bayad', merchant: 'Merchant', social: 'Sosyal', more: 'Higit pa', close: 'Isara', search: 'Maghanap...', openHub: 'Buksan ang hub' },
+  'hi-IN': { home: 'होम', pay: 'भुगतान', merchant: 'व्यापारी', social: 'सामाजिक', more: 'अधिक', close: 'बंद करें', search: 'खोजें...', openHub: 'हब खोलें' },
+  'id-ID': { home: 'Beranda', pay: 'Bayar', merchant: 'Pedagang', social: 'Sosial', more: 'Lainnya', close: 'Tutup', search: 'Cari...', openHub: 'Buka hub' },
+  'th-TH': { home: 'หน้าแรก', pay: 'ชำระเงิน', merchant: 'ผู้ค้า', social: 'โซเชียล', more: 'เพิ่มเติม', close: 'ปิด', search: 'ค้นหา...', openHub: 'เปิดฮับ' },
+  'ja-JP': { home: 'ホーム', pay: '支払い', merchant: 'マーチャント', social: 'ソーシャル', more: 'もっと', close: '閉じる', search: '検索...', openHub: 'ハブを開く' },
+  'zh-CN': { home: '首页', pay: '付款', merchant: '商家', social: '社交', more: '更多', close: '关闭', search: '搜索...', openHub: '打开中心' },
 };
 
 export interface StubCopy {
@@ -128,17 +136,34 @@ export const ABOUT_TRANSLATIONS: TranslationMap<AboutCopy> = {
 export interface HomeCopy { hero: string; subtitle: string; cta: string; homeAriaShop: string; homeAriaSell: string; }
 const _en_home: HomeCopy = { hero: 'Pay anyone. Zero merchant fees.', subtitle: 'The non-custodial payment protocol built for the world\'s unbanked — powered by ProofScore.', cta: 'Get started', homeAriaShop: 'Browse the marketplace', homeAriaSell: 'Set up your merchant account' };
 export const HOME_TRANSLATIONS: TranslationMap<HomeCopy> = {
-  'en-US': _en_home, 'en-GB': _en_home, 'es-ES': _en_home, 'fr-FR': _en_home, 'de-DE': _en_home,
-  'ar-SA': _en_home, 'fil-PH': _en_home, 'hi-IN': _en_home, 'id-ID': _en_home,
-  'th-TH': _en_home, 'ja-JP': _en_home, 'zh-CN': _en_home,
+  'en-US': _en_home,
+  'en-GB': { hero: 'Pay anyone. Zero merchant fees.', subtitle: 'The non-custodial payment protocol built for the world\'s unbanked — powered by ProofScore.', cta: 'Get started', homeAriaShop: 'Browse the marketplace', homeAriaSell: 'Set up your merchant account' },
+  'es-ES': { hero: 'Paga a cualquiera. Sin comisiones para comerciantes.', subtitle: 'El protocolo de pago no custodio para los no bancarizados del mundo — impulsado por ProofScore.', cta: 'Comenzar', homeAriaShop: 'Explorar el mercado', homeAriaSell: 'Configurar cuenta de comerciante' },
+  'fr-FR': { hero: 'Payez n\'importe qui. Zéro frais marchand.', subtitle: 'Le protocole de paiement non-custodial pour les non-bancarisés du monde — propulsé par ProofScore.', cta: 'Commencer', homeAriaShop: 'Parcourir le marché', homeAriaSell: 'Créer un compte marchand' },
+  'de-DE': { hero: 'Zahle jeden. Null Händlergebühren.', subtitle: 'Das nicht-verwahrende Zahlungsprotokoll für die Unbanked weltweit — betrieben von ProofScore.', cta: 'Loslegen', homeAriaShop: 'Marktplatz durchsuchen', homeAriaSell: 'Händlerkonto einrichten' },
+  'ar-SA': { hero: 'ادفع لأي شخص. بدون رسوم على التجار.', subtitle: 'بروتوكول الدفع غير الوصائي للمحرومين من الخدمات المصرفية — مدعوم بـ ProofScore.', cta: 'ابدأ الآن', homeAriaShop: 'تصفح السوق', homeAriaSell: 'إعداد حساب التاجر' },
+  'fil-PH': { hero: 'Magbayad sa sinuman. Walang bayad para sa mga merchant.', subtitle: 'Ang non-custodial na protocol ng pagbabayad para sa mga walang bangko — pinapagana ng ProofScore.', cta: 'Magsimula', homeAriaShop: 'I-browse ang marketplace', homeAriaSell: 'I-setup ang merchant account' },
+  'hi-IN': { hero: 'किसी को भी भुगतान करें। शून्य व्यापारी शुल्क।', subtitle: 'दुनिया के बैंक रहित लोगों के लिए नॉन-कस्टोडियल पेमेंट प्रोटोकॉल — ProofScore द्वारा संचालित।', cta: 'शुरू करें', homeAriaShop: 'मार्केटप्लेस देखें', homeAriaSell: 'व्यापारी खाता सेट करें' },
+  'id-ID': { hero: 'Bayar siapa saja. Nol biaya pedagang.', subtitle: 'Protokol pembayaran non-kustodial untuk yang tidak memiliki rekening bank — didukung ProofScore.', cta: 'Mulai', homeAriaShop: 'Jelajahi marketplace', homeAriaSell: 'Buat akun merchant' },
+  'th-TH': { hero: 'จ่ายให้ใครก็ได้ ไม่มีค่าธรรมเนียมผู้ค้า', subtitle: 'โปรโตคอลการชำระเงินแบบไม่ฝากทรัพย์สำหรับผู้ที่ไม่มีบัญชีธนาคาร — ขับเคลื่อนด้วย ProofScore', cta: 'เริ่มต้น', homeAriaShop: 'เรียกดูตลาด', homeAriaSell: 'ตั้งค่าบัญชีผู้ค้า' },
+  'ja-JP': { hero: '誰にでも支払える。マーチャント手数料ゼロ。', subtitle: '銀行口座を持たない世界の人々のための非カストディアル決済プロトコル — ProofScore搭載。', cta: '始める', homeAriaShop: 'マーケットプレイスを見る', homeAriaSell: 'マーチャントアカウント設定' },
+  'zh-CN': { hero: '向任何人付款。商家零手续费。', subtitle: '为全球无银行账户人群打造的非托管支付协议 — 由 ProofScore 驱动。', cta: '开始使用', homeAriaShop: '浏览市场', homeAriaSell: '设置商家账户' },
 };
 
 export interface MerchantCopy { heading: string; subtitle: string; getStarted: string; }
 const _en_merchant: MerchantCopy = { heading: 'Merchant Hub', subtitle: 'Sell anything. Keep 100% of every payment.', getStarted: 'Get started' };
 export const MERCHANT_TRANSLATIONS: TranslationMap<MerchantCopy> = {
-  'en-US': _en_merchant, 'en-GB': _en_merchant, 'es-ES': _en_merchant, 'fr-FR': _en_merchant, 'de-DE': _en_merchant,
-  'ar-SA': _en_merchant, 'fil-PH': _en_merchant, 'hi-IN': _en_merchant, 'id-ID': _en_merchant,
-  'th-TH': _en_merchant, 'ja-JP': _en_merchant, 'zh-CN': _en_merchant,
+  'en-US': _en_merchant, 'en-GB': _en_merchant,
+  'es-ES': { heading: 'Centro de Comerciantes', subtitle: 'Vende lo que quieras. Conserva el 100% de cada pago.', getStarted: 'Comenzar' },
+  'fr-FR': { heading: 'Espace Marchand', subtitle: 'Vendez n\'importe quoi. Gardez 100% de chaque paiement.', getStarted: 'Commencer' },
+  'de-DE': { heading: 'Händler-Hub', subtitle: 'Verkaufe alles. Behalte 100% jeder Zahlung.', getStarted: 'Loslegen' },
+  'ar-SA': { heading: 'مركز التجار', subtitle: 'بع أي شيء. احتفظ بـ 100٪ من كل دفعة.', getStarted: 'ابدأ' },
+  'fil-PH': { heading: 'Merchant Hub', subtitle: 'Ibenta ang anumang bagay. Itago ang 100% ng bawat bayad.', getStarted: 'Magsimula' },
+  'hi-IN': { heading: 'मर्चेंट हब', subtitle: 'कुछ भी बेचें। हर भुगतान का 100% अपने पास रखें।', getStarted: 'शुरू करें' },
+  'id-ID': { heading: 'Hub Merchant', subtitle: 'Jual apa saja. Simpan 100% setiap pembayaran.', getStarted: 'Mulai' },
+  'th-TH': { heading: 'ศูนย์ผู้ค้า', subtitle: 'ขายอะไรก็ได้ รับ 100% ของทุกการชำระเงิน', getStarted: 'เริ่มต้น' },
+  'ja-JP': { heading: 'マーチャントハブ', subtitle: '何でも売れる。全ての支払いの100%を受け取れる。', getStarted: '始める' },
+  'zh-CN': { heading: '商家中心', subtitle: '销售任何商品。保留每笔付款的100%。', getStarted: '开始使用' },
 };
 
 export interface OnboardingCopy { heading: string; subtitle: string; launch: string; reset: string; }
@@ -160,9 +185,15 @@ export const PAY_TRANSLATIONS: TranslationMap<PayCopy> = {
 export interface ProofscoreCopy { heading: string; subtitle: string; }
 const _en_proofscore: ProofscoreCopy = { heading: 'Your ProofScore', subtitle: 'On-chain reputation that earns you cheaper fees.' };
 export const PROOFSCORE_TRANSLATIONS: TranslationMap<ProofscoreCopy> = {
-  'en-US': _en_proofscore, 'en-GB': _en_proofscore, 'es-ES': _en_proofscore, 'fr-FR': _en_proofscore, 'de-DE': _en_proofscore,
-  'ar-SA': _en_proofscore, 'fil-PH': _en_proofscore, 'hi-IN': _en_proofscore, 'id-ID': _en_proofscore,
-  'th-TH': _en_proofscore, 'ja-JP': _en_proofscore, 'zh-CN': _en_proofscore,
+  'en-US': _en_proofscore, 'en-GB': _en_proofscore,
+  'es-ES': { heading: 'Tu ProofScore', subtitle: 'Reputación on-chain que te consigue comisiones más bajas.' },
+  'fr-FR': { heading: 'Votre ProofScore', subtitle: 'Réputation on-chain qui vous permet d\'obtenir des frais moins élevés.' },
+  'de-DE': { heading: 'Dein ProofScore', subtitle: 'On-Chain-Reputation, die dir günstigere Gebühren einbringt.' },
+  'ar-SA': { heading: 'درجة ProofScore الخاصة بك', subtitle: 'سمعة على السلسلة تمنحك رسوماً أقل.' },
+  'fil-PH': _en_proofscore, 'hi-IN': { heading: 'आपका ProofScore', subtitle: 'ऑन-चेन प्रतिष्ठा जो आपको कम शुल्क दिलाती है।' },
+  'id-ID': _en_proofscore, 'th-TH': _en_proofscore,
+  'ja-JP': { heading: 'あなたのProofScore', subtitle: 'オンチェーンの信頼スコアで手数料を下げよう。' },
+  'zh-CN': { heading: '您的 ProofScore', subtitle: '链上声誉，助您获得更低手续费。' },
 };
 
 export interface RemittanceCopy { heading: string; subtitle: string; }

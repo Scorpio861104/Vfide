@@ -52,13 +52,25 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     return 'USD';
   });
 
-  // Sync locale preference
+  // Sync locale preference on mount AND when hooks/useLocale fires a storage event
   useEffect(() => {
-    const stored = localStorage.getItem(LOCALE_STORAGE_KEY);
-    if (stored) {
-      setCurrentLocale(stored);
-      setUserLocale(stored);
+    function applyStored() {
+      const stored = localStorage.getItem(LOCALE_STORAGE_KEY);
+      if (stored) {
+        setCurrentLocale(stored);
+        setUserLocale(stored);
+      }
     }
+    applyStored();
+    // Listen for cross-hook updates (e.g. LanguageSwitcher uses hooks/useLocale)
+    function onStorage(e: StorageEvent) {
+      if (e.key === LOCALE_STORAGE_KEY && e.newValue) {
+        setCurrentLocale(e.newValue);
+        setUserLocale(e.newValue);
+      }
+    }
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
   }, []);
 
   const setLocale = useCallback((l: string) => {
