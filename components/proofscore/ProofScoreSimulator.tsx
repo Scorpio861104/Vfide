@@ -231,6 +231,7 @@ export function ProofScoreSimulator() {
               { label: 'Trusted', value: 5600 },
               { label: 'Council', value: 7000 },
               { label: 'Elite', value: 8000 },
+              { label: 'Perfect', value: 10000 },
             ].map(({ label, value }) => (
               <button
                 key={label}
