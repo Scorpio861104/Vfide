@@ -94,6 +94,13 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     setCurrentLocale(l);
     setUserLocale(l);
     localStorage.setItem(LOCALE_STORAGE_KEY, l);
+    // Mirror the RTL/LTR direction on the root element
+    if (typeof document !== 'undefined') {
+      const lang = l.split('-')[0] ?? 'en';
+      document.documentElement.lang = lang;
+      document.documentElement.dir = l === 'ar-SA' ? 'rtl' : 'ltr';
+      document.documentElement.setAttribute('data-locale', l);
+    }
     // Auto-update currency if user hasn't explicitly set one
     if (!localStorage.getItem(CURRENCY_STORAGE_KEY)) {
       const newCurrency = getDefaultCurrency(l);
