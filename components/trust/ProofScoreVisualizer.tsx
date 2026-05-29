@@ -46,7 +46,7 @@ export function ProofScoreVisualizer({
   const [displayScore, setDisplayScore] = useState(0)
   
   useEffect(() => {
-    springScore.set(score)
+    springScore.set(score ?? 0)
     const unsubscribe = springScore.on('change', (latest) => {
       setDisplayScore(Math.round(latest))
     })
@@ -73,7 +73,7 @@ export function ProofScoreVisualizer({
   }
   
   // Calculate circle progress (score out of 10000, 10x scale)
-  const progress = (score / 10000) * 100
+  const progress = ((score ?? 0) / 10000) * 100
   const circumference = 2 * Math.PI * 45 // radius = 45
   const strokeDashoffset = circumference - (progress / 100) * circumference
   
@@ -180,7 +180,7 @@ export function ProofScoreVisualizer({
             }}
             whileHover={{ scale: 1.05 }}
           >
-            {tier}
+            {tier?.label ?? 'Loading'}
           </m.div>
           
           {/* Benefits */}
@@ -349,7 +349,7 @@ export function ProofScoreVisualizer({
       {showEndorsementCard && address && (
         <EndorsementCard 
           targetAddress={address} 
-          endorserScore={score}
+          endorserScore={score ?? undefined}
         />
       )}
     </div>

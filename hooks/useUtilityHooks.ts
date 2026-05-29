@@ -47,7 +47,7 @@ export function useFeeCalculator(amount: string) {
   const amountNum = parseFloat(amount) || 0
   
   // VFIDE fees
-  const vfideFee = (amountNum * burnFee) / 100
+  const vfideFee = (amountNum * (burnFee ?? 0)) / 100
   const vfideNet = amountNum - vfideFee
   
   // Traditional payment processor fees (2.9% + $0.30)

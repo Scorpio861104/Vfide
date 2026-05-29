@@ -112,7 +112,7 @@ export function PaymentInterface() {
             <div>
               <div className="text-sm text-gray-400">Your Trust Score</div>
               <div className="text-2xl font-bold" style={{ color: trustScore.highTrust ? '#00FF88' : trustScore.lowTrust ? '#FF4444' : '#FFD700' }}>
-                {score.toLocaleString()}
+                {(score ?? 0).toLocaleString()}
               </div>
             </div>
             <div className="text-right">
@@ -121,7 +121,7 @@ export function PaymentInterface() {
                 trustScore.lowTrust ? 'bg-red-900/30 text-red-400' :
                 'bg-yellow-900/30 text-yellow-400'
               }`}>
-                {proofTier}
+                {proofTier?.label ?? '—'}
               </div>
             </div>
           </div>

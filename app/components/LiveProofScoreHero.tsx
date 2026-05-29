@@ -29,6 +29,7 @@
  * (which only runs before the user has interacted).
  */
 
+import { getFeeRate } from '@/lib/format';
 import {
   ChangeEvent,
   useCallback,
@@ -83,13 +84,6 @@ function tierForScore(score: number): Tier {
  * Below 4000 the contract also returns maxTotalBps (flat 5%); shown here
  * as flat for visual clarity.
  */
-function burnFeePercent(score: number): number {
-  const MIN_BPS = 25;   // ProofScoreBurnRouter.minTotalBps (0.25%)
-  const MAX_BPS = 500;  // ProofScoreBurnRouter.maxTotalBps (5.00%)
-  if (score >= 8000) return MIN_BPS / 100;
-  if (score <= 4000) return MAX_BPS / 100;
-  return (MAX_BPS - ((score - 4000) * (MAX_BPS - MIN_BPS)) / 4000) / 100;
-}
 
 /** FeeDistributor default split (FeeDistributor.sol L279, DAO-adjustable within protocol bounds):
  *  burnBps=3500 (35%) | sanctumBps=2000 (20%) | daoPayrollBps=1500 (15%) | merchantPoolBps=2000 (20%) | headhunterPoolBps=1000 (10%) */
@@ -149,7 +143,7 @@ export function LiveProofScoreHero() {
   }, [interacted]);
 
   const tier = useMemo(() => tierForScore(score), [score]);
-  const feePct = useMemo(() => burnFeePercent(score), [score]);
+  const feePct = useMemo(() => getFeeRate(score), [score]);
   const feeAmount = useMemo(() => (DEMO_AMOUNT * feePct) / 100, [feePct]);
 
   // Per-stream allocations of the sample fee.
@@ -346,7 +340,7 @@ function FeeCurve({ score, hex, reduce }: { score: number; hex: string; reduce: 
     const pts: string[] = [];
     for (let i = 0; i <= samples; i++) {
       const s = (i / samples) * 10000;
-      const fee = burnFeePercent(s);
+      const fee = getFeeRate(s);
       const x = (s / 10000) * W;
       const y = H - (Math.min(fee, 6) / 6) * (H - 8) - 4;
       pts.push(`${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`);
@@ -356,7 +350,7 @@ function FeeCurve({ score, hex, reduce }: { score: number; hex: string; reduce: 
 
   const filled = useMemo(() => `${path} L ${W} ${H} L 0 ${H} Z`, [path]);
   const cursorX = (score / 10000) * W;
-  const cursorY = H - (Math.min(burnFeePercent(score), 6) / 6) * (H - 8) - 4;
+  const cursorY = H - (Math.min(getFeeRate(score), 6) / 6) * (H - 8) - 4;
 
   return (
     <svg

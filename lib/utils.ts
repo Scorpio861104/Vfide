@@ -1,3 +1,4 @@
+import { getTier } from '@/lib/proofScore/tiers';
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { isAddress, getAddress } from "viem"
@@ -329,15 +330,7 @@ export function formatUSD(amount: number): string {
  *   LOW TRUST  ≥4000  — Yellow
  *   RISKY       <4000 — Red
  */
-export function getScoreTierColor(score: number): string {
-  if (score >= 8000) return '#F59E0B' // ELITE      — Amber
-  if (score >= 7000) return '#A855F7' // COUNCIL    — Purple
-  if (score >= 5600) return '#10B981' // TRUSTED    — Emerald
-  if (score >= 5400) return '#00F0FF' // GOVERNANCE — Cyan
-  if (score >= 5000) return '#3B82F6' // NEUTRAL    — Blue
-  if (score >= 4000) return '#EAB308' // LOW TRUST  — Yellow
-  return '#EF4444'                    // RISKY      — Red
-}
+export function getScoreTierColor(score: number): string { return getTier(score).hex; }
 
 /**
  * Truncate text with ellipsis

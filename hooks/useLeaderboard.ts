@@ -16,11 +16,11 @@
  * the type but never rendered. Real badge counts need a BadgeNFT read.
  */
 
+import { getTier } from '@/lib/proofScore/tiers';
 import { useState, useEffect, useCallback } from 'react';
 import { usePublicClient, useAccount, useReadContract } from 'wagmi';
 import { SeerABI, getContractConfigurationError, isConfiguredContractAddress } from '@/lib/contracts'
 import { useContractAddresses } from './useContractAddresses';
-import { getScoreTier as _getScoreTier } from './useProofScore';
 import { parseAbiItem } from 'viem';
 import { safeGetJSON, safeSetJSON, safeRemoveItem } from '@/lib/storage';
 
@@ -55,15 +55,7 @@ const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 // HELPER FUNCTIONS
 // ============================================================================
 
-function getTierFromScore(score: number): string {
-  if (score >= 8000) return 'ELITE';
-  if (score >= 7000) return 'COUNCIL';
-  if (score >= 5600) return 'TRUSTED';
-  if (score >= 5400) return 'GOVERNANCE';
-  if (score >= 5000) return 'NEUTRAL';
-  if (score >= 4000) return 'LOW TRUST';
-  return 'RISKY';
-}
+function getTierFromScore(score: number): string { return getTier(score).name; }
 
 function getCachedLeaderboard(): LeaderboardEntry[] | null {
   if (typeof window === 'undefined') return null;

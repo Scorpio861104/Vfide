@@ -185,12 +185,12 @@ export function MerchantDashboard() {
           <h3 className="font-bold text-lg mb-4">Requirements</h3>
           <div className="space-y-3">
             <m.div 
-              className={`flex items-center gap-3 ${score >= merchantMinScore ? 'text-green-400' : 'text-red-400'}`}
+              className={`flex items-center gap-3 ${(score ?? 0) >= merchantMinScore ? 'text-green-400' : 'text-red-400'}`}
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
             >
-              {score >= merchantMinScore ? (
+              {(score ?? 0) >= merchantMinScore ? (
                 <m.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
@@ -201,7 +201,7 @@ export function MerchantDashboard() {
               ) : (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               )}
-              <span>ProofScore ≥ {merchantMinScore.toLocaleString()} (Current: <AnimatedCounter value={score} />)</span>
+              <span>ProofScore ≥ {merchantMinScore.toLocaleString()} (Current: <AnimatedCounter value={score ?? 0} />)</span>
             </m.div>
             {!canMerchant && (
               <m.div 

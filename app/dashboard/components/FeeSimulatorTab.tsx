@@ -1,4 +1,6 @@
-'use client';
+'use client'
+
+import { getFeeRate } from '@/lib/format';
 
 import { useState } from 'react';
 import { m } from 'framer-motion';
@@ -6,17 +8,12 @@ import { Calculator } from 'lucide-react';
 
 import { GlassCard, containerVariants, itemVariants } from './shared';
 
-function calculateFee(score: number) {
-  if (score <= 4000) return 5.0;
-  if (score >= 8000) return 0.25;
-  return 5.0 - ((score - 4000) * 4.75) / 4000;
-}
 
 export function FeeSimulatorTab({ currentScore }: { currentScore: number }) {
   const [amount, setAmount] = useState(1000);
   const [simulatedScore, setSimulatedScore] = useState(currentScore);
 
-  const feePercent = calculateFee(simulatedScore);
+  const feePercent = getFeeRate(simulatedScore);
   const feeAmount = (amount * feePercent) / 100;
   const netAmount = amount - feeAmount;
 
@@ -78,7 +75,7 @@ export function FeeSimulatorTab({ currentScore }: { currentScore: number }) {
 
             <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 p-4">
               <p className="text-sm text-cyan-400">
-                💡 <strong>Tip:</strong> Your current score of {currentScore} gives you a {calculateFee(currentScore).toFixed(2)}% fee rate.
+                💡 <strong>Tip:</strong> Your current score of {currentScore} gives you a {getFeeRate(currentScore).toFixed(2)}% fee rate.
                 {currentScore < 8000 && ' Increase your score to 8000 to unlock the minimum 0.25% rate!'}
               </p>
             </div>

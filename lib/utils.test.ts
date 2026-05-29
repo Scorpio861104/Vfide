@@ -135,11 +135,11 @@ describe('formatting helpers', () => {
   test('formatUSD and getScoreTierColor', () => {
     expect(formatUSD(1234)).toContain('$')
     // Score tiers as per current implementation:
-    expect(getScoreTierColor(9500)).toBe('#F59E0B')  // ELITE >= 8000 -> Amber
-    expect(getScoreTierColor(7500)).toBe('#A855F7')  // COUNCIL >= 7000 -> Purple
-    expect(getScoreTierColor(4500)).toBe('#EAB308')  // LOW TRUST >= 3500 -> Yellow
-    expect(getScoreTierColor(2500)).toBe('#EF4444')  // RISKY < 3500 -> Red
-    expect(getScoreTierColor(100)).toBe('#EF4444')   // RISKY -> Red
+    expect(getScoreTierColor(9500)).toBe('#00FF88')  // ELITE >= 8000 -> Amber
+    expect(getScoreTierColor(7500)).toBe('#A78BFA')  // COUNCIL >= 7000 -> Purple
+    expect(getScoreTierColor(4500)).toBe('#FFA500')  // LOW TRUST >= 4000 -> Yellow
+    expect(getScoreTierColor(2500)).toBe('#FF4444')  // RISKY < 4000 -> Red
+    expect(getScoreTierColor(100)).toBe('#FF4444')   // RISKY -> Red
   })
 
   test('truncate text and timeUntil', () => {

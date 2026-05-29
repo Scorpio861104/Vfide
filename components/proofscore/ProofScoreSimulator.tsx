@@ -1,4 +1,6 @@
-'use client';
+'use client'
+
+import { getFeeRate } from '@/lib/format';
 
 import { useState } from 'react';
 import { m, AnimatePresence } from 'framer-motion';
@@ -43,13 +45,6 @@ function getNextTier(score: number): SimTier | null {
   return null;
 }
 
-function getFee(score: number): number {
-  if (score >= 8000) return 0.25;
-  if (score >= 7000) return 1.0;
-  if (score >= 5000) return 2.5;
-  if (score >= 4000) return 3.5;
-  return 5.0;
-}
 
 // ── Boost / Risk tips ─────────────────────────────────────────────────────────
 
@@ -79,7 +74,7 @@ export function ProofScoreSimulator() {
 
   const tier     = getTier(score);
   const nextTier = getNextTier(score);
-  const fee      = getFee(score);
+  const fee      = getFeeRate(score);
   const progress = nextTier
     ? ((score - tier.min) / (nextTier.min - tier.min)) * 100
     : 100;

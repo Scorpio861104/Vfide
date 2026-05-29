@@ -14,27 +14,20 @@
  * Cost: one read of useProofScore (already cached across the app).
  */
 
+import { getTier } from '@/lib/proofScore/tiers';
 import { useEffect, useState } from 'react';
 import { useProofScore } from '@/hooks/useProofScore';
 import { usePrefersReducedMotion } from '@/app/components/usePrefersReducedMotion';
 
 /** Tier color map mirrors hooks/useProofScore getTierColor — kept private here so
  *  the Aurora doesn't need that helper exported. */
-function tierColor(score: number): string {
-  if (score >= 8000) return '#00FF88';
-  if (score >= 7000) return '#00F0FF';
-  if (score >= 5000) return '#FFD700';
-  if (score >= 3500) return '#FFA500';
-  return '#FF4444';
-}
+function tierColor(score: number): string { return getTier(score).hex; }
 
 /** Which tier bucket the score is in — used to detect cross-events for the flash. */
 function tierBucket(score: number): number {
-  if (score >= 8000) return 4;
-  if (score >= 7000) return 3;
-  if (score >= 5000) return 2;
-  if (score >= 3500) return 1;
-  return 0;
+  const names = ['Risky','Low Trust','Neutral','Governance','Trusted','Council','Elite'];
+  const idx = names.indexOf(getTier(score).name);
+  return Math.min(4, Math.floor(Math.max(0, idx) * 4 / 6));
 }
 
 export function TierAurora() {

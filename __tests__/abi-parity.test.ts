@@ -375,7 +375,7 @@ const FILE_TO_ABIS: Record<string, string[]> = {
   'hooks/usePayment.ts': ['VFIDEToken', 'BurnRouter', 'UserVault'],
   'hooks/usePayroll.ts': ['PayrollManager'],
   'hooks/useVFIDEBalance.ts': ['VFIDEToken'],
-  'hooks/useProofScore.ts': ['Seer', 'ProofScoreBurnRouter'],
+  'hooks/useProofScore.ts': ['Seer', 'ProofScoreBurnRouter', 'SeerSocial'],
   'hooks/useProofScoreHooks.ts': ['Seer', 'SeerSocial'],
   'hooks/useDAOHooks.ts': ['DAO'],
   'hooks/useMerchantHooks.ts': ['MerchantPortal', 'VaultHub', 'CardBoundVault'],

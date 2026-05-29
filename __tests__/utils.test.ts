@@ -140,28 +140,28 @@ describe('formatUSD', () => {
 describe('getScoreTierColor', () => {
   // Uses the current tier system (based on lib/utils.ts implementation)
   it('returns amber for ELITE (>=8000)', () => {
-    expect(getScoreTierColor(9000)).toBe('#F59E0B')
-    expect(getScoreTierColor(10000)).toBe('#F59E0B')
+    expect(getScoreTierColor(9000)).toBe('#00FF88')
+    expect(getScoreTierColor(10000)).toBe('#00FF88')
   })
 
   it('returns purple for COUNCIL (>=7000)', () => {
-    expect(getScoreTierColor(7000)).toBe('#A855F7')
-    expect(getScoreTierColor(7999)).toBe('#A855F7')
+    expect(getScoreTierColor(7000)).toBe('#A78BFA')
+    expect(getScoreTierColor(7999)).toBe('#A78BFA')
   })
 
   it('returns emerald for TRUSTED (>=5600)', () => {
-    expect(getScoreTierColor(5600)).toBe('#10B981')
-    expect(getScoreTierColor(6999)).toBe('#10B981')
+    expect(getScoreTierColor(5600)).toBe('#34D399')
+    expect(getScoreTierColor(6999)).toBe('#34D399')
   })
 
   it('returns yellow for LOW TRUST (>=4000, <5000)', () => {
-    expect(getScoreTierColor(4500)).toBe('#EAB308')
-    expect(getScoreTierColor(4999)).toBe('#EAB308')
+    expect(getScoreTierColor(4500)).toBe('#FFA500')
+    expect(getScoreTierColor(4999)).toBe('#FFA500')
   })
 
-  it('returns red for RISKY (<3500)', () => {
-    expect(getScoreTierColor(0)).toBe('#EF4444')
-    expect(getScoreTierColor(1999)).toBe('#EF4444')
+  it('returns red for RISKY (<4000)', () => {
+    expect(getScoreTierColor(0)).toBe('#FF4444')
+    expect(getScoreTierColor(1999)).toBe('#FF4444')
   })
 })
 

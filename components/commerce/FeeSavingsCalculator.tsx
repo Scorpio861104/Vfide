@@ -201,7 +201,7 @@ export function FeeSavingsCalculator() {
       </m.div>
       
       {/* ProofScore Improvement Callout */}
-      {score < 8000 && (
+      {(score ?? 0) < 8000 && (
         <m.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -211,7 +211,7 @@ export function FeeSavingsCalculator() {
             <strong style={{ color }}>Earn higher ProofScore</strong> to save more!
           </p>
           <p className="text-[10px] sm:text-xs text-zinc-100/50 mt-0.5 sm:mt-1">
-            {tier === 'Elite' ? "You're at the lowest fee tier — 0.25%!" : tier === 'Council' ? 'Almost there! Reach Elite (8000+) for 0.25% fees' : 'Build your ProofScore to reach 0.25% fees'}
+            {tier?.label === 'Elite' ? "You're at the lowest fee tier — 0.25%!" : tier?.label === 'Council' ? 'Almost there! Reach Elite (8000+) for 0.25% fees' : 'Build your ProofScore to reach 0.25% fees'}
           </p>
         </m.div>
       )}

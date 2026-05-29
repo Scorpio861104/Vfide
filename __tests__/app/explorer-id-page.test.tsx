@@ -73,7 +73,8 @@ jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK_V2 */
 jest.mock('@/lib/vfide-hooks', () => ({
   useProofScore: () => ({
     score: 8200,
-    tier: 'GOLD',
+    tier: { label: 'Elite', color: 'emerald', min: 8000, max: 10000 },
+    tierName: 'Elite',
     canVote: true,
     canMerchant: true,
     isLoading: false,
@@ -178,7 +179,7 @@ describe('Explorer address detail page pathways', () => {
     expect(screen.getByRole('heading', { name: /User Profile/i })).toBeTruthy();
     expect(screen.getByText(/This is your profile/i)).toBeTruthy();
     expect(screen.getByText(/Trust Tier:/i)).toBeTruthy();
-    expect(screen.getByText(/GOLD/i)).toBeTruthy();
+    expect(screen.getByText(/Elite/i)).toBeTruthy();
 
     fireEvent.click(screen.getByTitle('Copy address'));
     expect(mockCopy).toHaveBeenCalledWith('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');

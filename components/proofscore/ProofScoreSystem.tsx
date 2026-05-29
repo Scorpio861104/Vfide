@@ -14,53 +14,58 @@
 'use client';
 
 import { m, AnimatePresence } from 'framer-motion';
+import { getTier as getCanonTier, TIERS as CANON_TIERS } from '@/lib/proofScore/tiers';
 import { Shield, Star, Zap, Users, ShoppingCart, Vote, Sparkles } from 'lucide-react';
 
 // ── Tier System ─────────────────────────────────────────────────────────────
 
+// ── Tier types — local shape with all fields for this component ────────────
 export interface Tier {
   name: string;
   minScore: number;
   maxScore: number;
-  feeBps: number;        // Basis points (100 = 1%)
+  feeBps: number;
   color: string;
   glowColor: string;
   bgGradient: string;
   icon: string;
 }
 
-/**
- * 7-tier ProofScore system as defined in VFIDE Complete Manual v1.0
- * Fee curve: 500 bps (5%) at score ≤4000, 25 bps (0.25%) at score ≥8000,
- * linear interpolation between 4000-8000.
- * SeerSocial.sol:117 — minScoreToEndorse = 7_000
- * SeerSocial.sol:127 — minScoreToMentor  = 7_200
- */
-export const TIERS: Tier[] = [
-  { name: 'Risky',      minScore: 0,    maxScore: 3499,  feeBps: 500, color: '#FF4444', glowColor: '#FF444440', bgGradient: 'from-red-500/20 to-red-600/20',          icon: '⚠️' },
-  { name: 'Low Trust',  minScore: 3500, maxScore: 4999,  feeBps: 400, color: '#FFA500', glowColor: '#FFA50040', bgGradient: 'from-orange-500/20 to-orange-600/20',    icon: '🔶' },
-  { name: 'Neutral',    minScore: 5000, maxScore: 5399,  feeBps: 250, color: '#FFD700', glowColor: '#FFD70040', bgGradient: 'from-yellow-500/20 to-amber-500/20',     icon: '🟡' },
-  { name: 'Governance', minScore: 5400, maxScore: 5599,  feeBps: 200, color: '#60A5FA', glowColor: '#60A5FA40', bgGradient: 'from-blue-500/20 to-indigo-500/20',      icon: '🗳️' },
-  { name: 'Trusted',    minScore: 5600, maxScore: 6999,  feeBps: 150, color: '#34D399', glowColor: '#34D39940', bgGradient: 'from-emerald-500/20 to-green-500/20',    icon: '✅' },
-  { name: 'Council',    minScore: 7000, maxScore: 7999,  feeBps: 75,  color: '#A78BFA', glowColor: '#A78BFA40', bgGradient: 'from-violet-500/20 to-purple-500/20',    icon: '⭐' },
-  { name: 'Elite',      minScore: 8000, maxScore: 10000, feeBps: 25,  color: '#00FF88', glowColor: '#00FF8840', bgGradient: 'from-emerald-400/20 to-[#00CC6A]/20',    icon: '🏆' },
-];
-
-export function getTier(score: number): Tier {
-  for (let i = TIERS.length - 1; i >= 0; i -= 1) {
-    const tier = TIERS[i];
-    if (tier && score >= tier.minScore) return tier;
-  }
-  return TIERS[0]!;
+// Maps canonical tiers.ts Tier → local Tier shape
+function toLocalTier(t: { name: string; min: number; max: number; hex: string }): Tier {
+  const icons: Record<string, string> = {
+    Risky: '⚠️', 'Low Trust': '🔶', Neutral: '🟡',
+    Governance: '🗳️', Trusted: '✅', Council: '⭐', Elite: '🏆',
+  };
+  const bps: Record<string, number> = {
+    Risky: 500, 'Low Trust': 400, Neutral: 250, Governance: 200, Trusted: 150, Council: 75, Elite: 25,
+  };
+  const bg: Record<string, string> = {
+    Risky: 'from-red-500/20 to-red-600/20',
+    'Low Trust': 'from-orange-500/20 to-orange-600/20',
+    Neutral: 'from-yellow-500/20 to-amber-500/20',
+    Governance: 'from-blue-500/20 to-indigo-500/20',
+    Trusted: 'from-emerald-500/20 to-green-500/20',
+    Council: 'from-violet-500/20 to-purple-500/20',
+    Elite: 'from-emerald-400/20 to-[#00CC6A]/20',
+  };
+  return {
+    name: t.name,
+    minScore: t.min,
+    maxScore: t.max,
+    feeBps: bps[t.name] ?? 500,
+    color: t.hex,
+    glowColor: t.hex + '40',
+    bgGradient: bg[t.name] ?? 'from-zinc-500/20 to-zinc-600/20',
+    icon: icons[t.name] ?? '🔵',
+  };
 }
 
+export const TIERS: Tier[] = CANON_TIERS.map(toLocalTier);
+export function getTier(score: number): Tier { return toLocalTier(getCanonTier(score)); }
 export function getNextTier(score: number): Tier | null {
-  let currentIdx = 0;
-  TIERS.forEach((tier, index) => {
-    if (score >= tier.minScore) currentIdx = index;
-  });
-
-  return currentIdx < TIERS.length - 1 ? TIERS[currentIdx + 1] ?? null : null;
+  const idx = TIERS.findIndex(t => score >= t.minScore && score <= t.maxScore);
+  return idx >= 0 && idx < TIERS.length - 1 ? TIERS[idx + 1] ?? null : null;
 }
 
 // ── ProofScore Ring ─────────────────────────────────────────────────────────

@@ -1,4 +1,10 @@
 import { useReadContract, useAccount } from 'wagmi'
+import { useState } from 'react'
+import { useWriteContract, useWaitForTransactionReceipt, usePublicClient, useChainId } from 'wagmi'
+import { SeerSocialABI } from '@/lib/abis'
+import { ZERO_ADDRESS } from '@/lib/constants'
+import { CURRENT_CHAIN_ID } from '@/lib/testnet'
+import { parseContractError, logError } from '@/lib/errorHandling'
 import { ProofScoreBurnRouterABI, SeerABI, isConfiguredContractAddress } from '@/lib/contracts'
 import { useContractAddresses } from './useContractAddresses'
 import { PROOF_SCORE_PERMISSIONS, PROOF_SCORE_TIERS } from '@/lib/constants'
@@ -185,5 +191,108 @@ export function useHasBadge(badgeId: `0x${string}`, userAddress?: `0x${string}`)
   return {
     hasBadge: !!data,
     isLoading,
+  }
+}
+
+// ─── Consolidated from useProofScoreHooks.ts ─────────────────────────────
+
+export function useEndorse(targetAddress?: `0x${string}`) {
+  const CONTRACT_ADDRESSES = useContractAddresses();
+  const chainId = useChainId()
+  const publicClient = usePublicClient()
+  const { writeContractAsync, data, isPending } = useWriteContract()
+  const [error, setError] = useState<string | null>(null)
+  const hasSeerSocialConfig = isConfiguredContractAddress(CONTRACT_ADDRESSES.SeerSocial)
+  
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+    hash: data,
+  })
+  
+  const endorse = async (reason = 'endorsement') => {
+    setError(null)
+    if (!targetAddress || targetAddress === ZERO_ADDRESS) {
+      setError('Invalid target address')
+      return { success: false, error: 'Invalid target address' }
+    }
+    if (!hasSeerSocialConfig) {
+      const message = 'SeerSocial contract is not configured'
+      setError(message)
+      return { success: false, error: message }
+    }
+    if (chainId !== CURRENT_CHAIN_ID) {
+      const message = 'Switch to the configured network before endorsing'
+      setError(message)
+      return { success: false, error: message }
+    }
+    try {
+      const hash = await writeContractAsync({
+        address: CONTRACT_ADDRESSES.SeerSocial,
+        abi: SeerSocialABI,
+        functionName: 'endorse',
+        args: [targetAddress, reason],
+        chainId: CURRENT_CHAIN_ID,
+      })
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash })
+      }
+      return { success: true, hash }
+    } catch (err: unknown) {
+      logError('endorse', err);
+      const parsed = parseContractError(err);
+      const errorMsg = `Failed to endorse: ${parsed.userMessage}`;
+      setError(errorMsg)
+      return { success: false, error: errorMsg }
+    }
+  }
+  
+  return {
+    endorse,
+    isEndorsing: isPending || isConfirming,
+    isSuccess,
+    error,
+    isValid: !!targetAddress && targetAddress !== ZERO_ADDRESS,
+    isAvailable: !!targetAddress && hasSeerSocialConfig,
+  }
+}
+
+/**
+/**
+ * Score breakdown hook - Breakdown of a user's proof score components
+ */
+
+export function useScoreBreakdown(userAddress?: `0x${string}`) {
+  const CONTRACT_ADDRESSES = useContractAddresses();
+  const { address: connectedAddress } = useAccount()
+  const targetAddress = userAddress || connectedAddress
+  const hasSeerConfig = isConfiguredContractAddress(CONTRACT_ADDRESSES.Seer)
+  
+  const { data, isLoading, refetch } = useReadContract({
+    address: CONTRACT_ADDRESSES.Seer,
+    abi: SeerABI,
+    functionName: 'getScore',
+    args: targetAddress ? [targetAddress] : undefined,
+    query: {
+      enabled: !!targetAddress && hasSeerConfig,
+    }
+  })
+  
+  const totalScore = data ? Number(data) : 5000
+
+  // Component-level score decomposition is unavailable until ProofLedger exposes breakdown reads.
+  return {
+    breakdown: {
+      totalScore,
+      baseScore: 0,
+      activityBonus: 0,
+      ageBonus: 0,
+      activityPoints: 0,
+      endorsementPoints: 0,
+      vaultBonus: 0,
+      badgePoints: 0,
+      reputationDelta: 0,
+      hasDiversityBonus: false,
+    },
+    isLoading,
+    refetch,
   }
 }

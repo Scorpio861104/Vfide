@@ -127,7 +127,7 @@ jest.mock('@/lib/vfide-hooks', () => ({
   }),
   useProofScore: () => ({
     score: 7500,
-    tier: 'Council',
+    tier: { label: 'Council', color: 'emerald', min: 7000, max: 8000 },
   }),
   useVaultBalance: () => ({
     balance: '1000',
