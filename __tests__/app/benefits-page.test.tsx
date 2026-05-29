@@ -172,7 +172,8 @@ describe('Benefits page pathways', () => {
     expect(screen.getByRole('heading', { name: /Available Rewards/i })).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: /My Stats/i }));
-    expect(screen.getByRole('heading', { name: /Gold Member/i })).toBeTruthy();
-    expect(screen.getByText(/ProofScore: 68/i)).toBeTruthy();
+    // StatsTab now shows real hook-derived tier (score=0 → Risky in test env)
+    expect(screen.getByText(/VFIDE Balance/i)).toBeTruthy();
+    expect(screen.getAllByText(/ProofScore/i).length).toBeGreaterThan(0);
   });
 });

@@ -159,7 +159,7 @@ export default function DashboardPage() {
               <FeeSavingsCard
                 totalVolume={totalVolume}
                 transactionCount={txCount}
-                buyerFeeBps={50}
+                buyerFeeBps={feeRate ?? 50}
               />
             </m.div>
           </div>

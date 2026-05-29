@@ -52,11 +52,11 @@ export function GatewayTab({ isConnected }: { isConnected: boolean }) {
             <div className="text-sm text-zinc-400">Orders Processed</div>
           </div>
           <div className="bg-black/30 rounded-lg p-4">
-            <div className="text-3xl font-bold text-zinc-100">1.2M</div>
+            <div className="text-3xl font-bold text-zinc-100">—</div>
             <div className="text-sm text-zinc-400">VFIDE Volume</div>
           </div>
           <div className="bg-black/30 rounded-lg p-4">
-            <div className="text-3xl font-bold text-green-400">98.5%</div>
+            <div className="text-3xl font-bold text-zinc-500">—</div>
             <div className="text-sm text-zinc-400">Settlement Rate</div>
           </div>
         </div>

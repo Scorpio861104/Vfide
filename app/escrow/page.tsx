@@ -13,6 +13,7 @@ import { CompletedTab } from './components/CompletedTab';
 import { CreateTab } from './components/CreateTab';
 import { DisputesTab } from './components/DisputesTab';
 import { useT } from '@/lib/i18n';
+import { useEscrowCount } from '@/hooks/useCommerceEscrow';
 
 type TabId = 'active' | 'create' | 'completed' | 'disputes';
 
@@ -26,6 +27,7 @@ const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
 export default function EscrowPage() {
   const t = useT();
   const [activeTab, setActiveTab] = useState<TabId>('active');
+  const { count: escrowCount } = useEscrowCount();
 
   return (
     <div className="relative min-h-screen bg-zinc-950 md:pt-[3.5rem]">
@@ -60,16 +62,16 @@ export default function EscrowPage() {
             </div>
             <div className="flex items-center gap-2">
               <div className="analytics-card text-center px-5 py-3">
-                <div className="text-xl font-bold text-accent">$2.4M</div>
-                <div className="text-xs text-white/40">Locked</div>
+                <div className="text-xl font-bold text-accent">—</div>
+                <div className="text-xs text-white/40">TVL (testnet)</div>
               </div>
               <div className="analytics-card text-center px-5 py-3">
-                <div className="text-xl font-bold text-emerald-400">1,847</div>
-                <div className="text-xs text-white/40">Active</div>
+                <div className="text-xl font-bold text-emerald-400">{escrowCount !== undefined ? Number(escrowCount).toLocaleString() : '…'}</div>
+                <div className="text-xs text-white/40">Total Escrows</div>
               </div>
               <div className="analytics-card text-center px-5 py-3">
-                <div className="text-xl font-bold text-violet-400">99.1%</div>
-                <div className="text-xs text-white/40">Settled</div>
+                <div className="text-xl font-bold text-violet-400">—</div>
+                <div className="text-xs text-white/40">Settlement (testnet)</div>
               </div>
             </div>
           </div>

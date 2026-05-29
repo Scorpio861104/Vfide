@@ -228,7 +228,7 @@ export function FeeSavingsCalculator() {
               <Shield size={20} className="text-emerald-400" />
               <div>
                 <div className="text-white font-bold">VFIDE</div>
-                <div className="text-emerald-400 text-xs">0% merchant fee • 0.5% buyer fee</div>
+                <div className="text-emerald-400 text-xs">0% merchant fee • 0.25%–5% buyer fee</div>
               </div>
             </div>
             <div className="text-right">
