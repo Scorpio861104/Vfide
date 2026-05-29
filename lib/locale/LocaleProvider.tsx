@@ -52,7 +52,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     return 'USD';
   });
 
-  // Sync locale preference on mount AND when hooks/useLocale fires a storage event
+  // Sync locale preference on mount AND when hooks/useLocale fires a locale event
   useEffect(() => {
     function applyStored() {
       const stored = localStorage.getItem(LOCALE_STORAGE_KEY);
@@ -62,7 +62,20 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
       }
     }
     applyStored();
-    // Listen for cross-hook updates (e.g. LanguageSwitcher uses hooks/useLocale)
+
+    // 'vfide:locale-changed' CustomEvent — same-tab signal from hooks/useLocale.
+    // This is the RELIABLE path: native StorageEvent fired via window.dispatchEvent()
+    // is NOT delivered to 'storage' listeners in the same tab.
+    function onLocaleChanged(e: Event) {
+      const next = (e as CustomEvent<string>).detail;
+      if (next) {
+        setCurrentLocale(next);
+        setUserLocale(next);
+      }
+    }
+    window.addEventListener('vfide:locale-changed', onLocaleChanged);
+
+    // Also keep the cross-tab StorageEvent listener for multi-window scenarios
     function onStorage(e: StorageEvent) {
       if (e.key === LOCALE_STORAGE_KEY && e.newValue) {
         setCurrentLocale(e.newValue);
@@ -70,7 +83,11 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
       }
     }
     window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
+
+    return () => {
+      window.removeEventListener('vfide:locale-changed', onLocaleChanged);
+      window.removeEventListener('storage', onStorage);
+    };
   }, []);
 
   const setLocale = useCallback((l: string) => {
