@@ -102,7 +102,7 @@ function ShareMenu({ notification, onClose: _onClose }: { notification: Achievem
   const shareText = notification.shareText || 
     `🏆 I just earned "${notification.title}" on VFIDE! ${notification.reward?.xp ? `+${notification.reward.xp} XP` : ''} #VFIDE #Web3`;
 
-  const shareUrl = typeof window !== 'undefined' ? window.location.origin : 'https://vfide.io';
+  const shareUrl = typeof window !== 'undefined' ? window.location.origin : 'https://vfide.app';
 
   const copyToClipboard = async () => {
     try {

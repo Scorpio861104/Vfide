@@ -18,7 +18,6 @@ export const metadata: Metadata = {
     title: 'Seer Insights & Safety - VFIDE',
     description:
       'Explore VFIDE safety signals, system analytics, and user-facing Seer guidance.',
-    url: 'https://vfide.io/seer-service',
     siteName: 'VFIDE',
     type: 'website',
     images: [

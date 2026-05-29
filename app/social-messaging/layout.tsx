@@ -18,7 +18,6 @@ export const metadata: Metadata = {
     title: 'Social Hub - VFIDE',
     description:
       'Private wallet-based messaging, trusted groups, and social coordination for the VFIDE ecosystem.',
-    url: 'https://vfide.io/social-messaging',
     siteName: 'VFIDE',
     type: 'website',
     images: [

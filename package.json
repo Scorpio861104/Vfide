@@ -238,7 +238,6 @@
     "sharp": "^0.34.1",
     "socket.io-client": "^4.8.3",
     "tailwind-merge": "^3.4.0",
-    "tsx": "^4.21.0",
     "viem": "2.50.4",
     "wagmi": "2.19.5",
     "web-vitals": "4.2.4",
@@ -317,7 +316,7 @@
     "supertest": "^7.2.2",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
-    "tsx": "^4.21.0",
+    "tsx": "^4.22.3",
     "typechain": "^8.3.2",
     "typescript": "^6",
     "vitest": "^4.1.4"

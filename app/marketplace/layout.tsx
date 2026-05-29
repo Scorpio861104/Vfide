@@ -18,7 +18,6 @@ export const metadata: Metadata = {
     title: 'Marketplace - VFIDE',
     description:
       'Browse trusted merchants, products, and services with streamlined VFIDE payments.',
-    url: 'https://vfide.io/marketplace',
     siteName: 'VFIDE',
     type: 'website',
     images: [

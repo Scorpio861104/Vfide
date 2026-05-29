@@ -18,7 +18,6 @@ export const metadata: Metadata = {
     title: 'Support Center - VFIDE',
     description:
       'Find answers, troubleshoot wallet and payment issues, and contact VFIDE support with confidence.',
-    url: 'https://vfide.io/support',
     siteName: 'VFIDE',
     type: 'website',
     images: [
