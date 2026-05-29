@@ -6,8 +6,10 @@
  */
 import { RemittanceTab } from '@/app/wallet/components/RemittanceTab';
 import { Footer } from '@/components/layout/Footer';
+import { useT } from '@/lib/i18n';
 
 export default function RemittancePage() {
+  const t = useT();
   return (
     <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem]">
       <div className="container mx-auto px-4 max-w-3xl py-8">

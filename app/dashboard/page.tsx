@@ -18,15 +18,10 @@ import { BadgesTab } from './components/BadgesTab';
 import { ScoreSimulatorTab } from './components/ScoreSimulatorTab';
 import { FeeSimulatorTab } from './components/FeeSimulatorTab';
 import { RecentActivity } from './components/RecentActivity';
+import { useT } from '@/lib/i18n';
 
-const tabs = [
-  { id: 'overview', label: 'Overview', icon: Home },
-  { id: 'badges',   label: 'Badges',   icon: Award },
-  { id: 'score',    label: 'Score Sim', icon: Calculator },
-  { id: 'fees',     label: 'Fee Sim',   icon: BarChart3 },
-  { id: 'activity', label: 'Activity',  icon: Activity },
-] as const;
-type TabId = typeof tabs[number]['id'];
+
+type TabId = 'overview' | 'badges' | 'score' | 'fees' | 'activity';
 
 function truncateAddress(address?: string) {
   if (!address) return null;
@@ -34,6 +29,14 @@ function truncateAddress(address?: string) {
 }
 
 export default function DashboardPage() {
+  const t = useT();
+  const tabs = [
+    { id: 'overview', label: t.dashboard_tab_overview, icon: Home },
+    { id: 'badges',   label: t.dashboard_tab_badges, icon: Award },
+    { id: 'score',    label: t.dashboard_tab_score, icon: Calculator },
+    { id: 'fees',     label: t.dashboard_tab_fees, icon: BarChart3 },
+    { id: 'activity', label: t.dashboard_tab_activity, icon: Activity },
+  ] as const;
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const { address } = useAccount();
   const { score: proofScore, burnFee: feeRate, isDisconnected: _scoreDisconnected } = useProofScore();

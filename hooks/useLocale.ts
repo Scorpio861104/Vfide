@@ -24,14 +24,18 @@ function applyDocumentLocale(locale: SupportedLocale): void {
 }
 
 function readStoredLocale(): SupportedLocale {
-  if (typeof localStorage === 'undefined') return DEFAULT_LOCALE;
-  // Try the shared key first (written by LocaleProvider), then the legacy key
-  const stored =
-    localStorage.getItem(STORAGE_KEY) ||
-    localStorage.getItem('locale');
-  return stored ? normalizeLocale(stored) : normalizeLocale(
-    typeof navigator !== 'undefined' ? navigator.language : undefined
-  );
+  try {
+    if (typeof localStorage === 'undefined') return DEFAULT_LOCALE;
+    // Try the shared key first (written by LocaleProvider), then the legacy key
+    const stored =
+      localStorage.getItem(STORAGE_KEY) ||
+      localStorage.getItem('locale');
+    return stored ? normalizeLocale(stored) : normalizeLocale(
+      typeof navigator !== 'undefined' ? navigator.language : undefined
+    );
+  } catch {
+    return DEFAULT_LOCALE;
+  }
 }
 
 /**

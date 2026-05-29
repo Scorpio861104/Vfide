@@ -5,7 +5,7 @@ import { TrustChallenges } from '@/app/proofscore/components/TrustChallenges'
 import { ScoreStoryFeed } from '@/app/proofscore/components/ScoreStoryFeed'
 import { ProofScoreVisualizer } from '@/components/trust/ProofScoreVisualizer'
 import { useLocale } from '@/hooks/useLocale';
-import { PROOFSCORE_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
+import { useT } from '@/lib/i18n';
 import { Footer } from '@/components/layout/Footer';
 
 // Canonical 7-tier system — 0–10,000 scale (matches Seer contract + ScoringConstants.sol)
@@ -22,7 +22,7 @@ const TIERS = [
 
 export default function ProofScorePage() {
   const [locale] = useLocale();
-  const _copy = pickLocaleCopy(PROOFSCORE_TRANSLATIONS, locale); // proofscore page i18n
+  const t = useT();
   const { address, isConnected } = useAccount()
 
   return (

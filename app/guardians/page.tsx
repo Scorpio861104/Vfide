@@ -9,6 +9,7 @@ import { m, AnimatePresence } from "framer-motion";
 import { Shield, Users, Key, FileText, Clock, Heart } from "lucide-react";
 
 import type { TabType } from './components/types';
+import { useT } from '@/lib/i18n';
 
 // ── Lazy-loaded tab components (code-split per tab) ─────────────────────────
 const OverviewTab = lazy(() => import('./components/OverviewTab').then(m => ({ default: m.OverviewTab })));
@@ -46,6 +47,7 @@ function TabSkeleton() {
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 export default function GuardiansPage() {
+  const t = useT();
   const { isConnected } = useAccount();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const visibleTabs = TAB_CONFIG;
@@ -68,7 +70,7 @@ export default function GuardiansPage() {
             <m.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-2">
               <div className="badge-live mb-3 w-fit"><Shield size={11} /> Security System</div>
               <h1 className="text-4xl font-black text-white tracking-tight mb-2">
-                Guardian Dashboard
+                {t.guardians_heading}
               </h1>
               <p className="text-zinc-400 max-w-2xl">
                 Manage recoveries only for vaults where the owner explicitly selected you as guardian.

@@ -10,15 +10,18 @@ import { Footer } from '@/components/layout/Footer';
 
 import { AchievementsTab } from './components/AchievementsTab';
 import { PerksTab } from './components/PerksTab';
+import { useT } from '@/lib/i18n';
 
 type TabId = 'achievements' | 'perks';
 
-const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
-  { id: 'achievements', label: 'Achievements', icon: Award },
-  { id: 'perks',        label: 'Perks',        icon: Gift  },
-];
+
 
 export default function AchievementsPage() {
+  const t = useT();
+  const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
+    { id: 'achievements', label: t.achievements_tab_achievements, icon: Award },
+    { id: 'perks',        label: t.achievements_tab_perks, icon: Gift  },
+  ];
   const [activeTab, setActiveTab] = useState<TabId>('achievements');
 
   return (

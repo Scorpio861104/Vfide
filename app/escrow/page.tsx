@@ -12,6 +12,7 @@ import { ActiveTab } from './components/ActiveTab';
 import { CompletedTab } from './components/CompletedTab';
 import { CreateTab } from './components/CreateTab';
 import { DisputesTab } from './components/DisputesTab';
+import { useT } from '@/lib/i18n';
 
 type TabId = 'active' | 'create' | 'completed' | 'disputes';
 
@@ -23,6 +24,7 @@ const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
 ];
 
 export default function EscrowPage() {
+  const t = useT();
   const [activeTab, setActiveTab] = useState<TabId>('active');
 
   return (

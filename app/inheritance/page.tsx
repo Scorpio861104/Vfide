@@ -11,8 +11,10 @@ import { useRouter } from 'next/navigation';
 import { useAccount } from 'wagmi';
 import { Loader2, Shield } from 'lucide-react';
 import { useInheritance } from '@/hooks/useInheritance';
+import { useT } from '@/lib/i18n';
 
 export default function InheritancePage() {
+  const t = useT();
   const router = useRouter();
   const { isConnected } = useAccount();
   const inh = useInheritance();
@@ -30,7 +32,7 @@ export default function InheritancePage() {
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-4">
       <Shield size={36} className="text-gray-500" />
       <div className="text-center">
-        <h1 className="text-xl font-bold text-white">Inheritance</h1>
+        <h1 className="text-xl font-bold text-white">{t.inheritance_heading}</h1>
         <p className="mt-1 text-sm text-gray-400">
           {!isConnected
             ? 'Connect your wallet to manage inheritance.'

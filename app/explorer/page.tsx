@@ -6,10 +6,12 @@ import { useRouter } from 'next/navigation'
 import { Search, TrendingUp, Users, Activity, ArrowRight } from 'lucide-react'
 import { m } from 'framer-motion'
 import { Footer } from '@/components/layout/Footer'
+import { useT } from '@/lib/i18n';
 
 const ETHEREUM_ADDRESS_LENGTH = 42
 
 export default function ExplorerPage() {
+  const t = useT();
   const [searchQuery, setSearchQuery] = useState('')
   const router = useRouter()
 
@@ -61,7 +63,7 @@ export default function ExplorerPage() {
         >
           <div className="badge-live mb-4 mx-auto w-fit"><Search size={11} /> Block Explorer</div>
           <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-4">
-            VFIDE Explorer
+            {t.explorer_heading}
           </h1>
           <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
             Explore transactions, addresses, and activity on the VFIDE network

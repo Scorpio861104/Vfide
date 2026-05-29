@@ -9,8 +9,10 @@ import { useAccount, useChainId } from 'wagmi'
 import { FAUCET_URLS } from '@/lib/testnet'
 import { getExplorerUrlForChainId, isTestnetChainId } from '@/lib/chains'
 import { useCopyToClipboard } from '@/lib/hooks/useCopyToClipboard'
+import { useT } from '@/lib/i18n';
 
 export default function TestnetPage() {
+  const t = useT();
   const router = useRouter()
   const { copied, copy } = useCopyToClipboard()
   const { address } = useAccount()
@@ -82,7 +84,7 @@ export default function TestnetPage() {
         <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         <div className="max-w-2xl mx-auto px-4 py-12">
           <div className="badge-live mb-3"><span>🔬</span> Testnet Mode</div>
-          <h1 className="text-3xl font-black mb-2 tracking-tight">Testnet Setup</h1>
+          <h1 className="text-3xl font-black mb-2 tracking-tight">{t.testnet_heading}</h1>
           <p className="text-zinc-400 mb-8">
             Get test ETH and VFIDE to start testing on Base Sepolia.
           </p>

@@ -33,20 +33,23 @@ import { SecurityTab } from '@/app/setup/components/SecurityTab';
 
 // Notifications tab — inline from /notifications page content
 import { NotificationsTabInline } from './components/NotificationsTabInline';
+import { useT } from '@/lib/i18n';
 
 type TabId = 'account' | 'vault' | 'security' | 'notifications';
 
-const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
-  { id: 'account',       label: 'Account',       icon: User     },
-  { id: 'vault',         label: 'Vault',          icon: Lock     },
-  { id: 'security',      label: 'Security',       icon: Shield   },
-  { id: 'notifications', label: 'Notifications',  icon: Bell     },
-];
+
 
 // UX-1: Valid tab IDs for type-safe URL parsing
 const VALID_TABS = new Set<TabId>(['account', 'vault', 'security', 'notifications']);
 
 function SettingsPageInner() {
+  const t = useT();
+  const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
+    { id: 'account',       label: t.settings_tab_account,       icon: User     },
+    { id: 'vault',         label: t.settings_tab_vault,          icon: Lock     },
+    { id: 'security',      label: t.settings_tab_security,       icon: Shield   },
+    { id: 'notifications', label: t.settings_tab_notifications,  icon: Bell     },
+  ];
   // UX-1: Read initial tab from URL search params so ?tab= links work correctly
   // and browser Back/Forward preserves the active tab context
   const searchParams = useSearchParams();
@@ -124,6 +127,7 @@ function SettingsPageInner() {
 }
 
 export default function SettingsPage() {
+
   return (
     <Suspense fallback={<div className="min-h-screen bg-zinc-950" />}>
       <SettingsPageInner />

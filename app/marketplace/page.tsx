@@ -12,8 +12,10 @@ import { FilterContent } from './components/FilterContent';
 import { MarketplaceEmptyState } from './components/MarketplaceEmptyState';
 import { ProductGridCard } from './components/ProductGridCard';
 import { ProductListCard } from './components/ProductListCard';
+import { useT } from '@/lib/i18n';
 
 export default function MarketplacePage() {
+  const t = useT();
   const [query, setQuery] = useState('');
   const [view, setView] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);

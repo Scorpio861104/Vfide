@@ -6,6 +6,7 @@ import { FaqTab } from './components/FaqTab';
 import { LearnTab } from './components/LearnTab';
 import { OverviewTab } from './components/OverviewTab';
 import { SecurityTab } from './components/SecurityTab';
+import { useT } from '@/lib/i18n';
 
 type TabId = 'overview' | 'learn' | 'faq' | 'security';
 
@@ -19,6 +20,7 @@ const TAB_LABELS: Record<TabId, string> = {
 const TAB_IDS: TabId[] = ['overview', 'learn', 'faq', 'security'];
 
 export default function DocsPage() {
+  const t = useT();
   const [activeTab, setActiveTab] = useState<TabId>('overview');
 
   return (
@@ -34,11 +36,11 @@ export default function DocsPage() {
         <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         <div className="relative container mx-auto max-w-6xl px-4 py-8">
           <div className="badge-live mb-3">
-            Documentation & Guides
+            {t.docs_heading} & Guides
           </div>
           <h1 className="mb-2 text-4xl font-black text-white tracking-tight">
             <span className="bg-gradient-to-r from-white to-accent-light bg-clip-text text-transparent">
-              Documentation & Help
+              {t.docs_heading} & Help
             </span>
           </h1>
           <p className="mb-8 text-white/60">Learn how trust scoring, wallets, payments, and recovery all work together in VFIDE.</p>

@@ -48,6 +48,7 @@ jest.mock('@/hooks/useLocale', () => ({
 }));
 
 jest.mock('@/lib/i18n', () => ({
+  useT: () => ({ developer_heading: 'Developer Hub', support_heading: 'Help & Support Center', support_tab_faq: 'FAQ', support_tab_tickets: 'My Tickets', support_tab_new: 'New Ticket', common_loading: 'Loading…', common_back: 'Back', security_heading: 'Account Security', security_subtitle: 'Monitor sessions.', common_settings: 'Settings' }),
   pickLocaleCopy: () => ({}),
   ABOUT_TRANSLATIONS: {},
 }));

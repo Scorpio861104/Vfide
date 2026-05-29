@@ -7,7 +7,7 @@ import { Footer } from '@/components/layout/Footer';
 import { PayContent } from './components/PayContent';
 import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import { useLocale } from '@/hooks/useLocale';
-import { PAY_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
+import { useT } from '@/lib/i18n';
 
 function PayFallback() {
   return (
@@ -18,8 +18,7 @@ function PayFallback() {
 }
 
 export default function PayPage() {
-  const [locale] = useLocale();
-  const _copy = pickLocaleCopy(PAY_TRANSLATIONS, locale); // pay page i18n
+  const t = useT();
   return (
     <>
       <ErrorBoundary>

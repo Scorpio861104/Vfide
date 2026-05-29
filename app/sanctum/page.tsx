@@ -12,18 +12,21 @@ import { CharitiesTab } from "./components/CharitiesTab";
 import { DisbursementsTab } from "./components/DisbursementsTab";
 import { DonateTab } from "./components/DonateTab";
 import { HistoryTab } from "./components/HistoryTab";
+import { useT } from '@/lib/i18n';
 
-const tabs = [
-  { id: 'overview', label: 'Overview', icon: Heart },
-  { id: 'charities', label: 'Charities', icon: Gift },
-  { id: 'disbursements', label: 'Disbursements', icon: Coins },
-  { id: 'donate', label: 'Donate', icon: Heart },
-  { id: 'history', label: 'History', icon: History },
-] as const;
+type TabId = 'overview' | 'charities' | 'disbursements' | 'donate' | 'history';
 
-type TabId = typeof tabs[number]['id'];
+
 
 export default function SanctumPage() {
+  const t = useT();
+  const tabs = [
+    { id: 'overview', label: t.sanctum_tab_overview, icon: Heart },
+    { id: 'charities', label: t.sanctum_tab_charities, icon: Gift },
+    { id: 'disbursements', label: t.sanctum_tab_disbursements, icon: Coins },
+    { id: 'donate', label: t.sanctum_tab_donate, icon: Heart },
+    { id: 'history', label: t.sanctum_tab_history, icon: History },
+  ];
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const { isConnected } = useAccount();
 
@@ -52,7 +55,7 @@ export default function SanctumPage() {
 
           <div className="sticky top-7 md:top-[5.25rem] z-30 backdrop-blur-xl bg-zinc-950/80 flex gap-2 mb-8 overflow-x-auto pb-2 border-b border-white/5">
             {tabs.map(tab => (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+              <button key={tab.id} onClick={() => setActiveTab(tab.id as TabId)}
                 className={activeTab === tab.id ? 'tab-pill-active flex items-center gap-2' : 'tab-pill-inactive flex items-center gap-2'}>
                 <tab.icon size={16} />{tab.label}
               </button>

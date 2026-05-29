@@ -21,8 +21,10 @@ import {
 import Link from 'next/link'
 import { useCopyToClipboard } from '@/lib/hooks/useCopyToClipboard'
 import { safeWindowOpen } from '@/lib/security/urlValidation'
+import { useT } from '@/lib/i18n';
 
 export default function InviteFriendsPage() {
+  const t = useT();
   const { address } = useAccount()
   const { copied, copy } = useCopyToClipboard()
   const [_selectedMethod, setSelectedMethod] = useState<string | null>(null)
@@ -121,7 +123,7 @@ export default function InviteFriendsPage() {
             <Users className="w-8 h-8 text-pink-400" />
           </div>
           <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-pink-400 via-purple-500 to-accent bg-clip-text text-transparent mb-4">
-            Invite Friends
+            {t.invite_heading}
           </h1>
           <p className="text-gray-400 text-lg">
             Share VFIDE with your network and grow the governance community

@@ -259,3 +259,7 @@ export const GOVERNANCE_TRANSLATIONS: TranslationMap<GovernanceCopy> = {
   'zh-CN': { heading: '治理', subtitle: '对提案投票，塑造协议走向。' },
 };
 
+
+// ── Universal translation hook (re-exported for convenience) ────────────────
+export { useT } from './i18n/useT';
+export type { TranslationKeys } from './i18n/useT';

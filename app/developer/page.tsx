@@ -9,6 +9,7 @@ import { ArrowRight, Clock, Code2, Rocket, Wallet, Users } from 'lucide-react';
 import { useLocale } from '@/hooks/useLocale';
 import { STUB_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
 import { SplitterTab } from './components/SplitterTab';
+import { useT } from '@/lib/i18n';
 
 type TabId = 'portal' | 'token-launch' | 'splitter';
 const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
@@ -88,6 +89,7 @@ function TokenLaunchTab() {
 }
 
 function DeveloperHubInner() {
+  const t = useT();
   const searchParams = useSearchParams();
   const initial = (searchParams.get('tab') as TabId | null) ?? 'portal';
   const [activeTab, setActiveTab] = useState<TabId>(
@@ -106,7 +108,7 @@ function DeveloperHubInner() {
         <div className="container mx-auto max-w-3xl px-4 py-12 relative z-10">
           <div className="mb-8 text-center">
             <div className="badge-live mb-4 justify-center"><Code2 size={12} /> Build on VFIDE</div>
-            <h1 className="text-4xl font-black text-white mb-2 tracking-tight">Developer Hub</h1>
+            <h1 className="text-4xl font-black text-white mb-2 tracking-tight">{t.developer_heading}</h1>
             <p className="text-zinc-400 text-sm">APIs, SDKs, and launch tools for builders.</p>
           </div>
 
@@ -146,6 +148,7 @@ function DeveloperHubInner() {
 }
 
 export default function DeveloperHubPage() {
+  const t = useT();
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center">

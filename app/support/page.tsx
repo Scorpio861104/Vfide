@@ -10,6 +10,7 @@ import { FaqTab } from './components/FaqTab';
 import { TicketsTab } from './components/TicketsTab';
 import { NewTab } from './components/NewTab';
 import { useLocale } from '@/hooks/useLocale';
+import { useT } from '@/lib/i18n';
 import { SUPPORT_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
 
 type TabId = 'faq' | 'tickets' | 'new';
@@ -64,6 +65,7 @@ const FAQ_ITEMS = [
 ];
 
 export default function SupportPage() {
+  const t = useT();
   const [locale] = useLocale();
   const copy = pickLocaleCopy(SUPPORT_TRANSLATIONS, locale);
   const { address, isConnected } = useAccount();
@@ -257,10 +259,10 @@ export default function SupportPage() {
             <div>
               <h1 className="text-4xl font-bold mb-2">
                 <span className="bg-gradient-to-r from-accent via-violet-400 to-pink-400 bg-clip-text text-transparent">
-                  {copy.heading}
+                  {t.support_heading}
                 </span>
               </h1>
-              <p className="text-white/50">{copy.subtitle}</p>
+              <p className="text-white/50">{t.support_subtitle}</p>
             </div>
             <div className="flex items-center gap-3">
               <label htmlFor="support-language" className="text-sm text-white/50">Language</label>

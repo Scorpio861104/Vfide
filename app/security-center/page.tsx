@@ -14,7 +14,7 @@ import { Footer } from '@/components/layout/Footer';
 import VerifierTabContent from './components/VerifierTabContent';
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { useLocale } from '@/hooks/useLocale';
-import { SECURITY_CENTER_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
+import { useT } from '@/lib/i18n';
 
 const tabs = [
   { id: 'overview', label: 'Overview', icon: Shield },
@@ -55,7 +55,7 @@ const CHECKS = [
 
 export default function SecurityCenterPage() {
   const [locale] = useLocale();
-  const _copy = pickLocaleCopy(SECURITY_CENTER_TRANSLATIONS, locale); // security center i18n
+  const t = useT();
   const { isConnected, address } = useAccount();
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   // In a real integration these come from API/contract reads.
