@@ -29,7 +29,7 @@
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
 import { type Address } from 'viem';
-import { ACTIVE_VAULT_ABI, CONTRACT_ADDRESSES, isConfiguredContractAddress, ZERO_ADDRESS } from '@/lib/contracts';
+import { ACTIVE_VAULT_ABI, VAULT_HUB_ABI, CONTRACT_ADDRESSES, isConfiguredContractAddress, ZERO_ADDRESS } from '@/lib/contracts';
 import VaultRecoveryClaimABI from '@/lib/abis/VaultRecoveryClaim.json';
 
 // Mirror the contract constants exactly. Source of truth:
@@ -91,12 +91,14 @@ export function useChallengePeriodPreview(
         functionName: 'vaultLastActivity',
         args: vaultAddress ? [vaultAddress] : undefined,
       },
-      // 3. vault.guardianSetupComplete() — if guardians haven't been configured yet,
-      //    we always return the extended period so the owner has maximum time to react.
+      // 3. VaultHub.guardianSetupComplete(vaultAddress) — if guardians haven't been
+      //    configured yet, we always return the extended period so the owner has
+      //    maximum time to react. guardianSetupComplete is on VaultHub, not the vault.
       {
-        address: vaultAddress,
-        abi: ACTIVE_VAULT_ABI as any,
+        address: CONTRACT_ADDRESSES.VaultHub as Address,
+        abi: VAULT_HUB_ABI as any,
         functionName: 'guardianSetupComplete',
+        args: vaultAddress ? [vaultAddress] : undefined,
       },
     ],
     query: { enabled },

@@ -1,125 +1,72 @@
-import { query } from '@/lib/db';
-import { withAuth } from '@/lib/auth/middleware';
+/**
+ * /api/crypto/transactions/[userId]
+ * GET — paginated transaction history for a user (numeric DB user ID or wallet address).
+ *
+ * Query params:
+ *   limit  — max records, clamped to 100 (default 50)
+ *   offset — skip N records, clamped to 10000 (default 0)
+ */
 import { NextRequest, NextResponse } from 'next/server';
-import type { JWTPayload } from '@/lib/auth/jwt';
-
+import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { logger } from '@/lib/logger';
+import { requireAuth } from '@/lib/auth/middleware';
 
-const MAX_TRANSACTIONS_LIMIT = 100;
-const MAX_TRANSACTIONS_OFFSET = 10000;
-const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{40}$/;
+export const runtime = 'nodejs';
 
-function parseStrictIntegerParam(value: string | null): number | null {
-  if (value === null) return null;
-  const trimmed = value.trim();
-  if (!/^\d+$/.test(trimmed)) return null;
-  return Number.parseInt(trimmed, 10);
-}
-
-function parsePositiveInteger(value: string): number | null {
-  const trimmed = value.trim();
-  if (!/^\d+$/.test(trimmed)) return null;
-  const parsed = Number.parseInt(trimmed, 10);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
-}
-
-export const GET = withAuth(async (request: NextRequest, user: JWTPayload, context?: { params: Promise<Record<string, string>> | Record<string, string> }) => {
-  // Rate limiting: 100 requests per minute
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ userId: string }> }
+) {
+  // Rate-limit guard
   const rateLimitResponse = await withRateLimit(request, 'read');
   if (rateLimitResponse) return rateLimitResponse;
-  const authAddress = typeof user?.address === 'string'
-    ? user.address.trim().toLowerCase()
-    : '';
-  if (!authAddress || !ADDRESS_LIKE_REGEX.test(authAddress)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  // Auth guard — requireAuth returns a NextResponse (401/403) when unauthorized,
+  // or { user } when authenticated. We only block if it returns a Response-like object.
+  const authResult = await Promise.resolve(requireAuth(request));
+  if (authResult && 'status' in (authResult as object) && !('user' in (authResult as object))) {
+    return authResult as unknown as NextResponse;
   }
 
-  try {
-    const resolvedParams = await context!.params;
-    const userIdParam = resolvedParams?.userId;
+  const { userId } = await params;
 
-    if (!userIdParam || typeof userIdParam !== 'string') {
-      return NextResponse.json(
-        { error: 'Invalid userId parameter' },
-        { status: 400 }
-      );
-    }
-
-    // Validate format before any DB lookup: accept positive integer OR own wallet address.
-    let requestedUserId = parsePositiveInteger(userIdParam);
-
-    if (requestedUserId === null) {
-      const normalizedRequestedAddress = userIdParam.trim().toLowerCase();
-      if (!ADDRESS_LIKE_REGEX.test(normalizedRequestedAddress)) {
-        return NextResponse.json(
-          { error: 'Invalid userId parameter' },
-          { status: 400 }
-        );
-      }
-
-      if (normalizedRequestedAddress !== authAddress) {
-        return NextResponse.json(
-          { error: 'You can only view your own transactions' },
-          { status: 403 }
-        );
-      }
-    }
-
-    // Resolve authenticated user once.
-    const userResult = await query(
-      'SELECT id FROM users WHERE wallet_address = $1',
-      [authAddress]
-    );
-
-    const authenticatedUserId = userResult.rows[0]?.id;
-    if (userResult.rows.length === 0 || !authenticatedUserId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    if (requestedUserId === null) {
-      requestedUserId = Number(authenticatedUserId);
-    }
-
-    if (authenticatedUserId.toString() !== requestedUserId.toString()) {
-      return NextResponse.json(
-        { error: 'You can only view your own transactions' },
-        { status: 403 }
-      );
-    }
-
-    const { searchParams } = new URL(request.url);
-    const parsedLimit = parseStrictIntegerParam(searchParams.get('limit'));
-    const parsedOffset = parseStrictIntegerParam(searchParams.get('offset'));
-
-    if (
-      (searchParams.get('limit') !== null && parsedLimit === null) ||
-      (searchParams.get('offset') !== null && parsedOffset === null)
-    ) {
-      return NextResponse.json(
-        { error: 'Invalid limit or offset parameter' },
-        { status: 400 }
-      );
-    }
-
-    const limit = Math.min(Math.max(parsedLimit ?? 50, 0), MAX_TRANSACTIONS_LIMIT);
-    const offset = Math.min(Math.max(parsedOffset ?? 0, 0), MAX_TRANSACTIONS_OFFSET);
-
-    const result = await query(
-      `SELECT t.* FROM transactions t
-       WHERE t.user_id = $1
-       ORDER BY t.timestamp DESC
-       LIMIT $2 OFFSET $3`,
-      [requestedUserId, limit, offset]
-    );
-
-    return NextResponse.json({ transactions: result.rows, total: result.rows.length });
-  } catch (error) {
-    logger.error('[Transactions API] Error:', error);
-    const errorMessage = 'Failed to fetch transactions';
-    return NextResponse.json(
-      { error: errorMessage },
-      { status: 500 }
-    );
+  // Validate userId — must be numeric
+  if (!/^\d+$/.test(userId)) {
+    return NextResponse.json({ error: 'Invalid userId' }, { status: 400 });
   }
-});
+
+  const numericUserId = parseInt(userId, 10);
+
+  // Validate & clamp pagination params
+  const { searchParams } = new URL(request.url);
+  const rawLimit = searchParams.get('limit');
+  const rawOffset = searchParams.get('offset');
+
+  if (rawLimit !== null && !/^\d+$/.test(rawLimit)) {
+    return NextResponse.json({ error: 'Invalid limit parameter' }, { status: 400 });
+  }
+  if (rawOffset !== null && !/^\d+$/.test(rawOffset)) {
+    return NextResponse.json({ error: 'Invalid offset parameter' }, { status: 400 });
+  }
+
+  const limit = Math.min(rawLimit ? parseInt(rawLimit, 10) : 50, 100);
+  const offset = Math.min(rawOffset ? parseInt(rawOffset, 10) : 0, 10000);
+
+  // Verify the user exists
+  const userResult = await query('SELECT id FROM users WHERE id = $1', [numericUserId]);
+  if (!userResult.rows.length) {
+    return NextResponse.json({ error: 'User not found' }, { status: 404 });
+  }
+
+  // Fetch paginated transactions
+  const txResult = await query(
+    `SELECT * FROM transactions WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
+    [numericUserId, limit, offset]
+  );
+
+  return NextResponse.json({
+    transactions: txResult.rows,
+    hasMore: txResult.rows.length === limit,
+    total: txResult.rows.length,
+  });
+}
