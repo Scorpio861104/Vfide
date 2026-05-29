@@ -15,8 +15,6 @@ import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts
  *
  * Reads (all batched via useReadContracts → single Multicall round-trip):
  *   • `feeSplit()`              — current BPS split across 3 channels (daoPayrollBps, merchantPoolBps, headhunterPoolBps)
- *   • `burnAddress()`           — destination for burned fees
- *   • `sanctumFund()`           — destination for charity fund
  *   • `daoPayrollPool()`        — destination for DAO payroll
  *   • `merchantPool()`          — destination for merchant rewards
  *   • `headhunterPool()`        — destination for headhunter bounties
@@ -51,8 +49,6 @@ export function RevenueTab() {
   const reads = configured
     ? ([
         { address: feeDistributorAddress as Address, abi: FeeDistributorABI as Abi, functionName: 'feeSplit' as const },
-        { address: feeDistributorAddress as Address, abi: FeeDistributorABI as Abi, functionName: 'burnAddress' as const },
-        { address: feeDistributorAddress as Address, abi: FeeDistributorABI as Abi, functionName: 'sanctumFund' as const },
         { address: feeDistributorAddress as Address, abi: FeeDistributorABI as Abi, functionName: 'daoPayrollPool' as const },
         { address: feeDistributorAddress as Address, abi: FeeDistributorABI as Abi, functionName: 'merchantPool' as const },
         { address: feeDistributorAddress as Address, abi: FeeDistributorABI as Abi, functionName: 'headhunterPool' as const },
@@ -99,13 +95,11 @@ export function RevenueTab() {
     0,
     [0n, 0n, 0n] as const,
   );
-  const burnAddress = decode<Address>(1, '0x0000000000000000000000000000000000000000');
-  const sanctumFund = decode<Address>(2, '0x0000000000000000000000000000000000000000');
-  const daoPayrollPool = decode<Address>(3, '0x0000000000000000000000000000000000000000');
-  const merchantPool = decode<Address>(4, '0x0000000000000000000000000000000000000000');
-  const headhunterPool = decode<Address>(5, '0x0000000000000000000000000000000000000000');
-  const lastDistributionTime = decode<bigint>(6, 0n);
-  const minDistributionAmount = decode<bigint>(7, 0n);
+  const daoPayrollPool = decode<Address>(1, '0x0000000000000000000000000000000000000000');
+  const merchantPool = decode<Address>(2, '0x0000000000000000000000000000000000000000');
+  const headhunterPool = decode<Address>(3, '0x0000000000000000000000000000000000000000');
+  const lastDistributionTime = decode<bigint>(4, 0n);
+  const minDistributionAmount = decode<bigint>(5, 0n);
 
   const [daoPayrollBps, merchantPoolBps, headhunterPoolBps] = feeSplit;
   // Aggregate BPS for sanity; should sum to 10000 (100%) on a healthy deploy.

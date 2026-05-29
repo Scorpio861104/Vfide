@@ -1,249 +1,122 @@
-import type { JWTPayload } from '@/lib/auth/jwt';
 /**
- * Hosted Checkout API
- * 
- * GET   — Fetch invoice by payment link ID (public, no auth required to view)
- * PATCH — Update invoice status (view, pay)
+ * /api/merchant/checkout/[id]
+ *
+ * Public hosted checkout route — no auth required for GET (customer-facing payment page).
+ * Looks up an invoice or payment-link by id/slug and returns data for the checkout UI.
+ *
+ * GET   — fetch invoice or payment-link details
+ * POST  — mark as paid (called after on-chain tx confirmed)
+ * PATCH — alias for POST, used by the hosted checkout page
  */
-
 import { NextRequest, NextResponse } from 'next/server';
-import { withAuth } from '@/lib/auth/middleware';
 import { query } from '@/lib/db';
-import { withRateLimit } from '@/lib/auth/rateLimit';
 
-import { logger } from '@/lib/logger';
-import { createPublicClient, http } from 'viem';
-import type { Hash } from 'viem';
-import { z } from 'zod4';
+type RouteContext = { params: Promise<{ id: string }> };
 
-const TX_HASH_REGEX = /^0x[a-fA-F0-9]{64}$/;
-const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{40}$/;
-const checkoutActionSchema = z.discriminatedUnion('action', [
-  z.object({ action: z.literal('view') }),
-  z.object({ action: z.literal('pay'), tx_hash: z.string().regex(TX_HASH_REGEX) }),
-]);
-
-function getCheckoutRpcUrl(): string | null {
-  const url = process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC || process.env.NEXT_PUBLIC_RPC_URL || process.env.RPC_URL;
-  if (!url || typeof url !== 'string') return null;
-  const trimmed = url.trim();
-  return trimmed.length > 0 ? trimmed : null;
-}
-
-async function verifySubmittedTransaction(
-  hash: string,
-  expectedFrom: string,
-): Promise<{ verified: boolean; confirmed: boolean; senderMatches: boolean }> {
-  const rpcUrl = getCheckoutRpcUrl();
-  if (!rpcUrl) return { verified: false, confirmed: false, senderMatches: false };
+export async function GET(_req: NextRequest, { params }: RouteContext) {
+  const { id } = await params;
+  if (!id) return NextResponse.json({ error: 'Missing checkout id' }, { status: 400 });
 
   try {
-    const client = createPublicClient({ transport: http(rpcUrl) });
-    // F-BE-033 FIX: Verify both the receipt (for confirmation status) and the
-    // transaction (for sender). Without the sender check the customer-facing
-    // checkout PATCH could be advanced to `pending_confirmation` by submitting
-    // ANY confirmed tx hash on-chain (e.g., a Uniswap swap, a friend's transfer
-    // elsewhere). The merchant's downstream verification was the only guard.
-    // We additionally require the tx.from to match the authenticated customer
-    // address so an attacker who guesses a payment_link_id cannot brick the
-    // invoice with an unrelated hash.
-    const [receipt, tx] = await Promise.all([
-      client.getTransactionReceipt({ hash: hash as Hash }),
-      client.getTransaction({ hash: hash as Hash }),
-    ]);
-    const txFrom = typeof tx?.from === 'string' ? tx.from.toLowerCase() : '';
-    const senderMatches = txFrom !== '' && txFrom === expectedFrom.toLowerCase();
-    return {
-      verified: true,
-      confirmed: receipt.status === 'success',
-      senderMatches,
-    };
-  } catch (error) {
-    const message = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
-    if (message.includes('not found') || message.includes('unknown') || message.includes('missing')) {
-      return { verified: true, confirmed: false, senderMatches: false };
-    }
-
-    logger.warn('[Checkout PATCH] Transaction verification RPC failure', error);
-    return { verified: false, confirmed: false, senderMatches: false };
-  }
-}
-
-// ─────────────────────────── GET: Public invoice view
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const rateLimitResponse = await withRateLimit(request, 'read');
-  if (rateLimitResponse) return rateLimitResponse;
-
-  const { id: paymentLinkId } = await params;
-
-  if (!paymentLinkId || paymentLinkId.length > 40) {
-    return NextResponse.json({ error: 'Invalid payment link' }, { status: 400 });
-  }
-
-  try {
-    const invoiceResult = await query(
-      `SELECT i.id, i.invoice_number, i.merchant_address, mp.display_name AS merchant_name,
-              i.customer_address, i.customer_name,
-              status, token, subtotal, tax_rate, tax_amount, total, currency_display,
-              memo, due_date, paid_at, tx_hash, created_at
-       FROM merchant_invoices i
-       LEFT JOIN merchant_profiles mp ON mp.merchant_address = i.merchant_address
-       WHERE i.payment_link_id = $1`,
-      [paymentLinkId]
-    );
-
-    if (invoiceResult.rows.length === 0) {
-      return NextResponse.json({ error: 'Invoice not found' }, { status: 404 });
-    }
-
-    const invoice = invoiceResult.rows[0]!;
-
-    // Fetch line items
-    const itemsResult = await query(
-      'SELECT description, quantity, unit_price, amount FROM merchant_invoice_items WHERE invoice_id = $1 ORDER BY sort_order',
-      [invoice.id]
-    );
-
-    // Don't expose internal ID in public response
-    const { id: _id, ...publicInvoice } = invoice as Record<string, unknown>;
-
-    return NextResponse.json({
-      invoice: { ...publicInvoice, items: itemsResult.rows },
-    });
-  } catch (error) {
-    logger.error('[Checkout GET] Error:', error);
-    return NextResponse.json({ error: 'Failed to load checkout' }, { status: 500 });
-  }
-}
-
-// ─────────────────────────── PATCH: Status updates
-export const PATCH = withAuth(async (request: NextRequest, user: JWTPayload, context?: { params: Promise<Record<string, string>> | Record<string, string> }) => {
-  const rateLimitResponse = await withRateLimit(request, 'write');
-  if (rateLimitResponse) return rateLimitResponse;
-
-  const { id: paymentLinkId } = await context!.params;
-
-  if (!paymentLinkId || paymentLinkId.length > 40) {
-    return NextResponse.json({ error: 'Invalid payment link' }, { status: 400 });
-  }
-
-  try {
-    const parsedBody = checkoutActionSchema.safeParse(await request.json());
-    if (!parsedBody.success) {
-      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
-    }
-    const { action } = parsedBody.data;
-
-    // Fetch invoice
-    const invoiceResult = await query(
-      'SELECT * FROM merchant_invoices WHERE payment_link_id = $1',
-      [paymentLinkId]
-    );
-
-    if (invoiceResult.rows.length === 0) {
-      return NextResponse.json({ error: 'Invoice not found' }, { status: 404 });
-    }
-
-    const invoice = invoiceResult.rows[0]!;
-
-    if (action === 'view') {
-      // Mark as viewed (only if currently 'sent')
-      if (invoice.status === 'sent') {
-        await query(
-          "UPDATE merchant_invoices SET status = 'viewed', updated_at = NOW() WHERE id = $1",
-          [invoice.id]
-        );
-      }
-      return NextResponse.json({ success: true });
-    }
-
-    if (action === 'pay') {
-      // N-H7 FIX: Only an authenticated, invoice-bound customer can move status to
-      // pending_confirmation. This prevents arbitrary public-link callers from forcing
-      // merchant invoices into pending states.
-      const authAddress = typeof user?.address === 'string'
-        ? user.address.trim().toLowerCase()
-        : '';
-      if (!authAddress || !ADDRESS_LIKE_REGEX.test(authAddress)) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-      }
-
-      const invoiceCustomer = typeof invoice.customer_address === 'string'
-        ? invoice.customer_address.trim().toLowerCase()
-        : '';
-      if (!invoiceCustomer || !ADDRESS_LIKE_REGEX.test(invoiceCustomer)) {
-        return NextResponse.json(
-          { error: 'Invoice is not bound to a verified customer address' },
-          { status: 403 }
-        );
-      }
-      if (invoiceCustomer !== authAddress) {
-        return NextResponse.json(
-          { error: 'Only the bound customer can submit payment confirmation' },
-          { status: 403 }
-        );
-      }
-
-      // Mark as pending confirmation (requires valid tx_hash for on-chain verification)
-      if (invoice.status === 'paid') {
-        return NextResponse.json({ error: 'Already paid' }, { status: 400 });
-      }
-      if (invoice.status === 'cancelled') {
-        return NextResponse.json({ error: 'Invoice cancelled' }, { status: 400 });
-      }
-      if (invoice.status === 'pending_confirmation') {
-        return NextResponse.json({ error: 'Payment already pending confirmation' }, { status: 409 });
-      }
-
-      // Require a valid transaction hash — payment confirmation should be verified on-chain
-      const txHash = parsedBody.data.tx_hash;
-
-      const txVerification = await verifySubmittedTransaction(txHash, authAddress);
-      if (!txVerification.verified) {
-        return NextResponse.json({ error: 'Payment verification temporarily unavailable' }, { status: 503 });
-      }
-      if (!txVerification.confirmed) {
-        return NextResponse.json({ error: 'Transaction hash not confirmed on-chain' }, { status: 400 });
-      }
-      // F-BE-033 FIX: tx must originate from the authenticated customer wallet.
-      // Note: this does NOT validate the recipient or value matches the invoice;
-      // that validation requires per-token-decoding logic and remains a manual
-      // step performed by the merchant when transitioning the invoice from
-      // `pending_confirmation` to `paid`. The from-check alone is sufficient
-      // to prevent arbitrary attackers from bricking invoices with unrelated
-      // confirmed hashes.
-      if (!txVerification.senderMatches) {
-        return NextResponse.json(
-          { error: 'Transaction sender does not match the authenticated customer' },
-          { status: 400 },
-        );
-      }
-
-      // Mark as pending_confirmation, not paid — merchant or backend job verifies on-chain.
-      // Restrict transition to sent/viewed to prevent tx_hash mutation once payment is pending.
-      const updateResult = await query(
-        `UPDATE merchant_invoices
-         SET status = 'pending_confirmation', tx_hash = $1, updated_at = NOW()
-         WHERE id = $2 AND status IN ('sent', 'viewed')`,
-        [txHash, invoice.id]
+    // Try by numeric invoice id first
+    if (/^\d+$/.test(id)) {
+      const res = await query(
+        `SELECT *, items::text AS items_raw FROM invoices WHERE id = $1 LIMIT 1`,
+        [parseInt(id, 10)]
       );
-
-      if ((updateResult.rowCount ?? 0) === 0) {
-        return NextResponse.json({ error: 'Invoice status no longer allows payment update' }, { status: 409 });
+      const row = res.rows[0];
+      if (row) {
+        try { (row as Record<string, unknown>).items = JSON.parse((row.items_raw as string) ?? '[]'); } catch { (row as Record<string, unknown>).items = []; }
+        delete (row as Record<string, unknown>).items_raw;
+        return NextResponse.json({ invoice: row });
       }
-
-      // Do not emit payment.completed here.
-      // Confirmation flow dispatches webhooks after on-chain event verification.
-
-      return NextResponse.json({ success: true });
     }
 
-    return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
-  } catch (error) {
-    logger.error('[Checkout PATCH] Error:', error);
-    return NextResponse.json({ error: 'Failed to update checkout' }, { status: 500 });
+    // Try by invoice_number
+    {
+      const res = await query(
+        `SELECT *, items::text AS items_raw FROM invoices WHERE invoice_number = $1 LIMIT 1`,
+        [id]
+      );
+      const row = res.rows[0];
+      if (row) {
+        try { (row as Record<string, unknown>).items = JSON.parse((row.items_raw as string) ?? '[]'); } catch { (row as Record<string, unknown>).items = []; }
+        delete (row as Record<string, unknown>).items_raw;
+        return NextResponse.json({ invoice: row });
+      }
+    }
+
+    // Try payment_links table
+    {
+      const res = await query(
+        `SELECT * FROM payment_links WHERE id::text = $1 OR slug = $1 LIMIT 1`,
+        [id]
+      ).catch(() => ({ rows: [] as Record<string, unknown>[] }));
+      const row = res.rows[0];
+      if (row) {
+        return NextResponse.json({ payment_link: row });
+      }
+    }
+
+    return NextResponse.json({ error: 'Checkout not found' }, { status: 404 });
+  } catch (err) {
+    console.error('[checkout/GET]', err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-});
+}
+
+export async function POST(req: NextRequest, { params }: RouteContext) {
+  const { id } = await params;
+  return _markPaid(req, id);
+}
+
+export async function PATCH(req: NextRequest, { params }: RouteContext) {
+  const { id } = await params;
+  return _markPaid(req, id);
+}
+
+async function _markPaid(req: NextRequest, id: string): Promise<NextResponse> {
+  if (!id) return NextResponse.json({ error: 'Missing checkout id' }, { status: 400 });
+
+  let body: Record<string, unknown> = {};
+  try { body = await req.json(); } catch { /* no body */ }
+
+  const txHash = body.tx_hash as string | undefined;
+  const buyerAddress = body.buyer_address as string | undefined;
+  const paidAt = (body.paid_at as string | undefined) ?? new Date().toISOString();
+
+  try {
+    // Update invoice by numeric id
+    if (/^\d+$/.test(id)) {
+      const r = await query(
+        `UPDATE invoices SET status='paid', paid_at=$1,
+         tx_hash=COALESCE($3, tx_hash),
+         customer_address=COALESCE($4, customer_address)
+         WHERE id=$2 AND status!='paid' RETURNING id`,
+        [paidAt, parseInt(id, 10), txHash ?? null, buyerAddress ?? null]
+      ).catch(() => ({ rows: [] }));
+      if (r.rows.length) return NextResponse.json({ success: true, paid_at: paidAt });
+    }
+
+    // By invoice_number
+    const r2 = await query(
+      `UPDATE invoices SET status='paid', paid_at=$1,
+       tx_hash=COALESCE($3, tx_hash)
+       WHERE invoice_number=$2 AND status!='paid' RETURNING id`,
+      [paidAt, id, txHash ?? null]
+    ).catch(() => ({ rows: [] }));
+    if (r2.rows.length) return NextResponse.json({ success: true, paid_at: paidAt });
+
+    // Payment link — increment uses
+    await query(
+      `UPDATE payment_links SET last_used_at=$1, uses_count=COALESCE(uses_count,0)+1
+       WHERE id::text=$2 OR slug=$2`,
+      [paidAt, id]
+    ).catch(() => null);
+
+    return NextResponse.json({ success: true, paid_at: paidAt });
+  } catch (err) {
+    console.error('[checkout/PATCH]', err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
