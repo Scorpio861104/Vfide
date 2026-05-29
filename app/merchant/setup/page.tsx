@@ -13,7 +13,7 @@ import { Footer } from '@/components/layout/Footer';
 import { MerchantQuickSetup } from '@/components/merchant/MerchantQuickSetup';
 import { useAccount } from 'wagmi';
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
-import { m } from 'framer-motion';
+import { m, LazyMotion, domAnimation } from 'framer-motion';
 import { Store, Wallet } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -41,7 +41,8 @@ export default function MerchantSetupPage() {
   }
 
   return (
-    <>
+    <LazyMotion features={domAnimation}>
+      <>
       <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] pb-8 relative overflow-hidden">
         <div className="absolute inset-0">
           <div className="absolute top-1/4 -left-32 w-100 h-100 bg-accent/8 rounded-full blur-[120px]" />

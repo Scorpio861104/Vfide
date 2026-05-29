@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useAccount } from 'wagmi';
 import { formatEther } from 'viem';
-import { m } from 'framer-motion';
+import { m, LazyMotion, domAnimation } from 'framer-motion';
 import {
   AlertTriangle,
   CheckCircle2,

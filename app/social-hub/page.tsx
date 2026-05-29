@@ -25,7 +25,7 @@ import type React from 'react';
  */
 
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
-import { AnimatePresence, m } from 'framer-motion';
+import { AnimatePresence, m, LazyMotion, domAnimation } from 'framer-motion';
 import {
   Hash,
   MessageCircle,
@@ -431,8 +431,10 @@ function SocialHubPageInner() {
 
 export default function SocialHubPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-zinc-950" />}>
+    <LazyMotion features={domAnimation}>
+      <Suspense fallback={<div className="min-h-screen bg-zinc-950" />}>
       <SocialHubPageInner />
     </Suspense>
+    </LazyMotion>
   );
 }

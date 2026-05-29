@@ -1,14 +1,15 @@
 'use client';
+import dynamic from 'next/dynamic';
 
 import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { m, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
 import { Footer } from '@/components/layout/Footer';
 import Link from 'next/link';
 import { ArrowRight, Clock, Code2, Rocket, Wallet, Users } from 'lucide-react';
 import { useLocale } from '@/hooks/useLocale';
 import { STUB_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
-import { SplitterTab } from './components/SplitterTab';
+const SplitterTab = dynamic(() => import('./components/SplitterTab').then(m => ({ default: m.SplitterTab })), { ssr: false });
 import { useT } from '@/lib/i18n';
 
 type TabId = 'portal' | 'token-launch' | 'splitter';
@@ -97,7 +98,8 @@ function DeveloperHubInner() {
   );
 
   return (
-    <>
+    <LazyMotion features={domAnimation}>
+      <>
       <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] relative overflow-hidden text-white">
         <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
           <div className="absolute -top-40 left-1/3 w-[600px] h-[600px] rounded-full opacity-[0.06]"
@@ -157,5 +159,6 @@ export default function DeveloperHubPage() {
     }>
       <DeveloperHubInner />
     </Suspense>
+    </LazyMotion>
   );
 }

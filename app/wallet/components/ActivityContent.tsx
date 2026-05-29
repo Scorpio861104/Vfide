@@ -2,7 +2,7 @@
 
 import React from 'react';
 import dynamic from 'next/dynamic';
-import { m } from 'framer-motion';
+import { m, LazyMotion, domAnimation } from 'framer-motion';
 import { Wallet, TrendingUp, History, LayoutDashboard } from 'lucide-react';
 import { useAccount, useBalance } from 'wagmi';
 import { formatUnits } from 'viem';

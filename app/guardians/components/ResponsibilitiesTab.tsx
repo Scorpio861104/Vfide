@@ -2,7 +2,7 @@
 
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { useMemo, useState } from 'react';
-import { m } from 'framer-motion';
+import { m, LazyMotion, domAnimation } from 'framer-motion';
 import { Shield, Users } from 'lucide-react';
 import { useAccount } from 'wagmi';
 

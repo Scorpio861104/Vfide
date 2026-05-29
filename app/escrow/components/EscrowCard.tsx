@@ -21,7 +21,7 @@
  * page — they apply to edge-case states and benefit from richer UI than a card.
  */
 
-import { m } from 'framer-motion';
+import { m, LazyMotion, domAnimation } from 'framer-motion';
 import Link from 'next/link';
 import {
   Lock,

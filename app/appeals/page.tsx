@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic';
 
 import { useState } from 'react';
-import { m, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
 import { Footer } from '@/components/layout/Footer';
 import { ActiveTab } from './components/ActiveTab';
 import { ResolvedTab } from './components/ResolvedTab';
@@ -22,7 +22,8 @@ export default function AppealsPage() {
   const [activeTab, setActiveTab] = useState<TabId>('submit');
 
   return (
-    <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] pb-8 relative">
+    <LazyMotion features={domAnimation}>
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] pb-8 relative">
       {/* Ambient orbs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
@@ -72,5 +73,6 @@ export default function AppealsPage() {
 
       <Footer />
     </div>
+    </LazyMotion>
   );
 }

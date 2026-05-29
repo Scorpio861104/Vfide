@@ -1,7 +1,7 @@
 'use client';
 
 import type { ElementType } from 'react';
-import { m } from 'framer-motion';
+import { m, LazyMotion, domAnimation } from 'framer-motion';
 
 interface FeatureCardProps {
   icon: ElementType;

@@ -29,7 +29,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useChainId } from 'wagmi';
-import { m, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
 import {
   Users,
   Shield,
@@ -268,7 +268,8 @@ export default function InheritanceSetupPage() {
   // After a successful proposal, show the confirmation page with envelopes.
   if (submittedTxHash) {
     return (
-      <ProposalSuccessPage
+      <LazyMotion features={domAnimation}>
+        <ProposalSuccessPage
         txHash={submittedTxHash}
         heirs={heirs}
         onDownloadEnvelope={downloadEnvelope}
@@ -959,5 +960,6 @@ function ProposalSuccessPage({
         Go to status page
       </a>
     </div>
+    </LazyMotion>
   );
 }

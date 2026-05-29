@@ -28,7 +28,7 @@ export const dynamic = 'force-dynamic';
 
 import { useAccount } from 'wagmi';
 import Link from 'next/link';
-import { m } from 'framer-motion';
+import { m, LazyMotion, domAnimation } from 'framer-motion';
 import {
   User,
   Shield,
@@ -104,7 +104,8 @@ export default function MeHubPage() {
 
   if (!isConnected) {
     return (
-      <>
+      <LazyMotion features={domAnimation}>
+        <>
         <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] text-white relative">
           <div className="pointer-events-none absolute inset-0 overflow-hidden">
             <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
@@ -306,5 +307,6 @@ function NextStep({ score }: { score: number }) {
       </Link>{' '}
       to help them build trust, and you&apos;re paying the minimum 0.25% fee on every payment.
     </p>
+    </LazyMotion>
   );
 }

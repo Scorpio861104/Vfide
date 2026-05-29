@@ -13,6 +13,7 @@ const customJestConfig = {
   maxConcurrency: 1, // Run tests serially to avoid axe-core concurrency issues
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
+    '^next/dynamic$': '<rootDir>/test/mocks/next-dynamic.js',
     '^uncrypto$': '<rootDir>/test/mocks/uncrypto.js',
     '^minimatch$': '<rootDir>/test/mocks/minimatch-compat.cjs',
   },

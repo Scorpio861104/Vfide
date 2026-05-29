@@ -1,4 +1,5 @@
 'use client';
+import _dynamic from 'next/dynamic';
 
 /**
  * Buyer-side QR scanner page.
@@ -26,7 +27,7 @@
 export const dynamic = 'force-dynamic';
 
 import { Suspense } from 'react';
-import { ScanContent } from './components/ScanContent';
+const ScanContent = _dynamic(() => import('./components/ScanContent').then(m => ({ default: m.ScanContent })), { ssr: false });
 
 export default function ScanPage() {
   return (

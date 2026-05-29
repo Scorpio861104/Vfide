@@ -1,8 +1,9 @@
 import { Suspense } from 'react';
 import { Footer } from '@/components/layout/Footer';
-import { PayLinkContent } from './components/PayLinkContent';
+const PayLinkContent = _dynamic(() => import('./components/PayLinkContent').then(m => ({ default: m.PayLinkContent })), { ssr: false });
 
 export const dynamic = 'force-dynamic';
+import _dynamic from 'next/dynamic';
 
 export default async function PayLinkPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

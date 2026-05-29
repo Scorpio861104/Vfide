@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { m } from 'framer-motion';
+import { m, LazyMotion, domAnimation } from 'framer-motion';
 import { Target } from 'lucide-react';
 import DailyQuestsPanel from '@/components/gamification/DailyQuestsPanel';
 import OnboardingChecklist from '@/components/gamification/OnboardingChecklist';
@@ -10,7 +10,8 @@ import { Footer } from '@/components/layout/Footer';
 
 export default function QuestsPage() {
   return (
-    <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] pb-8 relative">
+    <LazyMotion features={domAnimation}>
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] pb-8 relative">
       {/* Ambient orbs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
@@ -40,5 +41,6 @@ export default function QuestsPage() {
       <OnboardingChecklist />
       <Footer />
     </div>
+    </LazyMotion>
   );
 }

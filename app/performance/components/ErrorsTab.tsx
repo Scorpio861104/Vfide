@@ -1,6 +1,6 @@
 'use client';
 
-import { m } from 'framer-motion';
+import { m, LazyMotion, domAnimation } from 'framer-motion';
 import { ErrorTracker } from '@/components/performance/ErrorTracker';
 
 interface ErrorsTabProps {

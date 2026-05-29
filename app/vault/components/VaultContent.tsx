@@ -1,4 +1,5 @@
 'use client';
+import dynamic from 'next/dynamic';
 
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Footer } from '@/components/layout/Footer';
@@ -10,12 +11,9 @@ import { useVaultTransactions } from '@/hooks/useVaultTransactions';
 import { VaultHeader } from './VaultHeader';
 import { VaultOverviewStats } from './VaultOverviewStats';
 import { VaultQuickActions } from './VaultQuickActions';
-import { MerchantApprovalPanel } from './MerchantApprovalPanel';
-import { VaultSecuritySection } from './VaultSecuritySection';
-import { VaultRecoveryPanel } from './VaultRecoveryPanel';
-import { VaultInheritancePanel } from './VaultInheritancePanel';
-import { VaultQueueSection } from './VaultQueueSection';
-import { WithdrawModal } from './WithdrawModal';
+const MerchantApprovalPanel = dynamic(() => import('./MerchantApprovalPanel').then(m => ({ default: m.MerchantApprovalPanel })), { ssr: false });
+const VaultRecoveryPanel = dynamic(() => import('./VaultRecoveryPanel').then(m => ({ default: m.VaultRecoveryPanel })), { ssr: false });
+const VaultQueueSection = dynamic(() => import('./VaultQueueSection').then(m => ({ default: m.VaultQueueSection })), { ssr: false });
 import { VaultPendingChangesBanner } from '@/components/vault/VaultPendingChangesBanner';
 import { VaultGuardianSetupBanner } from '@/components/vault/VaultGuardianSetupBanner';
 import { IncomingRefunds } from '@/components/vault/IncomingRefunds';

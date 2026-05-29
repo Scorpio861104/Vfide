@@ -9,7 +9,7 @@ import { StoryRing } from '@/components/social/StoryRing';
 import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import { useAccount } from 'wagmi';
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
-import { m, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { Plus, Camera, Sparkles } from 'lucide-react';
 import { Story, isStoryExpired } from '@/lib/storiesSystem';
@@ -81,7 +81,8 @@ export default function StoriesPage() {
   const hasUnviewedStories = (stories: Story[]) => stories.some(s => !viewedStories.has(s.id) && !isStoryExpired(s));
 
   return (
-    <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] pb-8 relative">
+    <LazyMotion features={domAnimation}>
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] pb-8 relative">
       {/* Ambient orbs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
@@ -204,5 +205,6 @@ export default function StoriesPage() {
 
       <Footer />
     </div>
+    </LazyMotion>
   );
 }

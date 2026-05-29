@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import { Footer } from '@/components/layout/Footer';
 import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
-import { AnimatePresence, m } from 'framer-motion';
+import { AnimatePresence, m, LazyMotion, domAnimation } from 'framer-motion';
 import { Search, SlidersHorizontal, Grid, List, Loader2, Package, Store, ArrowRight, Sparkles } from 'lucide-react';
 
 import { FilterContent } from './components/FilterContent';

@@ -4,7 +4,7 @@
  * Re-uses the existing /payroll component tree via dynamic imports.
  */
 import { useState } from 'react';
-import { AnimatePresence, m } from 'framer-motion';
+import { AnimatePresence, m, LazyMotion, domAnimation } from 'framer-motion';
 import { History, LayoutDashboard, PlusCircle, Waves } from 'lucide-react';
 import nextDynamic from 'next/dynamic';
 

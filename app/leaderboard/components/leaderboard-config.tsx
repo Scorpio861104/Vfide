@@ -1,5 +1,5 @@
 import { Crown, Medal, ChevronUp, ChevronDown, Minus } from 'lucide-react';
-import { m } from 'framer-motion';
+import { m, LazyMotion, domAnimation } from 'framer-motion';
 
 /**
  * Tier color config aligned with the 7-tier ProofScore system per VFIDE Manual v1.0.

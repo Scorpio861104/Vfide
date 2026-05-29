@@ -15,10 +15,8 @@ import {
 } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 import { HubSection, type HubLink } from '@/components/navigation/HubGrid';
-import { MerchantDashboard } from '@/components/merchant/MerchantDashboard';
-import { PaymentInterface } from '@/components/merchant/PaymentInterface';
-import { PaymentQR } from '@/components/merchant/PaymentQR';
-import { useLocale } from '@/hooks/useLocale';
+const MerchantDashboard = dynamic(() => import('@/components/merchant/MerchantDashboard').then(m => ({ default: m.MerchantDashboard })), { ssr: false });
+const PaymentQR = dynamic(() => import('@/components/merchant/PaymentQR').then(m => ({ default: m.PaymentQR })), { ssr: false });
 import { MERCHANT_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
 import nextDynamic from 'next/dynamic';
 

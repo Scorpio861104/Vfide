@@ -1,6 +1,6 @@
 'use client';
 
-import { AnimatePresence, m } from 'framer-motion';
+import { AnimatePresence, m, LazyMotion, domAnimation } from 'framer-motion';
 import { History, LayoutGrid, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 
@@ -22,7 +22,8 @@ export default function BadgesPage() {
   const [activeTab, setActiveTab] = useState<TabId>('collection');
 
   return (
-    <div className="relative min-h-screen bg-zinc-950 md:pt-[3.5rem]">
+    <LazyMotion features={domAnimation}>
+      <div className="relative min-h-screen bg-zinc-950 md:pt-[3.5rem]">
       {/* Ambient background */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
@@ -72,5 +73,6 @@ export default function BadgesPage() {
       </div>
       <Footer />
     </div>
+    </LazyMotion>
   );
 }

@@ -23,7 +23,7 @@
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { containerVariants, itemVariants } from '@/lib/motion-presets';
-import { m } from 'framer-motion';
+import { m, LazyMotion, domAnimation } from 'framer-motion';
 import { DollarSign, Users } from 'lucide-react';
 import { safeParseFloat } from '@/lib/validation';
 

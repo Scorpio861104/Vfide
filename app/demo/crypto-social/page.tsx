@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { AnimatePresence, m } from 'framer-motion';
+import { AnimatePresence, m, LazyMotion, domAnimation } from 'framer-motion';
 import { BarChart2, Play, RefreshCw, Star, Store } from 'lucide-react';
 import { useState } from 'react';
 import { DemoDataBanner } from '@/components/layout/DemoDataBanner';
@@ -27,7 +27,8 @@ export default function CryptoSocialDemo() {
   const [activeTab, setActiveTab] = useState<TabId>('feed');
 
   return (
-    <div className="relative min-h-screen bg-zinc-950 md:pt-[3.5rem]">
+    <LazyMotion features={domAnimation}>
+      <div className="relative min-h-screen bg-zinc-950 md:pt-[3.5rem]">
       <DemoDataBanner />
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
@@ -71,5 +72,6 @@ export default function CryptoSocialDemo() {
       </div>
       <Footer />
     </div>
+    </LazyMotion>
   );
 }

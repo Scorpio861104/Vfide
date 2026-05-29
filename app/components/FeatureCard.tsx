@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { m } from 'framer-motion';
+import { m, LazyMotion, domAnimation } from 'framer-motion';
 import {
   ArrowRight,
   ChevronRight,

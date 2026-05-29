@@ -1,10 +1,11 @@
 'use client';
+import _dynamic from 'next/dynamic';
 
 export const dynamic = 'force-dynamic';
 
 import { Suspense } from 'react';
 import { Footer } from '@/components/layout/Footer';
-import { PayContent } from './components/PayContent';
+const PayContent = _dynamic(() => import('./components/PayContent').then(m => ({ default: m.PayContent })), { ssr: false });
 import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import { useLocale } from '@/hooks/useLocale';
 import { useT } from '@/lib/i18n';

@@ -4,7 +4,7 @@ import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 export const dynamic = 'force-dynamic';
 
 import { useState } from 'react'
-import { m } from 'framer-motion'
+import { m, LazyMotion, domAnimation } from 'framer-motion'
 import { useAccount } from 'wagmi'
 import {
   Copy,
@@ -112,6 +112,7 @@ export default function InviteFriendsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-zinc-900 to-black text-white">
+      <LazyMotion features={domAnimation}>
       <div className="max-w-4xl mx-auto px-4 py-8 md:py-12">
         {/* Header */}
         <m.div
@@ -277,5 +278,6 @@ export default function InviteFriendsPage() {
         </m.div>
       </div>
     </div>
+    </LazyMotion>
   )
 }

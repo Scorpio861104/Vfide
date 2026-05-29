@@ -37,7 +37,7 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { m, useReducedMotion } from 'framer-motion';
+import { m, useReducedMotion, LazyMotion, domAnimation } from 'framer-motion';
 import { ShieldCheck, Sparkles, ArrowDownRight, Info } from 'lucide-react';
 
 import { Numeric } from '@/components/ui/Numeric';

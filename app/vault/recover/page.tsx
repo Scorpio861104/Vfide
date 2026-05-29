@@ -1,4 +1,5 @@
 'use client';
+import _dynamic from 'next/dynamic';
 
 export const dynamic = 'force-dynamic';
 import { containerVariants, fadeSlideUp as itemVariants } from "@/lib/motion-presets";
@@ -20,7 +21,7 @@ import { VFIDEBadgeNFTABI } from "@/lib/abis/future";
 
 import { AuroraBackground, FloatingParticles, VaultKeyVisualization, GlassCard } from "./components/VisualEffects";
 import { SearchMethodButton, SearchResultCard } from "./components/SearchComponents";
-import { ClaimFlowModal } from "./components/ClaimFlowModal";
+const ClaimFlowModal = _dynamic(() => import('./components/ClaimFlowModal').then(m => ({ default: m.ClaimFlowModal })), { ssr: false });
 
 // ── Animation presets ───────────────────────────────────────────────────────
 

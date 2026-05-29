@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import React, { useState } from 'react';
 import { useFinancialIntelligence } from '@/lib/financialIntelligence';
 import { useAccount } from 'wagmi';
-import { m } from 'framer-motion';
+import { m, LazyMotion, domAnimation } from 'framer-motion';
 import { FileText, AlertTriangle, Download, Calculator } from 'lucide-react';
 
 export default function TaxesContent() {

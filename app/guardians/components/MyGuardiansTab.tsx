@@ -3,7 +3,7 @@
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { useState } from 'react';
 import { useAccount, usePublicClient, useReadContract, useReadContracts, useSignMessage, useWriteContract } from 'wagmi';
-import { m } from 'framer-motion';
+import { m, LazyMotion, domAnimation } from 'framer-motion';
 import { Shield, Users, UserMinus, CheckCircle2, FileText, AlertTriangle, Crown, UserPlus } from 'lucide-react';
 import { useVaultHub } from '@/hooks/useVaultHub';
 import { useVaultRecovery } from '@/hooks/useVaultRecovery';

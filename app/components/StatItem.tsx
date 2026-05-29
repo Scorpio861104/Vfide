@@ -1,6 +1,6 @@
 'use client';
 
-import { m } from 'framer-motion';
+import { m, LazyMotion, domAnimation } from 'framer-motion';
 
 import { useAnimatedCounter } from './useAnimatedCounter';
 import { usePrefersReducedMotion } from './usePrefersReducedMotion';

@@ -1,13 +1,14 @@
 'use client';
+import _dynamic from 'next/dynamic';
 
 export const dynamic = 'force-dynamic';
 
 import { useState } from 'react';
-import { m, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
 import { Footer } from '@/components/layout/Footer';
-import { BuyTab } from './components/BuyTab';
+const BuyTab = _dynamic(() => import('./components/BuyTab').then(m => ({ default: m.BuyTab })), { ssr: false });
 import { HistoryTab } from './components/HistoryTab';
-import { SwapTab } from './components/SwapTab';
+const SwapTab = _dynamic(() => import('./components/SwapTab').then(m => ({ default: m.SwapTab })), { ssr: false });
 import { ShoppingCart, ArrowLeftRight, Clock } from 'lucide-react';
 
 type TabId = 'buy' | 'swap' | 'history';
@@ -22,7 +23,8 @@ export default function BuyPage() {
   const [activeTab, setActiveTab] = useState<TabId>('buy');
 
   return (
-    <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] pb-8 relative">
+    <LazyMotion features={domAnimation}>
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] pb-8 relative">
       {/* Ambient orbs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
@@ -72,5 +74,6 @@ export default function BuyPage() {
 
       <Footer />
     </div>
+    </LazyMotion>
   );
 }

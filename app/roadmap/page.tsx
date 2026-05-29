@@ -13,7 +13,7 @@
  *                         or user-vault-multi-sig (architectural design review needed)
  */
 
-import { m } from 'framer-motion';
+import { m, LazyMotion, domAnimation } from 'framer-motion';
 import { Clock, CheckCircle, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { Footer } from '@/components/layout/Footer';
@@ -172,7 +172,8 @@ export default function RoadmapPage() {
   const v2   = FEATURES.filter(f => f.phase === 'v2');
 
   return (
-    <>
+    <LazyMotion features={domAnimation}>
+      <>
       <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] relative overflow-hidden text-white">
         {/* Ambient */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
@@ -276,5 +277,6 @@ function Section({ title, features, phaseMeta }: SectionProps) {
         ))}
       </div>
     </div>
+    </LazyMotion>
   );
 }

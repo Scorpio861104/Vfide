@@ -3,7 +3,7 @@
 import { getFeeRate } from '@/lib/format';
 
 import { useState } from 'react';
-import { m } from 'framer-motion';
+import { m, LazyMotion, domAnimation } from 'framer-motion';
 import { Calculator } from 'lucide-react';
 
 import { GlassCard, containerVariants, itemVariants } from './shared';

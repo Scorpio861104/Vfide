@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic';
 
 import { Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { m } from 'framer-motion';
+import { m, LazyMotion, domAnimation } from 'framer-motion';
 import { Sparkles, ArrowRight, Power, ExternalLink, Smartphone, Key, ShieldCheck } from 'lucide-react';
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { useAccount } from 'wagmi';
@@ -56,7 +56,8 @@ function OnboardingPageContent() {
   const hasProgress = completedCount > 0 || wizard.state.skippedChapters.length > 0;
 
   return (
-    <>
+    <LazyMotion features={domAnimation}>
+      <>
       <m.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -186,5 +187,6 @@ export default function OnboardingPage() {
     <Suspense fallback={<PageSkeleton />}>
       <OnboardingPageContent />
     </Suspense>
+    </LazyMotion>
   );
 }

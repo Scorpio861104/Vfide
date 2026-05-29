@@ -1,11 +1,12 @@
 'use client';
+import _dynamic from 'next/dynamic';
 
 export const dynamic = 'force-dynamic';
 
 import { Footer } from '@/components/layout/Footer';
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
-import { m, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
 import { Home, BarChart3, Award, Calculator, Activity, Wallet2, TrendingUp, Zap } from 'lucide-react';
 import { ProofScoreRing, ProofScoreTierProgress } from '@/components/proofscore';
 import { FeeSavingsCard } from '@/components/fees';
@@ -13,9 +14,9 @@ import { OnboardingProgressBar } from '@/components/onboarding';
 import { NonCustodialNotice } from '@/components/compliance';
 import { useProofScore } from '@/hooks/useProofScore';
 import { getTier } from '@/lib/proofScore/tiers';
-import { OverviewTab } from './components/OverviewTab';
+const OverviewTab = _dynamic(() => import('./components/OverviewTab').then(m => ({ default: m.OverviewTab })), { ssr: false });
 import { BadgesTab } from './components/BadgesTab';
-import { ScoreSimulatorTab } from './components/ScoreSimulatorTab';
+const ScoreSimulatorTab = _dynamic(() => import('./components/ScoreSimulatorTab').then(m => ({ default: m.ScoreSimulatorTab })), { ssr: false });
 import { FeeSimulatorTab } from './components/FeeSimulatorTab';
 import { RecentActivity } from './components/RecentActivity';
 import { useT } from '@/lib/i18n';
@@ -61,7 +62,8 @@ export default function DashboardPage() {
   }, [address]);
 
   return (
-    <>
+    <LazyMotion features={domAnimation}>
+      <>
       <OnboardingProgressBar />
 
       <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] relative">

@@ -1,8 +1,9 @@
 'use client';
+import _dynamic from 'next/dynamic';
 
 export const dynamic = 'force-dynamic';
 
-import { AnimatePresence, m } from 'framer-motion';
+import { AnimatePresence, m, LazyMotion, domAnimation } from 'framer-motion';
 import { BarChart3, Gift, Layers, Trophy } from 'lucide-react';
 import { useState } from 'react';
 import { useAccount } from 'wagmi';
@@ -12,7 +13,7 @@ import { Footer } from '@/components/layout/Footer';
 import { OverviewTab } from './components/OverviewTab';
 import { RewardsTab } from './components/RewardsTab';
 import { StatsTab } from './components/StatsTab';
-import { TiersTab } from './components/TiersTab';
+const TiersTab = _dynamic(() => import('./components/TiersTab').then(m => ({ default: m.TiersTab })), { ssr: false });
 
 const TABS = [
   { id: 'overview', label: 'Overview',          icon: Gift     },
@@ -28,7 +29,8 @@ export default function BenefitsPage() {
   const { isConnected, address } = useAccount();
 
   return (
-    <div className="relative min-h-screen bg-zinc-950 md:pt-[3.5rem]">
+    <LazyMotion features={domAnimation}>
+      <div className="relative min-h-screen bg-zinc-950 md:pt-[3.5rem]">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
           style={{ background: 'radial-gradient(circle, #10b981 0%, transparent 70%)' }} />
@@ -70,5 +72,6 @@ export default function BenefitsPage() {
       </div>
       <Footer />
     </div>
+    </LazyMotion>
   );
 }

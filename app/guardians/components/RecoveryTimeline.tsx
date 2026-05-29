@@ -8,7 +8,7 @@
  * Removed — those paths are unreachable in this build.
  */
 
-import { m } from 'framer-motion';
+import { m, LazyMotion, domAnimation } from 'framer-motion';
 import { Key, Timer, Users, CheckCircle2, ArrowRightCircle, Lock } from 'lucide-react';
 
 const TIMELINE_STEPS = [

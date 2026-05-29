@@ -3,7 +3,7 @@
 import { GlassCard } from '@/components/ui/GlassCard';
 import { containerVariants, itemVariants } from '@/lib/motion-presets';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { m } from 'framer-motion';
+import { m, LazyMotion, domAnimation } from 'framer-motion';
 import { Shield, Plus, Key } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
 import { devLog } from '@/lib/utils';

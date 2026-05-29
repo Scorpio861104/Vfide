@@ -1,12 +1,13 @@
 'use client';
+import dynamic from 'next/dynamic';
 
-import { AnimatePresence, m } from 'framer-motion';
+import { AnimatePresence, m, LazyMotion, domAnimation } from 'framer-motion';
 import { BookOpen, Key } from 'lucide-react';
 import { useState } from 'react';
 
 import { Footer } from '@/components/layout/Footer';
 
-import { GenerateTab } from './components/GenerateTab';
+const GenerateTab = dynamic(() => import('./components/GenerateTab').then(m => ({ default: m.GenerateTab })), { ssr: false });
 import { GuideTab } from './components/GuideTab';
 
 type TabId = 'generate' | 'guide';
@@ -20,7 +21,8 @@ export default function PaperWalletPage() {
   const [activeTab, setActiveTab] = useState<TabId>('generate');
 
   return (
-    <div className="relative min-h-screen bg-zinc-950 md:pt-[3.5rem]">
+    <LazyMotion features={domAnimation}>
+      <div className="relative min-h-screen bg-zinc-950 md:pt-[3.5rem]">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
           style={{ background: 'radial-gradient(circle, #f59e0b 0%, transparent 70%)' }} />
@@ -63,5 +65,6 @@ export default function PaperWalletPage() {
       </div>
       <Footer />
     </div>
+    </LazyMotion>
   );
 }

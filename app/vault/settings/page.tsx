@@ -23,11 +23,12 @@ import { AppLockSettings } from '@/components/security/AppLockSettings'
 import { ErrorBoundary } from '@/components/error/ErrorBoundary'
 import { Vault, Shield, Settings, Sliders, Fingerprint, AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
-import { m } from 'framer-motion'
+import { m, LazyMotion, domAnimation } from 'framer-motion'
 
 export default function VaultSettingsPage() {
   return (
-    <>
+    <LazyMotion features={domAnimation}>
+      <>
       <div className="min-h-screen bg-gradient-to-b from-gray-950 to-black text-white md:pt-[3.5rem]">
         <div className="container mx-auto px-4 py-12 max-w-6xl">
           {/* Header */}

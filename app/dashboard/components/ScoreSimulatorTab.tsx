@@ -17,7 +17,7 @@
  */
 
 import { useEffect, useMemo, useState } from 'react';
-import { m } from 'framer-motion';
+import { m, LazyMotion, domAnimation } from 'framer-motion';
 import { Sliders, AlertCircle } from 'lucide-react';
 
 import { GlassCard, containerVariants, itemVariants } from './shared';

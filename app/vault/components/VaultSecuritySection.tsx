@@ -15,7 +15,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { AnimatePresence, m } from 'framer-motion';
+import { AnimatePresence, m, LazyMotion, domAnimation } from 'framer-motion';
 import { AlertTriangle, Clock, Lock, Shield } from 'lucide-react';
 
 import { GlassCard } from '@/components/ui/GlassCard';

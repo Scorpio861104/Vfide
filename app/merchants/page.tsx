@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { m } from 'framer-motion';
+import { m, LazyMotion, domAnimation } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Search, Star, MapPin, ShoppingBag, Package, Briefcase, Download } from 'lucide-react';
@@ -70,7 +70,8 @@ export default function MerchantDirectoryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white relative">
+    <LazyMotion features={domAnimation}>
+      <div className="min-h-screen bg-zinc-950 text-white relative">
       {/* Ambient orbs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
@@ -237,5 +238,6 @@ export default function MerchantDirectoryPage() {
         )}
       </div>
     </div>
+    </LazyMotion>
   );
 }

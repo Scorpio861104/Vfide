@@ -23,7 +23,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useAccount, useReadContract } from 'wagmi';
 import { useRouter } from 'next/navigation';
-import { m } from 'framer-motion';
+import { m, LazyMotion, domAnimation } from 'framer-motion';
 import { formatUnits, type Address } from 'viem';
 import {
   ArrowLeft,

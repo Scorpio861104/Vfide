@@ -1,4 +1,5 @@
 'use client';
+import _dynamic from 'next/dynamic';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,7 +23,7 @@ import type React from 'react';
  * The old routes redirect here.
  */
 
-import { AnimatePresence, m } from 'framer-motion';
+import { AnimatePresence, m, LazyMotion, domAnimation } from 'framer-motion';
 import {
   Vote, PlusCircle, Users, BarChart2, Clock,
   Crown, ScrollText, Gavel, Landmark, LayoutDashboard,
@@ -37,29 +38,23 @@ import { SampleDataBanner } from '@/components/ui/SampleDataBanner';
 // Existing governance tabs
 // CODE-1: CouncilTab is dead code — the consolidated council section uses CouncilOverviewTab etc.
 // import { CouncilTab }   from './components/CouncilTab';
-import { CreateTab }    from './components/CreateTab';
-import { HistoryTab }   from './components/HistoryTab';
-import { ProposalsTab } from './components/ProposalsTab';
-import { StatsTab }     from './components/StatsTab';
+const CreateTab = _dynamic(() => import('./components/CreateTab').then(m => ({ default: m.CreateTab })), { ssr: false });
+const ProposalsTab = _dynamic(() => import('./components/ProposalsTab').then(m => ({ default: m.ProposalsTab })), { ssr: false });
 
 // DAO Hub tabs (from /dao-hub)
-import { OverviewTab as DaoOverviewTab }   from '@/app/dao-hub/components/OverviewTab';
-import { MembersTab  as DaoMembersTab }    from '@/app/dao-hub/components/MembersTab';
-import { TreasuryTab as DaoTreasuryTab }   from '@/app/dao-hub/components/TreasuryTab';
-
-// Council detail tabs (from /council)
-import { OverviewTab  as CouncilOverviewTab } from '@/app/council/components/OverviewTab';
-import { MembersTab   as CouncilMembersTab  } from '@/app/council/components/MembersTab';
-import { SalaryTab    as CouncilSalaryTab   } from '@/app/council/components/SalaryTab';
-import { VotingTab    as CouncilVotingTab   } from '@/app/council/components/VotingTab';
-
-// Elections content — extracted tab component
-import { ElectionsTabContent } from './components/ElectionsTabContent';
-
-// Disputes content — extracted tab component
-import { DisputesTabContent } from './components/DisputesTabContent';
-import AppealsTabContent from './components/AppealsTabContent';
-import FraudTabContent from './components/FraudTabContent';
+const DaoOverviewTab = _dynamic(() => import('@/app/dao-hub/components/OverviewTab').then(m => ({ default: m.OverviewTab })), { ssr: false });
+const DaoTreasuryTab = _dynamic(() => import('@/app/dao-hub/components/TreasuryTab').then(m => ({ default: m.TreasuryTab })), { ssr: false });
+const CouncilMembersTab = _dynamic(() => import('@/app/council/components/MembersTab').then(m => ({ default: m.MembersTab })), { ssr: false });
+const CouncilVotingTab = _dynamic(() => import('@/app/council/components/VotingTab').then(m => ({ default: m.VotingTab })), { ssr: false });
+const AppealsTabContent = _dynamic(() => import('./components/AppealsTabContent'), { ssr: false });
+const HistoryTab = _dynamic(() => import('./components/HistoryTab').then(m => ({ default: m.HistoryTab })), { ssr: false });
+const StatsTab = _dynamic(() => import('./components/StatsTab').then(m => ({ default: m.StatsTab })), { ssr: false });
+const DaoMembersTab = _dynamic(() => import('@/app/dao-hub/components/MembersTab').then(m => ({ default: m.MembersTab })), { ssr: false });
+const CouncilOverviewTab = _dynamic(() => import('@/app/council/components/OverviewTab').then(m => ({ default: m.OverviewTab })), { ssr: false });
+const CouncilSalaryTab = _dynamic(() => import('@/app/council/components/SalaryTab').then(m => ({ default: m.SalaryTab })), { ssr: false });
+const ElectionsTabContent = _dynamic(() => import('./components/ElectionsTabContent').then(m => ({ default: m.ElectionsTabContent })), { ssr: false });
+const FraudTabContent = _dynamic(() => import('./components/FraudTabContent'), { ssr: false });
+const DisputesTabContent = _dynamic(() => import('./components/DisputesTabContent').then(m => ({ default: m.DisputesTabContent })), { ssr: false });
 
 import { useLocale } from '@/hooks/useLocale';
 import { GOVERNANCE_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
@@ -321,8 +316,10 @@ function GovernancePageInner() {
 
 export default function GovernancePage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-zinc-950" />}>
+    <LazyMotion features={domAnimation}>
+      <Suspense fallback={<div className="min-h-screen bg-zinc-950" />}>
       <GovernancePageInner />
     </Suspense>
+    </LazyMotion>
   );
 }

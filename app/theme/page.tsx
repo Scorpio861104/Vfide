@@ -1,6 +1,7 @@
 'use client';
+import dynamic from 'next/dynamic';
 
-import { AnimatePresence, m } from 'framer-motion';
+import { AnimatePresence, m, LazyMotion, domAnimation } from 'framer-motion';
 import { Eye, Palette, Sliders } from 'lucide-react';
 import { useEffect, useState, Suspense} from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -8,7 +9,7 @@ import type React from 'react';
 
 import { Footer } from '@/components/layout/Footer';
 
-import { AdvancedTab } from './components/AdvancedTab';
+const AdvancedTab = dynamic(() => import('./components/AdvancedTab').then(m => ({ default: m.AdvancedTab })), { ssr: false });
 import { PreviewTab }  from './components/PreviewTab';
 import { PresetsTab }  from './components/PresetsTab';
 
@@ -98,8 +99,10 @@ function ThemeManagementPageInner() {
 
 export default function ThemeManagementPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-zinc-950" />}>
+    <LazyMotion features={domAnimation}>
+      <Suspense fallback={<div className="min-h-screen bg-zinc-950" />}>
       <ThemeManagementPageInner />
     </Suspense>
+    </LazyMotion>
   );
 }

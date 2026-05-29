@@ -1,4 +1,5 @@
 'use client';
+import _dynamic from 'next/dynamic';
 
 export const dynamic = 'force-dynamic';
 
@@ -7,11 +8,11 @@ import { useState } from "react";
 import { useAccount } from "wagmi";
 import { Heart, Gift, History, Coins } from "lucide-react";
 
-import { OverviewTab } from "./components/OverviewTab";
+const OverviewTab = _dynamic(() => import('./components/OverviewTab').then(m => ({ default: m.OverviewTab })), { ssr: false });
 import { CharitiesTab } from "./components/CharitiesTab";
-import { DisbursementsTab } from "./components/DisbursementsTab";
-import { DonateTab } from "./components/DonateTab";
-import { HistoryTab } from "./components/HistoryTab";
+const DisbursementsTab = _dynamic(() => import('./components/DisbursementsTab').then(m => ({ default: m.DisbursementsTab })), { ssr: false });
+const DonateTab = _dynamic(() => import('./components/DonateTab').then(m => ({ default: m.DonateTab })), { ssr: false });
+const HistoryTab = _dynamic(() => import('./components/HistoryTab').then(m => ({ default: m.HistoryTab })), { ssr: false });
 import { useT } from '@/lib/i18n';
 
 type TabId = 'overview' | 'charities' | 'disbursements' | 'donate' | 'history';

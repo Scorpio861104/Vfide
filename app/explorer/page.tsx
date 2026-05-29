@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Search, TrendingUp, Users, Activity, ArrowRight } from 'lucide-react'
-import { m } from 'framer-motion'
+import { m, LazyMotion, domAnimation } from 'framer-motion'
 import { Footer } from '@/components/layout/Footer'
 import { useT } from '@/lib/i18n';
 
@@ -39,7 +39,8 @@ export default function ExplorerPage() {
   }
 
   return (
-    <>
+    <LazyMotion features={domAnimation}>
+      <>
       <m.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

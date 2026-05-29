@@ -1,16 +1,17 @@
 'use client';
+import _dynamic from 'next/dynamic';
 
 export const dynamic = 'force-dynamic';
 
-import { AnimatePresence, m } from 'framer-motion';
+import { AnimatePresence, m, LazyMotion, domAnimation } from 'framer-motion';
 import { CheckCircle2, FileText, Lock, PlusCircle } from 'lucide-react';
 import { useState } from 'react';
 
 import { Footer } from '@/components/layout/Footer';
 
-import { ActiveTab } from './components/ActiveTab';
+const ActiveTab = _dynamic(() => import('./components/ActiveTab').then(m => ({ default: m.ActiveTab })), { ssr: false });
 import { CompletedTab } from './components/CompletedTab';
-import { CreateTab } from './components/CreateTab';
+const CreateTab = _dynamic(() => import('./components/CreateTab').then(m => ({ default: m.CreateTab })), { ssr: false });
 import { DisputesTab } from './components/DisputesTab';
 import { useT } from '@/lib/i18n';
 import { useEscrowCount } from '@/hooks/useCommerceEscrow';
@@ -30,7 +31,8 @@ export default function EscrowPage() {
   const { count: escrowCount } = useEscrowCount();
 
   return (
-    <div className="relative min-h-screen bg-zinc-950 md:pt-[3.5rem]">
+    <LazyMotion features={domAnimation}>
+      <div className="relative min-h-screen bg-zinc-950 md:pt-[3.5rem]">
       {/* Ambient background */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -left-20 w-[550px] h-[550px] rounded-full opacity-[0.07]"
@@ -105,5 +107,6 @@ export default function EscrowPage() {
       </div>
       <Footer />
     </div>
+    </LazyMotion>
   );
 }

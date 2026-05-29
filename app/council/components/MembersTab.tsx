@@ -1,5 +1,5 @@
 'use client';
-import { m } from 'framer-motion';
+import { m, LazyMotion, domAnimation } from 'framer-motion';
 import { Calendar, Crown, TrendingUp } from 'lucide-react';
 import { SampleDataBanner } from '@/components/ui/SampleDataBanner';
 

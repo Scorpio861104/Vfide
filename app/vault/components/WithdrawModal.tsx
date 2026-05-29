@@ -13,7 +13,7 @@
  * but the user-facing copy is "Transfer to Vault" throughout.
  */
 
-import { m, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
 import { ArrowUpFromLine, X, Loader2 } from 'lucide-react';
 import { safeParseFloat } from '@/lib/validation';
 

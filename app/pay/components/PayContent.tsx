@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { m } from 'framer-motion';
+import { m, LazyMotion, domAnimation } from 'framer-motion';
 import { CreditCard, Loader2, Shield } from 'lucide-react';
 import { useProofScore, getScoreTierObject } from '@/hooks/useProofScore';
 import { useAccount } from 'wagmi';

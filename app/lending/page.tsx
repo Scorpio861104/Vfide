@@ -1,7 +1,7 @@
 'use client';
 
 import { Footer } from '@/components/layout/Footer';
-import { m } from 'framer-motion';
+import { m, LazyMotion, domAnimation } from 'framer-motion';
 import Link from 'next/link';
 import { ArrowRight, Clock } from 'lucide-react';
 import { useLocale } from '@/hooks/useLocale';
@@ -11,7 +11,8 @@ export default function Page() {
   const [locale] = useLocale();
   const _copy = pickLocaleCopy(STUB_TRANSLATIONS, locale);
   return (
-    <>
+    <LazyMotion features={domAnimation}>
+      <>
       <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] relative overflow-hidden text-white">
         <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
           <div className="absolute -top-40 left-1/3 w-[600px] h-[600px] rounded-full opacity-[0.06]"

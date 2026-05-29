@@ -17,7 +17,7 @@
  *  - Plain English first, proper noun in parens or after a colon.
  */
 
-import { m } from 'framer-motion';
+import { m, LazyMotion, domAnimation } from 'framer-motion';
 import { Trophy, Shield, LifeBuoy } from 'lucide-react';
 
 const TERMS = [

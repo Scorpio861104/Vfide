@@ -4,7 +4,7 @@
  * Re-uses the existing /flashloans component tree via dynamic imports.
  */
 import { useState } from 'react';
-import { AnimatePresence, m } from 'framer-motion';
+import { AnimatePresence, m, LazyMotion, domAnimation } from 'framer-motion';
 import { History, Info, Users, Zap } from 'lucide-react';
 import nextDynamic from 'next/dynamic';
 

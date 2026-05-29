@@ -7,7 +7,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { m, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
 import { Search, Share2, Grid, List, Package } from 'lucide-react';
 import { MerchantTrustBadge } from '@/components/merchant/MerchantTrustBadge';
 import { Footer } from '@/components/layout/Footer';

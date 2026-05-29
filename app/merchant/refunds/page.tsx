@@ -40,7 +40,7 @@ export const dynamic = 'force-dynamic';
 import { useState } from 'react';
 import Link from 'next/link';
 import { useAccount } from 'wagmi';
-import { m } from 'framer-motion';
+import { m, LazyMotion, domAnimation } from 'framer-motion';
 import { parseEther, formatEther, isAddress, type Address } from 'viem';
 import {
   ArrowLeft,
@@ -197,7 +197,8 @@ export default function MerchantRefundsPage() {
   };
 
   return (
-    <>
+    <LazyMotion features={domAnimation}>
+      <>
       <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] text-white relative">
         {/* Ambient orbs */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">

@@ -11,7 +11,7 @@ import {
   Search,
   RefreshCw,
 } from 'lucide-react';
-import { m } from 'framer-motion';
+import { m, LazyMotion, domAnimation } from 'framer-motion';
 import RevenueSplitterABI from '@/lib/abis/RevenueSplitter.json';
 import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
 import { toast } from '@/lib/toast';

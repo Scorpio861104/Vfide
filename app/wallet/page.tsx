@@ -285,7 +285,8 @@ function WalletHubInner() {
   );
 
   return (
-    <>
+    <LazyMotion features={domAnimation}>
+      <>
       <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] pb-8 text-white relative">
         <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
           <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
@@ -357,5 +358,6 @@ export default function WalletHubPage() {
     }>
       <WalletHubInner />
     </Suspense>
+    </LazyMotion>
   );
 }

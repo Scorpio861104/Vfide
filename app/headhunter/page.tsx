@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { AnimatePresence, m } from 'framer-motion';
+import { AnimatePresence, m, LazyMotion, domAnimation } from 'framer-motion';
 import { Activity, LayoutDashboard, Trophy } from 'lucide-react';
 import { useState } from 'react';
 
@@ -24,7 +24,8 @@ export default function HeadhunterPage() {
   const [activeTab, setActiveTab] = useState<TabId>('dashboard');
 
   return (
-    <div className="relative min-h-screen bg-zinc-950 md:pt-[3.5rem]">
+    <LazyMotion features={domAnimation}>
+      <div className="relative min-h-screen bg-zinc-950 md:pt-[3.5rem]">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
           style={{ background: 'radial-gradient(circle, #f59e0b 0%, transparent 70%)' }} />
@@ -65,5 +66,6 @@ export default function HeadhunterPage() {
       </div>
       <Footer />
     </div>
+    </LazyMotion>
   );
 }

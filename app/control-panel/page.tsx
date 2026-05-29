@@ -1,4 +1,5 @@
 'use client';
+import _dynamic from 'next/dynamic';
 
 export const dynamic = 'force-dynamic';
 
@@ -6,11 +7,11 @@ import { useState } from 'react';
 import { useAccount } from 'wagmi';
 import { SystemStatusPanel } from './components/SystemStatusPanel';
 import { HoweySafeModePanel } from './components/HoweySafeModePanel';
-import { AutoSwapPanel } from './components/AutoSwapPanel';
+const AutoSwapPanel = _dynamic(() => import('./components/AutoSwapPanel').then(m => ({ default: m.AutoSwapPanel })), { ssr: false });
 import { TokenManagementPanel } from './components/TokenManagementPanel';
 import { FeeManagementPanel } from './components/FeeManagementPanel';
 import { EcosystemPanel } from './components/EcosystemPanel';
-import { GovernancePanel } from './components/GovernancePanel';
+const GovernancePanel = _dynamic(() => import('./components/GovernancePanel').then(m => ({ default: m.GovernancePanel })), { ssr: false });
 import { EmergencyPanel } from './components/EmergencyPanel';
 import { ProductionSetupPanel } from './components/ProductionSetupPanel';
 import { TransactionHistory } from './components/TransactionHistory';

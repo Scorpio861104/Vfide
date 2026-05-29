@@ -4,7 +4,7 @@
  * Re-uses the existing /escrow component tree via dynamic imports.
  */
 import { useState } from 'react';
-import { AnimatePresence, m } from 'framer-motion';
+import { AnimatePresence, m, LazyMotion, domAnimation } from 'framer-motion';
 import { CheckCircle2, FileText, Lock, PlusCircle } from 'lucide-react';
 import nextDynamic from 'next/dynamic';
 

@@ -22,7 +22,7 @@ import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { useState } from 'react';
 import { useAccount } from 'wagmi';
 import { isAddress, parseUnits, keccak256, stringToBytes, type Address } from 'viem';
-import { m } from 'framer-motion';
+import { m, LazyMotion, domAnimation } from 'framer-motion';
 import { Lock, ShieldCheck, Loader2, AlertCircle, CheckCircle2, Info } from 'lucide-react';
 import { useCommerceEscrow } from '@/hooks/useCommerceEscrow';
 import { useMerchantRegistry } from '@/hooks/useMerchantRegistry';

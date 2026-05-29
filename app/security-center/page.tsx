@@ -1,10 +1,11 @@
 'use client';
+import _dynamic from 'next/dynamic';
 
 export const dynamic = 'force-dynamic';
 
 import { useState } from 'react';
 import { useAccount } from 'wagmi';
-import { m, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
 import {
  Shield, Lock, Eye, Key, Activity, 
  Smartphone, Globe, ChevronRight, CheckCircle2, 
@@ -42,6 +43,7 @@ function SecurityScore({ score }: { score: number }) {
       </svg>
       <div className="text-sm font-semibold" style={{ color }}>{label}</div>
     </div>
+    </LazyMotion>
   );
 }
 
@@ -79,7 +81,8 @@ export default function SecurityCenterPage() {
   }
 
   return (
-    <>
+    <LazyMotion features={domAnimation}>
+      <>
       <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] relative">
         {/* Ambient */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">

@@ -1,21 +1,22 @@
 'use client';
+import dynamic from 'next/dynamic';
 
 import { Footer } from '@/components/layout/Footer';
-import { m, useScroll, useTransform } from 'framer-motion';
+import { m, useScroll, useTransform, LazyMotion, domAnimation } from 'framer-motion';
 import { ArrowRight, ChevronRight, CheckCircle2, ShoppingBag, Store } from 'lucide-react';
 import Link from 'next/link';
 import { FeeSavingsCalculator } from '@/components/fees';
 import { OnboardingPathChooser, useOnboarding } from '@/components/onboarding';
 import { useRef } from 'react';
 
-import { LiveProofScoreHero } from './components/LiveProofScoreHero';
-import { FeeFlowRiver } from './components/FeeFlowRiver';
-import { MonumentBackdrop } from './components/MonumentBackdrop';
+const LiveProofScoreHero = dynamic(() => import('./components/LiveProofScoreHero').then(m => ({ default: m.LiveProofScoreHero })), { ssr: false });
+const FeeFlowRiver = dynamic(() => import('./components/FeeFlowRiver').then(m => ({ default: m.FeeFlowRiver })), { ssr: false });
+const MonumentBackdrop = dynamic(() => import('./components/MonumentBackdrop').then(m => ({ default: m.MonumentBackdrop })), { ssr: false });
 import { FeatureCard } from './components/FeatureCard';
 import { StatItem } from './components/StatItem';
 import { Step } from './components/Step';
 import { PlainEnglishCard } from './components/PlainEnglishCard';
-import { ConstitutionSection } from './components/ConstitutionSection';
+const ConstitutionSection = dynamic(() => import('./components/ConstitutionSection').then(m => ({ default: m.ConstitutionSection })), { ssr: false });
 import { useLocale } from '@/hooks/useLocale';
 import { HOME_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
 
@@ -95,7 +96,8 @@ export default function Home() {
   const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
 
   return (
-    <>
+    <LazyMotion features={domAnimation}>
+      <>
       <div className="min-h-screen bg-zinc-950 relative overflow-hidden">
 
         {/* ════════════════════════════════════════

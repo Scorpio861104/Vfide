@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import { Footer } from '@/components/layout/Footer';
 import { useEffect, useMemo, useState } from 'react';
-import { m } from 'framer-motion';
+import { m, LazyMotion, domAnimation } from 'framer-motion';
 import { useAccount } from 'wagmi';
 import { FaqTab } from './components/FaqTab';
 import { TicketsTab } from './components/TicketsTab';
@@ -241,7 +241,8 @@ export default function SupportPage() {
   };
 
   return (
-    <div className="relative min-h-screen bg-zinc-950 md:pt-[3.5rem]">
+    <LazyMotion features={domAnimation}>
+      <div className="relative min-h-screen bg-zinc-950 md:pt-[3.5rem]">
       {/* Ambient background */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
@@ -324,5 +325,6 @@ export default function SupportPage() {
         </div>
       <Footer />
     </div>
+    </LazyMotion>
   );
 }

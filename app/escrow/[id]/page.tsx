@@ -1,8 +1,9 @@
 import { Suspense } from 'react';
 import { Footer } from '@/components/layout/Footer';
-import { EscrowDetailContent } from './components/EscrowDetailContent';
+const EscrowDetailContent = _dynamic(() => import('./components/EscrowDetailContent').then(m => ({ default: m.EscrowDetailContent })), { ssr: false });
 
 export const dynamic = 'force-dynamic';
+import _dynamic from 'next/dynamic';
 
 export default async function EscrowDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

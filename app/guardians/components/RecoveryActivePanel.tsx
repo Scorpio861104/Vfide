@@ -16,7 +16,7 @@
  * frontend doesn't need to enforce a frontend-side 7-day wait.
  */
 
-import { m } from 'framer-motion';
+import { m, LazyMotion, domAnimation } from 'framer-motion';
 import { AlertCircle } from 'lucide-react';
 
 interface RecoveryActivePanelProps {

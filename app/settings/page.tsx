@@ -1,4 +1,5 @@
 'use client';
+import _dynamic from 'next/dynamic';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,7 +22,7 @@ import type React from 'react';
  * /setup redirects here. /notifications redirects here.
  */
 
-import { AnimatePresence, m } from 'framer-motion';
+import { AnimatePresence, m, LazyMotion, domAnimation } from 'framer-motion';
 import { Bell, Lock, Settings, Shield, User } from 'lucide-react';
 import { useState, Suspense} from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -32,7 +33,7 @@ import { VaultTab }    from '@/app/setup/components/VaultTab';
 import { SecurityTab } from '@/app/setup/components/SecurityTab';
 
 // Notifications tab — inline from /notifications page content
-import { NotificationsTabInline } from './components/NotificationsTabInline';
+const NotificationsTabInline = _dynamic(() => import('./components/NotificationsTabInline').then(m => ({ default: m.NotificationsTabInline })), { ssr: false });
 import { useT } from '@/lib/i18n';
 
 type TabId = 'account' | 'vault' | 'security' | 'notifications';
@@ -129,8 +130,10 @@ function SettingsPageInner() {
 export default function SettingsPage() {
 
   return (
-    <Suspense fallback={<div className="min-h-screen bg-zinc-950" />}>
+    <LazyMotion features={domAnimation}>
+      <Suspense fallback={<div className="min-h-screen bg-zinc-950" />}>
       <SettingsPageInner />
     </Suspense>
+    </LazyMotion>
   );
 }

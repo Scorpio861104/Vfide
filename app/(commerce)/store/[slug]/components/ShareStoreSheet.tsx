@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { m, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
 import { X, Copy, Check, MessageCircle, Share2, QrCode } from 'lucide-react';
 // v19.10 BCOMPAT-1 FIX: in-app browser clipboard fallback.
 import { copyToClipboardSafe } from '@/lib/clipboardSafe';

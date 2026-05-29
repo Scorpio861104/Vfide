@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { m } from 'framer-motion';
+import { m, LazyMotion, domAnimation } from 'framer-motion';
 import { AlertTriangle } from 'lucide-react';
 import { LockVaultPanel } from '@/components/vault/LockVaultPanel';
 import { Footer } from '@/components/layout/Footer';
@@ -10,7 +10,8 @@ import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 
 export default function LockVaultPage() {
   return (
-    <>
+    <LazyMotion features={domAnimation}>
+      <>
       <div className="min-h-screen bg-gradient-to-b from-gray-950 to-black text-white md:pt-[3.5rem]">
         <div className="container mx-auto px-4 py-12 max-w-3xl">
           <m.div

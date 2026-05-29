@@ -7,7 +7,7 @@
  */
 
 import { useState, useMemo } from 'react';
-import { m, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
 import { useNotificationHub } from '@/hooks/useNotificationHub';
 import { NotificationList } from '@/components/notifications/NotificationList';
 import { NotificationPreferences } from '@/components/notifications/NotificationPreferences';

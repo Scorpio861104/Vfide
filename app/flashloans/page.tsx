@@ -1,16 +1,17 @@
 'use client';
+import _dynamic from 'next/dynamic';
 
 export const dynamic = 'force-dynamic';
 
-import { AnimatePresence, m } from 'framer-motion';
+import { AnimatePresence, m, LazyMotion, domAnimation } from 'framer-motion';
 import { History, Info, Users, Zap } from 'lucide-react';
 import { useState } from 'react';
 
 import { Footer } from '@/components/layout/Footer';
 
-import { LendersTab } from './components/LendersTab';
-import { BorrowInfoTab } from './components/BorrowInfoTab';
-import { BorrowTab } from './components/BorrowTab';
+const LendersTab = _dynamic(() => import('./components/LendersTab').then(m => ({ default: m.LendersTab })), { ssr: false });
+const BorrowInfoTab = _dynamic(() => import('./components/BorrowInfoTab').then(m => ({ default: m.BorrowInfoTab })), { ssr: false });
+const BorrowTab = _dynamic(() => import('./components/BorrowTab').then(m => ({ default: m.BorrowTab })), { ssr: false });
 import { HistoryTab } from './components/HistoryTab';
 
 type TabId = 'borrow' | 'lenders' | 'info' | 'history';
@@ -26,7 +27,8 @@ export default function FlashLoansPage() {
   const [activeTab, setActiveTab] = useState<TabId>('borrow');
 
   return (
-    <div className="relative min-h-screen bg-zinc-950 md:pt-[3.5rem]">
+    <LazyMotion features={domAnimation}>
+      <div className="relative min-h-screen bg-zinc-950 md:pt-[3.5rem]">
       {/* Ambient background */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
@@ -93,5 +95,6 @@ export default function FlashLoansPage() {
       </div>
       <Footer />
     </div>
+    </LazyMotion>
   );
 }
