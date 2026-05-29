@@ -154,7 +154,7 @@ export default function MerchantWholesalePage() {
   const storageKey = `${STORAGE_PREFIX}${address?.toLowerCase() || 'guest'}`;
 
   useEffect(() => {
-    setLocalGroupBuys(normalizeGroupBuys(JSON.parse(safeLocalStorage.getItem(storageKey) || '[]')));
+    try { setLocalGroupBuys(normalizeGroupBuys(JSON.parse(safeLocalStorage.getItem(storageKey) || '[]'))); } catch { setLocalGroupBuys([]); }
   }, [storageKey]);
 
   useEffect(() => {

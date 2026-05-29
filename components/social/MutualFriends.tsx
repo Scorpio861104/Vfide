@@ -33,11 +33,11 @@ export function MutualFriends({ userAddress, currentUserAddress }: MutualFriends
       try {
         // Load current user's friends
         const myFriendsData = safeLocalStorage.getItem(`vfide_friends_${currentUserAddress}`);
-        const myFriends: Friend[] = myFriendsData ? JSON.parse(myFriendsData) : [];
+        let myFriends: Friend[] = []; try { myFriends = myFriendsData ? JSON.parse(myFriendsData) : []; } catch { myFriends = []; }
 
         // Load other user's friends
         const theirFriendsData = safeLocalStorage.getItem(`vfide_friends_${userAddress}`);
-        const theirFriends: Friend[] = theirFriendsData ? JSON.parse(theirFriendsData) : [];
+        let theirFriends: Friend[] = []; try { theirFriends = theirFriendsData ? JSON.parse(theirFriendsData) : []; } catch { theirFriends = []; }
 
         // Find mutual friends
         const mutual = myFriends.filter(myFriend =>

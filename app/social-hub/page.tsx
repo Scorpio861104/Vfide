@@ -134,8 +134,8 @@ function SocialHubPageInner() {
       .then((r) => (r.ok ? r.json() : { posts: [] }))
       .then((d) => {
         const raw: SocialPost[] = Array.isArray(d.posts) ? d.posts : [];
-        const likedSet: string[]     = JSON.parse(localStorage.getItem(`vfide_liked_posts_${address    ?? 'anon'}`) ?? '[]');
-        const bookmarkSet: string[]  = JSON.parse(localStorage.getItem(`vfide_bookmarked_posts_${address ?? 'anon'}`) ?? '[]');
+        let likedSet: string[] = []; try { likedSet = JSON.parse(localStorage.getItem(`vfide_liked_posts_${address ?? 'anon'}`) ?? '[]'); } catch { likedSet = []; }
+        let bookmarkSet: string[] = []; try { bookmarkSet = JSON.parse(localStorage.getItem(`vfide_bookmarked_posts_${address ?? 'anon'}`) ?? '[]'); } catch { bookmarkSet = []; }
         setPosts(raw.map((p) => ({
           ...p,
           id: String(p.id),
@@ -188,7 +188,7 @@ function SocialHubPageInner() {
 
   const handleLike = async (postId: string) => {
     const key = getLikedKey();
-    const likedSet: string[] = JSON.parse(localStorage.getItem(key) ?? '[]');
+    let likedSet: string[] = []; try { likedSet = JSON.parse(localStorage.getItem(`vfide_liked_posts_${address ?? 'anon'}`) ?? '[]'); } catch { likedSet = []; }
     const alreadyLiked = likedSet.includes(postId);
     const action = alreadyLiked ? 'unlike' : 'like';
 
@@ -218,7 +218,7 @@ function SocialHubPageInner() {
 
   const handleBookmark = (postId: string) => {
     const key = getBookmarkKey();
-    const bookmarked: string[] = JSON.parse(localStorage.getItem(key) ?? '[]');
+    let bookmarked: string[] = []; try { bookmarked = JSON.parse(localStorage.getItem(key) ?? '[]'); } catch { bookmarked = []; }
     const already = bookmarked.includes(postId);
     const next = already ? bookmarked.filter((id) => id !== postId) : [...bookmarked, postId];
     localStorage.setItem(key, JSON.stringify(next));
