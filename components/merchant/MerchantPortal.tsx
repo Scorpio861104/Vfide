@@ -1429,7 +1429,7 @@ function InvoicesSection({ merchantAddress }: { merchantAddress: string }) {
       const url = statusFilter
         ? `/api/merchant/invoices?status=${statusFilter}`
         : '/api/merchant/invoices';
-      const res = await fetch(url, );
+      const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         setInvoices(data.invoices || []);

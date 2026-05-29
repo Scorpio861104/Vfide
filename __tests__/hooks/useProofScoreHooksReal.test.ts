@@ -110,7 +110,7 @@ describe('useProofScore', () => {
     const { result } = renderHook(() => useProofScore())
     
     expect(result.current.tier).toBe('Council')
-    expect(result.current.burnFee).toBe(1.0)
+    expect(result.current.burnFee).toBe(1.44)
   })
 
   it('returns Neutral tier for score >= 5000', () => {
@@ -123,10 +123,10 @@ describe('useProofScore', () => {
     const { result } = renderHook(() => useProofScore())
     
     expect(result.current.tier).toBe('Neutral')
-    expect(result.current.burnFee).toBe(2.5)
+    expect(result.current.burnFee).toBe(3.82)
   })
 
-  it('returns Low Trust tier for score >= 3500', () => {
+  it('returns Low Trust tier for score >= 4000', () => {
     mockUseReadContract.mockReturnValue({
       data: BigInt(4000),
       isLoading: false,
@@ -136,10 +136,10 @@ describe('useProofScore', () => {
     const { result } = renderHook(() => useProofScore())
     
     expect(result.current.tier).toBe('Low Trust')
-    expect(result.current.burnFee).toBe(3.5)
+    expect(result.current.burnFee).toBe(4.22)
   })
 
-  it('returns Risky tier for score < 3500', () => {
+  it('returns Risky tier for score < 4000', () => {
     mockUseReadContract.mockReturnValue({
       data: BigInt(3000),
       isLoading: false,

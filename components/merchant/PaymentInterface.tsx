@@ -32,7 +32,7 @@ export function PaymentInterface() {
   const { createEscrow, loading: isEscrowLoading, error: escrowError, isSuccess: escrowSuccess } = useEscrow()
   const merchantInfo = useIsMerchant(merchantAddress as `0x${string}` | undefined)
   const trustScore = useCustomerTrustScore(address)
-  const { score } = useProofScore(address)
+  const { score, tier: proofTier } = useProofScore(address)
   const { balance: vaultBalance } = useVaultBalance()
   const [isEscrowMode, setIsEscrowMode] = useState(true)
   const [hasSelectedMode, setHasSelectedMode] = useState(false)
@@ -121,7 +121,7 @@ export function PaymentInterface() {
                 trustScore.lowTrust ? 'bg-red-900/30 text-red-400' :
                 'bg-yellow-900/30 text-yellow-400'
               }`}>
-                {trustScore.highTrust ? 'High Trust' : trustScore.lowTrust ? 'Low Trust' : 'Neutral'}
+                {proofTier}
               </div>
             </div>
           </div>
@@ -166,7 +166,7 @@ export function PaymentInterface() {
                 disabled={!canUseInstant}
               >
                 <div className="font-semibold">Instant Settlement</div>
-                <div className="text-xs text-gray-400">High trust score required for trusted in-person or QR code payments.</div>
+                <div className="text-xs text-gray-400">Trusted tier (score ≥ 5,600) required for instant settlement.</div>
               </button>
             </div>
             {!canUseInstant && (

@@ -46,13 +46,15 @@ export function useProofScore(userAddress?: `0x${string}`) {
   
   // Total fees based on ProofScore (linear interpolation in contract)
   // Contract: minTotalBps=25 (0.25%) at score≥8000, maxTotalBps=500 (5%) at score≤4000
-  // Neutral (5000) is the midpoint → 2.5%
+  // Linear interpolation: minBps=25 at score≥8000, maxBps=500 at score≤4000
   const burnFee = 
     scoreNum >= 8000 ? 0.25 :  // Elite: 0.25% total (contract minimum)
-    scoreNum >= 7000 ? 1.0 :   // High Trust: ~1% (interpolated)
-    scoreNum >= 5000 ? 2.5 :   // Neutral: 2.5% (midpoint of fee range)
-    scoreNum >= 4000 ? 3.5 :   // Low Trust: ~3.5% (interpolated)
-    5.0                        // Risky (≤4000): 5% max (contract maximum)
+    scoreNum >= 7000 ? 1.44 :  // Council: ~1.44% (linear at 7000)
+    scoreNum >= 5600 ? 2.28 :  // Trusted: ~2.28% (midpoint 5600–6999 linear)
+    scoreNum >= 5400 ? 3.34 :  // Governance: ~3.34% (linear at 5400)
+    scoreNum >= 5000 ? 3.82 :  // Neutral: 3.82% (canonical neutral rate)
+    scoreNum >= 4000 ? 4.22 :  // Low Trust: ~4.22% (interpolated midpoint 4000–4999)
+    5.0                        // Risky (<4000): 5% max (contract maximum)
   
   const color =
     scoreNum >= 8000 ? '#00FF88' : // Elite green
@@ -60,7 +62,7 @@ export function useProofScore(userAddress?: `0x${string}`) {
     scoreNum >= 5600 ? '#34D399' : // Trusted emerald
     scoreNum >= 5400 ? '#60A5FA' : // Governance blue
     scoreNum >= 5000 ? '#FFD700' : // Neutral gold
-    scoreNum >= 3500 ? '#FFA500' : '#FF4444' // Low Trust orange / Risky red
+    scoreNum >= 4000 ? '#FFA500' : '#FF4444' // Low Trust orange (4000–4999) / Risky red (<4000)
   
   return {
     score: scoreNum,

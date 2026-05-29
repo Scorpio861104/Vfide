@@ -16,11 +16,12 @@
  * is worth a deterministic number of points.
  */
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { m } from 'framer-motion';
 import { Sliders, AlertCircle } from 'lucide-react';
 
 import { GlassCard, containerVariants, itemVariants } from './shared';
+import { useMonumentOverride } from '@/components/layout/MonumentOverrideContext';
 
 // Real Seer contract constants (see contracts/Seer.sol)
 const MAX_SINGLE_REWARD = 100;         // max delta per operator call
@@ -82,8 +83,8 @@ function getTier(score: number): { name: string; color: string } {
   if (score >= 5600) return { name: 'Trusted',    color: '#34d399' };  // 5600–6999
   if (score >= 5400) return { name: 'Governance', color: '#38bdf8' };  // 5400–5599
   if (score >= 5000) return { name: 'Neutral',    color: '#fbbf24' };  // 5000–5399
-  if (score >= 3500) return { name: 'Low Trust',  color: '#fb923c' };  // 3500–4999
-  return                     { name: 'Risky',     color: '#fb7185' };  // 0–3499
+  if (score >= 4000) return { name: 'Low Trust',  color: '#fb923c' };  // 4000–4999
+  return                     { name: 'Risky',     color: '#fb7185' };  // 0–3999
 }
 
 export function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
@@ -103,6 +104,14 @@ export function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
   const finalScore = projection[projection.length - 1]?.score ?? currentScore;
   const tier = getTier(finalScore);
   const currentTier = getTier(currentScore);
+
+  // Live-wire projected score into the global MonumentBackdrop so vertex
+  // colour + intensity update as the user adjusts activity level / months.
+  const { setOverride } = useMonumentOverride();
+  useEffect(() => {
+    setOverride({ score: finalScore });
+    return () => setOverride(null); // restore autonomous pulse on unmount
+  }, [finalScore, setOverride]);
 
   return (
     <m.div variants={containerVariants} initial="hidden" animate="show" className="mx-auto max-w-3xl space-y-6">

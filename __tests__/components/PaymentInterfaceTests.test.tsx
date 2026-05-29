@@ -126,7 +126,8 @@ jest.mock('@/lib/vfide-hooks', () => ({
     eligible: true,
   }),
   useProofScore: () => ({
-    score: 750,
+    score: 7500,
+    tier: 'Council',
   }),
   useVaultBalance: () => ({
     balance: '1000',
@@ -199,13 +200,13 @@ describe('PaymentInterface', () => {
     render(<PaymentInterface />)
     
     expect(screen.getByText('Your Trust Score')).toBeInTheDocument()
-    expect(screen.getByText('750')).toBeInTheDocument()
+    expect(screen.getByText('7,500')).toBeInTheDocument()
   })
 
   it('shows High Trust badge for high trust score', () => {
     render(<PaymentInterface />)
     
-    expect(screen.getByText('High Trust')).toBeInTheDocument()
+    expect(screen.getByText('Council')).toBeInTheDocument()
   })
 
   it('has merchant address input', () => {
