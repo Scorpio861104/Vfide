@@ -296,7 +296,7 @@ async function verifyPaymentEventOnChain(params: {
   return { ok: false, error: 'Transaction receipt does not contain a matching payment event' };
 }
 
-export const POST = withAuth(async (request: NextRequest, user: JWTPayload, context?: { params: Promise<Record<string, string>> | Record<string, string> }) => {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload, _context?: { params: Promise<Record<string, string>> | Record<string, string> }) => {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
   const authAddress = typeof user?.address === 'string'

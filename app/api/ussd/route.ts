@@ -6,7 +6,6 @@ import { logger } from '@/lib/logger';
 
 const ALLOW_MOCK_USSD = process.env.ALLOW_MOCK_USSD === 'true';
 const MAX_USSD_TEXT_LENGTH = 128;
-const MERCHANT_CODE_REGEX = /^[A-Z0-9]{3,12}$/;
 
 function isTrustedGateway(request: NextRequest): boolean {
   const configuredToken = process.env.USSD_GATEWAY_TOKEN;
@@ -67,9 +66,6 @@ function hashPhone(phoneNumber: string): string {
 
 function buildMenu(text: string): string {
   const normalizedText = text.trim();
-  const parts = normalizedText ? normalizedText.split('*') : [];
-  const level = parts.length;
-  const lastInput = parts[parts.length - 1] || '';
 
   if (normalizedText === '') {
     return 'CON Welcome to VFIDE\n1. Pay Merchant\n2. Check Balance\n3. My Trust Score\n4. Recent Transactions';
