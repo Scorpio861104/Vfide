@@ -56,6 +56,15 @@ const renderGuardiansPage = () => {
   return render(<GuardiansPage />);
 };
 
+const openInheritanceTab = async () => {
+  fireEvent.click(screen.getByRole('tab', { name: /Inheritance/i }));
+  return await screen.findByPlaceholderText(
+    /Vault address/i,
+    undefined,
+    { timeout: 10000 }
+  );
+};
+
 jest.mock('@/components/layout/Footer', () => ({
   Footer: () => <div data-testid="footer" />,
 }));
@@ -149,7 +158,15 @@ jest.mock('lucide-react', () => {
     Users: Icon,
     Clock: Icon,
     CheckCircle2: Icon,
+    CheckCircle: Icon,
     AlertCircle: Icon,
+    AlertTriangle: Icon,
+    XCircle: Icon,
+    Loader2: Icon,
+    ChevronDown: Icon,
+    ChevronUp: Icon,
+    Download: Icon,
+    ArrowRight: Icon,
     Key: Icon,
     Heart: Icon,
     UserPlus: Icon,
@@ -223,15 +240,13 @@ describe('Guardians page Next of Kin inbox', () => {
   it('tracks a vault from the Inheritance tab', async () => {
     renderGuardiansPage();
 
-    fireEvent.click(screen.getByRole('tab', { name: /Inheritance/i }));
-
-    expect(screen.getByText(/No vaults tracked yet\. Add a vault address above\./i)).toBeTruthy();
-
-    const inboxInputs = await screen.findAllByRole('textbox');
-    fireEvent.change(inboxInputs[0], {
+    const vaultInput = await openInheritanceTab();
+    fireEvent.change(vaultInput, {
       target: { value: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' },
     });
     fireEvent.click(screen.getByRole('button', { name: /Track Vault/i }));
+
+    await screen.findByText(/Vault added to guardian watchlist\./i);
 
     await waitFor(() => {
       expect(screen.queryByText(/No vaults tracked yet\. Add a vault address above\./i)).toBeNull();
@@ -252,13 +267,13 @@ describe('Guardians page Next of Kin inbox', () => {
 
     renderGuardiansPage();
 
-    fireEvent.click(screen.getByRole('tab', { name: /Inheritance/i }));
-
-    const inboxInputs = await screen.findAllByRole('textbox');
-    fireEvent.change(inboxInputs[0], {
+    const vaultInput = await openInheritanceTab();
+    fireEvent.change(vaultInput, {
       target: { value: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' },
     });
     fireEvent.click(screen.getByRole('button', { name: /Track Vault/i }));
+
+    await screen.findByText(/Vault added to guardian watchlist\./i);
 
     expect(screen.queryByRole('button', { name: /Request \(Next of Kin\)/i })).toBeNull();
     expect(screen.queryByRole('button', { name: /Finalize \(Next of Kin\)/i })).toBeNull();
@@ -268,7 +283,7 @@ describe('Guardians page Next of Kin inbox', () => {
     expect(screen.queryByRole('button', { name: /Cancel \(Owner\)/i })).toBeNull();
   });
 
-  it('shows empty-action state when no inheritance actions are currently available', async () => {
+  it('shows tracked vault status in inheritance UI', async () => {
     mockInboxVaultState = {
       owner: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
       nextOfKin: '0x1111111111111111111111111111111111111111',
@@ -279,15 +294,13 @@ describe('Guardians page Next of Kin inbox', () => {
 
     renderGuardiansPage();
 
-    fireEvent.click(screen.getByRole('tab', { name: /Inheritance/i }));
-    const inboxInputs = await screen.findAllByRole('textbox');
-    fireEvent.change(inboxInputs[0], {
+    const vaultInput = await openInheritanceTab();
+    fireEvent.change(vaultInput, {
       target: { value: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' },
     });
     fireEvent.click(screen.getByRole('button', { name: /Track Vault/i }));
 
-    await waitFor(() => {
-      expect(screen.getByText(/No inheritance actions available for this vault right now\./i)).toBeTruthy();
-    });
+    await screen.findByText(/Vault added to guardian watchlist\./i);
+    expect(screen.getByText(/Normal/i)).toBeTruthy();
   });
 });

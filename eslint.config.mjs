@@ -37,6 +37,7 @@ const eslintConfig = defineConfig([
     "e2e/**",
     "playwright/**",
     "public/mockServiceWorker.js",
+    "uploaded_files/**",
     
     // Temporarily exclude extremely large files that cause ESLint to hang
     // TODO: Refactor these files into smaller components

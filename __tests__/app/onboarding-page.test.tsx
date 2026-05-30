@@ -52,7 +52,7 @@ describe('Onboarding route', () => {
   it('renders onboarding launch card and connect wallet prompt', () => {
     renderOnboardingPage();
 
-    expect(screen.getByRole('heading', { name: /Setup Wizard/i })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: /(Welcome to VFIDE|Setup Wizard)/i })).toBeTruthy();
     expect(screen.getByRole('button', { name: /Connect Wallet/i })).toBeTruthy();
     expect(screen.getByTestId('footer')).toBeTruthy();
   });

@@ -259,6 +259,16 @@ jest.mock('next/navigation', () => ({
   usePathname: () => '/',
 }))
 
+// Mock locale provider and auth wrapper used broadly across page/route tests.
+jest.mock('@/lib/locale/LocaleProvider', () => ({
+  useLocale: () => ({ locale: 'en' }),
+}))
+
+jest.mock('@/lib/auth/middleware', () => ({
+  withAuth: (handler) => (request, user = { address: '0x1234567890123456789012345678901234567890' }, context) =>
+    handler(request, user, context),
+}))
+
 // Mock viem to avoid TextEncoder issues
 jest.mock('viem', () => ({
   isAddress: jest.fn((addr) => addr && addr.startsWith('0x') && addr.length === 42),

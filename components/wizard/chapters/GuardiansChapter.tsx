@@ -121,7 +121,7 @@ export function GuardiansChapter({ onComplete, onSkip }: GuardiansChapterProps) 
   return (
     <ChapterShell
       chapter="guardians"
-      description="Guardians are trusted addresses that can approve wallet rotation if your primary wallet is compromised. Add at least two — one of them must be independent from your owner wallet."
+      description="Choose trusted guardians. Think of them like emergency contacts for your digital assets who can support account recovery if access is ever lost."
       onPrimary={onComplete}
       onSkip={onSkip}
       isWorking={isAdding || isWritePending}
@@ -179,7 +179,7 @@ export function GuardiansChapter({ onComplete, onSkip }: GuardiansChapterProps) 
             </button>
           </div>
           <p className="text-xs text-white/40">
-            One transaction per guardian. Your wallet will prompt for the signature.
+            You can add guardians now or later. Each add is one wallet-signed transaction.
           </p>
         </div>
 

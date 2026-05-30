@@ -149,4 +149,27 @@ describe('/api/merchant/checkout/[id] PATCH', () => {
     expect(data.success).toBe(true);
     expect(query).toHaveBeenCalledTimes(3);
   });
+
+  it('returns 503 when anti-replay uniqueness check cannot be executed', async () => {
+    withRateLimit.mockResolvedValue(null);
+
+    query
+      .mockResolvedValueOnce({ rows: [{ id: 1, status: 'sent', customer_address: AUTH_ADDRESS, merchant_address: MERCHANT_ADDRESS, token: TOKEN_ADDRESS, total: '10' }] })
+      .mockRejectedValueOnce(new Error('db unavailable'));
+
+    const request = new NextRequest('http://localhost:3000/api/merchant/checkout/abc', {
+      method: 'PATCH',
+      body: JSON.stringify({
+        action: 'pay',
+        tx_hash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      }),
+    });
+
+    const response = await PATCH(request, { params: Promise.resolve({ id: 'abc' }) });
+    const data = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(data.error).toMatch(/temporarily unavailable/i);
+    expect(query).toHaveBeenCalledTimes(2);
+  });
 });

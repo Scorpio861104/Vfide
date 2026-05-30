@@ -329,7 +329,10 @@ export const PATCH = withAuth(async (request: NextRequest, user: JWTPayload, con
           [txHashLower, invoice.id]
         ) as { rows: unknown[] };
       } catch {
-        replay = { rows: [] };
+        return NextResponse.json(
+          { error: 'Payment verification temporarily unavailable — could not validate transaction uniqueness' },
+          { status: 503 }
+        );
       }
       if (replay.rows.length > 0) {
         return NextResponse.json({ error: 'Transaction has already been used for another invoice' }, { status: 409 });

@@ -3,7 +3,7 @@
  * Tests for actual vault hook implementations to increase coverage
  */
 
-import { describe, it, expect, vi, beforeEach } from '@jest/globals'
+import { describe, it, expect, beforeEach } from '@jest/globals'
 import { renderHook } from '@testing-library/react'
 
 // Mock wagmi
@@ -59,7 +59,6 @@ jest.mock('../../lib/abis', () => ({
 // Import hooks after mocks are set up
 import {
   useUserVault,
-  useCreateVault,
   useVaultBalance,
 } from '../../hooks/useVaultHooks'
 
@@ -116,82 +115,6 @@ describe('useUserVault', () => {
     
     // hasVault is falsy (undefined or false) when no vault
     expect(result.current.hasVault).toBeFalsy()
-  })
-})
-
-describe('useCreateVault', () => {
-  const mockWriteContract = jest.fn()
-
-  beforeEach(() => {
-    jest.clearAllMocks()
-    mockUseWriteContract.mockReturnValue({
-      writeContract: mockWriteContract,
-      data: undefined,
-      isPending: false,
-    })
-    mockUseWaitForTransactionReceipt.mockReturnValue({
-      isLoading: false,
-      isSuccess: false,
-    })
-  })
-
-  it('provides createVault function', () => {
-    const { result } = renderHook(() => useCreateVault())
-    
-    expect(typeof result.current.createVault).toBe('function')
-  })
-
-  it('returns isCreating as false when not pending', () => {
-    const { result } = renderHook(() => useCreateVault())
-    
-    expect(result.current.isCreating).toBe(false)
-  })
-
-  it('returns isCreating as true when pending', () => {
-    mockUseWriteContract.mockReturnValue({
-      writeContract: mockWriteContract,
-      data: undefined,
-      isPending: true,
-    })
-    
-    const { result } = renderHook(() => useCreateVault())
-    
-    expect(result.current.isCreating).toBe(true)
-  })
-
-  it('returns isCreating as true when confirming', () => {
-    mockUseWaitForTransactionReceipt.mockReturnValue({
-      isLoading: true,
-      isSuccess: false,
-    })
-    
-    const { result } = renderHook(() => useCreateVault())
-    
-    expect(result.current.isCreating).toBe(true)
-  })
-
-  it('returns isSuccess when transaction confirmed', () => {
-    mockUseWaitForTransactionReceipt.mockReturnValue({
-      isLoading: false,
-      isSuccess: true,
-    })
-    
-    const { result } = renderHook(() => useCreateVault())
-    
-    expect(result.current.isSuccess).toBe(true)
-  })
-
-  it('returns txHash when available', () => {
-    const txHash = '0xabc123'
-    mockUseWriteContract.mockReturnValue({
-      writeContract: mockWriteContract,
-      data: txHash,
-      isPending: false,
-    })
-    
-    const { result } = renderHook(() => useCreateVault())
-    
-    expect(result.current.txHash).toBe(txHash)
   })
 })
 

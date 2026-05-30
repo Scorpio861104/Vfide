@@ -84,9 +84,9 @@ export default function OnboardingPage() {
               </div>
               <div>
                 <div className="badge-live mb-1 w-fit"><Sparkles size={10} /> Setup Wizard</div>
-                <h1 className="text-2xl font-black text-white tracking-tight">Setup Wizard</h1>
+                <h1 className="text-2xl font-black text-white tracking-tight">Welcome to VFIDE</h1>
                 <p className="text-sm text-zinc-400">
-                  A chapter-by-chapter walk through everything your vault needs.
+                  A guided setup for wallet connection, vault protection, trusted recovery, and secure payments.
                 </p>
               </div>
             </div>

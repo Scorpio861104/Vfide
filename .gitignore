@@ -92,6 +92,8 @@ deployments-solo-*.json
 /VFIDE_Complete_Package.zip
 /VFIDE_Full_Audit_v2.docx
 /vfide-complete/
+# Local extraction of uploaded review artifacts
+/uploaded_files/
 # Audit archives and unpack workspace
 /Vfide-full-repo-audit-complete.zip
 /newaudit.zip

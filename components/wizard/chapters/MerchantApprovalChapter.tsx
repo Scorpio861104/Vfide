@@ -179,11 +179,11 @@ export function MerchantApprovalChapter({ onComplete, onSkip }: MerchantApproval
   return (
     <ChapterShell
       chapter="merchantApproval"
-      description="If you plan to pay merchants directly from your vault (instead of from your wallet), MerchantPortal needs permission to pull VFIDE up to your daily limit."
+      description="Ready for real-world use. VFIDE supports secure payments and merchant flows so your vault can move from storage to practical commerce."
       onPrimary={handleApprove}
       onSkip={onSkip}
       isWorking={isWorking}
-      primaryLabel="Approve MerchantPortal"
+      primaryLabel="Continue"
       primaryDisabled={approvalAmount === 0n}
       notice={
         error
