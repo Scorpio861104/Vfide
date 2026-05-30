@@ -296,7 +296,6 @@ function ApproverActions({
   d,
   status,
   approvalsRequired,
-  connectedAddress,
   pending,
   onApprove,
   onExecute,
@@ -304,7 +303,6 @@ function ApproverActions({
   d: Disbursement;
   status: DisbursementStatus;
   approvalsRequired: number;
-  connectedAddress: `0x${string}` | undefined;
   pending: boolean;
   onApprove: () => void;
   onExecute: () => void;

@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic';
 
 import { useEffect, useState, useMemo } from 'react';
-import { useReadContract, useReadContracts, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
+import { useReadContracts, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 import { type Address, isAddress, erc20Abi, formatUnits } from 'viem';
 import {
   Send,
@@ -30,12 +30,6 @@ import { useLocale } from '@/lib/locale/LocaleProvider';
  * The token to distribute is also user-provided since splitters can
  * hold any ERC20. Defaults to the configured VFIDE token for convenience.
  */
-
-const SHORTCUTS: Array<{ label: string; address: Address | undefined }> = [
-  // CONTRACT_ADDRESSES.VFIDEToken is the most common token to distribute
-  // since most VFIDE merchants settle in VFIDE. Other shortcuts (USDC,
-  // USDT) would be added by per-chain config, not hardcoded here.
-];
 
 function shortAddr(a: string) {
   if (!a || a.length < 12) return a;
