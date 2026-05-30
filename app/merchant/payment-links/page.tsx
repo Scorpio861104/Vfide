@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAccount } from 'wagmi';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 import {
   ArrowLeft,
   Link2,
@@ -49,6 +50,9 @@ const STATUS_BADGE: Record<LinkStatus, string> = {
 const ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
 
 export default function MerchantPaymentLinksPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address } = useAccount();
   const [links, setLinks] = useState<PaymentLink[]>([]);
   const [loading, setLoading] = useState(false);

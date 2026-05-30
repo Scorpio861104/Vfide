@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { BookOpen, CandlestickChart, CheckCircle2, Compass, ExternalLink, Shield, Wallet } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 type ChecklistKey =
   | 'walletSafe'
@@ -59,6 +60,9 @@ const checklistItems: Array<{ key: ChecklistKey; label: string }> = [
 ];
 
 export default function SeerAcademyPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [checks, setChecks] = useState<Record<ChecklistKey, boolean>>({
     walletSafe: false,
     networkChecked: false,

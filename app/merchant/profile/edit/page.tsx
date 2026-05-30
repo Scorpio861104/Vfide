@@ -12,6 +12,7 @@ import { MerchantProfileWizard } from '@/components/merchant/MerchantProfileWiza
 import { useVaultIdentity } from '@/hooks/useVaultIdentity';
 import { useMerchantProfile } from '@/hooks/useMerchantProfile';
 import { GlassCard } from '@/components/ui/GlassCard';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 interface FetchedProfile {
   name: string;
@@ -22,6 +23,9 @@ interface FetchedProfile {
 }
 
 export default function MerchantProfileEditPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const router = useRouter();
   const { address } = useAccount();
   const { identity } = useVaultIdentity(address);

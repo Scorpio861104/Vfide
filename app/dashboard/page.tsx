@@ -17,15 +17,48 @@ import { BadgesTab } from './components/BadgesTab';
 import { ScoreSimulatorTab } from './components/ScoreSimulatorTab';
 import { FeeSimulatorTab } from './components/FeeSimulatorTab';
 import { RecentActivity } from './components/RecentActivity';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
-const tabs = [
-  { id: 'overview', label: 'Overview', icon: Home },
-  { id: 'badges',   label: 'Badges',   icon: Award },
-  { id: 'score',    label: 'Score Sim', icon: Calculator },
-  { id: 'fees',     label: 'Fee Sim',   icon: BarChart3 },
-  { id: 'activity', label: 'Activity',  icon: Activity },
-] as const;
-type TabId = typeof tabs[number]['id'];
+const DASHBOARD_COPY = {
+  'en-US': {
+    badge: 'Dashboard',
+    welcome: 'Welcome back',
+    proofScoreLabel: 'ProofScore',
+    feeRateLabel: 'Fee Rate',
+    txLabel: 'Transactions',
+    tabs: {
+      overview: 'Overview',
+      badges: 'Badges',
+      score: 'Score Sim',
+      fees: 'Fee Sim',
+      activity: 'Activity',
+    },
+  },
+  'es-ES': {
+    badge: 'Panel',
+    welcome: 'Bienvenido de nuevo',
+    proofScoreLabel: 'ProofScore',
+    feeRateLabel: 'Comisión',
+    txLabel: 'Transacciones',
+    tabs: {
+      overview: 'Resumen',
+      badges: 'Insignias',
+      score: 'Sim score',
+      fees: 'Sim comisión',
+      activity: 'Actividad',
+    },
+  },
+};
+
+const tabIcons = {
+  overview: Home,
+  badges: Award,
+  score: Calculator,
+  fees: BarChart3,
+  activity: Activity,
+} as const;
+
+type TabId = keyof typeof tabIcons;
 
 function truncateAddress(address?: string) {
   if (!address) return null;
@@ -35,9 +68,18 @@ function truncateAddress(address?: string) {
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const { address } = useAccount();
+  const { locale } = useLocale();
+  const copy = (DASHBOARD_COPY as Record<string, typeof DASHBOARD_COPY['en-US']>)[locale] ?? DASHBOARD_COPY['en-US'];
   const { score: proofScore, burnFee: feeRate } = useProofScore();
   const [txCount, setTxCount] = useState(0);
   const [totalVolume, setTotalVolume] = useState(0);
+  const tabs = [
+    { id: 'overview' as const, label: copy.tabs.overview, icon: tabIcons.overview },
+    { id: 'badges' as const, label: copy.tabs.badges, icon: tabIcons.badges },
+    { id: 'score' as const, label: copy.tabs.score, icon: tabIcons.score },
+    { id: 'fees' as const, label: copy.tabs.fees, icon: tabIcons.fees },
+    { id: 'activity' as const, label: copy.tabs.activity, icon: tabIcons.activity },
+  ];
 
   useEffect(() => {
     if (!address) return;
@@ -79,10 +121,10 @@ export default function DashboardPage() {
                   transition={{ duration: 0.5 }}
                 >
                   <div className="badge-live mb-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> Dashboard
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> {copy.badge}
                   </div>
                   <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-                    Welcome back
+                    {copy.welcome}
                   </h1>
                   {address && (
                     <p className="mt-1.5 text-sm text-zinc-500 font-mono">
@@ -102,21 +144,21 @@ export default function DashboardPage() {
                 <div className="glass-card-premium px-4 py-2.5 flex items-center gap-2.5">
                   <TrendingUp size={15} className="text-cyan-400" />
                   <div>
-                    <p className="text-[10px] text-zinc-500 uppercase tracking-wider">ProofScore</p>
+                    <p className="text-[10px] text-zinc-500 uppercase tracking-wider">{copy.proofScoreLabel}</p>
                     <p className="text-lg font-bold text-glow-cyan leading-none">{proofScore.toLocaleString()}</p>
                   </div>
                 </div>
                 <div className="glass-card-premium px-4 py-2.5 flex items-center gap-2.5">
                   <Zap size={15} className="text-amber-400" />
                   <div>
-                    <p className="text-[10px] text-zinc-500 uppercase tracking-wider">Fee Rate</p>
+                    <p className="text-[10px] text-zinc-500 uppercase tracking-wider">{copy.feeRateLabel}</p>
                     <p className="text-lg font-bold text-amber-400 leading-none">{(feeRate / 100).toFixed(2)}%</p>
                   </div>
                 </div>
                 <div className="glass-card-premium px-4 py-2.5 flex items-center gap-2.5">
                   <Wallet2 size={15} className="text-emerald-400" />
                   <div>
-                    <p className="text-[10px] text-zinc-500 uppercase tracking-wider">Transactions</p>
+                    <p className="text-[10px] text-zinc-500 uppercase tracking-wider">{copy.txLabel}</p>
                     <p className="text-lg font-bold text-emerald-400 leading-none">{txCount}</p>
                   </div>
                 </div>

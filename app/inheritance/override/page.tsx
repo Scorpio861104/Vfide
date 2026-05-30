@@ -39,10 +39,14 @@ import {
 import { isAddress, type Address, type Hex } from 'viem';
 import CardBoundVaultABI from '@/lib/abis/CardBoundVault.json';
 import CardBoundVaultInheritanceManagerABI from '@/lib/abis/CardBoundVaultInheritanceManager.json';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 const ZERO_ADDR = '0x0000000000000000000000000000000000000000' as const;
 
 export default function OverridePage() {
+  const { locale } = useLocale();
+  void locale;
+
   return (
     <Suspense fallback={<LoadingPage />}>
       <OverrideInner />

@@ -9,6 +9,7 @@ import { ActiveTab } from './components/ActiveTab';
 import { ResolvedTab } from './components/ResolvedTab';
 import { SubmitTab } from './components/SubmitTab';
 import { AlertCircle, PlusCircle, CheckCircle2 } from 'lucide-react';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 type TabId = 'active' | 'submit' | 'resolved';
 
@@ -19,6 +20,9 @@ const TABS = [
 ];
 
 export default function AppealsPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [activeTab, setActiveTab] = useState<TabId>('submit');
 
   return (

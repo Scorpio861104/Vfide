@@ -7,6 +7,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAccount } from 'wagmi';
 import { type Address } from 'viem';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 import {
   ArrowLeft,
   AlertTriangle,
@@ -48,6 +49,9 @@ import {
  * which takes a `uint256`).
  */
 export default function ProposalDetailPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const params = useParams();
   const { address: connectedAddress } = useAccount();
   const dao = useDAO();

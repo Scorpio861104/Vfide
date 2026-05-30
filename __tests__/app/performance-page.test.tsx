@@ -20,6 +20,10 @@ jest.mock('@/components/ui/PageLayout', () => ({
   PageHeader: ({ title }: { title: string }) => <h2>{title}</h2>,
 }));
 
+jest.mock('@/lib/locale/LocaleProvider', () => ({
+  useLocale: () => ({ locale: 'en' }),
+}));
+
 jest.mock('@/hooks/usePerformanceMetrics', () => ({
   usePerformanceMetrics: () => ({
     metrics: { lcp: 1200, fid: 20, cls: 0.02 },
@@ -89,6 +93,7 @@ jest.mock('framer-motion', () => ({
       return ({ children, ...props }: any) => <Tag {...props}>{children}</Tag>;
     },
   }),
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 jest.mock('lucide-react', () => {
@@ -105,7 +110,7 @@ describe('Performance page pathways', () => {
     renderPerformancePage();
 
     expect(screen.getAllByRole('heading', { name: /Performance Command/i }).length).toBeGreaterThan(0);
-    expect(screen.getByText(/System Health Score/i)).toBeTruthy();
+    expect(screen.getByText(/Health Score/i)).toBeTruthy();
     expect(screen.getByText('88')).toBeTruthy();
     expect(screen.getByText(/Active Errors/i)).toBeTruthy();
     expect(screen.getByText(/Active Users/i)).toBeTruthy();

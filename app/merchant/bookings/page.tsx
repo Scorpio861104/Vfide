@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useAccount } from 'wagmi';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 import {
   ArrowLeft,
   CalendarDays,
@@ -66,6 +67,9 @@ const STATUS_META: Record<BookingStatus, { label: string; icon: typeof CheckCirc
 // ── Page ────────────────────────────────────────────────────────────────────
 
 export default function MerchantBookingsPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address } = useAccount();
   const [tab, setTab] = useState<'bookings' | 'slots'>('bookings');
   const [bookings, setBookings] = useState<Booking[]>([]);

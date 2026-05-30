@@ -55,6 +55,7 @@ import { HubSection, type HubLink } from '@/components/navigation/HubGrid';
 import { Numeric } from '@/components/ui/Numeric';
 import { ProofScoreRing } from '@/components/ui/ProofScoreRing';
 import { useProofScore } from '@/hooks/useProofScore';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 // ── Section groupings ──────────────────────────────────────────────
 
@@ -99,6 +100,9 @@ const ENGAGEMENT: HubLink[] = [
 // ── Page ────────────────────────────────────────────────────────────
 
 export default function MeHubPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address, isConnected } = useAccount();
   const { score, tierName, burnFee, isLoading } = useProofScore();
 

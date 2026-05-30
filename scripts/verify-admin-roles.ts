@@ -126,9 +126,12 @@ async function main() {
   // without hardhat in the loop. The check fails gracefully if hardhat
   // isn't available.
   let ethers: typeof import('ethers');
+  let provider: Awaited<ReturnType<typeof import('ethers').getDefaultProvider>>;
   try {
     const hardhat = await import('hardhat');
-    ethers = hardhat.ethers as unknown as typeof import('ethers');
+    const hre = hardhat as any;
+    ethers = hre.ethers as unknown as typeof import('ethers');
+    provider = hre.ethers.provider as unknown as typeof provider;
   } catch {
     console.error('[verify-admin-roles] FATAL: hardhat ethers not available. Run via `npx hardhat run`.');
     process.exit(2);
@@ -162,11 +165,13 @@ async function main() {
 
     let actualMembers: string[];
     try {
-      const ctr = new ethers.Contract(address, accessControlAbi, ethers.provider);
-      const count = Number(await ctr.getRoleMemberCount(DEFAULT_ADMIN_ROLE));
+      if (!provider) throw new Error('provider not initialized');
+      const ctr = new ethers.Contract(address, accessControlAbi, provider);
+      const count = Number(await ctr?.getRoleMemberCount?.(DEFAULT_ADMIN_ROLE) ?? 0);
       actualMembers = [];
       for (let i = 0; i < count; i++) {
-        actualMembers.push(String(await ctr.getRoleMember(DEFAULT_ADMIN_ROLE, i)).toLowerCase());
+        const member = await ctr?.getRoleMember?.(DEFAULT_ADMIN_ROLE, i);
+        if (member) actualMembers.push(String(member).toLowerCase());
       }
     } catch (e) {
       console.error(`  [ERR] ${name} (${address}): ${e}`);

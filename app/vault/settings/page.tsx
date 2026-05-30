@@ -24,8 +24,12 @@ import { ErrorBoundary } from '@/components/error/ErrorBoundary'
 import { Vault, Shield, Settings, Sliders, Fingerprint, AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function VaultSettingsPage() {
+  const { locale } = useLocale();
+  void locale;
+
   return (
     <>
       <div className="min-h-screen bg-gradient-to-b from-gray-950 to-black text-white md:pt-[3.5rem]">

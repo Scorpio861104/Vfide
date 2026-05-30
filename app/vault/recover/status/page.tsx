@@ -36,6 +36,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { usePublicClient, useReadContract } from 'wagmi';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 import {
   ArrowLeft,
   Clock,
@@ -92,6 +93,9 @@ function formatStatus(status: RecoveryClaimStatus): { label: string; color: stri
 }
 
 export default function RecoveryStatusPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const searchParams = useSearchParams();
   const publicClient = usePublicClient();
 

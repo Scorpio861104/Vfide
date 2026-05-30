@@ -47,8 +47,16 @@ jest.mock('@/components/layout/Footer', () => ({
   Footer: () => <div data-testid="footer" />,
 }));
 
+jest.mock('@/lib/locale/LocaleProvider', () => ({
+  useLocale: () => ({ locale: 'en' }),
+}));
+
 jest.mock('@/components/vault/TransactionHistory', () => ({
   TransactionHistory: () => <div data-testid="transaction-history" />,
+}));
+
+jest.mock('@/components/vault/VaultPendingChangesBanner', () => ({
+  VaultPendingChangesBanner: () => <div data-testid="vault-pending-changes-banner" />,
 }));
 
 jest.mock('@/components/ui/Skeleton', () => ({
@@ -72,6 +80,10 @@ jest.mock('@/hooks/useVaultHub', () => ({
 
 jest.mock('@/hooks/useVaultRecovery', () => ({
   useVaultRecovery: () => mockVaultRecoveryState,
+}));
+
+jest.mock('@/hooks/useRequireAppLock', () => ({
+  useRequireAppLock: () => jest.fn(async () => true),
 }));
 
 jest.mock('@/lib/vfide-hooks', () => ({
@@ -105,6 +117,8 @@ jest.mock('wagmi', () => ({
   useAccount: () => ({ address: mockAddress }),
   useWriteContract: () => ({ writeContractAsync: mockWriteContractAsync }),
   useChainId: () => 1,
+  usePublicClient: () => ({}),
+  useWatchContractEvent: () => undefined,
   useSignTypedData: () => ({ signTypedDataAsync: jest.fn() }),
   useReadContract: (args: { functionName?: string }) => {
     if (args?.functionName === 'balanceOf') {
@@ -143,6 +157,9 @@ jest.mock('wagmi', () => ({
 
 jest.mock('viem', () => ({
   isAddress: (value: string) => /^0x[a-fA-F0-9]{40}$/.test(value),
+  parseAbiItem: (_signature: string) => ({}),
+  toBytes: (value: string) => new TextEncoder().encode(value),
+  keccak256: (_value: Uint8Array | string) => '0x' + '1'.repeat(64),
   parseUnits: (value: string) => BigInt(Math.floor(parseFloat(value || '0') * 1e18)),
   formatUnits: (value: bigint) => String(Number(value) / 1e18),
   maxUint256: (1n << 256n) - 1n,
@@ -171,20 +188,30 @@ jest.mock('lucide-react', () => {
   const Icon = ({ className }: { className?: string }) => <span className={className}>icon</span>;
   return {
     Shield: Icon,
+    ShieldCheck: Icon,
+    ShieldOff: Icon,
     AlertTriangle: Icon,
+    Info: Icon,
     Lock: Icon,
     Clock: Icon,
     Plus: Icon,
     UserPlus: Icon,
     Users: Icon,
+    Inbox: Icon,
+    Download: Icon,
+    RotateCcw: Icon,
+    Trash2: Icon,
     Key: Icon,
     Heart: Icon,
     ArrowDownToLine: Icon,
     ArrowUpFromLine: Icon,
+    ChevronDown: Icon,
+    ChevronUp: Icon,
     CreditCard: Icon,
     Clock3: Icon,
     RefreshCw: Icon,
     CheckCircle2: Icon,
+    XCircle: Icon,
     Play: Icon,
     TimerReset: Icon,
     Zap: Icon,
@@ -275,40 +302,18 @@ describe('Vault page logic pathways', () => {
     expect(mockShowToast).toHaveBeenCalledWith('Vault created successfully!', 'success');
   });
 
-  it('blocks invalid next-of-kin address before contract call', async () => {
+  it('hides legacy next-of-kin controls in CardBound mode', () => {
     renderVaultPage();
 
-    const kinInput = screen.getAllByRole('textbox')[0] as HTMLInputElement;
-    expect(kinInput).toBeTruthy();
-
-    fireEvent.change(kinInput, {
-      target: { value: 'invalid-address' },
-    });
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Set Next of Kin/i })).not.toBeDisabled();
-    });
-    fireEvent.click(screen.getByRole('button', { name: /Set Next of Kin/i }));
-
-    expect(mockSetNextOfKinAddress).not.toHaveBeenCalled();
-    expect(mockShowToast).toHaveBeenCalledWith('Invalid address format', 'error');
+    expect(screen.queryByRole('button', { name: /Set Next of Kin/i })).toBeNull();
+    expect(screen.queryByText(/Next of Kin \(Inheritance\)/i)).toBeNull();
   });
 
-  it('blocks invalid guardian address before contract call', async () => {
+  it('hides legacy add-guardian action and routes to guardians dashboard', () => {
     renderVaultPage();
 
-    const guardianInput = screen.getAllByRole('textbox')[1] as HTMLInputElement;
-    expect(guardianInput).toBeTruthy();
-
-    fireEvent.change(guardianInput, {
-      target: { value: 'bad-guardian' },
-    });
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Add Guardian/i })).not.toBeDisabled();
-    });
-    fireEvent.click(screen.getByRole('button', { name: /Add Guardian/i }));
-
-    expect(mockAddGuardian).not.toHaveBeenCalled();
-    expect(mockShowToast).toHaveBeenCalledWith('Invalid address format', 'error');
+    expect(screen.queryByRole('button', { name: /Add Guardian/i })).toBeNull();
+    expect(screen.getByRole('link', { name: /Guardians dashboard/i })).toHaveAttribute('href', '/guardians');
   });
 
   it('shows a connect wallet button in the not-connected state', () => {
@@ -381,7 +386,7 @@ describe('Vault page logic pathways', () => {
     expect(screen.getByRole('button', { name: /Update Threshold/i })).toBeTruthy();
     expect(screen.queryByText(/Next of Kin \(Inheritance\)/i)).toBeNull();
     expect(screen.getByText(/CardBound Guardian Setup/i)).toBeTruthy();
-    expect(screen.getByText(/Manage guardian setup and post-setup guardian changes from the Guardians dashboard/i)).toBeTruthy();
+    expect(screen.getByText(/supports CardBound timelocks and setup completion/i)).toBeTruthy();
     expect(screen.queryByRole('button', { name: /Add Guardian/i })).toBeNull();
   });
 });

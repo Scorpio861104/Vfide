@@ -5,6 +5,9 @@ import type React from 'react';
 const mockCreateVault = jest.fn(async () => {});
 const mockWriteContractAsync = jest.fn(async (_config?: Record<string, unknown>) => '0xhash');
 const mockWaitForTransactionReceipt = jest.fn(async () => ({}));
+const mockPublicClient = {
+  waitForTransactionReceipt: mockWaitForTransactionReceipt,
+};
 const mockFetch: jest.MockedFunction<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>> = jest.fn();
 
 let mockVaultHubState: {
@@ -57,8 +60,14 @@ jest.mock('@/components/layout/Footer', () => ({
   Footer: () => <div data-testid="footer" />,
 }));
 
+jest.mock('@/lib/locale/LocaleProvider', () => ({
+  useLocale: () => ({ locale: 'en' }),
+}));
+
 jest.mock('viem', () => ({
   isAddress: (value: string) => /^0x[a-fA-F0-9]{40}$/.test(value),
+  toBytes: (value: string) => new TextEncoder().encode(value),
+  keccak256: (_value: Uint8Array | string) => '0x' + '2'.repeat(64),
 }));
 
 jest.mock('@/hooks/useVaultHub', () => ({
@@ -70,6 +79,11 @@ jest.mock('@/hooks/useVaultRecovery', () => ({
 }));
 
 jest.mock('@/lib/contracts', () => ({
+  CONTRACT_ADDRESSES: {
+    VaultHub: '0x2222222222222222222222222222222222222222',
+    VFIDEToken: '0x1111111111111111111111111111111111111111',
+  },
+  isConfiguredContractAddress: () => true,
   USER_VAULT_ABI: [],
   isCardBoundVaultMode: () => false,
   ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
@@ -80,6 +94,7 @@ jest.mock('wagmi', () => ({
     isConnected: true,
     address: '0x1111111111111111111111111111111111111111' as const,
   }),
+  useChainId: () => 1,
   useReadContract: ({ functionName }: { functionName: string }) => {
     if (functionName === 'owner') {
       return { data: mockInboxVaultState.owner };
@@ -102,9 +117,7 @@ jest.mock('wagmi', () => ({
     writeContractAsync: mockWriteContractAsync,
     isPending: false,
   }),
-  usePublicClient: () => ({
-    waitForTransactionReceipt: mockWaitForTransactionReceipt,
-  }),
+  usePublicClient: () => mockPublicClient,
   useSignMessage: () => ({
     signMessageAsync: jest.fn(),
   }),
@@ -207,36 +220,28 @@ describe('Guardians page Next of Kin inbox', () => {
     );
   });
 
-  it('submits Next of Kin fraud report from inbox card', async () => {
+  it('tracks a vault from the Inheritance tab', async () => {
     renderGuardiansPage();
 
-    fireEvent.click(screen.getByRole('tab', { name: /Next of Kin/i }));
+    fireEvent.click(screen.getByRole('tab', { name: /Inheritance/i }));
+
+    expect(screen.getByText(/No vaults tracked yet\. Add a vault address above\./i)).toBeTruthy();
 
     const inboxInputs = await screen.findAllByRole('textbox');
     fireEvent.change(inboxInputs[0], {
       target: { value: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /Add Vault to Kin Inbox/i }));
-
-    const reportButton = await screen.findByRole('button', { name: /Report Fraud/i });
-    fireEvent.click(reportButton);
+    fireEvent.click(screen.getByRole('button', { name: /Track Vault/i }));
 
     await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalledWith(
-        '/api/security/next-of-kin-fraud-events',
-        expect.objectContaining({ method: 'POST' })
-      );
+      expect(screen.queryByText(/No vaults tracked yet\. Add a vault address above\./i)).toBeNull();
     });
 
-    const firstCall = mockFetch.mock.calls[0] as [RequestInfo | URL, RequestInit | undefined] | undefined;
-    const init = firstCall?.[1];
-    const parsed = JSON.parse(String(init?.body));
-    expect(parsed.source).toBe('next-of-kin-inbox');
-    expect(parsed.vault).toBe('0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb');
-    expect(parsed.nextOfKin).toBe('0x1111111111111111111111111111111111111111');
+    const updatedInputs = screen.getAllByRole('textbox');
+    expect((updatedInputs[0] as HTMLInputElement).value).toBe('');
   });
 
-  it('keeps role-gated inbox actions disabled for unrelated wallet', async () => {
+  it('hides legacy next-of-kin action buttons in current inheritance UI', async () => {
     mockInboxVaultState = {
       owner: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
       nextOfKin: '0x9999999999999999999999999999999999999999',
@@ -247,38 +252,23 @@ describe('Guardians page Next of Kin inbox', () => {
 
     renderGuardiansPage();
 
-    fireEvent.click(screen.getByRole('tab', { name: /Next of Kin/i }));
+    fireEvent.click(screen.getByRole('tab', { name: /Inheritance/i }));
 
     const inboxInputs = await screen.findAllByRole('textbox');
     fireEvent.change(inboxInputs[0], {
       target: { value: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /Add Vault to Kin Inbox/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Track Vault/i }));
 
-    const requestBtn = await screen.findByRole('button', { name: /Request \(Next of Kin\)/i });
-    const finalizeButtons = screen.getAllByRole('button', { name: /Finalize \(Next of Kin\)/i });
-    const finalizeBtn = finalizeButtons[finalizeButtons.length - 1]!;
-    const approveButtons = screen.getAllByRole('button', { name: /Approve \(Guardian\)/i });
-    const approveBtn = approveButtons[approveButtons.length - 1]!;
-    const cancelVoteButtons = screen.getAllByRole('button', { name: /Cancel Vote \(Guardian\)/i });
-    const cancelVoteBtn = cancelVoteButtons[cancelVoteButtons.length - 1]!;
-    const denyButtons = screen.getAllByRole('button', { name: /Deny \(Owner\)/i });
-    const denyBtn = denyButtons.find((btn) => btn.className.includes('px-3 py-2')) ?? denyButtons[denyButtons.length - 1]!;
-    const cancelButtons = screen.getAllByRole('button', { name: /Cancel \(Owner\)/i });
-    const cancelBtn =
-      cancelButtons.find((btn) => btn.className.includes('px-3 py-2')) ??
-      cancelButtons[cancelButtons.length - 1]!;
-
-    expect(requestBtn.hasAttribute('disabled')).toBe(true);
-    expect(finalizeBtn.hasAttribute('disabled')).toBe(true);
-    expect(approveBtn.hasAttribute('disabled')).toBe(true);
-    expect(cancelVoteBtn.hasAttribute('disabled')).toBe(true);
-    expect(denyBtn.hasAttribute('disabled')).toBe(true);
-    // Current UI keeps owner cancel available even when other role-gated actions are disabled.
-    expect(cancelBtn.hasAttribute('disabled')).toBe(false);
+    expect(screen.queryByRole('button', { name: /Request \(Next of Kin\)/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Finalize \(Next of Kin\)/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Approve \(Guardian\)/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Cancel Vote \(Guardian\)/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Deny \(Owner\)/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Cancel \(Owner\)/i })).toBeNull();
   });
 
-  it('enables Next of Kin inbox actions for configured heir across claim states', async () => {
+  it('shows empty-action state when no inheritance actions are currently available', async () => {
     mockInboxVaultState = {
       owner: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
       nextOfKin: '0x1111111111111111111111111111111111111111',
@@ -287,68 +277,17 @@ describe('Guardians page Next of Kin inbox', () => {
       inheritance: [false, 0n, 2n, BigInt(Math.floor(Date.now() / 1000) + 3600), false],
     };
 
-    const firstRender = renderGuardiansPage();
+    renderGuardiansPage();
 
-    fireEvent.click(screen.getByRole('tab', { name: /Next of Kin/i }));
+    fireEvent.click(screen.getByRole('tab', { name: /Inheritance/i }));
     const inboxInputs = await screen.findAllByRole('textbox');
     fireEvent.change(inboxInputs[0], {
       target: { value: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /Add Vault to Kin Inbox/i }));
-
-    const requestBtn = await screen.findByRole('button', { name: /Request \(Next of Kin\)/i });
-    const finalizeButtons = screen.getAllByRole('button', { name: /Finalize \(Next of Kin\)/i });
-    const finalizeBtn = finalizeButtons[finalizeButtons.length - 1]!;
-
-    expect(requestBtn.hasAttribute('disabled')).toBe(false);
-    expect(finalizeBtn.hasAttribute('disabled')).toBe(true);
-
-    fireEvent.click(requestBtn);
+    fireEvent.click(screen.getByRole('button', { name: /Track Vault/i }));
 
     await waitFor(() => {
-      expect(mockWriteContractAsync).toHaveBeenCalledWith(
-        expect.objectContaining({
-          functionName: 'requestInheritance',
-          address: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
-        })
-      );
+      expect(screen.getByText(/No inheritance actions available for this vault right now\./i)).toBeTruthy();
     });
-
-    firstRender.unmount();
-    mockWriteContractAsync.mockClear();
-
-    mockInboxVaultState = {
-      ...mockInboxVaultState,
-      inheritance: [true, 1n, 2n, BigInt(Math.floor(Date.now() / 1000) + 3600), false],
-    };
-
-    const secondRender = renderGuardiansPage();
-
-    fireEvent.click(screen.getByRole('tab', { name: /Next of Kin/i }));
-    const inboxInputs2 = await screen.findAllByRole('textbox');
-    fireEvent.change(inboxInputs2[0], {
-      target: { value: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: /Add Vault to Kin Inbox/i }));
-
-    const requestBtnActive = await screen.findByRole('button', { name: /Request \(Next of Kin\)/i });
-    const finalizeButtonsActive = screen.getAllByRole('button', { name: /Finalize \(Next of Kin\)/i });
-    const finalizeBtnActive = finalizeButtonsActive[finalizeButtonsActive.length - 1]!;
-
-    expect(requestBtnActive.hasAttribute('disabled')).toBe(true);
-    expect(finalizeBtnActive.hasAttribute('disabled')).toBe(false);
-
-    fireEvent.click(finalizeBtnActive);
-
-    await waitFor(() => {
-      expect(mockWriteContractAsync).toHaveBeenCalledWith(
-        expect.objectContaining({
-          functionName: 'finalizeInheritance',
-          address: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
-        })
-      );
-    });
-
-    secondRender.unmount();
   });
 });

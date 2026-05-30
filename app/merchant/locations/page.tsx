@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useAccount } from 'wagmi';
 import { ArrowLeft, MapPin, Plus, CheckCircle2 } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 interface LocationRecord {
   id: string;
@@ -18,6 +19,9 @@ interface LocationRecord {
 }
 
 export default function MerchantLocationsPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address } = useAccount();
   const [locations, setLocations] = useState<LocationRecord[]>([]);
   const [loading, setLoading] = useState(true);

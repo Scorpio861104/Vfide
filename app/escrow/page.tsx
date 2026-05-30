@@ -12,6 +12,7 @@ import { ActiveTab } from './components/ActiveTab';
 import { CompletedTab } from './components/CompletedTab';
 import { CreateTab } from './components/CreateTab';
 import { DisputesTab } from './components/DisputesTab';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 type TabId = 'active' | 'create' | 'completed' | 'disputes';
 
@@ -23,6 +24,9 @@ const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
 ];
 
 export default function EscrowPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [activeTab, setActiveTab] = useState<TabId>('active');
 
   return (

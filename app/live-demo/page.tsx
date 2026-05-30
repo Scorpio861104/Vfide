@@ -17,8 +17,12 @@ import { LiveSystemStats } from '@/components/stats/LiveSystemStats'
 import { TransactionNotification, useTransactionNotifications } from '@/components/wallet/TransactionNotification'
 import { motion } from 'framer-motion'
 import { useAccount } from 'wagmi'
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function LiveDemoPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address, isConnected } = useAccount()
   const { notification, showNotification, closeNotification } = useTransactionNotifications()
   

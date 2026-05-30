@@ -9,8 +9,12 @@ import { ThemeSelector } from '@/components/theme/ThemeSelector';
 import { ThemeCustomizer } from '@/components/theme/ThemeCustomizer';
 import { SavedThemesManager } from '@/components/theme/SavedThemesManager';
 import { Palette, RotateCcw, Eye } from 'lucide-react';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function ThemeManagerPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { resetToDefault, isDirty, isSaved: _isSaved, exportAsCSS: _exportAsCSS } = useThemeManager();
   const [activeTab, setActiveTab] = useState<'presets' | 'customize' | 'saved'>(
     'presets'

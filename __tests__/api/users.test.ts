@@ -11,6 +11,18 @@ jest.mock('@/lib/auth/rateLimit', () => ({
 
 jest.mock('@/lib/auth/middleware', () => ({
   requireAuth: jest.fn(),
+  withAuth: (handler: (...args: any[]) => Promise<Response> | Response) => async (request: NextRequest, context?: unknown) => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { requireAuth } = require('@/lib/auth/middleware');
+    const auth = await requireAuth(request);
+    if (!auth?.user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    return handler(request, auth.user, context);
+  },
 }));
 
 jest.mock('@/lib/optimization/apiOptimization', () => ({
@@ -347,7 +359,7 @@ describe('/api/users', () => {
       const data = await response.json();
 
       expect(response.status).toBe(500);
-      expect(data.error).toBe('Failed to create/update user');
+      expect(data.error).toBe('Failed to create or update user');
     });
 
     it('should handle partial updates', async () => {

@@ -11,6 +11,7 @@ import { Footer } from '@/components/layout/Footer';
 import { ActiveTab } from './components/ActiveTab';
 import { BorrowTab } from './components/BorrowTab';
 import { HistoryTab } from './components/HistoryTab';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 type TabId = 'borrow' | 'active' | 'history';
 
@@ -21,6 +22,9 @@ const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
 ];
 
 export default function FlashLoansPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [activeTab, setActiveTab] = useState<TabId>('borrow');
 
   return (

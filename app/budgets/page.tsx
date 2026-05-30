@@ -9,8 +9,12 @@ import { toast } from '@/lib/toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PieChart, PlusCircle, Edit2, Trash2, BarChart3 } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function BudgetsPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address } = useAccount();
   const { budgets, spendingByCategory, setBudget, removeBudget, loading: _loading } = useFinancialIntelligence(address);
   const [showCreateModal, setShowCreateModal] = useState(false);

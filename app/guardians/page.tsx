@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Shield, Users, Key, FileText, Clock, Heart } from "lucide-react";
 
 import type { TabType } from './components/types';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 // ── Lazy-loaded tab components (code-split per tab) ─────────────────────────
 const OverviewTab = lazy(() => import('./components/OverviewTab').then(m => ({ default: m.OverviewTab })));
@@ -46,6 +47,9 @@ function TabSkeleton() {
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 export default function GuardiansPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { isConnected } = useAccount();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const visibleTabs = TAB_CONFIG;

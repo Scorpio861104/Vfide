@@ -12,6 +12,7 @@ import { StarRating } from './components/StarRating';
 import { ProductGallery } from './components/ProductGallery';
 import { ProductInfo } from './components/ProductInfo';
 import { RelatedProducts } from './components/RelatedProducts';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 interface ProductImage { url: string; alt?: string }
 interface Product {
@@ -25,6 +26,9 @@ interface Product {
 }
 
 export default function ProductDetailPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const params = useParams();
   const router = useRouter();
   const productId = params?.id as string;

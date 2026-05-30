@@ -10,8 +10,12 @@ import { Search, SlidersHorizontal, Grid, List, Loader2, Package } from 'lucide-
 import { FilterContent } from './components/FilterContent';
 import { ProductGridCard } from './components/ProductGridCard';
 import { ProductListCard } from './components/ProductListCard';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function MarketplacePage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [query, setQuery] = useState('');
   const [view, setView] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);

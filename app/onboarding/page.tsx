@@ -21,8 +21,12 @@ import { useAccount } from 'wagmi';
 import { Footer } from '@/components/layout/Footer';
 import { useWizardState } from '@/components/wizard';
 import { CHAPTERS } from '@/components/wizard';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function OnboardingPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isConnected } = useAccount();

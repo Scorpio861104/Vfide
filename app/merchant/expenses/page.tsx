@@ -8,6 +8,7 @@ import { ArrowLeft, ReceiptText, TrendingDown, TrendingUp, Wallet } from 'lucide
 import { useAccount } from 'wagmi';
 import { Footer } from '@/components/layout/Footer';
 import { BusinessBooks, type BookTransaction } from '@/components/bookkeeping/BusinessBooks';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 interface ExpenseRecord {
   id: number;
@@ -51,6 +52,9 @@ function formatMoney(value: number, currency = 'USD') {
 }
 
 export default function MerchantExpensesPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address } = useAccount();
   const [expenses, setExpenses] = useState<ExpenseRecord[]>([]);
   const [revenueSeries, setRevenueSeries] = useState<RevenuePoint[]>([]);

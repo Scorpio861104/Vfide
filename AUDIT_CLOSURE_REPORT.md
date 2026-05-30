@@ -1,5 +1,42 @@
 # VFIDE Audit Closure Report
 
+## Frontend Audit Addendum (2026-05-29)
+
+This addendum captures the latest frontend-wide verification pass requested after the i18n enrichment rollout.
+
+### What was re-validated
+
+- Type safety gate: `npm run typecheck` passes.
+- Page i18n baseline gate: `npm run check:i18n:pages` passes (`129` changed page files include i18n markers).
+- Environment validation gate: `npm run validate:env` executed.
+- Frontend/API/DB wiring gate: `npm run validate:frontend` executed.
+- Route coverage audit: `npm run audit:frontend:page-coverage` executed.
+
+### Provider wiring verification
+
+- Root provider composition is centralized in [lib/providers/CoreProviders.tsx](lib/providers/CoreProviders.tsx), mounted from [app/layout.tsx](app/layout.tsx).
+- Web3/session/security provider stack remains intact in [lib/providers/Web3Providers.tsx](lib/providers/Web3Providers.tsx) (wagmi, RainbowKit, React Query, auth/security managers).
+- Route-group feature providers remain scoped correctly in [lib/providers/FeatureProviders.tsx](lib/providers/FeatureProviders.tsx).
+- Security entrypoint remains proxy-based (`proxy.ts`) and `validate:frontend` confirmed nonce/CSP/CSRF/body-limit/RLS wiring.
+
+### Findings from this pass
+
+1. **Blocking config gap (deployment readiness):** `APP_ORIGIN` is missing in the current environment (`validate:env` hard error).
+2. **Coverage gap (quality risk):** frontend route coverage is currently `79/135` with `56` routes lacking direct page tests, reported in [FRONTEND_PAGE_COVERAGE_AUDIT.md](FRONTEND_PAGE_COVERAGE_AUDIT.md).
+3. **Non-blocking optional env gaps:** monitoring/storage/messaging and some optional web3 vars are unset in current local environment (warn-only in this mode).
+
+### Go/No-Go status (frontend)
+
+- **Code health:** GO (typecheck and i18n guard are green).
+- **Operational readiness for production:** **NO-GO** until `APP_ORIGIN` is set and production env checklist is satisfied.
+- **Traffic-readiness confidence:** CONDITIONAL GO for currently covered flows, with explicit risk from missing direct tests on the 56 uncovered routes.
+
+### Immediate closure actions required
+
+- Set `APP_ORIGIN` in deployment environment (aligned to canonical app origin).
+- Re-run `npm run validate:env` in deploy-like env and require zero errors.
+- Burn down missing direct route tests from [FRONTEND_PAGE_COVERAGE_AUDIT.md](FRONTEND_PAGE_COVERAGE_AUDIT.md), prioritizing dynamic and funds/security-critical routes.
+
 **Date:** 2026-05-14
 **Snapshot:** `Vfide-main__20_.zip`
 **Audit scope:** Phase 1 (Solidity), Phase 2 (Backend/API), Phase 3 (Frontend)

@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { History, LayoutDashboard, PlusCircle, Waves } from 'lucide-react';
 import { useState } from 'react';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 import { Footer } from '@/components/layout/Footer';
 
@@ -21,6 +22,9 @@ const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
 ];
 
 export default function PayrollPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [activeTab, setActiveTab] = useState<TabId>('dashboard');
 
   return (

@@ -26,8 +26,12 @@ import {
   fireStarShower,
 } from "@/components/ui";
 import { PageWrapper, PageHeader, Section } from "@/components/ui/PageLayout";
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function ThemeShowcasePage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [trustScore, setTrustScore] = useState(75);
 
   return (

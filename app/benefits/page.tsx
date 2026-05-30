@@ -13,6 +13,7 @@ import { OverviewTab } from './components/OverviewTab';
 import { RewardsTab } from './components/RewardsTab';
 import { StatsTab } from './components/StatsTab';
 import { TiersTab } from './components/TiersTab';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 const TABS = [
   { id: 'overview', label: 'Overview',          icon: Gift     },
@@ -24,6 +25,9 @@ const TABS = [
 type TabId = typeof TABS[number]['id'];
 
 export default function BenefitsPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const { isConnected, address } = useAccount();
 

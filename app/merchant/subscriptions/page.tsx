@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useAccount } from 'wagmi';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 import {
   ArrowLeft,
   Repeat,
@@ -50,6 +51,9 @@ const INTERVAL_LABEL: Record<Interval, string> = {
 const ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
 
 export default function MerchantSubscriptionsPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address } = useAccount();
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [loading, setLoading] = useState(false);

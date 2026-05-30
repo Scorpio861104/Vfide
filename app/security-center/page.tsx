@@ -12,6 +12,7 @@ import { useBiometricAuth } from '@/hooks/useBiometricAuth';
 import { useSecurityLogs } from '@/hooks/useSecurityLogs';
 import { useThreatDetection } from '@/hooks/useThreatDetection';
 import { Shield, Fingerprint, FileText, AlertTriangle, LayoutDashboard, ChevronRight, Search, Lock } from 'lucide-react';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 type TabView = 'overview' | 'biometric' | 'logs' | 'threats';
 
@@ -23,6 +24,9 @@ const TABS = [
 ];
 
 export default function SecurityCenterPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [activeTab, setActiveTab] = useState<TabView>('overview');
   const biometric = useBiometricAuth();
   const logs = useSecurityLogs();

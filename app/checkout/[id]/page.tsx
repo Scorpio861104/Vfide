@@ -22,6 +22,7 @@ import { Shield, Clock, CheckCircle, AlertTriangle, FileText, ExternalLink, Copy
 // v19.10 BCOMPAT-1 FIX: cross-browser clipboard helper.
 import { copyToClipboardSafe } from '@/lib/clipboardSafe';
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 interface InvoiceItem {
   description: string;
@@ -115,6 +116,9 @@ function formatEstimatedLocalCurrency(amount: number, currency: string): string 
 }
 
 export default function CheckoutPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const params = useParams();
   const paymentLinkId = params?.id as string;
   const { address, isConnected, chainId } = useAccount();

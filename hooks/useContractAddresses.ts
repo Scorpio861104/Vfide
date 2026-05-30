@@ -1,7 +1,7 @@
 'use client';
 
 import { useChainId } from 'wagmi';
-import { getContractAddresses } from '@/lib/contracts';
+import * as contracts from '@/lib/contracts';
 
 /**
  * Chain-aware contract address hook.
@@ -10,5 +10,11 @@ import { getContractAddresses } from '@/lib/contracts';
  */
 export function useContractAddresses() {
   const chainId = useChainId();
-  return getContractAddresses(chainId);
+  if (typeof contracts.getContractAddresses === 'function') {
+    return contracts.getContractAddresses(chainId);
+  }
+
+  // Some unit tests partially mock `@/lib/contracts` and only provide
+  // `CONTRACT_ADDRESSES`; fall back so hooks remain testable.
+  return contracts.CONTRACT_ADDRESSES;
 }

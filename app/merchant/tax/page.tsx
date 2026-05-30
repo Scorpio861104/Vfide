@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAccount } from 'wagmi';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 import {
   ArrowLeft,
   Percent,
@@ -47,6 +48,9 @@ function formatJurisdiction(t: TaxRate): string {
 // ── Page ────────────────────────────────────────────────────────────────────
 
 export default function MerchantTaxPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address } = useAccount();
   const [rates, setRates] = useState<TaxRate[]>([]);
   const [loading, setLoading] = useState(false);

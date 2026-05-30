@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useAccount } from 'wagmi';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 import {
   ArrowLeft,
   Package,
@@ -50,6 +51,9 @@ const LOW_STOCK_THRESHOLD = 5;
 // ── Page ────────────────────────────────────────────────────────────────────
 
 export default function MerchantInventoryPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address } = useAccount();
   const [products, setProducts] = useState<Product[]>([]);
   const [error, setError] = useState<string | null>(null);

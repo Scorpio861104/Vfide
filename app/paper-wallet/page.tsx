@@ -8,6 +8,7 @@ import { Footer } from '@/components/layout/Footer';
 
 import { GenerateTab } from './components/GenerateTab';
 import { GuideTab } from './components/GuideTab';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 type TabId = 'generate' | 'guide';
 
@@ -17,6 +18,9 @@ const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
 ];
 
 export default function PaperWalletPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [activeTab, setActiveTab] = useState<TabId>('generate');
 
   return (

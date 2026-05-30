@@ -13,6 +13,7 @@ import { CONTRACT_ADDRESSES, DevReserveVestingABI, isConfiguredContractAddress }
 import { ClaimTab } from './components/ClaimTab';
 import { OverviewTab } from './components/OverviewTab';
 import { ScheduleTab } from './components/ScheduleTab';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 const TABS = [
   { id: 'overview',  label: 'Overview',  icon: Clock    },
@@ -26,6 +27,9 @@ const VESTING_ADDRESS = CONTRACT_ADDRESSES.DevReserveVesting;
 const VESTING_ABI = DevReserveVestingABI;
 
 export default function VestingPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const { isConnected, address } = useAccount();
   const isAvailable = isConfiguredContractAddress(VESTING_ADDRESS);

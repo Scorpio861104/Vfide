@@ -12,6 +12,7 @@ import { FutureReleaseBanner } from '@/components/feedback/FutureReleaseBanner';
 import { ActiveTab } from './components/ActiveTab';
 import { CreateTab } from './components/CreateTab';
 import { HistoryTab } from './components/HistoryTab';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 type TabId = 'active' | 'create' | 'history';
 
@@ -22,6 +23,9 @@ const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
 ];
 
 export default function SubscriptionsPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [activeTab, setActiveTab] = useState<TabId>('active');
 
   return (

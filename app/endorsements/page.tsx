@@ -12,8 +12,12 @@ import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts
 import { SeerSocialABI, SeerViewABI } from '@/lib/abis'
 import { formatDistanceToNow } from 'date-fns'
 import { safeBigIntToNumber, ensureArray } from '@/lib/validation'
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function EndorsementsPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address } = useAccount()
   const isSeerViewAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.SeerView)
   const isSeerSocialAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.SeerSocial)

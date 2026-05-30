@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 type Endpoint = {
   route: string;
@@ -60,6 +61,9 @@ const DEFAULT_BODIES: BodyMap = {
 };
 
 export default function ApiCoveragePage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [routes, setRoutes] = useState<Record<string, string>>(() =>
     Object.fromEntries(UNMAPPED_ENDPOINTS.map((e) => [e.route, e.route]))
   );

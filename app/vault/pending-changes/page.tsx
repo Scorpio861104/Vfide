@@ -42,6 +42,7 @@ export const dynamic = 'force-dynamic';
 import { useState } from 'react';
 import Link from 'next/link';
 import { useAccount, useReadContract } from 'wagmi';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 import {
   ArrowLeft,
   Clock,
@@ -81,6 +82,9 @@ function formatCountdown(effectiveAt: number, canApply: boolean): string {
 const MANAGED_ELSEWHERE: PendingChangeId[] = ['guardian', 'trustee'];
 
 export default function PendingChangesPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address: connectedAddress } = useAccount();
   const { vaultAddress, hasVault, isLoadingVault } = useVaultHub();
 

@@ -19,6 +19,7 @@ import { Footer } from '@/components/layout/Footer';
 import RevenueSplitterABI from '@/lib/abis/RevenueSplitter.json';
 import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
 import { toast } from '@/lib/toast';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 /**
  * RevenueSplitter is deployed per-merchant (or per-org). There's no
@@ -47,6 +48,9 @@ interface PayeeRow {
 }
 
 export default function SplitterPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [splitterInput, setSplitterInput] = useState('');
   const [tokenInput, setTokenInput] = useState<string>(CONTRACT_ADDRESSES.VFIDEToken ?? '');
   const [submitting, setSubmitting] = useState(false);

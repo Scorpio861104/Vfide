@@ -3,8 +3,59 @@
 import { Footer } from "@/components/layout/Footer";
 import { motion } from "framer-motion";
 import { Shield, Users, Zap, Heart } from "lucide-react";
+import { useLocale } from '@/lib/locale/LocaleProvider';
+
+const ABOUT_COPY = {
+  'en-US': {
+    badge: 'Protocol Story',
+    title: 'About VFIDE',
+    hero: 'A decentralized payment protocol built on integrity, not wealth. Where trust is earned through actions, not purchased with capital.',
+    missionTitle: 'Our Mission',
+    missionBody1: 'VFIDE exists to create a financial system that values integrity over wealth. We believe that trust should be earned through actions, not bought with money.',
+    missionBody2: "Our ProofScore system rewards good behavior, community participation, and honest dealings - not the size of your wallet. A user with 1 VFIDE token can have the same influence as someone with 500,000 tokens if they've demonstrated genuine trust and contribution.",
+    openSourceTitle: 'Open Source & Transparent',
+    openSourceBody: 'All VFIDE smart contracts are open source, professionally audited, and deployed on public blockchains. Verify everything yourself.',
+    githubCta: 'View Source Code on GitHub',
+  },
+  'es-ES': {
+    badge: 'Historia del protocolo',
+    title: 'Sobre VFIDE',
+    hero: 'Un protocolo de pagos descentralizado construido sobre integridad, no riqueza. Donde la confianza se gana con acciones, no con capital.',
+    missionTitle: 'Nuestra misión',
+    missionBody1: 'VFIDE existe para crear un sistema financiero que valore la integridad por encima de la riqueza. Creemos que la confianza debe ganarse con acciones, no comprarse con dinero.',
+    missionBody2: 'Nuestro sistema ProofScore recompensa el buen comportamiento, la participación comunitaria y los tratos honestos, no el tamaño de tu billetera. Un usuario con 1 token VFIDE puede tener la misma influencia que alguien con 500,000 tokens si demuestra confianza y aporte reales.',
+    openSourceTitle: 'Código abierto y transparencia',
+    openSourceBody: 'Todos los contratos inteligentes de VFIDE son de código abierto, auditados profesionalmente y desplegados en blockchains públicas. Verifícalo todo por tu cuenta.',
+    githubCta: 'Ver código fuente en GitHub',
+  },
+  'fr-FR': {
+    badge: 'Histoire du protocole',
+    title: 'À propos de VFIDE',
+    hero: 'Un protocole de paiement décentralisé fondé sur l’intégrité, pas sur la richesse. Ici, la confiance se gagne par les actions, pas par le capital.',
+    missionTitle: 'Notre mission',
+    missionBody1: 'VFIDE existe pour créer un système financier qui valorise l’intégrité plutôt que la richesse. Nous pensons que la confiance doit être gagnée par les actions.',
+    missionBody2: "Notre système ProofScore récompense les bons comportements, la participation communautaire et les échanges honnêtes, pas la taille du portefeuille.",
+    openSourceTitle: 'Open source et transparent',
+    openSourceBody: 'Tous les contrats intelligents VFIDE sont open source, audités et déployés sur des blockchains publiques.',
+    githubCta: 'Voir le code source sur GitHub',
+  },
+  'de-DE': {
+    badge: 'Protokollgeschichte',
+    title: 'Über VFIDE',
+    hero: 'Ein dezentrales Zahlungsprotokoll, das auf Integrität statt Vermögen basiert. Vertrauen wird durch Handeln verdient.',
+    missionTitle: 'Unsere Mission',
+    missionBody1: 'VFIDE schafft ein Finanzsystem, das Integrität über Vermögen stellt. Vertrauen soll durch Verhalten entstehen, nicht gekauft werden.',
+    missionBody2: 'Unser ProofScore belohnt gutes Verhalten, Gemeinschaftsbeiträge und faire Interaktionen, nicht die Wallet-Größe.',
+    openSourceTitle: 'Open Source & transparent',
+    openSourceBody: 'Alle VFIDE Smart Contracts sind Open Source, professionell geprüft und öffentlich deployt.',
+    githubCta: 'Quellcode auf GitHub ansehen',
+  },
+};
 
 export default function AboutPage() {
+  const { locale } = useLocale();
+  const copy = (ABOUT_COPY as Record<string, typeof ABOUT_COPY['en-US']>)[locale] ?? ABOUT_COPY['en-US'];
+
   return (
     <>
       
@@ -26,14 +77,13 @@ export default function AboutPage() {
               className="text-center max-w-4xl mx-auto"
             >
               <div className="badge-live mb-6 justify-center">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> Protocol Story
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> {copy.badge}
               </div>
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-zinc-100 mb-6 tracking-tight">
-                About VFIDE
+                {copy.title}
               </h1>
               <p className="text-xl md:text-2xl text-zinc-400 leading-relaxed">
-                A decentralized payment protocol built on integrity, not wealth.
-                Where trust is earned through actions, not purchased with capital.
+                {copy.hero}
               </p>
             </motion.div>
           </div>
@@ -49,16 +99,13 @@ export default function AboutPage() {
               className="bg-zinc-800 border border-zinc-700 rounded-xl p-8 mb-12"
             >
               <h2 className="text-3xl font-[family-name:var(--font-display)] font-bold text-cyan-400 mb-6">
-                Our Mission
+                {copy.missionTitle}
               </h2>
               <p className="text-lg text-zinc-100 leading-relaxed mb-4">
-                VFIDE exists to create a financial system that values <strong>integrity over wealth</strong>. 
-                We believe that trust should be earned through actions, not bought with money.
+                {copy.missionBody1}
               </p>
               <p className="text-lg text-zinc-400 leading-relaxed">
-                Our ProofScore system rewards good behavior, community participation, and honest dealings - 
-                not the size of your wallet. A user with 1 VFIDE token can have the same influence as 
-                someone with 500,000 tokens if they&apos;ve demonstrated genuine trust and contribution.
+                {copy.missionBody2}
               </p>
             </motion.div>
 
@@ -150,10 +197,9 @@ export default function AboutPage() {
         {/* Open Source */}
         <section className="py-16 bg-zinc-800">
           <div className="container mx-auto px-4 max-w-4xl text-center">
-            <h2 className="text-3xl font-bold text-zinc-100 mb-4">Open Source & Transparent</h2>
+            <h2 className="text-3xl font-bold text-zinc-100 mb-4">{copy.openSourceTitle}</h2>
             <p className="text-zinc-400 mb-8">
-              All VFIDE smart contracts are open source, professionally audited, and deployed on public blockchains.
-              Verify everything yourself.
+              {copy.openSourceBody}
             </p>
             <a
               href="https://github.com/Scorpio861104/Vfide"
@@ -161,7 +207,7 @@ export default function AboutPage() {
               rel="noopener noreferrer"
               className="inline-block px-8 py-3 bg-gradient-to-r from-cyan-400 to-blue-500 text-zinc-900 rounded-lg font-bold hover:scale-105 transition-transform"
             >
-              View Source Code on GitHub
+              {copy.githubCta}
             </a>
           </div>
         </section>

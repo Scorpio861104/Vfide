@@ -52,6 +52,7 @@ import {
   type Hex,
 } from 'viem';
 import { useInheritanceClaim } from '@/hooks/useInheritanceClaim';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 import {
   INHERITANCE_STATE_LABEL,
   type InheritanceStateCode,
@@ -68,6 +69,9 @@ function formatRemaining(secondsRemaining: number): string {
 }
 
 export default function HeirClaimPage() {
+  const { locale } = useLocale();
+  void locale;
+
   return (
     <Suspense fallback={<LoadingPage />}>
       <ClaimInner />

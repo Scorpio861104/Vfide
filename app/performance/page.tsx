@@ -16,6 +16,7 @@ import { ErrorsTab } from './components/ErrorsTab';
 import { MetricsTab } from './components/MetricsTab';
 import { OverviewTab } from './components/OverviewTab';
 import { PagesTab } from './components/PagesTab';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 type TabId = 'overview' | 'metrics' | 'errors' | 'analytics' | 'pages';
 
@@ -33,6 +34,9 @@ const DEFAULT_ANALYTICS = {
 };
 
 export default function PerformancePage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const { metrics, isLoading, refreshMetrics } = usePerformanceMetrics();
   const { errors = [], errorStats = { unresolvedCount: 0 }, resolveError, clearErrors, exportErrors } = useErrorTracking();

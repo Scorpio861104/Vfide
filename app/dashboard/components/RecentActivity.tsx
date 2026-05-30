@@ -5,8 +5,22 @@ import { motion } from 'framer-motion';
 import { Activity, ArrowDownLeft, ArrowUpRight, Award, ChevronRight, Vote } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { useEffect, useState } from 'react';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 import { GlassCard, formatTimeAgo } from './shared';
+
+const ACTIVITY_COPY = {
+  'en-US': {
+    title: 'Recent Activity',
+    empty: 'No recent activity. Start transacting to see your history!',
+    viewAll: 'View All Activity',
+  },
+  'es-ES': {
+    title: 'Actividad reciente',
+    empty: 'Sin actividad reciente. Empieza a transaccionar para ver tu historial.',
+    viewAll: 'Ver toda la actividad',
+  },
+};
 
 type ActivityItem = {
   type: string;
@@ -18,6 +32,8 @@ type ActivityItem = {
 
 export function RecentActivitySection() {
   const { address } = useAccount();
+  const { locale } = useLocale();
+  const copy = (ACTIVITY_COPY as Record<string, typeof ACTIVITY_COPY['en-US']>)[locale] ?? ACTIVITY_COPY['en-US'];
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -41,7 +57,7 @@ export function RecentActivitySection() {
           (data.activities || []).slice(0, 4).map((activity: { type: string; description: string; timestamp: string }) => ({
             type: activity.type,
             desc: activity.description,
-            time: formatTimeAgo(new Date(activity.timestamp).getTime()),
+            time: formatTimeAgo(new Date(activity.timestamp).getTime(), locale),
             icon:
               activity.type === 'send'
                 ? ArrowUpRight
@@ -74,7 +90,7 @@ export function RecentActivitySection() {
     <GlassCard className="p-6" hover={false}>
       <h2 className="mb-6 flex items-center gap-2 text-xl font-bold text-white">
         <Activity className="text-cyan-400" size={24} />
-        Recent Activity
+        {copy.title}
       </h2>
       {isLoading ? (
         <div className="space-y-3">
@@ -89,7 +105,7 @@ export function RecentActivitySection() {
           ))}
         </div>
       ) : activities.length === 0 ? (
-        <p className="py-8 text-center text-white/60">No recent activity. Start transacting to see your history!</p>
+        <p className="py-8 text-center text-white/60">{copy.empty}</p>
       ) : (
         <div className="space-y-3">
           {activities.map((activity, index) => (
@@ -124,7 +140,7 @@ export function RecentActivitySection() {
       )}
       <div className="mt-4 text-center">
         <Link href="/explorer" className="inline-flex items-center gap-1 text-sm font-medium text-cyan-400 hover:text-cyan-300">
-          View All Activity <ChevronRight size={14} />
+          {copy.viewAll} <ChevronRight size={14} />
         </Link>
       </div>
     </GlassCard>

@@ -4,6 +4,7 @@ import { useAccount } from 'wagmi'
 import { TrustChallenges } from '@/app/proofscore/components/TrustChallenges'
 import { ScoreStoryFeed } from '@/app/proofscore/components/ScoreStoryFeed'
 import { ProofScoreVisualizer } from '@/components/trust/ProofScoreVisualizer'
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 const TIERS = [
   { tier: 'Risky',      min: 0,   max: 299, color: 'bg-red-500',    desc: 'No verified identity. High risk.' },
@@ -16,6 +17,9 @@ const TIERS = [
 ]
 
 export default function ProofScorePage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address } = useAccount()
 
   return (

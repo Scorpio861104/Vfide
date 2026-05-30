@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useAccount } from 'wagmi';
 import { ArrowLeft, DollarSign, Plus, X, Save } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 interface TipSettings {
   enabled: boolean;
@@ -21,6 +22,9 @@ interface TipTotals {
 }
 
 export default function MerchantTipsPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address } = useAccount();
   const [settings, setSettings] = useState<TipSettings>({
     enabled: true,

@@ -20,13 +20,45 @@
 
 let cachedLocale: string | null = null;
 
+export const LOCALE_STORAGE_KEY = 'vfide.user-locale';
+export const LEGACY_LOCALE_STORAGE_KEY = 'vfide_locale';
+
+export function getStoredLocale(): string | null {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    return localStorage.getItem(LOCALE_STORAGE_KEY) || localStorage.getItem(LEGACY_LOCALE_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function persistUserLocale(locale: string): void {
+  cachedLocale = locale;
+
+  if (typeof window === 'undefined') return;
+
+  try {
+    localStorage.setItem(LOCALE_STORAGE_KEY, locale);
+    // Backwards compatibility for existing sessions still reading legacy key.
+    localStorage.setItem(LEGACY_LOCALE_STORAGE_KEY, locale);
+  } catch {
+    // Ignore storage failures in strict/private browsing modes.
+  }
+}
+
 export function getUserLocale(): string {
   if (cachedLocale) return cachedLocale;
-  if (typeof navigator !== 'undefined') {
+  const stored = getStoredLocale();
+
+  if (stored) {
+    cachedLocale = stored;
+  } else if (typeof navigator !== 'undefined') {
     cachedLocale = navigator.language || navigator.languages?.[0] || 'en-US';
   } else {
     cachedLocale = 'en-US';
   }
+
   return cachedLocale;
 }
 

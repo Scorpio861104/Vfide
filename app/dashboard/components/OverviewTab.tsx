@@ -19,9 +19,49 @@ import {
 
 import { ProofScoreRing } from '@/components/ui/ProofScoreRing';
 import { CONTRACT_ADDRESSES, SeerABI, isConfiguredContractAddress } from '@/lib/contracts';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 import { RecentActivitySection } from './RecentActivity';
-import { GlassCard, QuickAction, containerVariants, ecosystemLoadout, itemVariants } from './shared';
+import { GlassCard, QuickAction, containerVariants, getEcosystemLoadout, itemVariants } from './shared';
+
+const OVERVIEW_COPY = {
+  'en-US': {
+    quickActionsTitle: 'Quick Actions',
+    quickActionsSubtitle: 'Jump straight into your most-used flows.',
+    loadoutTitle: 'Ecosystem Loadout',
+    loadoutStatus: 'Fully loaded',
+    loadoutSubtitle: 'Every core system is online and ready—move between vaults, governance, escrow, and credit in a single flow.',
+    proofScoreTitle: 'Your ProofScore',
+    scoreBreakdownTitle: 'Score Breakdown',
+    totalProofScoreLabel: 'Total ProofScore',
+    sendLabel: 'Send',
+    vaultLabel: 'Vault',
+    escrowLabel: 'Escrow',
+    payrollLabel: 'Payroll',
+    governanceLabel: 'Governance',
+    rewardsLabel: 'Rewards',
+    vaultActive: 'Vault active - score bonus applied',
+    noVault: 'No vault detected',
+  },
+  'es-ES': {
+    quickActionsTitle: 'Acciones rápidas',
+    quickActionsSubtitle: 'Entra directamente a tus flujos más usados.',
+    loadoutTitle: 'Carga del ecosistema',
+    loadoutStatus: 'Totalmente cargado',
+    loadoutSubtitle: 'Todos los sistemas clave están en línea: muévete entre vault, gobernanza, escrow y crédito en un solo flujo.',
+    proofScoreTitle: 'Tu ProofScore',
+    scoreBreakdownTitle: 'Desglose de score',
+    totalProofScoreLabel: 'ProofScore total',
+    sendLabel: 'Enviar',
+    vaultLabel: 'Vault',
+    escrowLabel: 'Escrow',
+    payrollLabel: 'Nómina',
+    governanceLabel: 'Gobernanza',
+    rewardsLabel: 'Recompensas',
+    vaultActive: 'Vault activo - bono de score aplicado',
+    noVault: 'No se detectó vault',
+  },
+};
 
 export function OverviewTab({
   proofscore,
@@ -32,6 +72,9 @@ export function OverviewTab({
   feeRate: number;
   address?: `0x${string}`;
 }) {
+  const { locale } = useLocale();
+  const copy = (OVERVIEW_COPY as Record<string, typeof OVERVIEW_COPY['en-US']>)[locale] ?? OVERVIEW_COPY['en-US'];
+  const ecosystemLoadout = getEcosystemLoadout(locale);
   const hasSeer = isConfiguredContractAddress(CONTRACT_ADDRESSES.Seer);
 
   const { data: breakdown } = useReadContract({
@@ -73,16 +116,16 @@ export function OverviewTab({
         <GlassCard className="p-6" hover={false}>
           <h2 className="mb-6 flex items-center gap-2 text-xl font-bold text-white">
             <Zap className="text-amber-400" size={24} />
-            Quick Actions
+            {copy.quickActionsTitle}
           </h2>
-          <p className="mb-5 text-sm text-white/50">Jump straight into your most-used flows.</p>
+          <p className="mb-5 text-sm text-white/50">{copy.quickActionsSubtitle}</p>
           <div className="grid grid-cols-3 gap-4 md:grid-cols-6">
-            <QuickAction icon={ArrowUpRight} label="Send" href="/pay" variant="primary" />
-            <QuickAction icon={Shield} label="Vault" href="/vault" />
-            <QuickAction icon={Lock} label="Escrow" href="/escrow" />
-            <QuickAction icon={Banknote} label="Payroll" href="/payroll" />
-            <QuickAction icon={Vote} label="Governance" href="/governance" />
-            <QuickAction icon={Gift} label="Rewards" href="/rewards" />
+            <QuickAction icon={ArrowUpRight} label={copy.sendLabel} href="/pay" variant="primary" />
+            <QuickAction icon={Shield} label={copy.vaultLabel} href="/vault" />
+            <QuickAction icon={Lock} label={copy.escrowLabel} href="/escrow" />
+            <QuickAction icon={Banknote} label={copy.payrollLabel} href="/payroll" />
+            <QuickAction icon={Vote} label={copy.governanceLabel} href="/governance" />
+            <QuickAction icon={Gift} label={copy.rewardsLabel} href="/rewards" />
           </div>
         </GlassCard>
       </motion.div>
@@ -92,12 +135,12 @@ export function OverviewTab({
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
             <h2 className="flex items-center gap-2 text-xl font-bold text-white">
               <Sparkles className="text-cyan-300" size={22} />
-              Ecosystem Loadout
+              {copy.loadoutTitle}
             </h2>
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300/80">Fully loaded</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300/80">{copy.loadoutStatus}</span>
           </div>
           <p className="mb-5 text-sm text-white/50">
-            Every core system is online and ready—move between vaults, governance, escrow, and credit in a single flow.
+            {copy.loadoutSubtitle}
           </p>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {ecosystemLoadout.map((item) => (
@@ -125,7 +168,7 @@ export function OverviewTab({
           <GlassCard className="p-6" hover={false}>
             <h2 className="mb-6 flex items-center gap-2 text-xl font-bold text-white">
               <TrendingUp className="text-cyan-400" size={24} />
-              Your ProofScore
+              {copy.proofScoreTitle}
             </h2>
             <div className="flex flex-col items-center py-6">
               <ProofScoreRing score={proofscore} size="lg" />
@@ -147,7 +190,7 @@ export function OverviewTab({
           <GlassCard className="p-6" hover={false}>
             <h2 className="mb-6 flex items-center gap-2 text-xl font-bold text-white">
               <Star className="text-amber-400" size={24} />
-              Score Breakdown
+              {copy.scoreBreakdownTitle}
             </h2>
             <div className="space-y-4">
               {breakdownRows.map((item, index) => (
@@ -183,13 +226,13 @@ export function OverviewTab({
               <div className="mt-4 flex items-center gap-2">
                 <Shield size={14} className={hasVault ? 'text-emerald-400' : 'text-gray-500'} />
                 <span className={`text-xs ${hasVault ? 'text-emerald-400' : 'text-gray-500'}`}>
-                  {hasVault ? 'Vault active — score bonus applied' : 'No vault detected'}
+                  {hasVault ? copy.vaultActive : copy.noVault}
                 </span>
               </div>
             )}
             <div className="mt-6 border-t border-white/10 pt-6">
               <div className="flex items-center justify-between">
-                <span className="text-white/60">Total ProofScore</span>
+                <span className="text-white/60">{copy.totalProofScoreLabel}</span>
                 <span className="text-2xl font-bold text-cyan-400">{proofscore}</span>
               </div>
             </div>

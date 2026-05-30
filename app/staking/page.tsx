@@ -20,6 +20,7 @@ import {
   useUnstake,
 } from '@/hooks/useStaking';
 import { toast } from '@/lib/toast';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 function shortAddress(addr: Address): string {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
@@ -49,6 +50,9 @@ function translateRevert(err: unknown, mode: 'stake' | 'unstake' | 'approve'): s
 }
 
 export default function StakingPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address: account, isConnected } = useAccount();
   const { LiquidityIncentives } = useContractAddresses();
   const { pools, isLoading: poolsLoading } = useAllPoolInfo();

@@ -1,4 +1,5 @@
 import { safeLocalStorage } from '@/lib/utils';
+import { LOCALE_STORAGE_KEY, LEGACY_LOCALE_STORAGE_KEY } from '@/lib/locale';
 
 export const SUPPORTED_LOCALES = ['en-US', 'en-GB', 'es-ES', 'fr-FR', 'de-DE'] as const;
 export type SupportedLocale = typeof SUPPORTED_LOCALES[number];
@@ -47,7 +48,8 @@ export function getBrowserLocale(): SupportedLocale {
   if (typeof window === 'undefined') return DEFAULT_LOCALE;
 
   const queryLocale = new URLSearchParams(window.location.search).get('lang');
-  const storedLocale = safeLocalStorage.getItem('vfide_locale');
+  const storedLocale = safeLocalStorage.getItem(LOCALE_STORAGE_KEY)
+    || safeLocalStorage.getItem(LEGACY_LOCALE_STORAGE_KEY);
   const navigatorLocale = typeof navigator !== 'undefined' ? navigator.language : DEFAULT_LOCALE;
 
   return normalizeLocale(queryLocale ?? storedLocale ?? navigatorLocale);
@@ -56,12 +58,15 @@ export function getBrowserLocale(): SupportedLocale {
 export function persistLocale(locale: string): SupportedLocale {
   const normalized = normalizeLocale(locale);
 
-  safeLocalStorage.setItem('vfide_locale', normalized);
+  safeLocalStorage.setItem(LOCALE_STORAGE_KEY, normalized);
+  // Keep legacy key for backwards compatibility while old code paths are retired.
+  safeLocalStorage.setItem(LEGACY_LOCALE_STORAGE_KEY, normalized);
 
   if (typeof document !== 'undefined') {
     document.documentElement.lang = getHtmlLang(normalized);
     document.documentElement.setAttribute('data-locale', normalized);
-    document.cookie = `vfide_locale=${normalized}; path=/; max-age=31536000; samesite=lax`;
+    document.cookie = `${LOCALE_STORAGE_KEY}=${normalized}; path=/; max-age=31536000; samesite=lax`;
+    document.cookie = `${LEGACY_LOCALE_STORAGE_KEY}=${normalized}; path=/; max-age=31536000; samesite=lax`;
   }
 
   return normalized;
@@ -77,31 +82,62 @@ export function pickLocaleCopy<T>(translations: TranslationMap<T>, locale: strin
 export interface SupportCopy {
   badge: string;
   heading: string;
-  description: string;
+  subtitle: string;
   languageLabel: string;
-  faqTitle: string;
-  faqDescription: string;
-  ticketsTitle: string;
-  ticketsDescription: string;
-  activeSuffix: string;
-  newTicketTitle: string;
-  newTicketDescription: string;
+  faqTabLabel: string;
+  ticketsTabLabel: string;
+  newTicketTabLabel: string;
+  faqItems: Array<{ question: string; answer: string }>;
   searchPlaceholder: string;
+  noFaqResults: string;
+  noTicketsMessage: string;
+  createTicketHint: string;
+  subjectPrefix: string;
+  ticketIdLabel: string;
+  supportTeamLabel: string;
+  youLabel: string;
+  selectTicketMessage: string;
+  connectPrompt: string;
+  subjectPlaceholder: string;
+  detailsPlaceholder: string;
+  submitTicketLabel: string;
 }
 
 const supportEnglish: SupportCopy = {
   badge: '24/7 Support',
   heading: 'Help & Support Center',
-  description: 'Find answers to common questions or open a support ticket. Our team is here to help you with any issues.',
+  subtitle: 'Find answers, manage tickets, and get direct support from the VFIDE team.',
   languageLabel: 'Language',
-  faqTitle: 'FAQ & Guides',
-  faqDescription: 'Browse common questions and tutorials',
-  ticketsTitle: 'My Tickets',
-  ticketsDescription: 'View and manage your support requests',
-  activeSuffix: 'active',
-  newTicketTitle: 'New Ticket',
-  newTicketDescription: 'Create a new support request',
+  faqTabLabel: 'FAQ',
+  ticketsTabLabel: 'My Tickets',
+  newTicketTabLabel: 'New Ticket',
+  faqItems: [
+    {
+      question: 'How do I connect my wallet?',
+      answer: 'Open the wallet menu, select your preferred wallet, and approve the VFIDE connection request.',
+    },
+    {
+      question: 'How does ProofScore work?',
+      answer: 'ProofScore rewards trustworthy activity, participation, and successful platform usage over time.',
+    },
+    {
+      question: 'How do I set up guardians?',
+      answer: 'Navigate to the guardians page, choose trusted contacts, and confirm the recovery configuration.',
+    },
+  ],
   searchPlaceholder: 'Search for answers...',
+  noFaqResults: 'No matching FAQs found.',
+  noTicketsMessage: 'No tickets yet. Create one from the new ticket tab.',
+  createTicketHint: 'Choose a ticket to see the conversation.',
+  subjectPrefix: 'Subject',
+  ticketIdLabel: 'Ticket ID',
+  supportTeamLabel: 'Support Team',
+  youLabel: 'You',
+  selectTicketMessage: 'Choose a ticket to see the conversation.',
+  connectPrompt: 'Connect your wallet to create support tickets.',
+  subjectPlaceholder: 'Brief summary of your issue',
+  detailsPlaceholder: 'Describe what happened, what you expected, and any transaction IDs.',
+  submitTicketLabel: 'Submit Ticket',
 };
 
 export const SUPPORT_TRANSLATIONS: TranslationMap<SupportCopy> = {
@@ -110,140 +146,195 @@ export const SUPPORT_TRANSLATIONS: TranslationMap<SupportCopy> = {
   'es-ES': {
     badge: 'Soporte 24/7',
     heading: 'Centro de ayuda y soporte',
-    description: 'Encuentra respuestas a preguntas comunes o abre un ticket de soporte. Nuestro equipo está aquí para ayudarte con cualquier problema.',
+    subtitle: 'Encuentra respuestas, administra tickets y recibe ayuda directa del equipo VFIDE.',
     languageLabel: 'Language',
-    faqTitle: 'Preguntas frecuentes y guías',
-    faqDescription: 'Consulta preguntas comunes y tutoriales',
-    ticketsTitle: 'Mis tickets',
-    ticketsDescription: 'Ver y gestionar tus solicitudes de soporte',
-    activeSuffix: 'activos',
-    newTicketTitle: 'Nuevo ticket',
-    newTicketDescription: 'Crear una nueva solicitud de soporte',
+    faqTabLabel: 'FAQ',
+    ticketsTabLabel: 'Mis tickets',
+    newTicketTabLabel: 'Nuevo ticket',
+    faqItems: [
+      {
+        question: '¿Cómo conecto mi billetera?',
+        answer: 'Abre el menú de billetera, elige tu billetera preferida y aprueba la solicitud de conexión de VFIDE.',
+      },
+      {
+        question: '¿Cómo funciona ProofScore?',
+        answer: 'ProofScore recompensa la actividad confiable, la participación y el uso exitoso de la plataforma con el tiempo.',
+      },
+      {
+        question: '¿Cómo configuro guardians?',
+        answer: 'Ve a la página de guardians, elige contactos de confianza y confirma la configuración de recuperación.',
+      },
+    ],
     searchPlaceholder: 'Buscar respuestas...',
+    noFaqResults: 'No se encontraron preguntas frecuentes.',
+    noTicketsMessage: 'Aún no tienes tickets. Crea uno desde la pestaña de nuevo ticket.',
+    createTicketHint: 'Elige un ticket para ver la conversación.',
+    subjectPrefix: 'Asunto',
+    ticketIdLabel: 'ID del ticket',
+    supportTeamLabel: 'Equipo de soporte',
+    youLabel: 'Tú',
+    selectTicketMessage: 'Elige un ticket para ver la conversación.',
+    connectPrompt: 'Conecta tu billetera para crear tickets de soporte.',
+    subjectPlaceholder: 'Resumen breve del problema',
+    detailsPlaceholder: 'Describe qué ocurrió, qué esperabas y cualquier ID de transacción.',
+    submitTicketLabel: 'Enviar ticket',
   },
   'fr-FR': {
     badge: 'Assistance 24/7',
     heading: 'Centre d’aide et d’assistance',
-    description: 'Trouvez des réponses aux questions courantes ou ouvrez un ticket d’assistance. Notre équipe est là pour vous aider.',
+    subtitle: 'Trouvez des réponses, gérez vos tickets et obtenez un support direct de l’équipe VFIDE.',
     languageLabel: 'Language',
-    faqTitle: 'FAQ et guides',
-    faqDescription: 'Parcourez les questions courantes et les tutoriels',
-    ticketsTitle: 'Mes tickets',
-    ticketsDescription: 'Voir et gérer vos demandes d’assistance',
-    activeSuffix: 'actifs',
-    newTicketTitle: 'Nouveau ticket',
-    newTicketDescription: 'Créer une nouvelle demande d’assistance',
+    faqTabLabel: 'FAQ',
+    ticketsTabLabel: 'Mes tickets',
+    newTicketTabLabel: 'Nouveau ticket',
+    faqItems: supportEnglish.faqItems,
     searchPlaceholder: 'Rechercher des réponses...',
+    noFaqResults: supportEnglish.noFaqResults,
+    noTicketsMessage: supportEnglish.noTicketsMessage,
+    createTicketHint: supportEnglish.createTicketHint,
+    subjectPrefix: supportEnglish.subjectPrefix,
+    ticketIdLabel: supportEnglish.ticketIdLabel,
+    supportTeamLabel: supportEnglish.supportTeamLabel,
+    youLabel: supportEnglish.youLabel,
+    selectTicketMessage: supportEnglish.selectTicketMessage,
+    connectPrompt: supportEnglish.connectPrompt,
+    subjectPlaceholder: supportEnglish.subjectPlaceholder,
+    detailsPlaceholder: supportEnglish.detailsPlaceholder,
+    submitTicketLabel: supportEnglish.submitTicketLabel,
   },
   'de-DE': {
     badge: '24/7-Support',
     heading: 'Hilfe- und Supportcenter',
-    description: 'Finden Sie Antworten auf häufige Fragen oder eröffnen Sie ein Support-Ticket. Unser Team hilft Ihnen gern weiter.',
+    subtitle: 'Finden Sie Antworten, verwalten Sie Tickets und erhalten Sie direkten Support vom VFIDE-Team.',
     languageLabel: 'Language',
-    faqTitle: 'FAQ & Anleitungen',
-    faqDescription: 'Häufige Fragen und Tutorials durchsuchen',
-    ticketsTitle: 'Meine Tickets',
-    ticketsDescription: 'Ihre Supportanfragen ansehen und verwalten',
-    activeSuffix: 'aktiv',
-    newTicketTitle: 'Neues Ticket',
-    newTicketDescription: 'Eine neue Supportanfrage erstellen',
+    faqTabLabel: 'FAQ',
+    ticketsTabLabel: 'Meine Tickets',
+    newTicketTabLabel: 'Neues Ticket',
+    faqItems: supportEnglish.faqItems,
     searchPlaceholder: 'Nach Antworten suchen...',
+    noFaqResults: supportEnglish.noFaqResults,
+    noTicketsMessage: supportEnglish.noTicketsMessage,
+    createTicketHint: supportEnglish.createTicketHint,
+    subjectPrefix: supportEnglish.subjectPrefix,
+    ticketIdLabel: supportEnglish.ticketIdLabel,
+    supportTeamLabel: supportEnglish.supportTeamLabel,
+    youLabel: supportEnglish.youLabel,
+    selectTicketMessage: supportEnglish.selectTicketMessage,
+    connectPrompt: supportEnglish.connectPrompt,
+    subjectPlaceholder: supportEnglish.subjectPlaceholder,
+    detailsPlaceholder: supportEnglish.detailsPlaceholder,
+    submitTicketLabel: supportEnglish.submitTicketLabel,
   },
 };
 
 export interface HomeCopy {
-  languageLabel: string;
   liveBadge: string;
-  heroTitle: string;
+  heroPrefix: string;
   heroAccent: string;
   heroDescription: string;
-  valueProps: [string, string, string];
+  trustPoints: [string, string, string, string];
   primaryCta: string;
   secondaryCta: string;
-  contractsBadge: string;
-  auditBadge: string;
-  settlementBadge: string;
-  chainBadge: string;
-  finalTitle: string;
-  finalDescription: string;
-  launchApp: string;
-  docsCta: string;
+  sliderHint: string;
+  statsKicker: string;
+  statsTitlePrefix: string;
+  statsTitleAccent: string;
+  merchantFeesLabel: string;
+  maxProofScoreLabel: string;
+  burnRateLabel: string;
+  sanctumFundLabel: string;
 }
 
 const homeEnglish: HomeCopy = {
-  languageLabel: 'Language',
-  liveBadge: 'Now Live on Base',
-  heroTitle: 'Accept Crypto.',
-  heroAccent: 'Zero Fees.',
-  heroDescription: 'The first payment protocol where merchants pay zero processing fees. Token transfers have behavioral fees (0.25-5%) that reward trust. Own your funds and build a ProofScore that unlocks lower fees.',
-  valueProps: ['Pay', 'Build Trust', 'Unlock Rewards'],
-  primaryCta: 'Get Started',
-  secondaryCta: 'Explore Flashloans P2P',
-  contractsBadge: '14 Contracts Deployed',
-  auditBadge: 'Audited & Open Source',
-  settlementBadge: 'Instant Settlement',
-  chainBadge: 'Built for Base • Polygon • zkSync',
-  finalTitle: 'Ready to Own Your Payments?',
-  finalDescription: 'Join thousands of merchants and users building trust on VFIDE.',
-  launchApp: 'Launch App',
-  docsCta: 'Read Documentation',
+  liveBadge: 'Trust-Scored Payments · Now on Base',
+  heroPrefix: 'Keep what you',
+  heroAccent: 'earn',
+  heroDescription: 'Zero merchant fees. Guardian-protected self-custody. Reputation that pays you back. Built for everyone the platforms forgot.',
+  trustPoints: [
+    'Non-custodial: your keys, your coins',
+    'Open-source contracts on Base',
+    'Guardian multi-sig recovery',
+    'On-chain audit trail for every tx',
+  ],
+  primaryCta: 'Start selling',
+  secondaryCta: 'Browse marketplace',
+  sliderHint: 'Try the slider — drag your trust score and watch the fee curve respond in real time.',
+  statsKicker: 'Protocol stats',
+  statsTitlePrefix: 'Numbers that',
+  statsTitleAccent: 'matter',
+  merchantFeesLabel: 'Merchant Fees',
+  maxProofScoreLabel: 'Max ProofScore',
+  burnRateLabel: 'Burn Rate',
+  sanctumFundLabel: 'Sanctum Fund',
 };
 
 export const HOME_TRANSLATIONS: TranslationMap<HomeCopy> = {
   'en-US': homeEnglish,
   'en-GB': homeEnglish,
   'es-ES': {
-    languageLabel: 'Language',
-    liveBadge: 'Ya disponible en Base',
-    heroTitle: 'Acepta criptomonedas.',
-    heroAccent: 'Cero comisiones.',
-    heroDescription: 'El primer protocolo de pagos donde los comerciantes pagan cero comisiones de procesamiento. Las transferencias aplican tarifas de comportamiento (0,25-5%) que recompensan la confianza.',
-    valueProps: ['Paga', 'Gana confianza', 'Desbloquea recompensas'],
-    primaryCta: 'Comenzar',
-    secondaryCta: 'Explorar Flashloans P2P',
-    contractsBadge: '14 contratos desplegados',
-    auditBadge: 'Auditado y de código abierto',
-    settlementBadge: 'Liquidación instantánea',
-    chainBadge: 'Creado para Base • Polygon • zkSync',
-    finalTitle: '¿Listo para controlar tus pagos?',
-    finalDescription: 'Únete a miles de comerciantes y usuarios que están construyendo confianza en VFIDE.',
-    launchApp: 'Abrir app',
-    docsCta: 'Leer documentación',
+    liveBadge: 'Pagos con trust score · Ya disponible en Base',
+    heroPrefix: 'Conserva lo que',
+    heroAccent: 'ganas',
+    heroDescription: 'Cero comisiones para comerciantes. Autocustodia protegida por guardians. Reputación que te devuelve valor. Diseñado para quienes las plataformas olvidaron.',
+    trustPoints: [
+      'Sin custodia: tus llaves, tus fondos',
+      'Contratos de código abierto en Base',
+      'Recuperación multi-sig con guardians',
+      'Rastreo on-chain para cada transacción',
+    ],
+    primaryCta: 'Empezar a vender',
+    secondaryCta: 'Explorar marketplace',
+    sliderHint: 'Prueba el deslizador: mueve tu trust score y observa cómo responde la curva de comisiones en tiempo real.',
+    statsKicker: 'Estadísticas del protocolo',
+    statsTitlePrefix: 'Números que',
+    statsTitleAccent: 'importan',
+    merchantFeesLabel: 'Comisiones de comerciantes',
+    maxProofScoreLabel: 'ProofScore máximo',
+    burnRateLabel: 'Tasa de quema',
+    sanctumFundLabel: 'Fondo Sanctum',
   },
   'fr-FR': {
-    languageLabel: 'Language',
-    liveBadge: 'Désormais en ligne sur Base',
-    heroTitle: 'Acceptez la crypto.',
-    heroAccent: 'Zéro frais.',
-    heroDescription: 'Le premier protocole de paiement où les commerçants paient zéro frais de traitement. Les transferts appliquent des frais comportementaux (0,25-5 %) qui récompensent la confiance.',
-    valueProps: ['Payer', 'Créer la confiance', 'Débloquer des récompenses'],
-    primaryCta: 'Commencer',
-    secondaryCta: 'Explorer Flashloans P2P',
-    contractsBadge: '14 contrats déployés',
-    auditBadge: 'Audité et open source',
-    settlementBadge: 'Règlement instantané',
-    chainBadge: 'Conçu pour Base • Polygon • zkSync',
-    finalTitle: 'Prêt à maîtriser vos paiements ?',
-    finalDescription: 'Rejoignez des milliers de marchands et d’utilisateurs qui renforcent la confiance sur VFIDE.',
-    launchApp: 'Ouvrir l’app',
-    docsCta: 'Lire la documentation',
+    liveBadge: 'Paiements scorés par la confiance · Désormais sur Base',
+    heroPrefix: 'Gardez ce que vous',
+    heroAccent: 'gagnez',
+    heroDescription: 'Zéro frais marchand. Auto-garde protégée par guardians. Une réputation qui vous récompense. Conçu pour celles et ceux que les plateformes ont oubliés.',
+    trustPoints: [
+      'Non custodial : vos clés, vos fonds',
+      'Contrats open source sur Base',
+      'Récupération multi-signature avec guardians',
+      'Traçabilité on-chain pour chaque transaction',
+    ],
+    primaryCta: 'Commencer à vendre',
+    secondaryCta: 'Parcourir le marketplace',
+    sliderHint: 'Testez le curseur : ajustez votre trust score et observez la courbe des frais en temps réel.',
+    statsKicker: 'Statistiques du protocole',
+    statsTitlePrefix: 'Des chiffres qui',
+    statsTitleAccent: 'comptent',
+    merchantFeesLabel: 'Frais marchands',
+    maxProofScoreLabel: 'ProofScore max',
+    burnRateLabel: 'Taux de burn',
+    sanctumFundLabel: 'Fonds Sanctum',
   },
   'de-DE': {
-    languageLabel: 'Language',
-    liveBadge: 'Jetzt live auf Base',
-    heroTitle: 'Krypto akzeptieren.',
-    heroAccent: 'Keine Gebühren.',
-    heroDescription: 'Das erste Zahlungsprotokoll, bei dem Händler keine Bearbeitungsgebühren zahlen. Token-Transfers nutzen verhaltensabhängige Gebühren (0,25-5 %), die Vertrauen belohnen.',
-    valueProps: ['Bezahlen', 'Vertrauen aufbauen', 'Belohnungen freischalten'],
-    primaryCta: 'Loslegen',
-    secondaryCta: 'Flashloans P2P erkunden',
-    contractsBadge: '14 Verträge bereitgestellt',
-    auditBadge: 'Geprüft & Open Source',
-    settlementBadge: 'Sofortige Abwicklung',
-    chainBadge: 'Entwickelt für Base • Polygon • zkSync',
-    finalTitle: 'Bereit, Ihre Zahlungen selbst zu steuern?',
-    finalDescription: 'Schließen Sie sich Tausenden von Händlern und Nutzern an, die Vertrauen auf VFIDE aufbauen.',
-    launchApp: 'App starten',
-    docsCta: 'Dokumentation lesen',
+    liveBadge: 'Vertrauensbasierte Zahlungen · Jetzt auf Base',
+    heroPrefix: 'Behalte, was du',
+    heroAccent: 'verdienst',
+    heroDescription: 'Keine Händlergebühren. Guardian-geschützte Selbstverwahrung. Reputation, die sich auszahlt. Für alle gebaut, die Plattformen vergessen haben.',
+    trustPoints: [
+      'Non-custodial: deine Keys, deine Coins',
+      'Open-Source-Verträge auf Base',
+      'Guardian Multi-Sig Recovery',
+      'On-Chain-Audit-Track für jede Transaktion',
+    ],
+    primaryCta: 'Verkauf starten',
+    secondaryCta: 'Marketplace öffnen',
+    sliderHint: 'Teste den Regler: Bewege deinen Trust Score und sieh, wie die Gebührenkurve in Echtzeit reagiert.',
+    statsKicker: 'Protokoll-Statistiken',
+    statsTitlePrefix: 'Zahlen, die',
+    statsTitleAccent: 'zählen',
+    merchantFeesLabel: 'Händlergebühren',
+    maxProofScoreLabel: 'Max ProofScore',
+    burnRateLabel: 'Burn Rate',
+    sanctumFundLabel: 'Sanctum-Fonds',
   },
 };

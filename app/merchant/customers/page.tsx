@@ -8,8 +8,12 @@ import { useAccount } from 'wagmi';
 import { ArrowLeft, Users } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 import { CustomerManager, type Customer, type CustomerOrder } from '@/components/customers/CustomerManager';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function MerchantCustomersPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address } = useAccount();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [ordersByCustomer, setOrdersByCustomer] = useState<Record<string, CustomerOrder[]>>({});

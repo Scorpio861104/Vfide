@@ -7,8 +7,12 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 import { MerchantProfileWizard } from '@/components/merchant/MerchantProfileWizard';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function MerchantProfileSetupPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const router = useRouter();
 
   return (

@@ -21,8 +21,16 @@ jest.mock('wagmi', () => ({
   }),
 }));
 
+jest.mock('@/lib/locale/LocaleProvider', () => ({
+  useLocale: () => ({ locale: 'en' }),
+}));
+
 jest.mock('@rainbow-me/rainbowkit', () => ({
   ConnectButton: () => <button>Connect Wallet</button>,
+}));
+
+jest.mock('@/components/crypto/VfideConnectButton', () => ({
+  VfideConnectButton: () => <button>Connect Wallet</button>,
 }));
 
 jest.mock('@/components/layout/Footer', () => ({
@@ -121,14 +129,14 @@ describe('Social hub page pathways', () => {
 
     renderSocialHubPage();
 
-    expect(screen.getByRole('heading', { name: /Connect to Join the Conversation/i })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: /Join the Conversation/i })).toBeTruthy();
     expect(screen.getByRole('button', { name: /Connect Wallet/i })).toBeTruthy();
   });
 
   it('renders connected hub with stories, post composer, and fetched post', async () => {
     renderSocialHubPage();
 
-    expect(screen.getByRole('heading', { name: /Social Hub/i })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: /Social/i })).toBeTruthy();
     expect(screen.getByRole('textbox')).toBeTruthy();
     expect(screen.getByRole('button', { name: /all/i })).toBeTruthy();
     expect(screen.getByRole('button', { name: /following/i })).toBeTruthy();
@@ -142,6 +150,6 @@ describe('Social hub page pathways', () => {
     fireEvent.click(screen.getByRole('button', { name: /trending/i }));
     fireEvent.click(screen.getByRole('button', { name: /all/i }));
 
-    expect(screen.getByRole('button', { name: /Load More Posts/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Show more suggested users/i })).toBeTruthy();
   });
 });

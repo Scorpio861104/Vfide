@@ -31,6 +31,7 @@ import {
   Lock,
 } from 'lucide-react';
 import { isAddress, type Address } from 'viem';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 import {
   useInheritance,
   INHERITANCE_STATE_LABEL,
@@ -48,6 +49,9 @@ function formatRemaining(secondsRemaining: number): string {
 }
 
 export default function InheritanceStatusPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const inh = useInheritance();
   // Tick every minute so countdowns render correctly without rAF.
   const [nowSec, setNowSec] = useState(() => Math.floor(Date.now() / 1000));

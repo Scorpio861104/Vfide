@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 
 // TYPE-2: Explicit React type import for React.ElementType usage in MAIN_TABS definition
 import type React from 'react';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 /**
  * Social Hub — consolidated social surface.
@@ -98,6 +99,9 @@ const ANALYTICS_TABS: { id: AnalyticsTab; label: string }[] = [
 const VALID_MAIN_TABS = new Set<MainTab>(['feed', 'messages', 'pay', 'analytics']);
 
 export default function SocialHubPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { isConnected, address } = useAccount();
   // UX-1: Read initial tab from URL search params so ?tab= links work correctly
   // and browser Back/Forward preserves the active tab context

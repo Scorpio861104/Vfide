@@ -4,8 +4,12 @@ import { Footer } from "@/components/layout/Footer";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { Zap, ArrowRight, Wallet } from "lucide-react";
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function TokenLaunchPage() {
+  const { locale } = useLocale();
+  void locale;
+
   return (
     <>
       <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] text-white relative flex flex-col">

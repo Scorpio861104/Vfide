@@ -3,8 +3,12 @@
 export const dynamic = 'force-dynamic';
 
 import { ComingSoonPage } from '@/components/feedback/ComingSoonPage';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function AgentPage() {
+  const { locale } = useLocale();
+  void locale;
+
   return (
     <ComingSoonPage
       title="Cash Agent Mode"

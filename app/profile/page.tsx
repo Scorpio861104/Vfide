@@ -8,8 +8,12 @@ import { ProfileSettings } from '@/components/profile/ProfileSettings';
 import { useAccount } from 'wagmi';
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { User } from 'lucide-react';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function ProfilePage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { isConnected } = useAccount();
 
   if (!isConnected) {

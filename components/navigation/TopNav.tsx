@@ -67,6 +67,16 @@ const MORE_MATCH = [
   '/merchant', '/pos',
   // NAV-1: streaming & subscriptions belong to More, not Pay, on desktop
   '/streaming', '/subscriptions',
+  // NAV-MATCH: finance/vault-adjacent routes not covered above
+  '/staking',
+  // NAV-MATCH: governance routes not covered above
+  '/fraud',
+  // NAV-MATCH: pay-adjacent utilities in More
+  '/splitter', '/scan',
+  // NAV-MATCH: account/setup routes
+  '/onboarding',
+  // NAV-MATCH: seer routes (Tools group)
+  '/seer-service', '/seer-academy',
 ];
 
 export function TopNav() {

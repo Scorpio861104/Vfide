@@ -7,6 +7,8 @@ import Link from 'next/link';
 import { FeeSavingsCalculator } from '@/components/fees';
 import { OnboardingPathChooser, useOnboarding } from '@/components/onboarding';
 import { useRef } from 'react';
+import { useLocale } from '@/lib/locale/LocaleProvider';
+import { HOME_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
 
 import { LiveProofScoreHero } from './components/LiveProofScoreHero';
 import { FeeFlowRiver } from './components/FeeFlowRiver';
@@ -14,18 +16,6 @@ import { MonumentBackdrop } from './components/MonumentBackdrop';
 import { FeatureCard } from './components/FeatureCard';
 import { StatItem } from './components/StatItem';
 import { Step } from './components/Step';
-
-/* ── Marquee items ─────────────────────────────────────────── */
-const PROTOCOL_METRICS = [
-  { label: 'Merchant Fees', value: '0%', icon: '💸' },
-  { label: 'Max ProofScore', value: '10,000', icon: '🏆' },
-  { label: 'Burn Rate', value: '40%', icon: '🔥' },
-  { label: 'Sanctum Fund', value: '10%', icon: '🛡️' },
-  { label: 'Avg Settlement', value: '<3s', icon: '⚡' },
-  { label: 'Guardian Nodes', value: '3-of-5', icon: '🔐' },
-  { label: 'ProofScore Tiers', value: '7 Tiers', icon: '🎯' },
-  { label: 'Self-Custody', value: '100%', icon: '🗝️' },
-];
 
 /* ── Feature data ──────────────────────────────────────────── */
 const FEATURES = [
@@ -73,19 +63,24 @@ const FEATURES = [
   },
 ];
 
-const TRUST_POINTS = [
-  'Non-custodial: your keys, your coins',
-  'Open-source contracts on Base',
-  'Guardian multi-sig recovery',
-  'On-chain audit trail for every tx',
-];
-
 export default function Home() {
   const { state } = useOnboarding();
+  const { locale } = useLocale();
+  const copy = pickLocaleCopy(HOME_TRANSLATIONS, locale);
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
   const heroY = useTransform(scrollYProgress, [0, 1], ['0%', '15%']);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
+  const protocolMetrics = [
+    { label: copy.merchantFeesLabel, value: '0%', icon: '💸' },
+    { label: copy.maxProofScoreLabel, value: '10,000', icon: '🏆' },
+    { label: copy.burnRateLabel, value: '40%', icon: '🔥' },
+    { label: copy.sanctumFundLabel, value: '10%', icon: '🛡️' },
+    { label: 'Avg Settlement', value: '<3s', icon: '⚡' },
+    { label: 'Guardian Nodes', value: '3-of-5', icon: '🔐' },
+    { label: 'ProofScore Tiers', value: '7 Tiers', icon: '🎯' },
+    { label: 'Self-Custody', value: '100%', icon: '🗝️' },
+  ];
 
   return (
     <>
@@ -126,19 +121,18 @@ export default function Home() {
                   transition={{ duration: 0.5, delay: 0.1 }}
                   className="badge-live mb-6 w-fit"
                 >
-                  Trust-Scored Payments · Now on Base
+                  {copy.liveBadge}
                 </motion.div>
 
                 <h1 className="text-5xl sm:text-6xl md:text-7xl font-black text-white mb-6 leading-[1.02] tracking-tight">
-                  Keep what you{' '}
+                  {copy.heroPrefix}{' '}
                   <span className="gradient-text-hero">
-                    earn
+                    {copy.heroAccent}
                   </span>
                 </h1>
 
                 <p className="text-lg sm:text-xl text-zinc-400 mb-8 max-w-md leading-relaxed">
-                  Zero merchant fees. Guardian-protected self-custody. Reputation that pays you back.
-                  Built for everyone the platforms forgot.
+                  {copy.heroDescription}
                 </p>
 
                 {/* CTA buttons */}
@@ -147,19 +141,19 @@ export default function Home() {
                     href="/merchant/setup"
                     className="btn-premium btn-premium-primary text-sm"
                   >
-                    Start selling <ArrowRight size={16} />
+                    {copy.primaryCta} <ArrowRight size={16} />
                   </Link>
                   <Link
                     href="/marketplace"
                     className="btn-premium btn-premium-ghost text-sm"
                   >
-                    Browse marketplace
+                    {copy.secondaryCta}
                   </Link>
                 </div>
 
                 {/* Trust points */}
                 <div className="space-y-2">
-                  {TRUST_POINTS.map((point, i) => (
+                  {copy.trustPoints.map((point, i) => (
                     <motion.div
                       key={point}
                       initial={{ opacity: 0, x: -15 }}
@@ -185,7 +179,7 @@ export default function Home() {
                   <LiveProofScoreHero />
                 </div>
                 <p className="mt-3 text-center text-xs text-zinc-500">
-                  Try the slider — drag your trust score and watch the fee curve respond in real time.
+                  {copy.sliderHint}
                 </p>
               </motion.div>
             </div>
@@ -201,7 +195,7 @@ export default function Home() {
         <section className="py-5 border-y border-white/5 bg-zinc-950/80 backdrop-blur-sm overflow-hidden">
           <div className="marquee-wrapper">
             <div className="marquee-track">
-              {[...PROTOCOL_METRICS, ...PROTOCOL_METRICS].map((m, i) => (
+              {[...protocolMetrics, ...protocolMetrics].map((m, i) => (
                 <div key={i} className="metric-chip mx-3">
                   <span>{m.icon}</span>
                   <span className="metric-chip-value">{m.value}</span>
@@ -243,19 +237,19 @@ export default function Home() {
               transition={{ duration: 0.6 }}
               className="mb-12 text-center"
             >
-              <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Protocol stats</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">{copy.statsKicker}</p>
               <h2 className="text-3xl sm:text-4xl font-bold text-white">
-                Numbers that{' '}
-                <span className="gradient-text-cyan-blue">matter</span>
+                {copy.statsTitlePrefix}{' '}
+                <span className="gradient-text-cyan-blue">{copy.statsTitleAccent}</span>
               </h2>
             </motion.div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {[
-                { value: 0,     label: 'Merchant Fees',  suffix: '%',   color: 'cyan'    },
-                { value: 10000, label: 'Max ProofScore', suffix: '',    color: 'amber'   },
-                { value: 40,    label: 'Burn Rate',      suffix: '%',   color: 'emerald' },
-                { value: 10,    label: 'Sanctum Fund',   suffix: '%',   color: 'pink'    },
+                { value: 0,     label: copy.merchantFeesLabel,  suffix: '%',   color: 'cyan'    },
+                { value: 10000, label: copy.maxProofScoreLabel, suffix: '',    color: 'amber'   },
+                { value: 40,    label: copy.burnRateLabel,      suffix: '%',   color: 'emerald' },
+                { value: 10,    label: copy.sanctumFundLabel,   suffix: '%',   color: 'pink'    },
               ].map((stat, i) => (
                 <motion.div
                   key={stat.label}

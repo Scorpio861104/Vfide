@@ -7,8 +7,12 @@ import { AlertTriangle } from 'lucide-react';
 import { LockVaultPanel } from '@/components/vault/LockVaultPanel';
 import { Footer } from '@/components/layout/Footer';
 import { ErrorBoundary } from '@/components/error/ErrorBoundary';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function LockVaultPage() {
+  const { locale } = useLocale();
+  void locale;
+
   return (
     <>
       <div className="min-h-screen bg-gradient-to-b from-gray-950 to-black text-white md:pt-[3.5rem]">

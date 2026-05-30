@@ -9,6 +9,7 @@ import { BuyTab } from './components/BuyTab';
 import { HistoryTab } from './components/HistoryTab';
 import { SwapTab } from './components/SwapTab';
 import { ShoppingCart, ArrowLeftRight, Clock } from 'lucide-react';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 type TabId = 'buy' | 'swap' | 'history';
 
@@ -19,6 +20,9 @@ const TABS = [
 ];
 
 export default function BuyPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [activeTab, setActiveTab] = useState<TabId>('buy');
 
   return (

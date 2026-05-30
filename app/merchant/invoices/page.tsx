@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useAccount } from 'wagmi';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 import {
   ArrowLeft,
   FileText,
@@ -72,6 +73,9 @@ const ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
 // ── Page ────────────────────────────────────────────────────────────────────
 
 export default function MerchantInvoicesPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address } = useAccount();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [summary, setSummary] = useState<InvoiceSummary[]>([]);

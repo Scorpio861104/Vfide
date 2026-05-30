@@ -8,6 +8,7 @@ import { Tag, ArrowLeft } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { Footer } from '@/components/layout/Footer';
 import { DiscountManager, type Discount } from '@/components/discounts';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 interface CouponResponse {
   id: string;
@@ -36,6 +37,9 @@ function toDiscount(coupon: CouponResponse): Discount {
 }
 
 export default function MerchantCouponsPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address } = useAccount();
   const [discounts, setDiscounts] = useState<Discount[]>([]);
   const [error, setError] = useState<string | null>(null);

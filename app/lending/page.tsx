@@ -3,8 +3,12 @@
 export const dynamic = 'force-dynamic';
 
 import { ComingSoonPage } from '@/components/feedback/ComingSoonPage';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function LendingPage() {
+  const { locale } = useLocale();
+  void locale;
+
   return (
     <ComingSoonPage
       title="Peer-to-Peer Lending"

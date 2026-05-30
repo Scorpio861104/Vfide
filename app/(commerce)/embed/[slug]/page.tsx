@@ -17,6 +17,7 @@
 
 import type { Metadata } from 'next';
 import { EmbedClient } from './EmbedClient';
+import { DEFAULT_LOCALE } from '@/lib/i18n';
 
 interface EmbedPageProps {
   params: Promise<{ slug: string }>;
@@ -45,6 +46,9 @@ export async function generateMetadata({ params }: EmbedPageProps): Promise<Meta
 }
 
 export default async function EmbedStorePage({ params, searchParams }: EmbedPageProps) {
+  const locale = DEFAULT_LOCALE;
+  void locale;
+
   const { slug } = await params;
   const { theme = 'dark', cols = '2', max = '12' } = await searchParams;
 

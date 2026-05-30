@@ -145,7 +145,7 @@ export const navigationItems: NavItem[] = [
       { id: 'payroll',       label: 'Payroll',       href: '/payroll',       icon: Calendar,       color: '#10B981' },
       { id: 'streaming',     label: 'Streaming',     href: '/streaming',     icon: Zap,            color: '#10B981', comingSoon: true },
       { id: 'cross-chain',   label: 'Cross-Chain',   href: '/cross-chain',   icon: ArrowLeftRight, color: '#10B981' },
-      { id: 'stealth',       label: 'Private Pay',   href: '/stealth',       icon: Eye,            color: '#10B981' },
+      { id: 'stealth',       label: 'Private Pay',   href: '/stealth',       icon: Eye,            color: '#10B981', comingSoon: true },
       { id: 'pay',           label: 'Quick Pay',     href: '/pay',           icon: Send,           color: '#10B981' },
       { id: 'subscriptions', label: 'Subscriptions', href: '/subscriptions', icon: Repeat,         color: '#10B981' },
       { id: 'lending',       label: 'Lending',       href: '/lending',       icon: Scale,          color: '#10B981', comingSoon: true },

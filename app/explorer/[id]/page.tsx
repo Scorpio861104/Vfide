@@ -11,8 +11,12 @@ import { BadgeGallery } from '@/components/badge/BadgeGallery'
 import { EndorsementStats } from '@/components/trust/EndorsementStats'
 import { useProofScore } from '@/lib/vfide-hooks'
 import { useCopyToClipboard } from '@/lib/hooks/useCopyToClipboard'
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function AddressPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const params = useParams()
   const { address: connectedAddress } = useAccount()
   const address = params.id as `0x${string}`

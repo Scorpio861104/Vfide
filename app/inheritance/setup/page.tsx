@@ -46,6 +46,7 @@ import type { Address, Hex } from 'viem';
 import { useInheritance } from '@/hooks/useInheritance';
 import { useGuardians } from '@/hooks/useGuardians';
 import { useUserVault } from '@/hooks/useVaultHooks';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 interface DraftHeir {
   /** Local id used as the React key while building the draft. */
@@ -71,6 +72,9 @@ function newDraftHeir(): DraftHeir {
 }
 
 export default function InheritanceSetupPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const chainId = useChainId();
   const { vaultAddress } = useUserVault();
   const inheritance = useInheritance();

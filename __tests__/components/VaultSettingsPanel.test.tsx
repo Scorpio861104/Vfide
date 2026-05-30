@@ -19,6 +19,7 @@ jest.mock('framer-motion', () => ({
 // Mock wagmi
 jest.mock('wagmi', () => ({
   useAccount: jest.fn(() => ({ address: '0x1234567890123456789012345678901234567890' })),
+  useChainId: jest.fn(() => 8453),
 }))
 
 // Mock vfide-hooks
@@ -68,6 +69,12 @@ jest.mock('@/lib/vfide-hooks', () => ({
   useCleanupExpiredTransaction: jest.fn(() => ({
     cleanup: jest.fn(),
     isLoading: false,
+  })),
+}))
+
+jest.mock('@/hooks/useVaultHooks', () => ({
+  useUserVault: jest.fn(() => ({
+    vaultAddress: '0xVaultAddress123456789012345678901234567890' as `0x${string}`,
   })),
 }))
 
@@ -135,7 +142,7 @@ describe('VaultSettingsPanel - No Wallet', () => {
 
 describe('VaultSettingsPanel - No Vault', () => {
   it('shows connect wallet message when no vault', async () => {
-    const hooks = await import('@/lib/vfide-hooks')
+    const hooks = await import('@/hooks/useVaultHooks')
     ;(hooks.useUserVault as ReturnType<typeof jest.fn>).mockReturnValue({ vaultAddress: null })
     
     const { container } = render(<VaultSettingsPanel />)

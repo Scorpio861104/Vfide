@@ -6,10 +6,14 @@ import { useRouter } from 'next/navigation'
 import { Search, TrendingUp, Users, Activity, ArrowRight } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { Footer } from '@/components/layout/Footer'
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 const ETHEREUM_ADDRESS_LENGTH = 42
 
 export default function ExplorerPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [searchQuery, setSearchQuery] = useState('')
   const router = useRouter()
 

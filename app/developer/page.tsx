@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { FutureReleaseBanner } from '@/components/feedback/FutureReleaseBanner';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 const SDK_CODE_SNIPPET = `// Example checkout widget
 
@@ -79,6 +80,9 @@ app.post('/webhooks/vfide', (req, res) => {
 });`;
 
 export default function DeveloperPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [activeTab, setActiveTab] = useState<'sdk' | 'webhooks' | 'api'>('sdk');
 
   return (

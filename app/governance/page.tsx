@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 
 // TYPE-2: Explicit React type import for React.ElementType usage in MAIN_TABS definition
 import type React from 'react';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 /**
  * Governance — consolidated DAO surface (R90 T1-2).
@@ -80,6 +81,9 @@ const VALID_MAIN_TABS = new Set<MainTab>(['proposals', 'dao', 'council', 'electi
 const VALID_DAO_SUBS  = new Set<DaoSub>(['overview', 'members', 'treasury']);
 
 export default function GovernancePage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { isConnected } = useAccount();
   // UX-1: Read initial tab from URL search params so ?tab= links work correctly
   // and browser Back/Forward preserves the active tab context

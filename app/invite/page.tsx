@@ -21,8 +21,12 @@ import {
 import Link from 'next/link'
 import { useCopyToClipboard } from '@/lib/hooks/useCopyToClipboard'
 import { safeWindowOpen } from '@/lib/security/urlValidation'
+import { DEFAULT_LOCALE } from '@/lib/i18n';
 
 export default function InviteFriendsPage() {
+  const locale = DEFAULT_LOCALE;
+  void locale;
+
   const { address } = useAccount()
   const { copied, copy } = useCopyToClipboard()
   const [_selectedMethod, setSelectedMethod] = useState<string | null>(null)

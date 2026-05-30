@@ -33,6 +33,7 @@ import { SecurityTab } from '@/app/setup/components/SecurityTab';
 
 // Notifications tab — inline from /notifications page content
 import { NotificationsTabInline } from './components/NotificationsTabInline';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 type TabId = 'account' | 'vault' | 'security' | 'notifications';
 
@@ -47,6 +48,9 @@ const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
 const VALID_TABS = new Set<TabId>(['account', 'vault', 'security', 'notifications']);
 
 export default function SettingsPage() {
+  const { locale } = useLocale();
+  void locale;
+
   // UX-1: Read initial tab from URL search params so ?tab= links work correctly
   // and browser Back/Forward preserves the active tab context
   const searchParams = useSearchParams();

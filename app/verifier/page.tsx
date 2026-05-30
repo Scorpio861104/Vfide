@@ -25,6 +25,7 @@ import { useVerifierVote } from '@/hooks/useVerifierVote';
 import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
 import VaultRecoveryClaimABI from '@/lib/abis/VaultRecoveryClaim.json';
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types mirroring VaultRecoveryClaim.RecoveryClaim struct
@@ -313,6 +314,9 @@ function ClaimPanel({ claimId }: { claimId: bigint }) {
 // Main page
 // ─────────────────────────────────────────────────────────────────────────────
 export default function VerifierConsolePage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address, isConnected } = useAccount();
   const [claimIdInput, setClaimIdInput] = useState('');
   const [activeClaimId, setActiveClaimId] = useState<bigint | null>(null);

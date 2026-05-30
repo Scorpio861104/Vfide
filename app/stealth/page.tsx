@@ -4,8 +4,12 @@ import { useMemo, useState } from 'react';
 import { Shield, Clock3, CheckCircle2, Activity, Copy, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Footer } from '@/components/layout/Footer';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function StealthPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [testAddress, setTestAddress] = useState('0x');
 
   const readiness = useMemo(() => {

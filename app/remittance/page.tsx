@@ -11,6 +11,7 @@ import { useAccount } from 'wagmi';
 import { Footer } from '@/components/layout/Footer';
 import { Beneficiary, BeneficiaryManager } from '@/components/remittance/BeneficiaryManager';
 import { FutureReleaseBanner } from '@/components/feedback/FutureReleaseBanner';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 const comparisonRows = [
   { provider: 'VFIDE (wallet-to-wallet)', fee: '0.25%–1.00%', payout: 'Minutes', highlight: true },
@@ -19,6 +20,9 @@ const comparisonRows = [
 ];
 
 export default function RemittancePage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { isConnected } = useAccount();
   const [selectedBeneficiary, setSelectedBeneficiary] = useState<Beneficiary | null>(null);
   const [amount, setAmount] = useState('100');

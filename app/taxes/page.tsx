@@ -8,8 +8,12 @@ import { useAccount } from 'wagmi';
 import { motion } from 'framer-motion';
 import { FileText, AlertTriangle, Download, Calculator } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function TaxesPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address } = useAccount();
   const { taxEvents, taxSummary, loading } = useFinancialIntelligence(address);
   const [year, setYear] = useState(new Date().getFullYear());
