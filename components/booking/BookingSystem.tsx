@@ -1,12 +1,12 @@
 'use client';
 import { useState, useMemo } from 'react';
-import { Calendar, Clock, User, Plus, Check, X } from 'lucide-react';
+import { Calendar, User } from 'lucide-react';
 import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export interface TimeSlot { id: string; dayOfWeek: number; startTime: string; endTime: string; available: boolean; }
 export interface Booking { id: string; customerName: string; customerPhone?: string; service: string; date: number; startTime: string; endTime: string; status: 'confirmed'|'pending'|'cancelled'|'completed'; notes?: string; price: number; }
 
-export function BookingManager({ bookings = [], slots = [], onConfirm, onCancel, onComplete }: { bookings: Booking[]; slots: TimeSlot[]; onConfirm?: (id: string) => void; onCancel?: (id: string) => void; onComplete?: (id: string) => void; }) {
+export function BookingManager({ bookings = [], slots: _slots = [], onConfirm, onCancel, onComplete }: { bookings: Booking[]; slots: TimeSlot[]; onConfirm?: (id: string) => void; onCancel?: (id: string) => void; onComplete?: (id: string) => void; }) {
   const { formatCurrency, formatDate } = useLocale();
   const [view, setView] = useState<'upcoming'|'past'|'slots'>('upcoming');
   const now = Date.now();
