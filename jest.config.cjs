@@ -85,6 +85,7 @@ const customJestConfig = {
   ],
   testPathIgnorePatterns: [
     '/node_modules/',
+    '/uploaded_files/',
     '/__mocks__/',
     '/vfide-complete/',
     '/test/hardhat/',
@@ -96,6 +97,9 @@ const customJestConfig = {
     '/test/performance/load.test.js', // k6 scenario; execute with `k6 run`, not Jest
     '<rootDir>/playwright/',
     '/e2e/',  // E2E tests run via Playwright, not Jest
+  ],
+  modulePathIgnorePatterns: [
+    '<rootDir>/uploaded_files/',
   ],
 }
 

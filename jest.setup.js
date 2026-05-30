@@ -284,6 +284,8 @@ jest.mock('viem', () => ({
   custom: jest.fn(() => ({})),
   encodeFunctionData: jest.fn(() => '0x'),
   decodeFunctionResult: jest.fn(() => []),
+  parseAbiItem: jest.fn((value) => value),
+  decodeEventLog: jest.fn(() => ({ eventName: 'Unknown', args: {} })),
 }))
 
 // Mock viem/chains
