@@ -1,9 +1,6 @@
 'use client';
 
 // Extracted from page.tsx — verify imports
-import { GlassCard } from '@/components/ui/GlassCard';
-import { motion } from 'framer-motion';
-
 export function addProductToCart(product: { id: string; name: string; price: string; merchant_slug: string | null }, qty: number): void {
   try {
     const existing = JSON.parse(localStorage.getItem('vfide_cart') || '[]') as Array<{
