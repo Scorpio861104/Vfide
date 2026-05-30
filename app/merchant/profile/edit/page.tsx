@@ -9,7 +9,6 @@ import { useAccount } from 'wagmi';
 import { ArrowLeft } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 import { MerchantProfileWizard } from '@/components/merchant/MerchantProfileWizard';
-import { useVaultIdentity } from '@/hooks/useVaultIdentity';
 import { useMerchantProfile } from '@/hooks/useMerchantProfile';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useLocale } from '@/lib/locale/LocaleProvider';
@@ -28,7 +27,6 @@ export default function MerchantProfileEditPage() {
 
   const router = useRouter();
   const { address } = useAccount();
-  const { identity } = useVaultIdentity(address);
   const { currentMetaHash, registrationStatus } = useMerchantProfile();
 
   const [initialValues, setInitialValues] = useState<FetchedProfile | null>(null);

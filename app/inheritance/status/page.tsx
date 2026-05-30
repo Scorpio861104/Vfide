@@ -26,7 +26,6 @@ import {
   CheckCircle2,
   Users,
   Eye,
-  XCircle,
   Loader2,
   Lock,
 } from 'lucide-react';
