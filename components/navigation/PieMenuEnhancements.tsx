@@ -14,9 +14,9 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Star, Store, ShoppingCart, Send, Repeat, Banknote, QrCode } from 'lucide-react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 
 // ═══════════════════════════════════════════════════════════════════════════
 //  1. PROOFSCORE RING — Wraps the V button with a trust-colored arc
