@@ -35,7 +35,7 @@ export const dynamic = 'force-dynamic';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { usePublicClient, useReadContract } from 'wagmi';
+import { usePublicClient } from 'wagmi';
 import { useLocale } from '@/lib/locale/LocaleProvider';
 import {
   ArrowLeft,
