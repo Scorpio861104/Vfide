@@ -219,7 +219,7 @@
     "lucide-react": "^1.7.0",
     "mlkem": "^2.2.0",
     "multiformats": "^13.3.1",
-    "next": "^16.2.4",
+    "next": "16.2.4",
     "next-themes": "^0.4.6",
     "pdf-lib": "^1.17.1",
     "pg": "8.17.2",
@@ -236,7 +236,7 @@
     "tailwind-merge": "^3.4.0",
     "tsx": "^4.21.0",
     "viem": "2.48.8",
-    "wagmi": "^2.19.5",
+    "wagmi": "2.19.5",
     "web-vitals": "4.2.4",
     "zod4": "npm:zod@^4.3.6",
     "zustand": "^5.0.13"
