@@ -58,7 +58,7 @@ export function PayoutAddressManager({ currentPayoutAddress }: PayoutAddressMana
   const [newAddress, setNewAddress] = useState('');
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
-  const [tick, setTick] = useState(0);
+  const [_tick, setTick] = useState(0);
 
   // Re-render every 30s so the countdown is fresh without spamming chain reads
   useEffect(() => {

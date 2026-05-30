@@ -711,6 +711,7 @@ export function TagInput({
           id={id}
           type="text"
           value={inputValue}
+          placeholder={placeholder}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
           onFocus={() => setShowSuggestions(true)}
