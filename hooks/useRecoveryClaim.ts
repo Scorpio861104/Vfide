@@ -52,7 +52,6 @@
 import { useCallback, useMemo } from 'react';
 import {
   useAccount,
-  usePublicClient,
   useReadContract,
   useReadContracts,
   useWriteContract,
@@ -118,7 +117,6 @@ interface UseRecoveryClaimArgs {
 
 export function useRecoveryClaim({ targetVault, claimId: explicitClaimId }: UseRecoveryClaimArgs) {
   const { address: newWalletAddress } = useAccount();
-  const publicClient = usePublicClient();
   const { writeContractAsync, isPending: isWritePending, error: writeError } = useWriteContract();
   const recoveryAddress = CONTRACT_ADDRESSES.VaultRecoveryClaim as Address;
 

@@ -42,13 +42,6 @@ function scrubValue(value: unknown): unknown {
   return value;
 }
 
-function toSentryExtras(value: unknown): Record<string, unknown> | undefined {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    return undefined;
-  }
-  return value as Record<string, unknown>;
-}
-
 // OP-3 FIX: Sentry forwarder. Lazy-loaded so:
 //   1. Edge runtimes that don't bundle @sentry/nextjs don't fail at import.
 //   2. Test/CI environments without Sentry DSN don't pay any cost.
@@ -74,7 +67,7 @@ function _loadSentryClient(): typeof import('@sentry/nextjs') | null {
     return null;
   }
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     _sentryClientCache = require('@sentry/nextjs');
   } catch {
     _sentryClientCache = null;

@@ -206,7 +206,7 @@ self.addEventListener('notificationclick', (event) => {
       if (parsed.origin !== scopeOrigin) return '/';
       if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return '/';
       return parsed.pathname + parsed.search + parsed.hash;
-    } catch (e) {
+    } catch (_e) {
       return '/';
     }
   }

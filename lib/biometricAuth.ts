@@ -119,18 +119,6 @@ function bufferToBase64(buffer: ArrayBuffer): string {
 }
 
 /**
- * Convert base64 string to ArrayBuffer
- */
-function base64ToBuffer(base64: string): ArrayBuffer {
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return bytes.buffer;
-}
-
-/**
  * Register a passkey for the current wallet address
  */
 export async function registerPasskey(walletAddress: string): Promise<boolean> {

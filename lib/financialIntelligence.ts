@@ -557,7 +557,6 @@ export function useFinancialIntelligence(userAddress: string | undefined) {
             const mapped: Transaction[] = apiTxs.map((row) => {
               const amount = typeof row.amount === 'string' ? Number(row.amount) : (row.amount as number) ?? 0;
               const tokenAmount = typeof row.token_amount === 'string' ? Number(row.token_amount) : undefined;
-              const isVfide = (row.currency as string)?.toUpperCase() === 'VFIDE';
               return {
                 id: String(row.id ?? ''),
                 type: (row.type as Transaction['type']) ?? 'send',

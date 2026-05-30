@@ -241,8 +241,6 @@ export function useRefundHistory(role: RefundRole, viewerAddress?: Address) {
     setIsLoading(true);
     setError(null);
     try {
-      const initiatedTopic =
-        '0x' /* keccak256 hash of RefundInitiated(address,address,string,uint256) */;
       // Use getLogs with event signatures rather than precomputed topics, so
       // viem handles topic encoding for us.
 

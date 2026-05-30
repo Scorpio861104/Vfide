@@ -16,15 +16,6 @@ interface RecoveryStatus {
   daysRemaining: number | null;
 }
 
-interface InheritanceStatus {
-  isActive: boolean;
-  approvals: number;
-  threshold: number;
-  denied: boolean;
-  expiryTime: number | null;
-  daysRemaining: number | null;
-}
-
 export function useVaultRecovery(vaultAddress?: `0x${string}`) {
   const CONTRACT_ADDRESSES = useContractAddresses();
   const { address: userAddress } = useAccount();
