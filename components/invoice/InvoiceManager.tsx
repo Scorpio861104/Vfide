@@ -10,8 +10,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, Plus, Send, Check, Clock, AlertCircle, X, Copy, ExternalLink, Download, Search, Filter } from 'lucide-react';
+import { FileText, Plus, Send, X, Search } from 'lucide-react';
 import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export interface InvoiceItem {
@@ -51,7 +50,7 @@ interface InvoiceManagerProps {
   onCancelInvoice?: (invoiceId: string) => void;
 }
 
-export function InvoiceManager({ merchantAddress, invoices = [], onCreateInvoice, onSendInvoice, onCancelInvoice }: InvoiceManagerProps) {
+export function InvoiceManager({ merchantAddress: _merchantAddress, invoices = [], onCreateInvoice, onSendInvoice, onCancelInvoice }: InvoiceManagerProps) {
   const { formatCurrency, formatDate } = useLocale();
   const [view, setView] = useState<'list' | 'create'>('list');
   const [filter, setFilter] = useState<'all' | Invoice['status']>('all');
@@ -129,7 +128,7 @@ function InvoiceRow({ invoice, formatCurrency, formatDate, onSend, onCancel }: {
   invoice: Invoice; formatCurrency: (n: number) => string; formatDate: (n: number, s?: any) => string;
   onSend?: (id: string, method: 'link' | 'whatsapp' | 'email') => void; onCancel?: (id: string) => void;
 }) {
-  const [showActions, setShowActions] = useState(false);
+  void onCancel;
   const statusColors: Record<string, string> = {
     draft: 'bg-gray-500/20 text-gray-400', sent: 'bg-cyan-500/20 text-cyan-400', viewed: 'bg-blue-500/20 text-blue-400',
     paid: 'bg-emerald-500/20 text-emerald-400', overdue: 'bg-red-500/20 text-red-400', cancelled: 'bg-gray-500/20 text-gray-500',
