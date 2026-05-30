@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ShoppingCart, Heart, Share2, Minus, Plus, Check, Star, Truck, Download, Clock } from 'lucide-react';
+import { ShoppingCart, Heart, Minus, Plus, Check, Truck, Download, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { StarRating } from './StarRating';
 import { useCart } from '@/providers/CartProvider';
