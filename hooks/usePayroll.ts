@@ -317,11 +317,11 @@ export function useStreamControls() {
     hash: txHash,
   });
 
-  const requireConfigured = () => {
+  const requireConfigured = useCallback(() => {
     if (!isConfiguredContractAddress(PayrollManager)) {
       throw getContractConfigurationError('PayrollManager');
     }
-  };
+  }, [PayrollManager]);
 
   const pauseStream = useCallback(async (streamId: bigint) => {
     requireConfigured();
@@ -331,8 +331,7 @@ export function useStreamControls() {
       functionName: 'pauseStream',
       args: [streamId],
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [PayrollManager, writeContractAsync]);
+  }, [PayrollManager, requireConfigured, writeContractAsync]);
 
   const resumeStream = useCallback(async (streamId: bigint) => {
     requireConfigured();
@@ -342,8 +341,7 @@ export function useStreamControls() {
       functionName: 'resumeStream',
       args: [streamId],
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [PayrollManager, writeContractAsync]);
+  }, [PayrollManager, requireConfigured, writeContractAsync]);
 
   const cancelStream = useCallback(async (streamId: bigint) => {
     requireConfigured();
@@ -353,8 +351,7 @@ export function useStreamControls() {
       functionName: 'cancelStream',
       args: [streamId],
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [PayrollManager, writeContractAsync]);
+  }, [PayrollManager, requireConfigured, writeContractAsync]);
 
   const claimExpiredStream = useCallback(async (streamId: bigint) => {
     requireConfigured();
@@ -364,8 +361,7 @@ export function useStreamControls() {
       functionName: 'claimExpiredStream',
       args: [streamId],
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [PayrollManager, writeContractAsync]);
+  }, [PayrollManager, requireConfigured, writeContractAsync]);
 
   return { pauseStream, resumeStream, cancelStream, claimExpiredStream, isPending, isConfirming, isConfirmed, txHash: txHash ?? null, error: error as Error | null };
 }
