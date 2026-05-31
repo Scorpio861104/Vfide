@@ -74,11 +74,6 @@ function formatTimeRemaining(seconds: bigint): string {
   return 'less than 1 minute';
 }
 
-function shortAddr(addr: string): string {
-  if (!addr || addr.length < 10) return addr;
-  return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
-}
-
 export function OwnerChallengeBanner() {
   const { hasActiveClaim, claim, claimId, canChallenge, challengeTimeRemaining } = useOwnerActiveClaim();
   const [showChallengeModal, setShowChallengeModal] = useState(false);

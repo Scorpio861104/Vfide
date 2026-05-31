@@ -28,8 +28,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowRight, Shield, AlertTriangle, Check, X,
-  Fuel, Clock, Eye, ChevronDown, Info, Loader2,
+  ArrowRight, AlertTriangle, Check, X,
+  Fuel, Eye, ChevronDown, Info, Loader2,
 } from 'lucide-react';
 import { useLocale } from '@/lib/locale/LocaleProvider';
 

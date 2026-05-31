@@ -1,12 +1,12 @@
 'use client';
 import { useState, useMemo } from 'react';
-import { RotateCcw, Clock, Check, X } from 'lucide-react';
+import { RotateCcw } from 'lucide-react';
 import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export interface RefundRequest { id: string; orderId: string; customerName: string; amount: number; reason: string; status: 'pending'|'approved'|'processed'|'rejected'; type: 'full'|'partial'; createdAt: number; }
 
-export function RefundManager({ requests = [], onApprove, onReject, onProcess }: { requests: RefundRequest[]; onApprove?: (id: string) => void; onReject?: (id: string) => void; onProcess?: (id: string) => void; }) {
-  const { formatCurrency, formatDate } = useLocale();
+export function RefundManager({ requests = [], onApprove, onReject, onProcess: _onProcess }: { requests: RefundRequest[]; onApprove?: (id: string) => void; onReject?: (id: string) => void; onProcess?: (id: string) => void; }) {
+  const { formatCurrency } = useLocale();
   const [filter, setFilter] = useState<'all'|'pending'|'processed'>('all');
   const filtered = useMemo(() => filter==='all'?requests:requests.filter(r=>r.status===filter),[requests,filter]);
   const colors: Record<string,string> = {pending:'amber',approved:'cyan',processed:'emerald',rejected:'red'};

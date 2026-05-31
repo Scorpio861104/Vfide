@@ -13,7 +13,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { formatUnits, parseUnits } from 'viem';
 import { type Address } from 'viem';
-import { useLargePaymentThreshold, MIN_THRESHOLD_DELAY_SECONDS, MAX_THRESHOLD_DELAY_SECONDS } from '@/hooks/useLargePaymentThreshold';
+import { useLargePaymentThreshold, MAX_THRESHOLD_DELAY_SECONDS } from '@/hooks/useLargePaymentThreshold';
 import { AlertCircle, CheckCircle2, Clock, Sliders } from 'lucide-react';
 import Link from 'next/link';
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useAccount, useReadContract } from 'wagmi';
-import { Shield, AlertTriangle, CheckCircle, Info } from 'lucide-react';
+import { Shield, Info } from 'lucide-react';
 import { CardBoundVaultABI as CARD_BOUND_VAULT_ABI } from '@/lib/abis';
 
 interface Dimension {
@@ -45,7 +45,7 @@ export function VaultHealthScore({
   vaultAddress?: `0x${string}`;
   proofScore?: number;
 }) {
-  const { address } = useAccount();
+  useAccount();
 
   const { data: guardianCount } = useReadContract({
     address: vaultAddress,
