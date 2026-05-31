@@ -31,6 +31,28 @@ export default function robots(): MetadataRoute.Robots {
           '/dashboard/',     // Block user dashboard (requires auth)
           '/vault/',         // Block vault pages (requires auth)
           '/settings/',      // Block settings (requires auth)
+          '/wallet/',        // Block wallet hub (requires auth, key material flows)
+          '/me/',            // Block personal user hub (requires auth)
+          '/control-panel/', // Block admin control panel
+          '/multisig/',      // Block multisig admin surface
+          '/paper-wallet/',  // Block paper wallet (private-key generator, env-gated)
+          '/hardware-wallet/', // Block hardware wallet setup (auth)
+          '/profile/',       // Block user profile (auth)
+          '/notifications/', // Block per-user notifications (auth)
+          '/security-center/', // Block per-user security center (auth)
+          '/inheritance/',   // Block inheritance flows (auth, sensitive)
+          // Internal / dev / demo surfaces — not part of the user-facing nav.
+          // Indexing these would surface non-product content in search and
+          // could mislead users about what the live product offers.
+          '/api-coverage/',  // Internal API endpoint coverage tracker
+          '/live-demo/',     // Marketing demo (not a real product surface)
+          '/demo/',          // Misc demo subroutes (e.g. /demo/crypto-social)
+          '/testnet/',       // Testnet-only faucet hub (auto-redirects on mainnet)
+          '/theme-showcase/',// Legacy designer showcase (now redirects to /theme)
+          '/theme-manager/', // Legacy theme manager (now redirects to /theme)
+          '/verifier/',      // Operator-only trusted-verifier console
+          '/splitter/',      // Operator-only revenue splitter inspector
+          '/agent/',         // Coming-soon placeholder (cash-agent operator workflow)
         ],
       },
       {

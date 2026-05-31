@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useThemeManager } from '@/hooks/useThemeManager';
 import { Trash2, Download, Upload, Plus, Check } from 'lucide-react';
+import { toast } from '@/lib/toast';
 
 export function SavedThemesManager() {
   const {
@@ -53,9 +54,9 @@ export function SavedThemesManager() {
         reader.onload = (event: ProgressEvent<FileReader>) => {
           const json = event.target?.result as string;
           if (importTheme(json)) {
-            alert('✅ Theme imported successfully!');
+            toast.success('Theme imported successfully');
           } else {
-            alert('❌ Invalid theme file');
+            toast.error('Invalid theme file');
           }
         };
         reader.readAsText(file);

@@ -48,6 +48,12 @@ jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn(), pathname: '/' }),
   usePathname: () => '/',
   useSearchParams: () => ({ get: (key: string) => mockSearchParams.get(key) }),
+  redirect: jest.fn(() => { throw new Error('NEXT_REDIRECT'); }),
+  permanentRedirect: jest.fn(() => { throw new Error('NEXT_REDIRECT'); }),
+  notFound: jest.fn(() => { throw new Error('NEXT_NOT_FOUND'); }),
+  useParams: jest.fn(() => ({})),
+  useSelectedLayoutSegment: jest.fn(() => null),
+  useSelectedLayoutSegments: jest.fn(() => []),
 }))
 
 jest.mock('next/link', () => ({
@@ -59,23 +65,68 @@ jest.mock('@/components/layout/Footer', () => ({
   Footer: () => React.createElement('div', { 'data-testid': 'footer' }),
 }))
 
+jest.mock('@/components/crypto/VfideConnectButton', () => ({
+  VfideConnectButton: () => null,
+}))
+
+jest.mock('@/hooks/useRequireAppLock', () => ({
+  useRequireAppLock: jest.fn(() => undefined),
+}))
+
+jest.mock('@/components/security/AppLockProvider', () => ({
+  AppLockProvider: ({ children }: { children: React.ReactNode }) => children,
+  useAppLock: jest.fn(() => ({
+    isLocked: false,
+    lock: jest.fn(),
+    unlock: jest.fn(),
+    checkPin: jest.fn(() => true),
+    setPin: jest.fn(),
+    hasPin: false,
+    isEnabled: false,
+  })),
+}))
+
 jest.mock('@rainbow-me/rainbowkit', () => ({
   ConnectButton: () => React.createElement('button', null, 'Connect Wallet'),
 }))
 
-jest.mock('wagmi', () => ({
+jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK_V2 */
   useAccount: () => mockAccountState,
   useChainId: () => mockChainId,
-  useBalance: () => ({ data: mockBalance }),
-  useReadContract: ({ functionName }: { functionName?: string }) => {
-    if (functionName === 'owner') return { data: mockOwnerAddress }
-    if (functionName === 'totalSupply') return { data: 0n }
-    return { data: false }
-  },
-  useWriteContract: () => ({ writeContract: jest.fn(), data: undefined, isPending: false }),
-  useWaitForTransactionReceipt: () => ({ isLoading: false, isSuccess: false }),
-  useSignMessage: () => ({ signMessageAsync: jest.fn() }),
-  usePublicClient: () => ({ readContract: jest.fn(), waitForTransactionReceipt: jest.fn() }),
+  useSwitchChain: jest.fn(() => ({ switchChain: jest.fn(), switchChainAsync: jest.fn(), chains: [], status: 'idle' })),
+  useReadContract: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
+  useReadContracts: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
+  useWriteContract: jest.fn(() => ({ writeContract: jest.fn(), writeContractAsync: jest.fn(), data: undefined, isPending: false, isSuccess: false, isError: false, error: null, reset: jest.fn() })),
+  useWaitForTransactionReceipt: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
+  useWatchContractEvent: jest.fn(() => undefined),
+  usePublicClient: jest.fn(() => ({ readContract: jest.fn(), getBlockNumber: jest.fn(), getTransactionReceipt: jest.fn() })),
+  useWalletClient: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useSignTypedData: jest.fn(() => ({ signTypedData: jest.fn(), signTypedDataAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null, reset: jest.fn() })),
+  useSignMessage: jest.fn(() => ({ signMessage: jest.fn(), signMessageAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null, reset: jest.fn() })),
+  useConnect: jest.fn(() => ({ connect: jest.fn(), connectAsync: jest.fn(), connectors: [], status: 'idle' })),
+  useDisconnect: jest.fn(() => ({ disconnect: jest.fn(), disconnectAsync: jest.fn() })),
+  useConnections: jest.fn(() => []),
+  useBalance: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })),
+  useEnsName: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useEnsAvatar: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useBlockNumber: jest.fn(() => ({ data: undefined, isLoading: false, refetch: jest.fn() })),
+  useEstimateGas: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useSendTransaction: jest.fn(() => ({ sendTransaction: jest.fn(), sendTransactionAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null })),
+  useConfig: jest.fn(() => ({})),
+  WagmiProvider: ({ children }) => children,
+  createConfig: jest.fn(() => ({})),
+  createStorage: jest.fn(() => ({ getItem: jest.fn(() => null), setItem: jest.fn(), removeItem: jest.fn() })),
+  cookieStorage: { getItem: jest.fn(() => null), setItem: jest.fn(), removeItem: jest.fn() },
+  http: jest.fn(() => ({})),
+  fallback: jest.fn(() => ({})),
+  useGasPrice: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })),
+  useEstimateFeesPerGas: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })),
+  useReconnect: jest.fn(() => ({ reconnect: jest.fn(), reconnectAsync: jest.fn(), connectors: [], status: 'idle', isPending: false, isSuccess: false, isError: false })),
+  useTransaction: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
+  useTransactionReceipt: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
+  serialize: jest.fn((v) => JSON.stringify(v)),
+  deserialize: jest.fn((v) => { try { return JSON.parse(v); } catch { return v; } }),
+  cookieToInitialState: jest.fn(() => undefined),
 }))
 
 jest.mock('wagmi/chains', () => ({
@@ -134,6 +185,34 @@ jest.mock('@/lib/vfide-hooks', () => ({
   useVfidePrice: () => ({ priceUsd: 0.07, isLoading: false }),
   useEscrow: () => ({ createEscrow: mockCreateEscrow, loading: false, isSuccess: false, error: null }),
   usePayMerchant: () => ({ payMerchant: mockPayMerchant, isPaying: false, isSuccess: false, error: null }),
+
+  useUserVault: jest.fn(() => ({ vault: undefined, vaultAddress: undefined, isLoading: false, refetch: jest.fn() })),
+  useVaultBalance: jest.fn(() => ({ balance: 0n, isLoading: false, refetch: jest.fn() })),
+  useVaultPayMerchant: jest.fn(() => ({ payMerchant: jest.fn(), payMerchantAsync: jest.fn(), isPending: false, isSuccess: false, isError: false, error: null })),
+  useSelfPanic: jest.fn(() => ({ selfPanic: jest.fn(), selfPanicAsync: jest.fn(), isPending: false, isSuccess: false, isError: false, error: null })),
+  useCanSelfPanic: jest.fn(() => ({ canSelfPanic: false, isLoading: false, refetch: jest.fn() })),
+  useGuardianCancelInheritance: jest.fn(() => ({ cancelInheritance: jest.fn(), cancelInheritanceAsync: jest.fn(), isPending: false })),
+  useInheritanceStatus: jest.fn(() => ({ status: undefined, isLoading: false, refetch: jest.fn() })),
+  useQuarantineStatus: jest.fn(() => ({ status: undefined, isLoading: false, refetch: jest.fn() })),
+  useProofScore: jest.fn(() => ({ score: 0, isLoading: false, refetch: jest.fn() })),
+  useScoreBreakdown: jest.fn(() => ({ breakdown: undefined, isLoading: false, refetch: jest.fn() })),
+  useEndorse: jest.fn(() => ({ endorse: jest.fn(), endorseAsync: jest.fn(), isPending: false, isSuccess: false, isError: false, error: null })),
+  useCustomerTrustScore: jest.fn(() => ({ score: 0, isLoading: false, refetch: jest.fn() })),
+  useIsMerchant: jest.fn(() => ({ isMerchant: false, isLoading: false, refetch: jest.fn() })),
+  useRegisterMerchant: jest.fn(() => ({ registerMerchant: jest.fn(), registerMerchantAsync: jest.fn(), isPending: false, isSuccess: false, isError: false, error: null, hash: undefined })),
+  useGetAutoConvert: jest.fn(() => ({ autoConvertEnabled: false, isLoading: false, refetch: jest.fn(), isAvailable: true })),
+  useSetAutoConvert: jest.fn(() => ({ setAutoConvert: jest.fn(), setAutoConvertAsync: jest.fn(), isPending: false, isSuccess: false, isError: false, error: null })),
+  useSetPayoutAddress: jest.fn(() => ({ setPayoutAddress: jest.fn(), setPayoutAddressAsync: jest.fn(), isPending: false, isSuccess: false, isError: false, error: null })),
+  useSetMerchantPullPermit: jest.fn(() => ({ setPermit: jest.fn(), setPermitAsync: jest.fn(), isPending: false })),
+  useProcessPayment: jest.fn(() => ({ processPayment: jest.fn(), processPaymentAsync: jest.fn(), isPending: false, isSuccess: false, isError: false, error: null, hash: undefined })),
+  useMerchantPaymentStatus: jest.fn(() => ({ status: undefined, isLoading: false, refetch: jest.fn() })),
+  useBadgeNFTs: jest.fn(() => ({ badges: [], isLoading: false, refetch: jest.fn() })),
+  useUserBadges: jest.fn(() => ({ badges: [], isLoading: false, refetch: jest.fn() })),
+  useCanMintBadge: jest.fn(() => ({ canMint: false, isLoading: false, refetch: jest.fn() })),
+  useMintBadge: jest.fn(() => ({ mintBadge: jest.fn(), mintBadgeAsync: jest.fn(), isPending: false, isSuccess: false, isError: false, error: null })),
+  useActivityFeed: jest.fn(() => ({ activities: [], isLoading: false, refetch: jest.fn() })),
+  useFeeCalculator: jest.fn(() => ({ fee: 0n, isLoading: false })),
+  useSystemStats: jest.fn(() => ({ stats: undefined, isLoading: false, refetch: jest.fn() })),
 }))
 
 jest.mock('@/hooks/useVaultHub', () => ({
@@ -145,17 +224,17 @@ jest.mock('@/hooks/useVaultRecovery', () => ({
 }))
 
 jest.mock('@/lib/contracts', () => ({
+  // CANONICAL_CONTRACTS_MOCK_V4
   CONTRACT_ADDRESSES: { VFIDEToken: '0x2222222222222222222222222222222222222222' },
+  CONTRACTS: {},
+  getContractAddresses: jest.fn(() => ({ VFIDEToken: '0x1111111111111111111111111111111111111101', StablecoinRegistry: '0x1111111111111111111111111111111111111102', MerchantPortal: '0x1111111111111111111111111111111111111103', MerchantRegistry: '0x1111111111111111111111111111111111111104', VaultHub: '0x1111111111111111111111111111111111111105', Seer: '0x1111111111111111111111111111111111111106', SeerView: '0x1111111111111111111111111111111111111107', DAO: '0x1111111111111111111111111111111111111108', DAOTimelock: '0x1111111111111111111111111111111111111109', TrustGateway: '0x111111111111111111111111111111111111110a', GuardianRegistry: '0x111111111111111111111111111111111111110b', GuardianLock: '0x111111111111111111111111111111111111110c', PanicGuard: '0x111111111111111111111111111111111111110d', EmergencyBreaker: '0x111111111111111111111111111111111111110e' })),
+  isConfiguredContractAddress: (_address?: string | null) => true,
+  validateContractAddress: jest.fn((addr: any) => addr),
+  ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
+  CURRENT_CHAIN_ID: 84532,
   USER_VAULT_ABI: [],
   isCardBoundVaultMode: () => true,
-  isConfiguredContractAddress: (address?: string | null) =>
-    typeof address === 'string' &&
-    address !== '0x0000000000000000000000000000000000000000' &&
-    address.startsWith('0x') &&
-    address.length === 42,
-  getContractConfigurationError: (name: string) =>
-    new Error(`[VFIDE] ${name} contract not configured.`),
-  ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
+  getContractConfigurationError: (_name: string) => new Error('Contract not configured'),
 }))
 
 jest.mock('@/lib/recovery/guardianAttestation', () => ({
@@ -167,25 +246,130 @@ jest.mock('viem', () => ({
   formatUnits: (value: bigint, decimals: number) => (Number(value) / 10 ** decimals).toString(),
   isAddress: (value: string) => /^0x[a-fA-F0-9]{40}$/.test(value),
   verifyMessage: jest.fn(async () => true),
+  parseAbi: jest.fn(() => []),
+  parseAbiItem: jest.fn((sig: any) => ({ name: typeof sig === 'string' ? sig.split(' ')[1]?.split('(')[0] : '', type: 'function',
+  parseUnits: jest.fn((v: any) => BigInt(v || 0)),
+  parseEther: jest.fn((v: any) => BigInt(v || 0)),
+  getAddress: jest.fn((a: string) => a),
+  encodeFunctionData: jest.fn(() => '0x'),
+  decodeFunctionResult: jest.fn(() => undefined),
+  encodeAbiParameters: jest.fn(() => '0x'),
+  decodeAbiParameters: jest.fn(() => []),
+  keccak256: jest.fn(() => '0x' + '0'.repeat(64)),
+  toBytes: jest.fn(() => new Uint8Array()),
+  toHex: jest.fn((v: any) => '0x' + (v ?? '').toString(16)),
+  hexToString: jest.fn((h: any) => String(h)),
+  padHex: jest.fn((h: any) => h),
+  zeroAddress: '0x0000000000000000000000000000000000000000',
+  stringToHex: jest.fn((s: any) => '0x' + Buffer.from(String(s)).toString('hex')),
+  createPublicClient: jest.fn(() => ({ readContract: jest.fn(), getBlockNumber: jest.fn() })),
+  createWalletClient: jest.fn(() => ({ writeContract: jest.fn() })),
+  http: jest.fn(() => ({})),
+  custom: jest.fn(() => ({})),
+  erc20Abi: [],
+  erc721Abi: [],
+})),
+  parseUnits: jest.fn((v: any) => BigInt(v || 0)),
+  parseEther: jest.fn((v: any) => BigInt(v || 0)),
+  getAddress: jest.fn((a: string) => a),
+  encodeFunctionData: jest.fn(() => '0x'),
+  decodeFunctionResult: jest.fn(() => undefined),
+  encodeAbiParameters: jest.fn(() => '0x'),
+  decodeAbiParameters: jest.fn(() => []),
+  keccak256: jest.fn(() => '0x' + '0'.repeat(64)),
+  toBytes: jest.fn(() => new Uint8Array()),
+  toHex: jest.fn((v: any) => '0x' + (v ?? '').toString(16)),
+  hexToString: jest.fn((h: any) => String(h)),
+  padHex: jest.fn((h: any) => h),
+  zeroAddress: '0x0000000000000000000000000000000000000000',
+  stringToHex: jest.fn((s: any) => '0x' + Buffer.from(String(s)).toString('hex')),
+  createPublicClient: jest.fn(() => ({ readContract: jest.fn(), getBlockNumber: jest.fn() })),
+  createWalletClient: jest.fn(() => ({ writeContract: jest.fn() })),
+  http: jest.fn(() => ({})),
+  custom: jest.fn(() => ({})),
+  erc20Abi: [],
+  erc721Abi: [],
 }))
 
 jest.mock('framer-motion', () => {
-  const passthrough = (tag: string) => ({ children, ...props }: any) => React.createElement(tag, props, children)
+  /* FRAMER_MOTION_MOCK_V1 */
+  const React = require('react');
+  // Reusable component that strips motion-only props and renders the underlying tag.
+  const __MOTION_PROPS = new Set([
+    'initial', 'animate', 'exit', 'transition', 'variants', 'whileHover',
+    'whileTap', 'whileFocus', 'whileDrag', 'whileInView', 'drag',
+    'dragConstraints', 'dragElastic', 'dragMomentum', 'dragTransition',
+    'layout', 'layoutId', 'layoutDependency', 'layoutScroll',
+    'onAnimationStart', 'onAnimationComplete', 'onUpdate', 'onPan',
+    'onPanStart', 'onPanEnd', 'onTap', 'onTapStart', 'onTapCancel',
+    'onHoverStart', 'onHoverEnd', 'onDrag', 'onDragStart', 'onDragEnd',
+    'onDirectionLock', 'onViewportEnter', 'onViewportLeave',
+    'viewport', 'custom', 'transformTemplate', 'inherit',
+  ]);
+  const __makeMotion = (tag) => React.forwardRef((props, ref) => {
+    const sanitized = {};
+    for (const k of Object.keys(props || {})) {
+      if (!__MOTION_PROPS.has(k)) sanitized[k] = props[k];
+    }
+    return React.createElement(tag, { ...sanitized, ref });
+  });
+  const motion = new Proxy({}, {
+    get: (t, prop) => {
+      if (typeof prop !== 'string') return undefined;
+      if (!t[prop]) t[prop] = __makeMotion(prop === 'custom' ? 'div' : prop);
+      return t[prop];
+    },
+  });
   return {
-    motion: new Proxy(
-      {},
-      {
-        get: (_target, prop: string) => passthrough(prop),
-      }
-    ),
-    AnimatePresence: ({ children }: any) => React.createElement(React.Fragment, null, children),
-  }
-})
+    motion,
+    AnimatePresence: ({ children }) => children,
+    LayoutGroup: ({ children }) => children,
+    LazyMotion: ({ children }) => children,
+    MotionConfig: ({ children }) => children,
+    Reorder: { Group: ({ children }) => children, Item: ({ children }) => children },
+    domAnimation: {},
+    domMax: {},
+    useAnimation: () => ({ start: jest.fn(), stop: jest.fn(), set: jest.fn() }),
+    useAnimationControls: () => ({ start: jest.fn(), stop: jest.fn(), set: jest.fn() }),
+    useScroll: () => ({ scrollY: { get: () => 0, on: jest.fn(() => jest.fn()) }, scrollX: { get: () => 0, on: jest.fn(() => jest.fn()) }, scrollYProgress: { get: () => 0, on: jest.fn(() => jest.fn()) }, scrollXProgress: { get: () => 0, on: jest.fn(() => jest.fn()) } }),
+    useMotionValue: (v) => ({ get: () => v, set: jest.fn(), on: jest.fn(() => jest.fn()) }),
+    useTransform: (v) => ({ get: () => 0, set: jest.fn(), on: jest.fn(() => jest.fn()) }),
+    useSpring: (v) => ({ get: () => v, set: jest.fn(), on: jest.fn(() => jest.fn()) }),
+    useInView: () => true,
+    useReducedMotion: () => false,
+    useDragControls: () => ({ start: jest.fn() }),
+    usePresence: () => [true, jest.fn()],
+    useIsPresent: () => true,
+    useMotionTemplate: () => ({ get: () => '', set: jest.fn(), on: jest.fn(() => jest.fn()) }),
+    useViewportScroll: () => ({ scrollY: { get: () => 0, on: jest.fn(() => jest.fn()) }, scrollYProgress: { get: () => 0, on: jest.fn(() => jest.fn()) } }),
+    useCycle: (...args) => [args[0], jest.fn()],
+    animate: jest.fn(),
+    stagger: jest.fn(() => 0),
+    transform: jest.fn((v) => v),
+  };
+});
 
-jest.mock('lucide-react', () => {
-  const Icon = ({ className }: { className?: string }) => React.createElement('span', { className }, 'icon')
-  return new Proxy({}, { get: () => Icon })
-})
+jest.mock('lucide-react', () => (() => { /* LucideProxyFallback */
+  const Icon = ({ className }: { className?: string }) => {
+    const React = require('react');
+    return React.createElement('span', { className }, 'icon');
+  };
+  const __orig: Record<string, any> = {};
+  return new Proxy(__orig, {
+    get: (t, prop) => {
+      if (prop in t) return (t as any)[prop];
+      if (prop === '__esModule') return true;
+      if (typeof prop === 'symbol') return undefined;
+      const name = String(prop);
+      const Icon = ({ className, ...rest }: any) => {
+        const React = require('react');
+        return React.createElement('span', { 'data-testid': `${name.toLowerCase()}-icon`, className, ...rest });
+      };
+      Icon.displayName = `LucideMock(${name})`;
+      return Icon;
+    },
+  });
+})())
 
 const renderAdminPage = () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -281,12 +465,10 @@ describe('App page behavior coverage', () => {
   })
 
   it('renders the setup completion state on the correct chain with balance', () => {
-    renderSetupPage()
-
-    expect(screen.getByRole('heading', { name: /^Setup$/i })).toBeTruthy()
-    expect(screen.getByRole('button', { name: /Account/i })).toBeTruthy()
-    expect(screen.getByRole('button', { name: /Vault/i })).toBeTruthy()
-    expect(screen.getByRole('button', { name: /Security/i })).toBeTruthy()
+    // /setup redirects to /settings?tab=account - test the redirect
+    const pageModule = require('../app/setup/page')
+    const SetupPage = pageModule.default
+    expect(() => SetupPage({})).toThrow('NEXT_REDIRECT')
   })
 
   it('blocks pay page checkout when QR signature is missing', async () => {

@@ -17,6 +17,7 @@ import {
   PowerOff,
 } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -56,6 +57,7 @@ export default function MerchantTaxPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     if (!address) return;
@@ -91,7 +93,13 @@ export default function MerchantTaxPage() {
   }, [load]);
 
   const deleteRate = useCallback(async (id: number) => {
-    if (!confirm('Delete this tax rate? Past invoices that used it are unaffected.')) return;
+    setPendingDelete(id);
+  }, []);
+
+  const confirmDeleteRate = useCallback(async () => {
+    const id = pendingDelete;
+    if (id == null) return;
+    setPendingDelete(null);
     try {
       const response = await fetch(`/api/merchant/tax-rates?id=${id}`, { method: 'DELETE' });
       const data = await response.json().catch(() => ({}));
@@ -100,7 +108,7 @@ export default function MerchantTaxPage() {
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to delete tax rate');
     }
-  }, [load]);
+  }, [pendingDelete, load]);
 
   return (
     <>
@@ -185,6 +193,17 @@ export default function MerchantTaxPage() {
           onError={setError}
         />
       )}
+
+      <ConfirmModal
+        isOpen={pendingDelete !== null}
+        onClose={() => setPendingDelete(null)}
+        onConfirm={confirmDeleteRate}
+        title="Delete tax rate?"
+        message="Past invoices that used this rate are unaffected. New checkouts will fall back to the default rate."
+        confirmText="Delete"
+        cancelText="Keep"
+        variant="danger"
+      />
 
       <Footer />
     </>
@@ -288,11 +307,18 @@ function CreateTaxRateModal({ onClose, onCreated, onError }: { onClose: () => vo
   }, [canSubmit, name, ratePercent, country, stateRegion, city, postalPattern, isDefault, applies, onCreated, onError]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur flex items-start sm:items-center justify-center p-4 overflow-y-auto" onClick={onClose}>
+    <div
+      role="dialog"
+      aria-modal="true"
+      className="fixed inset-0 z-50 bg-black/70 backdrop-blur flex items-start sm:items-center justify-center p-4 overflow-y-auto"
+      onClick={onClose}
+      onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
+      tabIndex={-1}
+    >
       <div className="bg-zinc-950 border border-white/10 rounded-2xl p-6 max-w-lg w-full my-8" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-xl font-bold">New tax rate</h2>
-          <button onClick={onClose} className="text-zinc-400 hover:text-white"><X size={20} /></button>
+          <button onClick={onClose} className="text-zinc-400 hover:text-white" aria-label="Close"><X size={20} /></button>
         </div>
 
         <div className="space-y-4">

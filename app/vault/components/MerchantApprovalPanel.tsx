@@ -3,11 +3,13 @@
 import { useState } from 'react';
 import { CheckCircle2, CreditCard, Loader2 } from 'lucide-react';
 import { formatUnits, isAddress } from 'viem';
-import { useReadContract, useWriteContract } from 'wagmi';
+import { useReadContract, useWriteContract, useChainId, useSwitchChain } from 'wagmi';
 
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useToast } from '@/components/ui/toast';
-import { CARD_BOUND_VAULT_ABI, CONTRACT_ADDRESSES, ERC20ABI, isConfiguredContractAddress } from '@/lib/contracts';
+import { CARD_BOUND_VAULT_ABI, CONTRACT_ADDRESSES, ERC20ABI, isConfiguredContractAddress, getContractAddresses } from '@/lib/contracts';
+import { isSupportedChainId, getChainByChainId } from '@/lib/chains';
+import { CURRENT_CHAIN_ID } from '@/lib/testnet';
 
 type MerchantApprovalPanelProps = {
   vaultAddress: `0x${string}` | null | undefined;
@@ -16,6 +18,8 @@ type MerchantApprovalPanelProps = {
 export function MerchantApprovalPanel({ vaultAddress }: MerchantApprovalPanelProps) {
   const { showToast } = useToast();
   const { writeContractAsync } = useWriteContract();
+  const connectedChainId = useChainId();
+  const { switchChainAsync } = useSwitchChain();
   const [stablecoinAddress, setStablecoinAddress] = useState('');
   const [isApprovingVfide, setIsApprovingVfide] = useState(false);
   const [isApprovingStablecoin, setIsApprovingStablecoin] = useState(false);
@@ -23,6 +27,37 @@ export function MerchantApprovalPanel({ vaultAddress }: MerchantApprovalPanelPro
   const merchantPortalAddress = CONTRACT_ADDRESSES.MerchantPortal;
   const merchantPortalReady = isConfiguredContractAddress(merchantPortalAddress);
   const stablecoinReady = isAddress(stablecoinAddress);
+
+  // Resolve the chain id we should be writing on. If the wallet is on a supported
+  // chain that has CARD_BOUND_VAULT contracts (i.e. VaultHub configured), use
+  // that chain — otherwise fall back to the env-configured default. Mirrors the
+  // resolveOperationalChainId helper in useVaultHub.
+  const operationalChainId = (() => {
+    if (typeof connectedChainId === 'number' && isSupportedChainId(connectedChainId)) {
+      const addrs = getContractAddresses(connectedChainId);
+      if (isConfiguredContractAddress(addrs.VaultHub)) return connectedChainId;
+    }
+    return CURRENT_CHAIN_ID;
+  })();
+  const isOnCorrectChain = connectedChainId === operationalChainId;
+  const expectedChainName = getChainByChainId(operationalChainId)?.name || `chain ${operationalChainId}`;
+
+  /**
+   * Pre-flight chain check. Approving an ERC20 spender hits the vault contract
+   * directly; if the wallet is on the wrong chain the call would either land
+   * on a non-existent contract or, on a chain where another contract happens
+   * to live at the same address, do something we did not intend. Switch first.
+   */
+  const ensureCorrectChain = async (): Promise<boolean> => {
+    if (isOnCorrectChain) return true;
+    showToast(`Switch to ${expectedChainName} before approving the merchant`, 'error');
+    try {
+      await switchChainAsync({ chainId: operationalChainId as 84532 | 8453 | 300 | 137 | 324 | 80002 });
+      return true;
+    } catch {
+      return false;
+    }
+  };
 
   const { data: vfideAllowance, refetch: refetchVfideAllowance } = useReadContract({
     address: CONTRACT_ADDRESSES.VFIDEToken,
@@ -68,6 +103,7 @@ export function MerchantApprovalPanel({ vaultAddress }: MerchantApprovalPanelPro
       showToast('Vault daily transfer limit not loaded. Please wait and retry.', 'error');
       return;
     }
+    if (!(await ensureCorrectChain())) return;
     setIsApprovingVfide(true);
     try {
       await writeContractAsync({
@@ -75,6 +111,7 @@ export function MerchantApprovalPanel({ vaultAddress }: MerchantApprovalPanelPro
         abi: CARD_BOUND_VAULT_ABI,
         functionName: 'approveVFIDE',
         args: [merchantPortalAddress, approvalAmount],
+        chainId: operationalChainId as 84532 | 8453 | 300 | 137 | 324 | 80002,
       });
       await refetchVfideAllowance();
       showToast('MerchantPortal was approved to pull VFIDE from this vault.', 'success');
@@ -100,6 +137,7 @@ export function MerchantApprovalPanel({ vaultAddress }: MerchantApprovalPanelPro
       return;
     }
 
+    if (!(await ensureCorrectChain())) return;
     setIsApprovingStablecoin(true);
     try {
       await writeContractAsync({
@@ -107,6 +145,7 @@ export function MerchantApprovalPanel({ vaultAddress }: MerchantApprovalPanelPro
         abi: CARD_BOUND_VAULT_ABI,
         functionName: 'approveERC20',
         args: [stablecoinAddress as `0x${string}`, merchantPortalAddress, approvalAmount],
+        chainId: operationalChainId as 84532 | 8453 | 300 | 137 | 324 | 80002,
       });
       await refetchStablecoinAllowance();
       showToast('MerchantPortal was approved to pull the selected stablecoin.', 'success');

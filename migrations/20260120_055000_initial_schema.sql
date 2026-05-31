@@ -202,27 +202,13 @@ CREATE TABLE IF NOT EXISTS monthly_leaderboard (
 
 -- Create indexes for better performance
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_users_wallet ON users(wallet_address);
-DO $$
-BEGIN
-  IF EXISTS (
-    SELECT 1
-    FROM information_schema.columns
-    WHERE table_schema = 'public' AND table_name = 'messages' AND column_name = 'sender_id'
-  ) THEN
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_messages_sender ON messages(sender_id);
-  END IF;
-END $$;
-
-DO $$
-BEGIN
-  IF EXISTS (
-    SELECT 1
-    FROM information_schema.columns
-    WHERE table_schema = 'public' AND table_name = 'messages' AND column_name = 'recipient_id'
-  ) THEN
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_messages_recipient ON messages(recipient_id);
-  END IF;
-END $$;
+-- The `messages` table is defined earlier in this same migration with `sender_id`
+-- and `recipient_id` columns, so the previous defensive `DO $$ ... IF EXISTS ...
+-- CREATE INDEX CONCURRENTLY ... END $$;` blocks were both redundant and broken:
+-- `CREATE INDEX CONCURRENTLY` cannot run inside a transaction, and `DO` blocks
+-- always create one. `IF NOT EXISTS` on the index already provides idempotency.
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_messages_sender ON messages(sender_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_messages_recipient ON messages(recipient_id);
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_friendships_user ON friendships(user_id);
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_friendships_friend ON friendships(friend_id);
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_group_members_group ON group_members(group_id);

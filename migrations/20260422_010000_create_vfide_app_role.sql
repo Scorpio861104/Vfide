@@ -19,8 +19,13 @@ BEGIN
 END;
 $$;
 
--- Grant connection to the application database
-GRANT CONNECT ON DATABASE vfide_testnet TO vfide_app;
+-- Grant connection to the application database (uses current_database() to
+-- remain portable across dev/test/prod environments with different DB names)
+DO $$
+BEGIN
+  EXECUTE format('GRANT CONNECT ON DATABASE %I TO vfide_app', current_database());
+END;
+$$;
 
 -- Grant schema usage
 GRANT USAGE ON SCHEMA public TO vfide_app;

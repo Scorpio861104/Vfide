@@ -9,10 +9,7 @@ const renderPage = () => {
   return render(<Page />);
 };
 
-jest.mock('@/components/StealthAddressUI', () => ({
-  __esModule: true,
-  default: () => <div>StealthAddressUI</div>,
-}));
+// Note: app/stealth/page.tsx does not import StealthAddressUI; no mock needed.
 
 describe('Stealth page', () => {
   it('renders stealth heading and readiness panel', () => {

@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { Friend } from '@/types/messaging';
 import { formatAddress } from '@/lib/messageEncryption';
+import { toast } from '@/lib/toast';
 
 interface PaymentModalProps {
   friend: Friend;
@@ -25,7 +26,7 @@ export function PaymentModal({ friend, type, onClose, onSubmit }: PaymentModalPr
 
   const handleSubmit = () => {
     if (!amount || parseFloat(amount) <= 0) {
-      alert('Please enter a valid amount');
+      toast.error('Please enter a valid amount');
       return;
     }
     onSubmit(amount, message, token);
@@ -64,8 +65,7 @@ export function PaymentModal({ friend, type, onClose, onSubmit }: PaymentModalPr
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
-          >
+            className="p-2 hover:bg-zinc-800 rounded-lg transition-colors" aria-label="Close">
             <X className="w-5 h-5 text-zinc-500" />
           </button>
         </div>

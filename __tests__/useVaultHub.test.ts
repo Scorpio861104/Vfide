@@ -11,28 +11,43 @@ const MOCK_ZERO = '0x0000000000000000000000000000000000000000'
 const MOCK_TX_HASH = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890'
 const MOCK_BALANCE = BigInt('1000000000000000000000')
 
-jest.mock('wagmi', () => ({
-  useAccount: jest.fn(() => ({
-    address: '0x1234567890123456789012345678901234567890',
-    isConnected: true,
-  })),
-  useChainId: jest.fn(() => 84532),
-  useReadContract: jest.fn(() => ({
-    data: '0xABCDEF1234567890ABCDEF1234567890ABCDEF12',
-    isLoading: false,
-    error: null,
-    refetch: jest.fn(),
-  })),
-  useWriteContract: jest.fn(() => ({
-    writeContract: jest.fn(),
-    writeContractAsync: jest.fn().mockResolvedValue('0xhash'),
-    data: undefined,
-    isPending: false,
-  })),
-  useWaitForTransactionReceipt: jest.fn(() => ({
-    isLoading: false,
-    isSuccess: false,
-  })),
+jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK_V2 */
+  useAccount: jest.fn(() => ({ address: undefined, isConnected: false, status: 'disconnected', chainId: undefined })),
+  useChainId: jest.fn(() => 1),
+  useSwitchChain: jest.fn(() => ({ switchChain: jest.fn(), switchChainAsync: jest.fn(), chains: [], status: 'idle' })),
+  useReadContract: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
+  useReadContracts: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
+  useWriteContract: jest.fn(() => ({ writeContract: jest.fn(), writeContractAsync: jest.fn(), data: undefined, isPending: false, isSuccess: false, isError: false, error: null, reset: jest.fn() })),
+  useWaitForTransactionReceipt: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
+  useWatchContractEvent: jest.fn(() => undefined),
+  usePublicClient: jest.fn(() => ({ readContract: jest.fn(), getBlockNumber: jest.fn(), getTransactionReceipt: jest.fn() })),
+  useWalletClient: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useSignTypedData: jest.fn(() => ({ signTypedData: jest.fn(), signTypedDataAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null, reset: jest.fn() })),
+  useSignMessage: jest.fn(() => ({ signMessage: jest.fn(), signMessageAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null, reset: jest.fn() })),
+  useConnect: jest.fn(() => ({ connect: jest.fn(), connectAsync: jest.fn(), connectors: [], status: 'idle' })),
+  useDisconnect: jest.fn(() => ({ disconnect: jest.fn(), disconnectAsync: jest.fn() })),
+  useConnections: jest.fn(() => []),
+  useBalance: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })),
+  useEnsName: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useEnsAvatar: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useBlockNumber: jest.fn(() => ({ data: undefined, isLoading: false, refetch: jest.fn() })),
+  useEstimateGas: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useSendTransaction: jest.fn(() => ({ sendTransaction: jest.fn(), sendTransactionAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null })),
+  useConfig: jest.fn(() => ({})),
+  WagmiProvider: ({ children }) => children,
+  createConfig: jest.fn(() => ({})),
+  createStorage: jest.fn(() => ({ getItem: jest.fn(() => null), setItem: jest.fn(), removeItem: jest.fn() })),
+  cookieStorage: { getItem: jest.fn(() => null), setItem: jest.fn(), removeItem: jest.fn() },
+  http: jest.fn(() => ({})),
+  fallback: jest.fn(() => ({})),
+  useGasPrice: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })),
+  useEstimateFeesPerGas: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })),
+  useReconnect: jest.fn(() => ({ reconnect: jest.fn(), reconnectAsync: jest.fn(), connectors: [], status: 'idle', isPending: false, isSuccess: false, isError: false })),
+  useTransaction: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
+  useTransactionReceipt: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
+  serialize: jest.fn((v) => JSON.stringify(v)),
+  deserialize: jest.fn((v) => { try { return JSON.parse(v); } catch { return v; } }),
+  cookieToInitialState: jest.fn(() => undefined),
 }))
 
 describe('useVaultHub', () => {
@@ -43,6 +58,15 @@ describe('useVaultHub', () => {
   describe('Wallet Connection States', () => {
     it('returns user address when connected', async () => {
       const { useAccount } = await import('wagmi')
+      const mockUseAccount = useAccount as ReturnType<typeof jest.fn>
+      
+      mockUseAccount.mockReturnValueOnce({
+        address: MOCK_USER,
+        isConnected: true,
+        status: 'connected',
+        chainId: 84532,
+      })
+      
       const result = useAccount()
       
       expect(result.isConnected).toBe(true)
@@ -51,6 +75,10 @@ describe('useVaultHub', () => {
 
     it('returns correct chain ID', async () => {
       const { useChainId } = await import('wagmi')
+      const mockUseChainId = useChainId as ReturnType<typeof jest.fn>
+      
+      mockUseChainId.mockReturnValueOnce(84532)
+      
       const chainId = useChainId()
       
       expect(chainId).toBe(84532) // Base Sepolia
@@ -74,6 +102,15 @@ describe('useVaultHub', () => {
   describe('Vault Read Operations', () => {
     it('reads vault address for connected user', async () => {
       const { useReadContract } = await import('wagmi')
+      const mockUseReadContract = useReadContract as ReturnType<typeof jest.fn>
+      
+      mockUseReadContract.mockReturnValueOnce({
+        data: MOCK_VAULT,
+        isLoading: false,
+        error: null,
+        refetch: jest.fn(),
+      })
+      
       const result = useReadContract({
         address: MOCK_USER as `0x${string}`,
         abi: [],

@@ -75,9 +75,9 @@ contract MerchantRegistry {
     }
 
     mapping(address => Merchant) public merchants;
-    uint16 public minScore;
-    uint8  public autoSuspendRefunds = 5;
-    uint8  public autoSuspendDisputes = 3;
+    uint16 public immutable minScore;
+    uint8  public constant autoSuspendRefunds = 5;
+    uint8  public constant autoSuspendDisputes = 3;
 
     // POW-1 decay tracking: per-merchant timestamp of most recent strike,
     // used by _applyRefundDecay / _applyDisputeDecay to subtract one from

@@ -25,6 +25,7 @@ import { useMerchantProfile, type ProfileSubmitInput } from '@/hooks/useMerchant
 import { Identicon } from '@/components/identity/Identicon';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { CATEGORIES } from '@/lib/profile/validate';
+import { toast } from '@/lib/toast';
 
 interface Props {
   /** Optional pre-fill for editing an existing profile. */
@@ -112,11 +113,11 @@ export function MerchantProfileWizard({
     if (!file) return;
 
     if (file.size > 2 * 1024 * 1024) {
-      alert('Avatar must be under 2 MB. Please choose a smaller file.');
+      toast.error('Avatar must be under 2 MB. Please choose a smaller file.');
       return;
     }
     if (!['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/svg+xml'].includes(file.type)) {
-      alert('Please upload a JPEG, PNG, WebP, or SVG image.');
+      toast.error('Please upload a JPEG, PNG, WebP, or SVG image.');
       return;
     }
 

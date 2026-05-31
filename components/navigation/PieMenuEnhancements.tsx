@@ -94,7 +94,9 @@ const DEFAULT_QUICK_ACTIONS: QuickAction[] = [
   { id: 'quick-pay', label: 'Quick Pay', icon: <Send size={18} />, href: '/pay', color: '#8B5CF6' },
   { id: 'subscriptions', label: 'Subscriptions', icon: <Repeat size={18} />, href: '/subscriptions', color: '#F59E0B' },
   { id: 'payroll', label: 'Payroll', icon: <Banknote size={18} />, href: '/payroll', color: '#14B8A6' },
-  { id: 'qr', label: 'QR', icon: <QrCode size={18} />, href: '/merchant', color: '#22C55E' },
+  // F-NAV-01: was href: '/merchant' (incorrect — that's the merchant hub, not the scanner).
+  // /scan is the buyer-side QR scanner page that decodes a payment QR and routes to /pay.
+  { id: 'qr', label: 'Scan QR', icon: <QrCode size={18} />, href: '/scan', color: '#22C55E' },
 ];
 
 interface QuickActionsProps {

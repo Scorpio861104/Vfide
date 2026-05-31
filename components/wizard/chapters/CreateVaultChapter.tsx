@@ -29,6 +29,8 @@ export function CreateVaultChapter({ onComplete }: CreateVaultChapterProps) {
     expectedChainName,
     vaultHubConfigured,
     refetchVault,
+    switchToPreferredChain,
+    isSwitchingChain,
   } = useVaultHub();
 
   const [error, setError] = useState<string | null>(null);
@@ -99,16 +101,29 @@ export function CreateVaultChapter({ onComplete }: CreateVaultChapterProps) {
           text: `Connected to the wrong network. Switch to ${expectedChainName ?? 'the configured network'} in your wallet to continue.`,
         }}
       >
-        <div className="flex justify-center py-2">
+        <div className="flex justify-center gap-2 py-2">
+          <button
+            type="button"
+            onClick={async () => {
+              const ok = await switchToPreferredChain();
+              if (!ok) {
+                setError(`Could not switch to ${expectedChainName ?? 'the network'}. Please switch manually in your wallet.`);
+              }
+            }}
+            disabled={isSwitchingChain}
+            className="rounded-xl bg-amber-500 px-5 py-2 text-sm font-bold text-zinc-950 hover:bg-amber-400 disabled:opacity-50"
+          >
+            {isSwitchingChain ? 'Switching…' : `Switch to ${expectedChainName ?? 'Network'}`}
+          </button>
           <ConnectButton.Custom>
             {({ openChainModal, mounted }) => (
               <button
                 type="button"
                 onClick={openChainModal}
                 disabled={!mounted}
-                className="rounded-xl bg-amber-500 px-5 py-2 text-sm font-bold text-zinc-950 hover:bg-amber-400 disabled:opacity-50"
+                className="rounded-xl border border-white/10 px-3 py-2 text-sm font-medium text-white/70 hover:text-white disabled:opacity-50"
               >
-                Switch network
+                Manual
               </button>
             )}
           </ConnectButton.Custom>

@@ -18,6 +18,7 @@ import { PrivacySettings as PrivacySettingsType, DEFAULT_PRIVACY_SETTINGS, Block
 import { STORAGE_KEYS, formatAddress } from '@/lib/messageEncryption';
 import { safeLocalStorage } from '@/lib/utils';
 import { safeParseInt } from '@/lib/validation';
+import { toast } from '@/lib/toast';
 
 export function PrivacySettings() {
   const { address } = useAccount();
@@ -66,12 +67,12 @@ export function PrivacySettings() {
     if (!blockAddress || !address) return;
     
     if (!/^0x[a-fA-F0-9]{40}$/.test(blockAddress)) {
-      alert('Invalid wallet address');
+      toast.error('Invalid wallet address');
       return;
     }
 
     if (blockedUsers.some(u => u.address.toLowerCase() === blockAddress.toLowerCase())) {
-      alert('User already blocked');
+      toast.error('User already blocked');
       return;
     }
 

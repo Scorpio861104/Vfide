@@ -58,7 +58,7 @@ export function ShareStoreSheet({ show, onClose, storeName, slug }: ShareStoreSh
           >
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-bold text-white">Share {storeName}</h3>
-              <button onClick={onClose} className="text-gray-400 hover:text-white"><X size={20} /></button>
+              <button onClick={onClose} className="text-gray-400 hover:text-white" aria-label="Close"><X size={20} /></button>
             </div>
 
             {/* Store link */}

@@ -39,7 +39,9 @@ describe('R-057 – Permit replay or overdraw', () => {
 
   it('permit setup enforces positive amount and non-expired expiry', () => {
     expect(merchantSrc).toMatch(/if \(maxAmount == 0\) revert MERCH_InvalidConfig\(\)/);
-    expect(merchantSrc).toMatch(/if \(!\(expiresAt == 0 \|\| expiresAt > block\.timestamp\)\) revert MERCH_InvalidConfig\(\)/);
+    // F-60 FIX: Zero expiry is now rejected; non-zero expiry must be in future and within MAX_PULL_PERMIT_DURATION
+    expect(merchantSrc).toMatch(/if \(expiresAt == 0\) revert MERCH_InvalidConfig\(\)/);
+    expect(merchantSrc).toMatch(/if \(expiresAt <= block\.timestamp \|\| expiresAt > block\.timestamp \+ MAX_PULL_PERMIT_DURATION\)/);
   });
 
   it('merchant pull requires approval flag', () => {
@@ -112,7 +114,7 @@ describe('R-059 – Auto-convert policy misconfiguration', () => {
   });
 
   it('swap path has strict shape and endpoint checks', () => {
-    expect(merchantSrc).toMatch(/MAX_SWAP_PATH_LENGTH\s*=\s*5/);
+    expect(merchantSrc).toMatch(/MAX_SWAP_PATH_LENGTH\s*=\s*3/);
     expect(merchantSrc).toMatch(/if \(path\.length < 2 \|\| path\.length > MAX_SWAP_PATH_LENGTH\) revert MERCH_InvalidConfig\(\)/);
     expect(merchantSrc).toMatch(/if \(path\[0\] != token\) revert MERCH_InvalidConfig\(\)/);
     expect(merchantSrc).toMatch(/if \(path\[path\.length - 1\] != stablecoin\) revert MERCH_InvalidConfig\(\)/);

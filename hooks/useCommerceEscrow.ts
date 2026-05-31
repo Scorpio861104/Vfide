@@ -74,10 +74,12 @@ import { useCallback } from 'react';
 import { useAccount, usePublicClient, useReadContract, useSignTypedData, useWriteContract } from 'wagmi';
 import { type Abi, type Address, type Hex } from 'viem';
 import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
-// The CommerceEscrow ABI lives inside VFIDECommerce.json, exported as
-// MerchantRegistryABI (merged with MerchantRegistry + interface fragments).
-// All CommerceEscrow functions/state vars are reachable through this ABI.
-import { MerchantRegistryABI, CardBoundVaultABI, VaultHubABI } from '@/lib/abis';
+// CommerceEscrow ABI is shipped as VFIDECommerceABI (the JSON in
+// lib/abis/VFIDECommerce.json contains exactly the CommerceEscrow surface).
+// Previously this file imported CommerceEscrowABI under the assumption
+// the ABIs were merged — fixed during the 2026-Q4 frontend↔contract parity
+// audit so escrow reads/writes hit the right selectors.
+import { VFIDECommerceABI as CommerceEscrowABI, CardBoundVaultABI, VaultHubABI } from '@/lib/abis';
 
 /** From ICommerceEscrow.State enum, kept in numeric form to match the contract. */
 export enum EscrowState {
@@ -157,7 +159,7 @@ export function useEscrowById(id: bigint | undefined) {
 
   const { data, isLoading, refetch } = useReadContract({
     address: escrowAddress,
-    abi: MerchantRegistryABI,
+    abi: CommerceEscrowABI,
     functionName: 'escrows',
     args: id !== undefined ? [id] : undefined,
     query: { enabled: escrowConfigured && id !== undefined },
@@ -171,7 +173,7 @@ export function useEscrowById(id: bigint | undefined) {
   // amount when state >= FUNDED.
   const { data: depositedRaw } = useReadContract({
     address: escrowAddress,
-    abi: MerchantRegistryABI,
+    abi: CommerceEscrowABI,
     functionName: 'escrowDeposited',
     args: id !== undefined ? [id] : undefined,
     query: { enabled: escrowConfigured && id !== undefined },
@@ -190,7 +192,7 @@ export function useEscrowCount() {
 
   const { data, refetch } = useReadContract({
     address: escrowAddress,
-    abi: MerchantRegistryABI,
+    abi: CommerceEscrowABI,
     functionName: 'escrowCount',
     query: { enabled: escrowConfigured },
   });
@@ -212,7 +214,7 @@ export function useEscrowRequiredApproval(buyerOwner: Address | undefined) {
 
   const { data } = useReadContract({
     address: escrowAddress,
-    abi: MerchantRegistryABI,
+    abi: CommerceEscrowABI,
     functionName: 'getRequiredApproval',
     args: buyerOwner ? [buyerOwner] : undefined,
     query: { enabled: escrowConfigured && !!buyerOwner },
@@ -275,7 +277,7 @@ export function useCommerceEscrow() {
           }) => Promise<{ result: unknown }>;
           const sim = await simulateContract({
             address: escrowAddress!,
-            abi: MerchantRegistryABI as Abi,
+            abi: CommerceEscrowABI as Abi,
             functionName: 'open',
             args: [params.merchantOwner, params.amountWei, params.metaHash],
             account: connectedAddress,
@@ -296,7 +298,7 @@ export function useCommerceEscrow() {
 
       const hash = await writeContractAsync({
         address: escrowAddress,
-        abi: MerchantRegistryABI,
+        abi: CommerceEscrowABI,
         functionName: 'open',
         args: [params.merchantOwner, params.amountWei, params.metaHash],
       });
@@ -355,7 +357,7 @@ export function useCommerceEscrow() {
           address: buyerVault, abi: CardBoundVaultABI, functionName: 'nextNonce',
         }) as Promise<bigint>,
         publicClient.readContract({
-          address: escrowAddress!, abi: MerchantRegistryABI, functionName: 'escrowCount',
+          address: escrowAddress!, abi: CommerceEscrowABI, functionName: 'escrowCount',
         }) as Promise<bigint>,
         Promise.resolve(BigInt(publicClient.chain?.id ?? 0)),
       ]);
@@ -408,7 +410,7 @@ export function useCommerceEscrow() {
       // 5. Submit the combined open + fund call
       const hash = await writeContractAsync({
         address: escrowAddress,
-        abi: MerchantRegistryABI,
+        abi: CommerceEscrowABI,
         functionName: 'openAndFundWithIntent',
         args: [intent, signature, params.merchantOwner, params.metaHash],
       });
@@ -440,7 +442,7 @@ export function useCommerceEscrow() {
       if (!escrowConfigured) throw new Error('CommerceEscrow not configured');
       const hash = await writeContractAsync({
         address: escrowAddress,
-        abi: MerchantRegistryABI,
+        abi: CommerceEscrowABI,
         functionName: 'markFunded',
         args: [escrowId],
       });
@@ -461,7 +463,7 @@ export function useCommerceEscrow() {
       if (!escrowConfigured) throw new Error('CommerceEscrow not configured');
       const hash = await writeContractAsync({
         address: escrowAddress,
-        abi: MerchantRegistryABI,
+        abi: CommerceEscrowABI,
         functionName: 'release',
         args: [escrowId],
       });
@@ -481,7 +483,7 @@ export function useCommerceEscrow() {
       if (!escrowConfigured) throw new Error('CommerceEscrow not configured');
       const hash = await writeContractAsync({
         address: escrowAddress,
-        abi: MerchantRegistryABI,
+        abi: CommerceEscrowABI,
         functionName: 'refund',
         args: [escrowId],
       });
@@ -503,7 +505,7 @@ export function useCommerceEscrow() {
       if (!escrowConfigured) throw new Error('CommerceEscrow not configured');
       const hash = await writeContractAsync({
         address: escrowAddress,
-        abi: MerchantRegistryABI,
+        abi: CommerceEscrowABI,
         functionName: 'dispute',
         args: [params.escrowId, params.reason],
       });
@@ -523,7 +525,7 @@ export function useCommerceEscrow() {
       if (!escrowConfigured) throw new Error('CommerceEscrow not configured');
       const hash = await writeContractAsync({
         address: escrowAddress,
-        abi: MerchantRegistryABI,
+        abi: CommerceEscrowABI,
         functionName: 'cancelStaleOpen',
         args: [escrowId],
       });
@@ -543,7 +545,7 @@ export function useCommerceEscrow() {
       if (!escrowConfigured) throw new Error('CommerceEscrow not configured');
       const hash = await writeContractAsync({
         address: escrowAddress,
-        abi: MerchantRegistryABI,
+        abi: CommerceEscrowABI,
         functionName: 'settleByInheritance',
         args: [escrowId],
       });

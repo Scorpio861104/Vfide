@@ -7,29 +7,107 @@ import { describe, it, expect, vi, beforeEach } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 
 // Mock wagmi
-jest.mock('wagmi', () => ({
-  useAccount: jest.fn().mockReturnValue({ address: null, isConnected: false }),
-  useConnect: jest.fn().mockReturnValue({ connect: jest.fn(), connectors: [], isPending: false }),
-  useDisconnect: jest.fn().mockReturnValue({ disconnect: jest.fn() }),
-  useChainId: jest.fn().mockReturnValue(84532),
-  useSwitchChain: jest.fn().mockReturnValue({ switchChain: jest.fn() }),
-  useBalance: jest.fn().mockReturnValue({ data: null, isLoading: false }),
-  WagmiProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  createConfig: jest.fn(),
-  http: jest.fn(),
+jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK_V2 */
+  useAccount: jest.fn(() => ({ address: undefined, isConnected: false, status: 'disconnected' })).mockReturnValue({ address: null, isConnected: false }),
+  useChainId: jest.fn(() => 1).mockReturnValue(84532),
+  useSwitchChain: jest.fn(() => ({ switchChain: jest.fn(), switchChainAsync: jest.fn(), chains: [], status: 'idle' })).mockReturnValue({ switchChain: jest.fn() }),
+  useReadContract: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
+  useReadContracts: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
+  useWriteContract: jest.fn(() => ({ writeContract: jest.fn(), writeContractAsync: jest.fn(), data: undefined, isPending: false, isSuccess: false, isError: false, error: null, reset: jest.fn() })),
+  useWaitForTransactionReceipt: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
+  useWatchContractEvent: jest.fn(() => undefined),
+  usePublicClient: jest.fn(() => ({ readContract: jest.fn(), getBlockNumber: jest.fn(), getTransactionReceipt: jest.fn() })),
+  useWalletClient: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useSignTypedData: jest.fn(() => ({ signTypedData: jest.fn(), signTypedDataAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null, reset: jest.fn() })),
+  useSignMessage: jest.fn(() => ({ signMessage: jest.fn(), signMessageAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null, reset: jest.fn() })),
+  useConnect: jest.fn(() => ({ connect: jest.fn(), connectAsync: jest.fn(), connectors: [], status: 'idle' })),
+  useDisconnect: jest.fn(() => ({ disconnect: jest.fn(), disconnectAsync: jest.fn() })),
+  useConnections: jest.fn(() => []),
+  useBalance: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })),
+  useEnsName: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useEnsAvatar: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useBlockNumber: jest.fn(() => ({ data: undefined, isLoading: false, refetch: jest.fn() })),
+  useEstimateGas: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useSendTransaction: jest.fn(() => ({ sendTransaction: jest.fn(), sendTransactionAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null })),
+  useConfig: jest.fn(() => ({})),
+  WagmiProvider: ({ children }) => children,
+  createConfig: jest.fn(() => ({})),
+  createStorage: jest.fn(() => ({ getItem: jest.fn(() => null), setItem: jest.fn(), removeItem: jest.fn() })),
+  cookieStorage: { getItem: jest.fn(() => null), setItem: jest.fn(), removeItem: jest.fn() },
+  http: jest.fn(() => ({})),
+  fallback: jest.fn(() => ({})),
+  useGasPrice: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })),
+  useEstimateFeesPerGas: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })),
+  useReconnect: jest.fn(() => ({ reconnect: jest.fn(), reconnectAsync: jest.fn(), connectors: [], status: 'idle', isPending: false, isSuccess: false, isError: false })),
+  useTransaction: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
+  useTransactionReceipt: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
+  serialize: jest.fn((v) => JSON.stringify(v)),
+  deserialize: jest.fn((v) => { try { return JSON.parse(v); } catch { return v; } }),
+  cookieToInitialState: jest.fn(() => undefined),
 }))
 
 // Mock framer-motion
-jest.mock('framer-motion', () => ({
-  motion: {
-    div: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => <div {...props}>{children}</div>,
-    button: ({ children, ...props }: React.HTMLAttributes<HTMLButtonElement>) => <button {...props}>{children}</button>,
-  },
-  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}))
+jest.mock('framer-motion', () => {
+  /* FRAMER_MOTION_MOCK_V1 */
+  const React = require('react');
+  // Reusable component that strips motion-only props and renders the underlying tag.
+  const __MOTION_PROPS = new Set([
+    'initial', 'animate', 'exit', 'transition', 'variants', 'whileHover',
+    'whileTap', 'whileFocus', 'whileDrag', 'whileInView', 'drag',
+    'dragConstraints', 'dragElastic', 'dragMomentum', 'dragTransition',
+    'layout', 'layoutId', 'layoutDependency', 'layoutScroll',
+    'onAnimationStart', 'onAnimationComplete', 'onUpdate', 'onPan',
+    'onPanStart', 'onPanEnd', 'onTap', 'onTapStart', 'onTapCancel',
+    'onHoverStart', 'onHoverEnd', 'onDrag', 'onDragStart', 'onDragEnd',
+    'onDirectionLock', 'onViewportEnter', 'onViewportLeave',
+    'viewport', 'custom', 'transformTemplate', 'inherit',
+  ]);
+  const __makeMotion = (tag) => React.forwardRef((props, ref) => {
+    const sanitized = {};
+    for (const k of Object.keys(props || {})) {
+      if (!__MOTION_PROPS.has(k)) sanitized[k] = props[k];
+    }
+    return React.createElement(tag, { ...sanitized, ref });
+  });
+  const motion = new Proxy({}, {
+    get: (t, prop) => {
+      if (typeof prop !== 'string') return undefined;
+      if (!t[prop]) t[prop] = __makeMotion(prop === 'custom' ? 'div' : prop);
+      return t[prop];
+    },
+  });
+  return {
+    motion,
+    AnimatePresence: ({ children }) => children,
+    LayoutGroup: ({ children }) => children,
+    LazyMotion: ({ children }) => children,
+    MotionConfig: ({ children }) => children,
+    Reorder: { Group: ({ children }) => children, Item: ({ children }) => children },
+    domAnimation: {},
+    domMax: {},
+    useAnimation: () => ({ start: jest.fn(), stop: jest.fn(), set: jest.fn() }),
+    useAnimationControls: () => ({ start: jest.fn(), stop: jest.fn(), set: jest.fn() }),
+    useScroll: () => ({ scrollY: { get: () => 0, on: jest.fn(() => jest.fn()) }, scrollX: { get: () => 0, on: jest.fn(() => jest.fn()) }, scrollYProgress: { get: () => 0, on: jest.fn(() => jest.fn()) }, scrollXProgress: { get: () => 0, on: jest.fn(() => jest.fn()) } }),
+    useMotionValue: (v) => ({ get: () => v, set: jest.fn(), on: jest.fn(() => jest.fn()) }),
+    useTransform: (v) => ({ get: () => 0, set: jest.fn(), on: jest.fn(() => jest.fn()) }),
+    useSpring: (v) => ({ get: () => v, set: jest.fn(), on: jest.fn(() => jest.fn()) }),
+    useInView: () => true,
+    useReducedMotion: () => false,
+    useDragControls: () => ({ start: jest.fn() }),
+    usePresence: () => [true, jest.fn()],
+    useIsPresent: () => true,
+    useMotionTemplate: () => ({ get: () => '', set: jest.fn(), on: jest.fn(() => jest.fn()) }),
+    useViewportScroll: () => ({ scrollY: { get: () => 0, on: jest.fn(() => jest.fn()) }, scrollYProgress: { get: () => 0, on: jest.fn(() => jest.fn()) } }),
+    useCycle: (...args) => [args[0], jest.fn()],
+    animate: jest.fn(),
+    stagger: jest.fn(() => 0),
+    transform: jest.fn((v) => v),
+  };
+});
 
 // Mock lucide-react
-jest.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => (() => { /* LucideProxyFallback */
+  const __orig = ({
   Wallet: () => <span data-testid="wallet-icon" />,
   LogOut: () => <span data-testid="logout-icon" />,
   ChevronDown: () => <span data-testid="chevron-down" />,
@@ -40,7 +118,22 @@ jest.mock('lucide-react', () => ({
   RefreshCw: () => <span data-testid="refresh-icon" />,
   Droplets: () => <span data-testid="droplets-icon" />,
   Link2: () => <span data-testid="link2-icon" />,
-}))
+});
+  return new Proxy(__orig, {
+    get: (t, prop) => {
+      if (prop in t) return (t as any)[prop];
+      if (prop === '__esModule') return true;
+      if (typeof prop === 'symbol') return undefined;
+      const name = String(prop);
+      const Icon = ({ className, ...rest }: any) => {
+        const React = require('react');
+        return React.createElement('span', { 'data-testid': `${name.toLowerCase()}-icon`, className, ...rest });
+      };
+      Icon.displayName = `LucideMock(${name})`;
+      return Icon;
+    },
+  });
+})())
 
 // Test WalletConnectButton pattern
 describe('WalletConnectButton Pattern', () => {

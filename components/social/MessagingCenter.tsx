@@ -36,6 +36,7 @@ import { apiClient } from '@/lib/api-client';
 import { PaymentButton } from '../crypto/PaymentButton';
 import { useAnnounce } from '@/lib/accessibility';
 import { safeLocalStorage } from '@/lib/utils';
+import { toast } from '@/lib/toast';
 interface MessagingCenterProps {
   friend: Friend;
   hasVault?: boolean;
@@ -157,7 +158,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
 
     if (!canEncryptForRecipient || !recipientEncryptionKey) {
       setEncryptionStatus('error');
-      alert('Secure messaging is not ready for this contact yet. Ask them to share an encryption key first.');
+      toast.error('Secure messaging is not ready for this contact yet. Ask them to share an encryption key first.');
       return;
     }
     
@@ -211,7 +212,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
       // Rollback optimistic update on error
       setMessages(prev => prev.filter(msg => msg.id !== tempId));
       setInputMessage(messageContent); // Restore input
-      alert('Failed to send message. Please try again.');
+      toast.error('Failed to send message. Please try again.');
       setEncryptionStatus('error');
     } finally {
       setIsSending(false);
@@ -250,7 +251,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
 
     if (!canEncryptForRecipient || !recipientEncryptionKey) {
       setEncryptionStatus('error');
-      alert('Cannot securely edit message until recipient encryption key is available.');
+      toast.error('Cannot securely edit message until recipient encryption key is available.');
       return;
     }
 
@@ -283,7 +284,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
       );
       safeLocalStorage.setItem(`${STORAGE_KEYS.MESSAGES}_${conversationId}`, JSON.stringify(updatedMessages));
     } catch {
-      alert('Failed to edit message. Please try again.');
+      toast.error('Failed to edit message. Please try again.');
     }
   };
 
@@ -311,7 +312,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
       );
       safeLocalStorage.setItem(`${STORAGE_KEYS.MESSAGES}_${conversationId}`, JSON.stringify(updatedMessages));
     } catch {
-      alert('Failed to delete message. Please try again.');
+      toast.error('Failed to delete message. Please try again.');
     }
   };
 
@@ -329,7 +330,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
   const handleReportMessage = (_messageId: string) => {
     // In production: send report to backend
     // Message report submitted
-    alert('Message reported. Thank you for helping keep the community safe.');
+    toast.success('Message reported. Thank you for helping keep the community safe.');
   };
 
   return (
@@ -407,7 +408,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
                 content: `Requested ${amount} ${token} from ${friend.alias || formatAddress(friend.address)}`,
               });
             }
-            alert(`Payment request sent: ${amount} ${token}`);
+            toast.success(`Payment request sent: ${amount} ${token}`);
           }}
           onPaymentSend={(amount, message, token) => {
             if (address) {
@@ -423,7 +424,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
                 content: `Sent ${amount} ${token} to ${friend.alias || formatAddress(friend.address)}`,
               });
             }
-            alert(`Payment sent: ${amount} ${token} (Will integrate with Vault)`);
+            toast.success(`Payment sent: ${amount} ${token}`);
           }}
           />
         ) : (

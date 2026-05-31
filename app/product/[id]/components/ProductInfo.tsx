@@ -117,16 +117,32 @@ export function ProductInfo({ product }: { product: Product }) {
       )}
 
       {showCheckout && (
-        <CheckoutPanel
-          items={items.map((item) => ({ name: item.name, price: item.unitPrice, qty: item.quantity }))}
-          merchantAddress={(product.merchant_address ?? '0x0000000000000000000000000000000000000001') as `0x${string}`}
-          merchantName={product.merchant_name}
-          onComplete={() => {
-            clear();
-            setShowCheckout(false);
-          }}
-          onCancel={() => setShowCheckout(false)}
-        />
+        product.merchant_address && /^0x[a-fA-F0-9]{40}$/.test(product.merchant_address) ? (
+          <CheckoutPanel
+            items={items.map((item) => ({ name: item.name, price: item.unitPrice, qty: item.quantity }))}
+            merchantAddress={product.merchant_address as `0x${string}`}
+            merchantName={product.merchant_name}
+            onComplete={() => {
+              clear();
+              setShowCheckout(false);
+            }}
+            onCancel={() => setShowCheckout(false)}
+          />
+        ) : (
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-200">
+            <div className="font-semibold mb-1">Checkout unavailable</div>
+            <p className="text-amber-200/80">
+              This merchant has not finished onboarding their on-chain payout address yet.
+              Funds cannot be routed safely. Please contact the merchant or try again later.
+            </p>
+            <button
+              onClick={() => setShowCheckout(false)}
+              className="mt-3 text-xs font-semibold text-amber-300 hover:text-amber-200 underline"
+            >
+              Close
+            </button>
+          </div>
+        )
       )}
     </div>
   );

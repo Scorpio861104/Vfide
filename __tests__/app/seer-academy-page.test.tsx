@@ -13,9 +13,12 @@ jest.mock('@/components/layout/Footer', () => ({
   Footer: () => <div data-testid="footer" />,
 }));
 
-jest.mock('lucide-react', () => {
-  const Icon = ({ className }: { className?: string }) => <span className={className}>icon</span>;
-  return {
+jest.mock('lucide-react', () => (() => { /* LucideProxyFallback */
+  const Icon = ({ className }: { className?: string }) => {
+    const React = require('react');
+    return React.createElement('span', { className }, 'icon');
+  };
+  const __orig: Record<string, any> = {
     BookOpen: Icon,
     CandlestickChart: Icon,
     CheckCircle2: Icon,
@@ -24,7 +27,21 @@ jest.mock('lucide-react', () => {
     Shield: Icon,
     Wallet: Icon,
   };
-});
+  return new Proxy(__orig, {
+    get: (t, prop) => {
+      if (prop in t) return (t as any)[prop];
+      if (prop === '__esModule') return true;
+      if (typeof prop === 'symbol') return undefined;
+      const name = String(prop);
+      const Icon = ({ className, ...rest }: any) => {
+        const React = require('react');
+        return React.createElement('span', { 'data-testid': `${name.toLowerCase()}-icon`, className, ...rest });
+      };
+      Icon.displayName = `LucideMock(${name})`;
+      return Icon;
+    },
+  });
+})());
 
 describe('Seer Academy page pathways', () => {
   beforeEach(() => {

@@ -14,6 +14,7 @@ import { motion } from 'framer-motion';
 import { Users, Search, Plus, Star, Clock, DollarSign, MessageCircle, Tag, TrendingUp, UserPlus } from 'lucide-react';
 import { Address } from '@/components/ui/Address';
 import { useLocale } from '@/lib/locale/LocaleProvider';
+import { PromptModal } from '@/components/ui/PromptModal';
 
 export interface Customer {
   id: string;
@@ -55,6 +56,7 @@ export function CustomerManager({ customers = [], customerOrders = {}, isLoading
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null);
   const [noteDraft, setNoteDraft] = useState('');
+  const [tagModalOpenFor, setTagModalOpenFor] = useState<string | null>(null);
 
   const allTags = useMemo(() => [...new Set(customers.flatMap(c => c.tags))], [customers]);
 
@@ -231,10 +233,7 @@ export function CustomerManager({ customers = [], customerOrders = {}, isLoading
                 ))}
                 <button
                   type="button"
-                  onClick={() => {
-                    const tag = typeof window === 'undefined' ? '' : window.prompt('Add a tag for this customer', 'vip') || '';
-                    if (tag.trim()) onAddTag?.(detail.id, tag.trim());
-                  }}
+                  onClick={() => setTagModalOpenFor(detail.id)}
                   className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-2.5 py-1 text-xs text-gray-300"
                 >
                   <Plus size={12} /> Add tag
@@ -290,6 +289,24 @@ export function CustomerManager({ customers = [], customerOrders = {}, isLoading
           </div>
         </motion.div>
       )}
+
+      <PromptModal
+        isOpen={tagModalOpenFor !== null}
+        onClose={() => setTagModalOpenFor(null)}
+        onSubmit={(tag) => {
+          if (tagModalOpenFor && tag.trim()) {
+            onAddTag?.(tagModalOpenFor, tag.trim());
+          }
+          setTagModalOpenFor(null);
+        }}
+        title="Add a tag"
+        description="Tags are visible only to you and help you segment customers (e.g. vip, wholesale, returning)."
+        placeholder="vip"
+        defaultValue="vip"
+        submitText="Add tag"
+        minLength={1}
+        maxLength={32}
+      />
     </div>
   );
 }

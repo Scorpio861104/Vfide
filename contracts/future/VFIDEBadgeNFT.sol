@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "../SharedInterfaces.sol";
 import { Seer } from "../Seer.sol";
-import "./BadgeRegistry.sol";
+import "../BadgeRegistry.sol";
 
 /**
  * @title VFIDEBadgeNFT

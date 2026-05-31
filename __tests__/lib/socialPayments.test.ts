@@ -26,6 +26,9 @@ jest.mock('@/lib/logger', () => ({
 describe('socialPayments notification hardening', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Default validators to "valid"; individual tests override when needed.
+    mockValidateAmount.mockReturnValue({ valid: true });
+    mockValidateEthereumAddress.mockReturnValue({ valid: true });
     Object.defineProperty(global, 'fetch', {
       configurable: true,
       writable: true,

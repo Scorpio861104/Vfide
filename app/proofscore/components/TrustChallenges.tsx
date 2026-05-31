@@ -24,7 +24,7 @@ const CHALLENGES: Challenge[] = [
     description: 'Deploy your first CardBound Vault',
     reward: 500,
     difficulty: 'Easy',
-    href: '/vault/create',
+    href: '/vault',
     checkCompleted: ({ hasVault }) => !!hasVault,
   },
   {
@@ -42,7 +42,7 @@ const CHALLENGES: Challenge[] = [
     description: 'Add 2+ guardians to your vault',
     reward: 300,
     difficulty: 'Medium',
-    href: '/vault/guardians',
+    href: '/guardians',
     checkCompleted: ({ guardianCount }) => (guardianCount ?? 0) >= 2,
   },
   {

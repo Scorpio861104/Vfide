@@ -130,7 +130,7 @@ jobs:
 
   # ── Slither smart contract static analysis ──────────────────────────────
   slither:
-    name: Slither
+    name: Slither (zero-findings gate)
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -138,12 +138,48 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Gate policy (post mainnet-readiness PR #235):
+      #   The repo currently runs Slither at 0 findings across every severity tier.
+      #   This job MUST keep that bar. Any new finding (high/medium/low/info/opt)
+      #   fails the PR. To intentionally introduce a finding, you must either:
+      #     (a) add an inline `// slither-disable-...` with a justification, or
+      #     (b) update slither.config.json `detectors_to_exclude` AND add an entry
+      #         to SLITHER_TRIAGE_RATIONALE.md explaining why.
       - name: Run Slither
         uses: crytic/slither-action@v0.4.2
+        id: slither
         with:
           target: 'contracts/'
-          slither-args: '--json slither-output.json'
-          fail-on: high
+          slither-args: '--json slither-output.json --solc-args "--via-ir --optimize --optimize-runs 0"'
+          fail-on: none
+        continue-on-error: true
+
+      - name: Enforce zero-findings gate
+        run: |
+          set -euo pipefail
+          if [ ! -f slither-output.json ]; then
+            echo "::error::slither-output.json not produced — Slither failed to run."
+            exit 1
+          fi
+          COUNT=$(python3 -c "
+          import json
+          d = json.load(open('slither-output.json'))
+          print(len((d.get('results') or {}).get('detectors') or []))
+          ")
+          echo "Slither finding count: $COUNT"
+          if [ "$COUNT" != "0" ]; then
+            echo "::error::Slither found $COUNT issue(s). The mainnet-readiness gate requires 0."
+            echo "::error::See SLITHER_TRIAGE_RATIONALE.md for how to address findings."
+            python3 -c "
+          import json
+          d = json.load(open('slither-output.json'))
+          for r in (d.get('results') or {}).get('detectors') or []:
+              line = (r.get('description') or '').splitlines()[0][:160] if r.get('description') else ''
+              print(f\"  - [{r.get('impact')}] {r.get('check')} :: {line}\")
+          "
+            exit 1
+          fi
+          echo "✅ Slither: 0 findings — gate passes."
 
       - name: Upload Slither report
         if: always()

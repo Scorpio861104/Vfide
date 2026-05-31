@@ -322,8 +322,7 @@ export function WalletSettings() {
                 </button>
                 <button
                   onClick={handleRemoveBiometric}
-                  className="px-4 py-3 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors"
-                >
+                  className="px-4 py-3 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors" aria-label="Remove biometric">
                   <X size={18} />
                 </button>
               </div>

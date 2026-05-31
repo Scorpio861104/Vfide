@@ -173,7 +173,7 @@ function OnRampModal({
             <h3 className="text-lg font-bold text-white">Buy Crypto</h3>
             <p className="text-gray-400 text-xs mt-0.5">Choose a provider to purchase tokens</p>
           </div>
-          <button onClick={onClose} className="p-2 text-gray-400 hover:text-white"><X size={18} /></button>
+          <button onClick={onClose} className="p-2 text-gray-400 hover:text-white" aria-label="Close"><X size={18} /></button>
         </div>
 
         <div className="p-5 space-y-2">

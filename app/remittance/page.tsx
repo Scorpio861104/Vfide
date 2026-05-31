@@ -146,6 +146,7 @@ export default function RemittancePage() {
                     <Link
                       href={`https://wa.me/?text=${whatsappText}`}
                       target="_blank"
+                      rel="noopener noreferrer"
                       className="btn-premium-ghost flex items-center gap-2"
                     >
                       Share via WhatsApp

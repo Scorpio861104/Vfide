@@ -11,6 +11,7 @@ import { OWNER_CONTROL_PANEL_ADDRESS } from '../config/contracts';
 export function useOwnerVerification() {
   const { address, isConnected } = useAccount();
   
+  // abi-parity-ok: inline minimal ABI for OZ Ownable owner(); 0-arg view function
   const { data: contractOwner } = useReadContract({
     address: OWNER_CONTROL_PANEL_ADDRESS,
     abi: [

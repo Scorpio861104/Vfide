@@ -69,12 +69,25 @@ export const CHAINS: Record<SupportedChain, ChainConfig> = {
     testnet: baseSepolia,
     contracts: {
       mainnet: {
-        vfideToken: '', // Deploy pending
-        vaultHub: '',
-        seer: '',
+        // Base mainnet (8453) — env-driven. Operators set
+        // NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS_8453 / NEXT_PUBLIC_VAULT_HUB_ADDRESS_8453 / etc.
+        // Falls back to the unscoped vars if chain-scoped vars aren't set, so
+        // a single-chain deployment (Base mainnet only) just needs the base names.
+        vfideToken:
+          process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS_8453
+          || process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS
+          || '',
+        vaultHub:
+          process.env.NEXT_PUBLIC_VAULT_HUB_ADDRESS_8453
+          || process.env.NEXT_PUBLIC_VAULT_HUB_ADDRESS
+          || '',
+        seer:
+          process.env.NEXT_PUBLIC_SEER_ADDRESS_8453
+          || process.env.NEXT_PUBLIC_SEER_ADDRESS
+          || '',
       },
       testnet: {
-        // Deployed on Base Sepolia - Dec 25, 2025
+        // Deployed on Base Sepolia (84532)
         vfideToken: configuredContractOrEmpty(CONTRACT_ADDRESSES.VFIDEToken),
         vaultHub: configuredContractOrEmpty(CONTRACT_ADDRESSES.VaultHub),
         seer: configuredContractOrEmpty(CONTRACT_ADDRESSES.Seer),
@@ -141,7 +154,29 @@ export const CHAINS: Record<SupportedChain, ChainConfig> = {
 // ENVIRONMENT CONFIGURATION
 // ========================================
 
-export const IS_TESTNET = process.env.NEXT_PUBLIC_IS_TESTNET !== 'false'
+// IS_TESTNET resolution priority:
+//   1. Explicit NEXT_PUBLIC_IS_TESTNET (truthy string "true" / "false")
+//   2. NEXT_PUBLIC_DEFAULT_CHAIN_ID — if it's a known mainnet id, IS_TESTNET=false
+//   3. Otherwise default to true (testnet) for safety in dev/test runs
+//
+// Rationale: operators who set NEXT_PUBLIC_DEFAULT_CHAIN_ID=8453 (Base mainnet)
+// but forget NEXT_PUBLIC_IS_TESTNET=false would otherwise silently load the
+// testnet wagmi config and the user couldn't even see Base mainnet as an option.
+const MAINNET_CHAIN_IDS = new Set<number>([8453, 137, 324]); // Base, Polygon, zkSync mainnets
+function resolveIsTestnet(): boolean {
+  const explicit = process.env.NEXT_PUBLIC_IS_TESTNET;
+  if (explicit === 'false') return false;
+  if (explicit === 'true') return true;
+  const defaultChainIdRaw = process.env.NEXT_PUBLIC_DEFAULT_CHAIN_ID;
+  if (defaultChainIdRaw) {
+    const parsed = Number.parseInt(defaultChainIdRaw, 10);
+    if (Number.isFinite(parsed) && MAINNET_CHAIN_IDS.has(parsed)) {
+      return false;
+    }
+  }
+  return true;
+}
+export const IS_TESTNET = resolveIsTestnet();
 
 // Default chain - can be overridden by user preference
 export const DEFAULT_CHAIN: SupportedChain = 

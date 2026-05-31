@@ -20,6 +20,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 
 type LinkStatus = 'active' | 'paused' | 'archived' | 'exhausted';
 
@@ -59,6 +60,7 @@ export default function MerchantPaymentLinksPage() {
   const [error, setError] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     if (!address) return;
@@ -94,7 +96,13 @@ export default function MerchantPaymentLinksPage() {
   }, [load]);
 
   const deleteLink = useCallback(async (id: number) => {
-    if (!confirm('Delete this payment link? Existing customers with the link will get an error.')) return;
+    setPendingDelete(id);
+  }, []);
+
+  const confirmDeleteLink = useCallback(async () => {
+    const id = pendingDelete;
+    if (id == null) return;
+    setPendingDelete(null);
     try {
       const response = await fetch(`/api/merchant/payment-links?id=${id}`, { method: 'DELETE' });
       const data = await response.json().catch(() => ({}));
@@ -103,7 +111,7 @@ export default function MerchantPaymentLinksPage() {
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to delete link');
     }
-  }, [load]);
+  }, [pendingDelete, load]);
 
   const copyLink = useCallback(async (link: PaymentLink) => {
     const url = `${window.location.origin}/pay/link/${link.link_id}`;
@@ -191,6 +199,17 @@ export default function MerchantPaymentLinksPage() {
           onError={setError}
         />
       )}
+
+      <ConfirmModal
+        isOpen={pendingDelete !== null}
+        onClose={() => setPendingDelete(null)}
+        onConfirm={confirmDeleteLink}
+        title="Delete payment link?"
+        message="Existing customers who have this link saved will get an error. This cannot be undone."
+        confirmText="Delete"
+        cancelText="Keep"
+        variant="danger"
+      />
 
       <Footer />
     </>
@@ -316,11 +335,18 @@ function CreateLinkModal({ onClose, onCreated, onError }: { onClose: () => void;
   }, [canSubmit, title, description, amountMode, amount, minAmount, maxAmount, singleUse, maxUses, expiresDate, token, onCreated, onError]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur flex items-start sm:items-center justify-center p-4 overflow-y-auto" onClick={onClose}>
+    <div
+      role="dialog"
+      aria-modal="true"
+      className="fixed inset-0 z-50 bg-black/70 backdrop-blur flex items-start sm:items-center justify-center p-4 overflow-y-auto"
+      onClick={onClose}
+      onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
+      tabIndex={-1}
+    >
       <div className="bg-zinc-950 border border-white/10 rounded-2xl p-6 max-w-md w-full my-8" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-xl font-bold">New payment link</h2>
-          <button onClick={onClose} className="text-zinc-400 hover:text-white"><X size={20} /></button>
+          <button onClick={onClose} className="text-zinc-400 hover:text-white" aria-label="Close"><X size={20} /></button>
         </div>
 
         <div className="space-y-4">

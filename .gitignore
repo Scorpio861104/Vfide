@@ -105,3 +105,4 @@ lib/abis/*.bak
 lib/abis/*.bak2
 *.json.bak
 *.json.bak2
+scripts/__pycache__/

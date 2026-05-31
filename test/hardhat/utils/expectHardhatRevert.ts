@@ -8,7 +8,7 @@ const GENERIC_HARDHAT_REVERT = [
 
 export async function expectHardhatRevert(
   action: () => Promise<unknown>,
-  expected?: RegExp,
+  expected?: RegExp
 ): Promise<void> {
   const pattern = expected
     ? new RegExp(`${expected.source}|${GENERIC_HARDHAT_REVERT}`, expected.flags)

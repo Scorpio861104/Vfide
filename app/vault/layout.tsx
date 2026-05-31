@@ -5,6 +5,11 @@ export const metadata: Metadata = {
   title: 'Your Vault - VFIDE',
   description:
     'Manage your VFIDE vault. Deposits, withdrawals, guardian setup, and social recovery controls.',
+  robots: {
+    index: false,
+    follow: false,
+    googleBot: { index: false, follow: false },
+  },
 };
 
 export default function VaultLayout({ children }: { children: React.ReactNode }) {

@@ -367,11 +367,18 @@ function CreateInvoiceModal({
   }, [canSubmit, customer, items, taxRate, memo, dueDate, token, sendImmediately, setCreating, onCreated, onError]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur flex items-start sm:items-center justify-center p-4 overflow-y-auto" onClick={onClose}>
+    <div
+      role="dialog"
+      aria-modal="true"
+      className="fixed inset-0 z-50 bg-black/70 backdrop-blur flex items-start sm:items-center justify-center p-4 overflow-y-auto"
+      onClick={onClose}
+      onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
+      tabIndex={-1}
+    >
       <div className="bg-zinc-950 border border-white/10 rounded-2xl p-6 max-w-2xl w-full my-8" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-xl font-bold">New invoice</h2>
-          <button onClick={onClose} className="text-zinc-400 hover:text-white"><X size={20} /></button>
+          <button onClick={onClose} className="text-zinc-400 hover:text-white" aria-label="Close"><X size={20} /></button>
         </div>
 
         <div className="space-y-5">
@@ -383,7 +390,7 @@ function CreateInvoiceModal({
             </label>
             <label className="block">
               <span className="text-xs text-zinc-400 mb-1 block">Email (optional)</span>
-              <input type="email" value={customer.email} onChange={(e) => setCustomer((c) => ({ ...c, email: e.target.value }))} placeholder="billing@acme.co" className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none" />
+              <input type="email" autoComplete="email" inputMode="email" value={customer.email} onChange={(e) => setCustomer((c) => ({ ...c, email: e.target.value }))} placeholder="billing@acme.co" className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none" />
             </label>
             <label className="block sm:col-span-2">
               <span className="text-xs text-zinc-400 mb-1 block">Customer wallet (optional)</span>

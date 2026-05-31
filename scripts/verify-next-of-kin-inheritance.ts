@@ -50,7 +50,7 @@ async function main() {
   const hubArtifact = loadArtifact(
     'artifacts/contracts/mocks/NextOfKinInheritanceVerifierMocks.sol/MockVaultHubForInheritance.json'
   );
-  const vaultArtifact = loadArtifact('artifacts/contracts/VaultInfrastructure.sol/UserVaultLegacy.json');
+  const vaultArtifact = loadArtifact('artifacts/contracts/legacy/VaultInfrastructure.sol/UserVaultLegacy.json');
 
   const vfideFactory = new ContractFactory(vfideArtifact.abi as any, vfideArtifact.bytecode, owner);
   const vfide = (await vfideFactory.deploy()) as any;

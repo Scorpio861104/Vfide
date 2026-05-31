@@ -1,9 +1,27 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "./BadgeRegistry.sol";
+import {BadgeRegistry} from "./BadgeRegistry.sol";
 
+/// @notice IBadgeQualificationRules
+/// @title IBadgeQualificationRules
+/// @author Vfide
 interface IBadgeQualificationRules {
+    /// @notice checkQualification
+    /// @param commerceTxCount commerceTxCount
+    /// @param consecutiveDays consecutiveDays
+    /// @param governanceVotes governanceVotes
+    /// @param successfulTrades successfulTrades
+    /// @param endorsementsReceived endorsementsReceived
+    /// @param referralsMade referralsMade
+    /// @param referralsQualified referralsQualified
+    /// @param fraudReports fraudReports
+    /// @param educationalContent educationalContent
+    /// @param lastScoreDropBelow700 lastScoreDropBelow700
+    /// @param score score
+    /// @param badge badge
+    /// @param currentTimestamp currentTimestamp
+    /// @return _bool _bool
     function checkQualification(
         uint32 commerceTxCount,
         uint32 consecutiveDays,
@@ -21,7 +39,25 @@ interface IBadgeQualificationRules {
     ) external pure returns (bool);
 }
 
+/// @notice BadgeQualificationRules
+/// @title BadgeQualificationRules
+/// @author Vfide
 contract BadgeQualificationRules is IBadgeQualificationRules {
+    /// @notice checkQualification
+    /// @param commerceTxCount commerceTxCount
+    /// @param consecutiveDays consecutiveDays
+    /// @param governanceVotes governanceVotes
+    /// @param successfulTrades successfulTrades
+    /// @param endorsementsReceived endorsementsReceived
+    /// @param referralsMade referralsMade
+    /// @param referralsQualified referralsQualified
+    /// @param fraudReports fraudReports
+    /// @param educationalContent educationalContent
+    /// @param lastScoreDropBelow700 lastScoreDropBelow700
+    /// @param score score
+    /// @param badge badge
+    /// @param currentTimestamp currentTimestamp
+    /// @return _bool _bool
     function checkQualification(
         uint32 commerceTxCount,
         uint32 consecutiveDays,
@@ -47,10 +83,10 @@ contract BadgeQualificationRules is IBadgeQualificationRules {
 
         if (badge == BadgeRegistry.POWER_USER) {
             uint8 activityTypes = 0;
-            if (commerceTxCount > 0) activityTypes++;
-            if (governanceVotes > 0) activityTypes++;
-            if (endorsementsReceived > 0) activityTypes++;
-            if (referralsMade > 0) activityTypes++;
+            if (commerceTxCount > 0) ++activityTypes;
+            if (governanceVotes > 0) ++activityTypes;
+            if (endorsementsReceived > 0) ++activityTypes;
+            if (referralsMade > 0) ++activityTypes;
             return activityTypes >= 3;
         }
 

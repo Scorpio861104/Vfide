@@ -14,12 +14,6 @@ jest.mock('@/hooks/useProofScoreHooks', () => ({
   useProofScore: jest.fn(() => ({ score: 500, tier: 'Bronze' })),
 }))
 
-jest.mock('@/hooks/useMentorHooks', () => ({
-  useMentorHooks: jest.fn(() => ({})),
-  useIsMentor: jest.fn(() => ({ isMentor: false })),
-  useMentorInfo: jest.fn(() => ({ menteeCount: 0 })),
-}))
-
 jest.mock('@/hooks/useMerchantHooks', () => ({
   useMerchantHooks: jest.fn(() => ({})),
 }))
@@ -28,7 +22,7 @@ jest.mock('@/hooks/useSecurityHooks', () => ({
   useSecurityHooks: jest.fn(() => ({})),
 }))
 
-jest.mock('@/hooks/useDAOHooks', () => ({
+jest.mock('@/hooks/useDAO', () => ({
   useDAOHooks: jest.fn(() => ({})),
 }))
 
@@ -116,14 +110,14 @@ describe('vfide-hooks module', () => {
     expect(typeof useProofScore).toBe('function')
   })
 
-  it('can destructure useIsMentor from module', async () => {
+  it.skip('can destructure useIsMentor from module (removed - mentors feature deprecated)', async () => {
     const { useIsMentor } = await import('@/lib/vfide-hooks')
     
     expect(useIsMentor).toBeDefined()
     expect(typeof useIsMentor).toBe('function')
   })
 
-  it('can destructure useMentorInfo from module', async () => {
+  it.skip('can destructure useMentorInfo from module (removed - mentors feature deprecated)', async () => {
     const { useMentorInfo } = await import('@/lib/vfide-hooks')
     
     expect(useMentorInfo).toBeDefined()

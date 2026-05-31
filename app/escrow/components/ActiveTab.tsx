@@ -19,6 +19,7 @@ import { Lock, Loader2, AlertCircle, ShoppingBag, Store } from 'lucide-react';
 import { useEscrowList } from '@/hooks/useEscrowList';
 import { useCommerceEscrow, EscrowState, type CommerceEscrowRecord } from '@/hooks/useCommerceEscrow';
 import { EscrowCard } from './EscrowCard';
+import { PromptModal } from '@/components/ui/PromptModal';
 
 const ACTIVE_STATES = new Set<EscrowState>([EscrowState.Open, EscrowState.Funded, EscrowState.Disputed]);
 
@@ -39,6 +40,8 @@ export function ActiveTab() {
   const { release, refund, dispute, isWritePending } = useCommerceEscrow();
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [disputeTargetId, setDisputeTargetId] = useState<bigint | null>(null);
+  const [disputeSubmitting, setDisputeSubmitting] = useState(false);
 
   const filterActive = (list: CommerceEscrowRecord[]) => list.filter((e) => ACTIVE_STATES.has(e.state));
   const activeBuyer = filterActive(buyerEscrows);
@@ -68,18 +71,25 @@ export function ActiveTab() {
     }
   };
 
-  const handleDispute = async (id: bigint) => {
+  const handleDispute = (id: bigint) => {
     setActionError(null);
     setActionMessage(null);
-    // Minimal MVP: prompt-based reason capture. The detail page (future) will offer richer input.
-    const reason = prompt('Briefly describe the dispute (visible on-chain):') ?? '';
-    if (reason.trim().length === 0) return;
+    setDisputeTargetId(id);
+  };
+
+  const submitDispute = async (reason: string) => {
+    const id = disputeTargetId;
+    if (id == null) return;
+    setDisputeSubmitting(true);
     try {
       await dispute({ escrowId: id, reason });
       setActionMessage(`Dispute opened on escrow #${id}. DAO will review.`);
       await Promise.all([refetchBuyer(), refetchMerchant()]);
+      setDisputeTargetId(null);
     } catch (e: any) {
       setActionError(e?.shortMessage || e?.message || 'Dispute failed.');
+    } finally {
+      setDisputeSubmitting(false);
     }
   };
 
@@ -181,6 +191,26 @@ export function ActiveTab() {
           No active escrows. Use the <span className="text-cyan-400">Create</span> tab to start one.
         </p>
       )}
+
+      <PromptModal
+        isOpen={disputeTargetId !== null}
+        onClose={() => !disputeSubmitting && setDisputeTargetId(null)}
+        onSubmit={submitDispute}
+        title={disputeTargetId !== null ? `Open dispute on escrow #${disputeTargetId}` : 'Open dispute'}
+        description={
+          <span>
+            Briefly describe the issue. <strong className="text-amber-300">This text is recorded on-chain</strong>{' '}
+            and visible to the DAO during review.
+          </span>
+        }
+        placeholder="What's wrong with this transaction?"
+        submitText={disputeSubmitting ? 'Submitting…' : 'Open dispute'}
+        cancelText="Cancel"
+        multiline
+        minLength={5}
+        maxLength={500}
+        isLoading={disputeSubmitting}
+      />
     </div>
   );
 }

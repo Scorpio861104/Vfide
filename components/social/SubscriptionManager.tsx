@@ -10,6 +10,7 @@ import { SubscriptionManagerABI } from '@/lib/abis/future';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
 import { Check, Sparkles, Crown, Zap, Star } from 'lucide-react';
+import { toast } from '@/lib/toast';
 
 /**
  * SubscriptionManager - Creator subscription management component
@@ -97,17 +98,17 @@ export function SubscriptionManager({
 
   const handleSubscribe = async (tier: SubscriptionTier) => {
     if (!userAddress) {
-      alert('Please connect your wallet first');
+      toast.error('Please connect your wallet first');
       return;
     }
 
     if (!creatorAddress || !/^0x[a-fA-F0-9]{40}$/.test(creatorAddress)) {
-      alert('Invalid creator contract address');
+      toast.error('Invalid creator contract address');
       return;
     }
 
     if (!isSubscriptionManagerConfigured || !isVfideTokenConfigured) {
-      alert('Subscription contracts are not configured for this environment');
+      toast.error('Subscription contracts are not configured for this environment');
       return;
     }
 
@@ -162,7 +163,7 @@ export function SubscriptionManager({
     if (error) {
       setIsProcessing(false);
       playError();
-      alert(`Subscription failed: ${error.message}`);
+      toast.error(`Subscription failed: ${error.message}`);
     }
   }, [error, playError]);
 

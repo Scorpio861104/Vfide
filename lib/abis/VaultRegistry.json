@@ -22,11 +22,6 @@
   },
   {
     "inputs": [],
-    "name": "EmailAlreadyTaken",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "InvalidVault",
     "type": "error"
   },
@@ -52,22 +47,7 @@
   },
   {
     "inputs": [],
-    "name": "PhoneAlreadyTaken",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "RecoveryIdAlreadyTaken",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "UsernameAlreadyTaken",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "VaultNotFound",
     "type": "error"
   },
   {

@@ -3,68 +3,128 @@ pragma solidity 0.8.30;
 
 /**
  * EcoTreasuryVault.sol - VFIDE-Only Treasury System
- * 
+ *
  * (Originally named VFIDEFinance.sol; renamed 2026-05-16 to match the
  *  EcoTreasuryVault contract declared inside, resolving MAINNET_DEPLOY_READINESS
  *  Section A.1 file/contract naming dissonance.)
- * 
+ *
  * Simplified for VFIDE-only ecosystem:
  * - No stablecoin registry (VFIDE is the only currency)
  * - Treasury holds VFIDE for ecosystem operations
  * - DAO can rescue any accidentally sent tokens
  */
 
-import "./SharedInterfaces.sol";
+import {IProofLedger, IERC20, ReentrancyGuard, SafeERC20} from "./SharedInterfaces.sol";
 
+/// @notice FI_NotDAO
 error FI_NotDAO();
+/// @notice FI_Zero
 error FI_Zero();
+/// @notice FI_Insufficient
 error FI_Insufficient();
 
 /**
  * @title EcoTreasuryVault
  * @notice VFIDE ecosystem treasury - holds and distributes VFIDE for ecosystem operations
- * 
+ *
  * Simplified model:
  * - Receives VFIDE from ecosystem fees (0.2% ecosystem fee)
  * - Funds development, marketing, operations
  * - DAO-controlled disbursements
+ * @author Vfide
  */
 contract EcoTreasuryVault is ReentrancyGuard {
     using SafeERC20 for IERC20;
-    
+
+    /// @notice ModulesSet
+    /// @param dao dao
+    /// @param ledger ledger
+    /// @param vfideToken vfideToken
     event ModulesSet(address dao, address ledger, address vfideToken);
+    /// @notice ModulesChangeQueued
+    /// @param pendingDAO pendingDAO
+    /// @param pendingLedger pendingLedger
+    /// @param pendingVfideToken pendingVfideToken
     event ModulesChangeQueued(address indexed pendingDAO, address indexed pendingLedger, address indexed pendingVfideToken);
+    /// @notice ModulesChangeCancelled
+    /// @param pendingDAO pendingDAO
+    /// @param pendingLedger pendingLedger
+    /// @param pendingVfideToken pendingVfideToken
     event ModulesChangeCancelled(address indexed pendingDAO, address indexed pendingLedger, address indexed pendingVfideToken);
+    /// @notice ModulesChangeExpired
+    /// @param pendingDAO pendingDAO
+    /// @param pendingLedger pendingLedger
+    /// @param pendingVfideToken pendingVfideToken
     event ModulesChangeExpired(address indexed pendingDAO, address indexed pendingLedger, address indexed pendingVfideToken);
+    /// @notice ReceivedVFIDE
+    /// @param amount amount
+    /// @param from from
     event ReceivedVFIDE(uint256 amount, address from);
+    /// @notice Sent
+    /// @param token token
+    /// @param to to
+    /// @param amount amount
+    /// @param reason reason
     event Sent(address indexed token, address to, uint256 amount, string reason);
+    /// @notice NotifierChangeQueued
+    /// @param notifier notifier
+    /// @param authorized authorized
+    /// @param effectiveAt effectiveAt
     event NotifierChangeQueued(address indexed notifier, bool authorized, uint64 effectiveAt);
+    /// @notice NotifierChangeCancelled
+    /// @param notifier notifier
+    /// @param authorized authorized
     event NotifierChangeCancelled(address indexed notifier, bool authorized);
 
+    /// @notice dao
     address public dao;
+    /// @notice pendingDAO
     address public pendingDAO;
+    /// @notice pendingLedger
     address public pendingLedger;
+    /// @notice pendingVfideToken
     address public pendingVfideToken;
+    /// @notice pendingModulesExpireAt
     uint64 public pendingModulesExpireAt;
+    /// @notice MODULE_ACCEPT_WINDOW
     uint64 public constant MODULE_ACCEPT_WINDOW = 7 days;
+    /// @notice ledger
     IProofLedger public ledger;
+    /// @notice vfideToken
     IERC20 public vfideToken;
-    
+
     // Track allocations
+    /// @notice totalReceived
     uint256 public totalReceived;
+    /// @notice totalDisbursed
     uint256 public totalDisbursed;
 
-    modifier onlyDAO() { _checkDAO(); _; }
-    function _checkDAO() internal view { if (msg.sender != dao) revert FI_NotDAO(); }
+    /// @notice onlyDAO
+    modifier onlyDAO() {
+        _checkDAO();
+        _;
+    }
+    /// @notice _checkDAO
+    function _checkDAO() internal view {
+        if (msg.sender != dao) revert FI_NotDAO();
+    }
 
+    /// @notice constructor
+    /// @param _dao _dao
+    /// @param _ledger _ledger
+    /// @param _vfide _vfide
     constructor(address _dao, address _ledger, address _vfide) {
         if (_dao == address(0) || _vfide == address(0)) revert FI_Zero();
-        dao = _dao; 
-        ledger = IProofLedger(_ledger); 
+        dao = _dao;
+        ledger = IProofLedger(_ledger);
         vfideToken = IERC20(_vfide);
         emit ModulesSet(_dao, _ledger, _vfide);
     }
 
+    /// @notice setModules
+    /// @param _dao _dao
+    /// @param _ledger _ledger
+    /// @param _vfide _vfide
     function setModules(address _dao, address _ledger, address _vfide) external onlyDAO {
         if (_dao == address(0) || _vfide == address(0)) revert FI_Zero();
         require(_ledger != address(0), "FI: zero ledger");
@@ -76,6 +136,7 @@ contract EcoTreasuryVault is ReentrancyGuard {
         _log("treasury_modules_queued");
     }
 
+    /// @notice acceptDAO
     function acceptDAO() external {
         require(msg.sender == pendingDAO, "FI: not pending DAO");
         require(pendingLedger != address(0) && pendingVfideToken != address(0), "FI: pending modules missing");
@@ -94,6 +155,7 @@ contract EcoTreasuryVault is ReentrancyGuard {
         _log("treasury_dao_accepted");
     }
 
+    /// @notice cancelModules
     function cancelModules() external onlyDAO {
         require(pendingDAO != address(0), "FI: no pending modules");
         emit ModulesChangeCancelled(pendingDAO, pendingLedger, pendingVfideToken);
@@ -104,6 +166,7 @@ contract EcoTreasuryVault is ReentrancyGuard {
         _log("treasury_modules_cancelled");
     }
 
+    /// @notice clearExpiredModules
     function clearExpiredModules() external {
         require(pendingDAO != address(0), "FI: no pending modules");
         require(pendingModulesExpireAt != 0 && block.timestamp > pendingModulesExpireAt, "FI: pending modules active");
@@ -115,7 +178,9 @@ contract EcoTreasuryVault is ReentrancyGuard {
         _log("treasury_modules_expired");
     }
 
+    /// @notice authorizedNotifiers
     mapping(address => bool) public authorizedNotifiers;
+    /// @notice NOTIFIER_CHANGE_DELAY
     uint64 public constant NOTIFIER_CHANGE_DELAY = 48 hours;
 
     struct PendingNotifierChange {
@@ -123,23 +188,27 @@ contract EcoTreasuryVault is ReentrancyGuard {
         bool authorized;
         uint64 effectiveAt;
     }
+    /// @notice pendingNotifierChange
     PendingNotifierChange public pendingNotifierChange;
-    
+
+    /// @notice NotifierAuthorized
+    /// @param notifier notifier
+    /// @param authorized authorized
     event NotifierAuthorized(address indexed notifier, bool authorized);
-    
+
+    /// @notice setNotifier
+    /// @param notifier notifier
+    /// @param authorized authorized
     function setNotifier(address notifier, bool authorized) external onlyDAO {
         if (notifier == address(0)) revert FI_Zero();
         require(pendingNotifierChange.effectiveAt == 0, "FI: pending notifier");
         uint64 effectiveAt = uint64(block.timestamp) + NOTIFIER_CHANGE_DELAY;
-        pendingNotifierChange = PendingNotifierChange({
-            notifier: notifier,
-            authorized: authorized,
-            effectiveAt: effectiveAt
-        });
+        pendingNotifierChange = PendingNotifierChange({notifier: notifier, authorized: authorized, effectiveAt: effectiveAt});
         emit NotifierChangeQueued(notifier, authorized, effectiveAt);
         _log("treasury_notifier_queued");
     }
 
+    /// @notice applyNotifier
     function applyNotifier() external onlyDAO {
         PendingNotifierChange memory p = pendingNotifierChange;
         require(p.effectiveAt != 0, "FI: no pending notifier");
@@ -152,6 +221,7 @@ contract EcoTreasuryVault is ReentrancyGuard {
         _log("treasury_notifier_applied");
     }
 
+    /// @notice cancelNotifier
     function cancelNotifier() external onlyDAO {
         PendingNotifierChange memory p = pendingNotifierChange;
         require(p.effectiveAt != 0, "FI: no pending notifier");
@@ -167,24 +237,24 @@ contract EcoTreasuryVault is ReentrancyGuard {
      *      This catches a compromised authorised notifier inflating totalReceived
      *      without a matching on-chain transfer: if the VFIDE never arrived the
      *      invariant (balanceOf >= totalReceived - totalDisbursed) breaks and reverts.
+     * @param amount amount
+     * @param from from
      */
     function noteVFIDE(uint256 amount, address from) external {
         require(authorizedNotifiers[msg.sender], "FI: not authorized notifier");
         totalReceived += amount;
         // Reconciliation: on-chain balance must cover all recorded net inflows.
-        uint256 netAccountedInflows = totalReceived > totalDisbursed
-            ? totalReceived - totalDisbursed
-            : 0;
-        require(
-            vfideToken.balanceOf(address(this)) >= netAccountedInflows,
-            "FI: balance does not cover reported inflow"
-        );
+        uint256 netAccountedInflows = totalReceived > totalDisbursed ? totalReceived - totalDisbursed : 0;
+        require(vfideToken.balanceOf(address(this)) >= netAccountedInflows, "FI: balance does not cover reported inflow");
         emit ReceivedVFIDE(amount, from);
         _logEv(from, "treasury_vfide_in", amount, "");
     }
 
     /**
      * @notice Send VFIDE for ecosystem expenses (development, marketing, etc)
+     * @param to to
+     * @param amount amount
+     * @param reason reason
      */
     function sendVFIDE(address to, uint256 amount, string calldata reason) external onlyDAO nonReentrant {
         if (to == address(0) || amount == 0) revert FI_Zero();
@@ -200,6 +270,9 @@ contract EcoTreasuryVault is ReentrancyGuard {
     /**
      * @notice Rescue any accidentally sent tokens (not just VFIDE)
      * @dev Emergency function for recovering stuck tokens
+     * @param token token
+     * @param to to
+     * @param amount amount
      */
     function rescueToken(address token, address to, uint256 amount) external onlyDAO nonReentrant {
         if (token == address(0) || to == address(0) || amount == 0) revert FI_Zero();
@@ -211,6 +284,7 @@ contract EcoTreasuryVault is ReentrancyGuard {
 
     /**
      * @notice Get current VFIDE balance
+     * @return _uint256 _uint256
      */
     function vfideBalance() external view returns (uint256) {
         return vfideToken.balanceOf(address(this));
@@ -218,48 +292,55 @@ contract EcoTreasuryVault is ReentrancyGuard {
 
     /**
      * @notice Get balance of any token (for rescue operations)
+     * @param token token
+     * @return _uint256 _uint256
      */
     function balanceOf(address token) external view returns (uint256) {
         return IERC20(token).balanceOf(address(this));
     }
-    
+
     /**
      * @notice Get treasury summary
+     * @return currentBalance currentBalance
+     * @return totalIn totalIn
+     * @return totalOut totalOut
+     * @return netPosition netPosition
      */
-    function getTreasurySummary() external view returns (
-        uint256 currentBalance,
-        uint256 totalIn,
-        uint256 totalOut,
-        uint256 netPosition
-    ) {
+    function getTreasurySummary() external view returns (uint256 currentBalance, uint256 totalIn, uint256 totalOut, uint256 netPosition) {
         currentBalance = vfideToken.balanceOf(address(this));
         totalIn = totalReceived;
         totalOut = totalDisbursed;
         netPosition = totalIn > totalOut ? totalIn - totalOut : 0;
     }
-    
+
     /**
      * @notice Get balances of multiple tokens (for portfolio view)
+     * @param tokens tokens
+     * @return balances balances
      */
-    function getMultiTokenBalances(address[] calldata tokens) external view returns (
-        uint256[] memory balances
-    ) {
+    function getMultiTokenBalances(address[] calldata tokens) external view returns (uint256[] memory balances) {
         balances = new uint256[](tokens.length);
-        for (uint256 i = 0; i < tokens.length; i++) {
+        for (uint256 i = 0; i < tokens.length; ++i) {
             balances[i] = IERC20(tokens[i]).balanceOf(address(this));
         }
     }
 
+    /// @notice _log
+    /// @param action action
     function _log(string memory action) internal {
-        if (address(ledger) != address(0)) { 
-            try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {} 
+        if (address(ledger) != address(0)) {
+            try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {}
         }
     }
-    
+
+    /// @notice _logEv
+    /// @param who who
+    /// @param action action
+    /// @param amount amount
+    /// @param note note
     function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
-        if (address(ledger) != address(0)) { 
-            try ledger.logEvent(who, action, amount, note) {} catch {} 
+        if (address(ledger) != address(0)) {
+            try ledger.logEvent(who, action, amount, note) {} catch {}
         }
     }
 }
-

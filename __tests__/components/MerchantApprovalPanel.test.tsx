@@ -7,22 +7,48 @@ const mockRefetchVfide = jest.fn(async () => ({ data: 0n }))
 const mockRefetchStablecoin = jest.fn(async () => ({ data: 0n }))
 const mockShowToast = jest.fn()
 
-jest.mock('wagmi', () => ({
-  useReadContract: jest.fn((params?: { functionName?: string; address?: string }) => {
+jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK_V2 */
+  useAccount: jest.fn(() => ({ address: '0x1234567890123456789012345678901234567890', isConnected: true, status: 'connected' })),
+  useChainId: jest.fn(() => 84532),
+  useSwitchChain: jest.fn(() => ({ switchChain: jest.fn(), switchChainAsync: jest.fn(), chains: [], status: 'idle' })),
+  useReadContract: jest.fn((params: any) => {
     if (params?.functionName === 'dailyTransferLimit') {
-      return { data: 123n }
+      return { data: 123n, isError: false, isLoading: false, isSuccess: true, error: null, refetch: jest.fn() };
     }
-    if (params?.functionName === 'allowance' && params?.address === '0x1000000000000000000000000000000000000001') {
-      return { data: 0n, refetch: mockRefetchVfide }
-    }
-    if (params?.functionName === 'allowance') {
-      return { data: 0n, refetch: mockRefetchStablecoin }
-    }
-    return { data: undefined }
+    return { data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() };
   }),
-  useWriteContract: jest.fn(() => ({
-    writeContractAsync: mockWriteContractAsync,
-  })),
+  useReadContracts: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
+  useWriteContract: jest.fn(() => ({ writeContract: jest.fn(), writeContractAsync: mockWriteContractAsync, data: undefined, isPending: false, isSuccess: false, isError: false, error: null, reset: jest.fn() })),
+  useWaitForTransactionReceipt: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
+  useWatchContractEvent: jest.fn(() => undefined),
+  usePublicClient: jest.fn(() => ({ readContract: jest.fn(), getBlockNumber: jest.fn(), getTransactionReceipt: jest.fn() })),
+  useWalletClient: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useSignTypedData: jest.fn(() => ({ signTypedData: jest.fn(), signTypedDataAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null, reset: jest.fn() })),
+  useSignMessage: jest.fn(() => ({ signMessage: jest.fn(), signMessageAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null, reset: jest.fn() })),
+  useConnect: jest.fn(() => ({ connect: jest.fn(), connectAsync: jest.fn(), connectors: [], status: 'idle' })),
+  useDisconnect: jest.fn(() => ({ disconnect: jest.fn(), disconnectAsync: jest.fn() })),
+  useConnections: jest.fn(() => []),
+  useBalance: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })),
+  useEnsName: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useEnsAvatar: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useBlockNumber: jest.fn(() => ({ data: undefined, isLoading: false, refetch: jest.fn() })),
+  useEstimateGas: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useSendTransaction: jest.fn(() => ({ sendTransaction: jest.fn(), sendTransactionAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null })),
+  useConfig: jest.fn(() => ({})),
+  WagmiProvider: ({ children }) => children,
+  createConfig: jest.fn(() => ({})),
+  createStorage: jest.fn(() => ({ getItem: jest.fn(() => null), setItem: jest.fn(), removeItem: jest.fn() })),
+  cookieStorage: { getItem: jest.fn(() => null), setItem: jest.fn(), removeItem: jest.fn() },
+  http: jest.fn(() => ({})),
+  fallback: jest.fn(() => ({})),
+  useGasPrice: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })),
+  useEstimateFeesPerGas: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })),
+  useReconnect: jest.fn(() => ({ reconnect: jest.fn(), reconnectAsync: jest.fn(), connectors: [], status: 'idle', isPending: false, isSuccess: false, isError: false })),
+  useTransaction: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
+  useTransactionReceipt: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
+  serialize: jest.fn((v) => JSON.stringify(v)),
+  deserialize: jest.fn((v) => { try { return JSON.parse(v); } catch { return v; } }),
+  cookieToInitialState: jest.fn(() => undefined),
 }))
 
 jest.mock('@/components/ui/toast', () => ({
@@ -36,14 +62,14 @@ jest.mock('@/components/ui/GlassCard', () => ({
 }))
 
 jest.mock('@/lib/contracts', () => ({
-  CONTRACT_ADDRESSES: {
-    MerchantPortal: '0x2000000000000000000000000000000000000002',
-    VFIDEToken: '0x1000000000000000000000000000000000000001',
-  },
-  CARD_BOUND_VAULT_ABI: [],
-  ERC20ABI: [],
-  isConfiguredContractAddress: (address?: string | null) =>
-    typeof address === 'string' && address.startsWith('0x') && address.length === 42,
+  // CANONICAL_CONTRACTS_MOCK_V4
+  CONTRACT_ADDRESSES: { VFIDEToken: '0x1111111111111111111111111111111111111101', StablecoinRegistry: '0x1111111111111111111111111111111111111102', MerchantPortal: '0x1111111111111111111111111111111111111103', MerchantRegistry: '0x1111111111111111111111111111111111111104', VaultHub: '0x1111111111111111111111111111111111111105', Seer: '0x1111111111111111111111111111111111111106', SeerView: '0x1111111111111111111111111111111111111107', DAO: '0x1111111111111111111111111111111111111108', DAOTimelock: '0x1111111111111111111111111111111111111109', TrustGateway: '0x111111111111111111111111111111111111110a', GuardianRegistry: '0x111111111111111111111111111111111111110b', GuardianLock: '0x111111111111111111111111111111111111110c', PanicGuard: '0x111111111111111111111111111111111111110d', EmergencyBreaker: '0x111111111111111111111111111111111111110e' },
+  CONTRACTS: {},
+  getContractAddresses: jest.fn(() => ({ VFIDEToken: '0x1111111111111111111111111111111111111101', StablecoinRegistry: '0x1111111111111111111111111111111111111102', MerchantPortal: '0x1111111111111111111111111111111111111103', MerchantRegistry: '0x1111111111111111111111111111111111111104', VaultHub: '0x1111111111111111111111111111111111111105', Seer: '0x1111111111111111111111111111111111111106', SeerView: '0x1111111111111111111111111111111111111107', DAO: '0x1111111111111111111111111111111111111108', DAOTimelock: '0x1111111111111111111111111111111111111109', TrustGateway: '0x111111111111111111111111111111111111110a', GuardianRegistry: '0x111111111111111111111111111111111111110b', GuardianLock: '0x111111111111111111111111111111111111110c', PanicGuard: '0x111111111111111111111111111111111111110d', EmergencyBreaker: '0x111111111111111111111111111111111111110e' })),
+  isConfiguredContractAddress: jest.fn(() => true),
+  validateContractAddress: jest.fn((addr) => addr),
+  ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
+  CURRENT_CHAIN_ID: 84532,
 }))
 
 const loadMerchantApprovalPanel = () =>
@@ -76,7 +102,7 @@ describe('MerchantApprovalPanel', () => {
       expect(mockWriteContractAsync).toHaveBeenCalledWith(
         expect.objectContaining({
           functionName: 'approveVFIDE',
-          args: ['0x2000000000000000000000000000000000000002', 123n],
+          args: ['0x1111111111111111111111111111111111111103', 123n],
         })
       )
     })
@@ -103,7 +129,7 @@ describe('MerchantApprovalPanel', () => {
           functionName: 'approveERC20',
           args: [
             '0x4000000000000000000000000000000000000004',
-            '0x2000000000000000000000000000000000000002',
+            '0x1111111111111111111111111111111111111103',
             123n,
           ],
         })

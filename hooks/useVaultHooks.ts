@@ -28,7 +28,6 @@ import { ACTIVE_VAULT_IMPLEMENTATION, isConfiguredContractAddress } from '../lib
 import { useContractAddresses } from './useContractAddresses'
 import { ZERO_ADDRESS } from '../lib/constants'
 import { VaultHubABI, VFIDETokenABI, CardBoundVaultABI } from '../lib/abis'
-import { isCardBoundVaultMode } from '../lib/contracts'
 import { useAppStore } from '@/lib/store/appStore';
 
 const HUB_ABI = VaultHubABI
@@ -141,27 +140,22 @@ export function useGuardianCancelInheritance(vaultAddress?: `0x${string}`) {
 
 // ---------------------------------------------------------------------------
 // useInheritanceStatus
-// Reads next-of-kin style inheritance status from a vault. In CardBound mode
-// the vault uses the InheritanceManager multi-heir system, so legacy
-// next-of-kin fields are meaningless — hasNextOfKin always returns false.
+// Legacy next-of-kin compatibility shim. In CardBound mode (the only
+// supported mode), the vault uses the InheritanceManager multi-heir system
+// from `VaultInheritancePanel` — there is no next-of-kin field on the
+// vault contract anymore. Previously this hook called
+// `vaultAdmin()` on the legacy ABI gated behind `!isCardBound`, but
+// (a) `isCardBoundVaultMode()` always returns true, so the read never
+//     fired, and (b) the CardBoundVault ABI does not even export
+// `vaultAdmin()`, so reactivating that branch would surface a hard
+// "function not found" failure at runtime.
+// We keep the hook for downstream callers + tests but always return the
+// zero-address sentinel.
 // ---------------------------------------------------------------------------
-export function useInheritanceStatus(vaultAddress?: `0x${string}`) {
-  const isCardBound = isCardBoundVaultMode()
-
-  const { data } = useReadContract({
-    address: vaultAddress,
-    abi: CardBoundVaultABI,
-    functionName: 'vaultAdmin',
-    query: { enabled: !!vaultAddress && !isCardBound },
-  })
-
-  const nextOfKin = isCardBound
-    ? ZERO_ADDRESS
-    : (data as string | undefined) ?? ZERO_ADDRESS
-
+export function useInheritanceStatus(_vaultAddress?: `0x${string}`) {
   return {
-    nextOfKin,
-    hasNextOfKin: nextOfKin !== ZERO_ADDRESS && nextOfKin !== '0x0000000000000000000000000000000000000000',
+    nextOfKin: ZERO_ADDRESS,
+    hasNextOfKin: false,
   }
 }
 

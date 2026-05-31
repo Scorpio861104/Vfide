@@ -16,6 +16,7 @@ import DAORaw from './DAO.json'
 import DAOTimelockRaw from './DAOTimelock.json'
 import MerchantPortalRaw from './MerchantPortal.json'
 import VFIDECommerceRaw from './VFIDECommerce.json'
+import MerchantRegistryRaw from './MerchantRegistry.json'
 import ProofScoreBurnRouterRaw from './ProofScoreBurnRouter.json'
 import ProofLedgerRaw from './ProofLedger.json'
 // New consolidated ABIs
@@ -96,11 +97,16 @@ const SeerABI = normalizeImportedABI(SeerRaw);
 const DAOABI = normalizeImportedABI(DAORaw);
 const DAOTimelockABI = normalizeImportedABI(DAOTimelockRaw);
 const MerchantPortalABI = normalizeImportedABI(MerchantPortalRaw);
-// VFIDECommerce.json contains MerchantRegistry + VFIDECommerce + CommerceEscrow ABIs
-// merged into one array. Re-exported as MerchantRegistryABI so the merchant-identity
-// hook can target the registry surface (setMetaHash, merchants, delistMerchant, etc.)
-// without pulling in unrelated escrow / commerce surface separately.
-const MerchantRegistryABI = normalizeImportedABI(VFIDECommerceRaw);
+// MerchantRegistry is a SEPARATE contract from CommerceEscrow.
+// Previously this file aliased MerchantRegistryABI = VFIDECommerceRaw, but
+// VFIDECommerce.json only contains the CommerceEscrow ABI — the registry
+// functions (info, minScore, autoSuspendRefunds, autoSuspendDisputes,
+// merchants, addMerchant, setMetaHash, …) are absent from it. As a
+// result every useMerchantRegistry read silently failed at the ABI layer.
+// Fixed 2026-Q4 audit: ship a dedicated MerchantRegistry.json synthesized
+// from contracts/MerchantRegistry.sol so reads land on real selectors.
+const MerchantRegistryABI = normalizeImportedABI(MerchantRegistryRaw);
+const VFIDECommerceABI = normalizeImportedABI(VFIDECommerceRaw);
 const ProofScoreBurnRouterABI = normalizeImportedABI(ProofScoreBurnRouterRaw);
 const ProofLedgerABI = normalizeImportedABI(ProofLedgerRaw);
 const DutyDistributorABI = normalizeImportedABI(DutyDistributorRaw);
@@ -180,6 +186,7 @@ validateABI(DAOABI, 'DAO');
 validateABI(DAOTimelockABI, 'DAOTimelock');
 validateABI(MerchantPortalABI, 'MerchantPortal');
 validateABI(MerchantRegistryABI, 'MerchantRegistry');
+validateABI(VFIDECommerceABI, 'VFIDECommerce');
 validateABI(ProofScoreBurnRouterABI, 'ProofScoreBurnRouter');
 validateABI(ProofLedgerABI, 'ProofLedger');
 // Validate new ABIs
@@ -256,6 +263,7 @@ export {
   DAOTimelockABI,
   MerchantPortalABI,
   MerchantRegistryABI,
+  VFIDECommerceABI,
   ProofScoreBurnRouterABI,
   ProofLedgerABI,
   // New consolidated exports

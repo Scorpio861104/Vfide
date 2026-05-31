@@ -56,22 +56,37 @@ export function ElectionsTabContent() {
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [expandedCandidate, setExpandedCandidate] = useState<string | null>(null);
 
-  const { data: electionInfoData } = useReadContract({
+  // CouncilElection.sol exposes `getElectionStatus()` and `getElectionWindow()`.
+  // There is no `getElectionInfo()`. Fetch both and remap to the UI shape.
+  const enabled = isConfiguredContractAddress(COUNCIL_ELECTION_ADDRESS);
+
+  const { data: statusData } = useReadContract({
     address: COUNCIL_ELECTION_ADDRESS as `0x${string}`,
     abi: CouncilElectionABI,
-    functionName: 'getElectionInfo',
-    query: { enabled: isConfiguredContractAddress(COUNCIL_ELECTION_ADDRESS) },
+    functionName: 'getElectionStatus',
+    query: { enabled },
   });
 
-  const electionInfo: ElectionInfo = electionInfoData
+  const { data: windowData } = useReadContract({
+    address: COUNCIL_ELECTION_ADDRESS as `0x${string}`,
+    abi: CouncilElectionABI,
+    functionName: 'getElectionWindow',
+    query: { enabled },
+  });
+
+  const electionInfo: ElectionInfo = statusData
     ? {
-        councilSize: Number((electionInfoData as any)[0] ?? 12),
-        termDays: Number((electionInfoData as any)[1] ?? 365),
-        minScore: Number((electionInfoData as any)[2] ?? 7000),
-        currentTermEnd: Number((electionInfoData as any)[3] ?? 0),
-        electionActive: Boolean((electionInfoData as any)[4] ?? true),
-        totalVotes: Number((electionInfoData as any)[5] ?? 0),
-        totalVotePower: Number((electionInfoData as any)[6] ?? 0),
+        // currentCouncilSize, maxCouncilSize, termEndTime, daysRemaining,
+        // candidateCount, eligibleCandidateCount
+        councilSize: Number((statusData as readonly [bigint, bigint, bigint, bigint, bigint, bigint])[1] ?? 12n),
+        termDays: 365, // not exposed onchain; UI default
+        minScore: 7000, // not exposed onchain; UI default
+        currentTermEnd: Number((statusData as readonly [bigint, bigint, bigint, bigint, bigint, bigint])[2] ?? 0n),
+        electionActive: windowData
+          ? Number((windowData as readonly [bigint, bigint, bigint])[1] ?? 0n) > Math.floor(Date.now() / 1000)
+          : true,
+        totalVotes: Number((statusData as readonly [bigint, bigint, bigint, bigint, bigint, bigint])[4] ?? 0n),
+        totalVotePower: Number((statusData as readonly [bigint, bigint, bigint, bigint, bigint, bigint])[5] ?? 0n),
       }
     : DEFAULT_ELECTION;
 

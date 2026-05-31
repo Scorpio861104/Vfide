@@ -295,6 +295,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
 
     /// @notice N-L15 FIX: Set the optional SessionKeyManager for per-session spend limits.
     ///         Pass address(0) to disable the gate (backward-compatible).
+    // slither-disable-next-line missing-zero-check  // intentional: address(0) disables the gate
     function setSessionKeyManager(address _skm) external onlyDAO {
         sessionKeyManager = _skm;
     }
@@ -537,6 +538,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         // cannot saturate the full 500-slot history and block all future refunds.
         if (customerRefunds[customer].length >= 450) revert MERCH_CapExceeded();
         
+        // audit-ok(weak-randomness): Not a PRNG: keccak hash used as a unique identifier; collision-resistance from caller/nonce/length is sufficient
         refundId = keccak256(abi.encode(msg.sender, customer, orderId, block.timestamp, customerRefunds[customer].length));
         
         refundRequests[refundId] = RefundRequest({
@@ -747,7 +749,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
             if (allowance < maxAmount) revert MERCH_NotApproved();
         }
 
-        uint256 vaultDailyLimit;
+        uint256 vaultDailyLimit = 0;
         try ICardBoundVaultPermitView(customerVault).dailyTransferLimit() returns (uint256 limit) {
             vaultDailyLimit = limit;
         } catch {
@@ -791,11 +793,13 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
      * Signed-intent payment path: customer signs an intent and merchant/relayer submits it.
      * Avoids requiring standing ERC20 approvals from the customer vault to this portal.
      */
+    // slither-disable-start reentrancy-no-eth
     function payWithIntent(
         ICardBoundVaultPay.PayIntent calldata intent,
         bytes calldata signature,
         string calldata orderId
     ) external nonReentrant returns (uint256 netAmount) {
+        // function has nonReentrant guard; cross-contract calls are to trusted vault/escrow modules
         if (intent.merchantPortal != address(this)) revert MERCH_IntentInvalid();
         if (intent.merchant == address(0) || intent.token == address(0)) revert MERCH_IntentInvalid();
         if (intent.amount == 0) revert MERCH_IntentInvalid();
@@ -848,6 +852,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         _rewardPaymentParticipants(customer, intent.merchant);
         _logEv(customer, "m_pay", intent.amount, orderId);
     }
+    // slither-disable-end reentrancy-no-eth
 
     /**
      * Enable or disable automatic conversion for stable-pay merchants

@@ -71,6 +71,11 @@
     "type": "error"
   },
   {
+    "inputs": [],
+    "name": "PM_Zero",
+    "type": "error"
+  },
+  {
     "anonymous": false,
     "inputs": [],
     "name": "DAOChangeCancelled",

@@ -23,17 +23,6 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "actualSum",
-        "type": "uint256"
-      }
-    ],
-    "name": "INH_BasisPointsMustSumTo10000",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "uint64",
         "name": "remaining",
         "type": "uint64"
@@ -54,28 +43,7 @@
   },
   {
     "inputs": [],
-    "name": "INH_GuardianSnapshotOnly",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "INH_HashAlreadyClaimed",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "current",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "needed",
-        "type": "uint256"
-      }
-    ],
-    "name": "INH_InsufficientGuardianApprovals",
     "type": "error"
   },
   {
@@ -127,11 +95,6 @@
   {
     "inputs": [],
     "name": "INH_OwnerOverrideExpired",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "INH_PendingObligations",
     "type": "error"
   },
   {

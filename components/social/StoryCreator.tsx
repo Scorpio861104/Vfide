@@ -5,6 +5,7 @@ import React, { useState, useRef } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { X, Camera, Type, Image as ImageIcon } from 'lucide-react';
 import { createTextStory, createMediaStory, STORY_BACKGROUNDS, Story } from '@/lib/storiesSystem';
+import { toast } from '@/lib/toast';
 
 interface StoryCreatorProps {
   onClose: () => void;
@@ -45,14 +46,14 @@ export function StoryCreator({
     ]);
 
     if (!allowedTypes.has(file.type)) {
-      alert('Only PNG, JPEG, WEBP, GIF, MP4, WEBM, and MOV uploads are allowed.');
+      toast.error('Only PNG, JPEG, WEBP, GIF, MP4, WEBM, and MOV uploads are allowed.');
       return;
     }
 
     // Validate file size (10MB for images, 100MB for videos)
     const maxSize = file.type.startsWith('video/') ? 100 * 1024 * 1024 : 10 * 1024 * 1024;
     if (file.size > maxSize) {
-      alert(`File too large. Maximum size is ${maxSize / (1024 * 1024)}MB`);
+      toast.error(`File too large. Maximum size is ${maxSize / (1024 * 1024)}MB`);
       return;
     }
 
@@ -67,7 +68,7 @@ export function StoryCreator({
   const handleCreate = () => {
     if (mode === 'text') {
       if (!textContent.trim()) {
-        alert('Please enter some text');
+        toast.error('Please enter some text');
         return;
       }
 
@@ -82,7 +83,7 @@ export function StoryCreator({
       onCreate(story);
     } else {
       if (!mediaPreview) {
-        alert('Please select a photo or video');
+        toast.error('Please select a photo or video');
         return;
       }
 
@@ -209,8 +210,17 @@ export function StoryCreator({
               {/* Media Upload/Preview */}
               {!mediaPreview ? (
                 <div
-                  className="aspect-9/16 max-w-sm mx-auto border-2 border-dashed border-zinc-700 rounded-xl flex flex-col items-center justify-center p-8 cursor-pointer hover:border-cyan-400 transition-colors"
+                  role="button"
+                  tabIndex={0}
+                  aria-label="Add photo or video to story"
+                  className="aspect-9/16 max-w-sm mx-auto border-2 border-dashed border-zinc-700 rounded-xl flex flex-col items-center justify-center p-8 cursor-pointer hover:border-cyan-400 focus-visible:outline-2 focus-visible:outline-cyan-400 transition-colors"
                   onClick={() => fileInputRef.current?.click()}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      fileInputRef.current?.click();
+                    }
+                  }}
                 >
                   <ImageIcon className="w-16 h-16 text-zinc-400 mb-4" />
                   <p className="text-zinc-100 text-lg mb-2">Add Photo or Video</p>

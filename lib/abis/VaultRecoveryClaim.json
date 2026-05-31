@@ -92,11 +92,6 @@
   },
   {
     "inputs": [],
-    "name": "NotClaimant",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "NotGuardian",
     "type": "error"
   },
@@ -107,17 +102,7 @@
   },
   {
     "inputs": [],
-    "name": "NotTrustedVerifier",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "NotTrustee",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "VaultHasNoClaim",
     "type": "error"
   },
   {
@@ -606,37 +591,6 @@
       }
     ],
     "name": "VerifierSet",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "claimId",
-        "type": "uint256"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "verifier",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "bool",
-        "name": "approved",
-        "type": "bool"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint8",
-        "name": "totalVotes",
-        "type": "uint8"
-      }
-    ],
-    "name": "VerifierVoteCast",
     "type": "event"
   },
   {

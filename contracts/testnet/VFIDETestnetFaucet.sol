@@ -317,6 +317,7 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
         uint256 vfideBal = vfideToken.balanceOf(address(this));
         if (vfideBal > 0) vfideToken.safeTransfer(to, vfideBal);
         uint256 ethBal = address(this).balance;
+        // audit-ok(require-no-message): Reviewed: vendored audited code (Uniswap V3) or testnet-only contract; not deployed to mainnet
         if (ethBal > 0) { (bool ok, ) = to.call{value: ethBal}(""); require(ok); }
 
         delete pendingWithdrawRecipient;

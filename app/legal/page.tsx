@@ -1,7 +1,8 @@
 'use client';
 
 import { Footer } from "@/components/layout/Footer";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Scale, Lock, FileText } from "lucide-react";
 import { useLocale } from '@/lib/locale/LocaleProvider';
@@ -39,7 +40,10 @@ const LEGAL_COPY = {
   },
 };
 
+const VALID_TABS: TabType[] = ['legal', 'privacy', 'terms'];
+
 export default function LegalPage() {
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<TabType>('legal');
   const { locale } = useLocale();
   const copy = (LEGAL_COPY as Record<string, typeof LEGAL_COPY['en-US']>)[locale] ?? LEGAL_COPY['en-US'];
@@ -49,6 +53,14 @@ export default function LegalPage() {
     { id: 'privacy' as const, label: copy.tabs.privacy, icon: Lock },
     { id: 'terms' as const, label: copy.tabs.terms, icon: FileText },
   ];
+
+  // Honor ?tab=privacy / ?tab=terms deeplinks (e.g. from /vault/safety).
+  useEffect(() => {
+    const requested = searchParams?.get('tab');
+    if (requested && (VALID_TABS as string[]).includes(requested)) {
+      setActiveTab(requested as TabType);
+    }
+  }, [searchParams]);
 
   return (
     <>
@@ -167,11 +179,12 @@ function LegalDisclaimersTab() {
       </div>
 
       <div className="bg-zinc-800 border border-amber-400 rounded-xl p-8">
-        <h2 className="text-2xl font-bold text-amber-400 mb-6">🌍 Jurisdiction Notice</h2>
+        <h2 className="text-2xl font-bold text-amber-400 mb-6">🌍 Your Local Laws Apply</h2>
         <p className="text-zinc-100 leading-relaxed">
-          VFIDE tokens are not offered to residents of the United States, China, or any jurisdiction where 
-          cryptocurrency transactions are prohibited. It is YOUR responsibility to ensure compliance with 
-          your local laws before participating.
+          VFIDE is a permissionless protocol with no KYC, no geo-restrictions, and no minimums &mdash;
+          if you have a wallet, you can interact with it. Cryptocurrency regulations vary by location
+          and change over time, so it is YOUR responsibility to ensure your use of VFIDE complies
+          with the laws that apply to you before participating.
         </p>
       </div>
     </div>
