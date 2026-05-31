@@ -11,8 +11,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Mic, MicOff, Square, Play, Pause, Trash2 } from 'lucide-react';
+import { Mic, Square, Play, Pause, Trash2 } from 'lucide-react';
 
 interface VoiceNoteRecorderProps {
   onRecorded: (blob: Blob, duration: number) => void;
