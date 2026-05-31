@@ -17,7 +17,7 @@ import {
   MessageSquare,
   Shield,
   Copy,
-  Check
+  Check,
 } from 'lucide-react';
 import CardBoundVaultABI from '@/lib/abis/CardBoundVault.json';
 import { useUserVault } from '@/hooks/useVaultHooks';
@@ -171,7 +171,6 @@ function CancelQueueSection({ vault }: { vault: `0x${string}` }) {
       try {
         const { createPublicClient, custom } = await import('viem');
         const client = createPublicClient({ transport: custom((window as any).ethereum) });
-        // abi-parity-ok: inline ABI for CardBoundVaultPaymentQueueManager.queueLength(); 0-arg view
         const length = (await client.readContract({
           address: paymentManagerAddr as `0x${string}`,
           abi: [
@@ -220,7 +219,6 @@ function CancelQueueSection({ vault }: { vault: `0x${string}` }) {
         const { createPublicClient, custom } = await import('viem');
         const client = createPublicClient({ transport: custom((window as any).ethereum) });
         for (let i = 0n; i < BigInt(paymentCount); i++) {
-          // abi-parity-ok: inline ABI for paymentQueue(uint256); 1 arg, statically present
           const entry = (await client.readContract({
             address: paymentManagerAddr as `0x${string}`,
             abi: [

@@ -74,7 +74,6 @@ export function AppLockModal({
     return () => {
       cancelled = true;
     };
-     
   }, [tab]);
 
   const submitPin = async () => {

@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 import { AnimatePresence, m, LazyMotion, domAnimation } from 'framer-motion';
 import { Bell, History, PlusCircle } from 'lucide-react';
 import { useState } from 'react';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 import { Footer } from '@/components/layout/Footer';
 
@@ -22,6 +23,9 @@ const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
 ];
 
 export default function PriceAlertsPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [activeTab, setActiveTab] = useState<TabId>('active');
 
   return (

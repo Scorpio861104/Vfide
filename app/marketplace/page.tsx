@@ -4,18 +4,18 @@ export const dynamic = 'force-dynamic';
 
 import { Footer } from '@/components/layout/Footer';
 import { useState, useMemo, useEffect } from 'react';
-import Link from 'next/link';
-import { AnimatePresence, m, LazyMotion, domAnimation } from 'framer-motion';
-import { Search, SlidersHorizontal, Grid, List, Loader2, Package, Store, ArrowRight, Sparkles } from 'lucide-react';
+import { AnimatePresence } from 'framer-motion';
+import { Search, SlidersHorizontal, Grid, List, Loader2, Package } from 'lucide-react';
 
 import { FilterContent } from './components/FilterContent';
-import { MarketplaceEmptyState } from './components/MarketplaceEmptyState';
 import { ProductGridCard } from './components/ProductGridCard';
 import { ProductListCard } from './components/ProductListCard';
-import { useT } from '@/lib/i18n';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function MarketplacePage() {
-  const t = useT();
+  const { locale } = useLocale();
+  void locale;
+
   const [query, setQuery] = useState('');
   const [view, setView] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
@@ -25,14 +25,12 @@ export default function MarketplacePage() {
   const [wishlist, setWishlist] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    let cancelled = false;
     setLoading(true);
     fetch(`/api/merchant/products?q=${query}&status=active`)
       .then(r => r.ok ? r.json() : { products: [] })
-      .then(d => { if (!cancelled) { setProducts(d.products || []); setLoading(false); } })
-      .catch(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
-    }, [query]);
+      .then(d => { setProducts(d.products || []); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [query]);
 
   const toggleWishlist = (id: string) => {
     setWishlist(prev => {
@@ -73,7 +71,7 @@ export default function MarketplacePage() {
               <Package size={12} /> Live Market
             </div>
             <h1 className="text-4xl font-black text-white mb-2 tracking-tight">
-              <span className="bg-gradient-to-r from-white to-accent-light bg-clip-text text-transparent">Marketplace</span>
+              <span className="bg-gradient-to-r from-white to-cyan-300 bg-clip-text text-transparent">Marketplace</span>
             </h1>
           </div>
 
@@ -82,15 +80,15 @@ export default function MarketplacePage() {
             <div className="relative flex-1">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
               <input type="text" value={query} onChange={e =>  setQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white  focus:border-accent/50 focus:outline-none" />
+                className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white  focus:border-cyan-500/50 focus:outline-none" />
             </div>
             <button onClick={() => setShowFilters(!showFilters)}
-              className={`px-4 py-3 rounded-xl border font-bold ${showFilters ? 'bg-accent/20 text-accent border-accent/30' : 'bg-white/5 text-gray-400 border-white/10'}`}>
+              className={`px-4 py-3 rounded-xl border font-bold ${showFilters ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30' : 'bg-white/5 text-gray-400 border-white/10'}`}>
               <SlidersHorizontal size={20} />
             </button>
             <div className="flex border border-white/10 rounded-xl overflow-hidden">
-              <button onClick={() => setView('grid')} className={`p-3 ${view === 'grid' ? 'bg-accent/20 text-accent' : 'text-gray-500'}`}><Grid size={18} /></button>
-              <button onClick={() => setView('list')} className={`p-3 ${view === 'list' ? 'bg-accent/20 text-accent' : 'text-gray-500'}`}><List size={18} /></button>
+              <button onClick={() => setView('grid')} className={`p-3 ${view === 'grid' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-500'}`}><Grid size={18} /></button>
+              <button onClick={() => setView('list')} className={`p-3 ${view === 'list' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-500'}`}><List size={18} /></button>
             </div>
           </div>
 
@@ -100,9 +98,9 @@ export default function MarketplacePage() {
 
           {/* Results */}
           {loading ? (
-            <div className="text-center py-16"><Loader2 size={32} className="text-accent animate-spin mx-auto" /></div>
+            <div className="text-center py-16"><Loader2 size={32} className="text-cyan-400 animate-spin mx-auto" /></div>
           ) : filtered.length === 0 ? (
-            <MarketplaceEmptyState hasQuery={!!query} />
+            <div className="text-center py-16"><Package size={48} className="mx-auto mb-4 text-gray-600" /><p className="text-gray-400">No products found</p></div>
           ) : (
             <div className={view === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4' : 'space-y-3'}>
               {filtered.map((product: any) => view === 'grid'

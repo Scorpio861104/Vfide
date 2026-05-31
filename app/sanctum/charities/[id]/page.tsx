@@ -10,11 +10,12 @@ import {
   AlertTriangle,
   Heart,
   Calendar,
-  Copy
+  Copy,
 } from 'lucide-react';
 import { formatEther, type Address } from 'viem';
 import { Footer } from '@/components/layout/Footer';
 import { useSanctumVault, deriveDisbursementStatus } from '@/hooks/useSanctumVault';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 /**
  * /sanctum/charities/[id] — detail view for a single DAO-approved charity.
@@ -28,6 +29,9 @@ import { useSanctumVault, deriveDisbursementStatus } from '@/hooks/useSanctumVau
  * registry entry).
  */
 export default function CharityDetailPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const params = useParams();
   const rawId = (params?.id ?? '') as string;
   const isValidAddress =

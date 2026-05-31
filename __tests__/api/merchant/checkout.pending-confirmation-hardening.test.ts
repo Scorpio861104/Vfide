@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PATCH } from '../../../app/api/merchant/checkout/[id]/route';
 
+const AUTH_ADDRESS = '0x1111111111111111111111111111111111111111';
+const MERCHANT_ADDRESS = '0x2222222222222222222222222222222222222222';
+const TOKEN_ADDRESS = '0x3333333333333333333333333333333333333333';
+const PORTAL_ADDRESS = '0x4444444444444444444444444444444444444444';
+
 jest.mock('@/lib/db', () => ({
   query: jest.fn(),
 }));
@@ -10,27 +15,34 @@ jest.mock('@/lib/auth/rateLimit', () => ({
 }));
 
 jest.mock('@/lib/auth/middleware', () => ({
-  withAuth: jest.fn((handler: any) => async (req: any, ctx?: any) =>
-    handler(req, { sub: 'merchant', address: '0x1234567890123456789012345678901234567890' }, ctx)),
-  requireAuth: jest.fn(async () => ({ user: { sub: 'merchant', address: '0x1234567890123456789012345678901234567890' } })),
+  withAuth: (handler: any) => (request: Request, context?: any) =>
+    handler(request, { address: AUTH_ADDRESS }, context),
 }));
 
-// Mock viem so verifySubmittedTransaction returns a confirmed tx whose sender
-// matches the authenticated customer address. Provide an RPC URL via env.
-const mockGetTransactionReceipt = jest.fn(async () => ({ status: 'success' }));
-const mockGetTransaction = jest.fn(async () => ({ from: '0x1234567890123456789012345678901234567890' }));
-jest.mock('viem', () => ({
-  createPublicClient: jest.fn(() => ({
-    getTransactionReceipt: mockGetTransactionReceipt,
-    getTransaction: mockGetTransaction,
-  })),
-  http: jest.fn(() => ({})),
+jest.mock('@/lib/contracts', () => ({
+  CONTRACT_ADDRESSES: {
+    MerchantPortal: '0x4444444444444444444444444444444444444444',
+    VFIDEToken: '0x3333333333333333333333333333333333333333',
+    StablecoinRegistry: '0x5555555555555555555555555555555555555555',
+  },
+  StablecoinRegistryABI: [],
+  isConfiguredContractAddress: jest.fn(() => true),
 }));
-process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC = 'https://test.example/rpc';
+
+jest.mock('viem', () => {
+  const actual = jest.requireActual('viem');
+  return {
+    ...actual,
+    createPublicClient: jest.fn(),
+    decodeEventLog: jest.fn(),
+    http: jest.fn((url: string) => url),
+  };
+});
 
 describe('/api/merchant/checkout/[id] payment hardening', () => {
   const { query } = require('@/lib/db');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
+  const { createPublicClient, decodeEventLog } = require('viem');
 
   const paymentLinkId = 'a'.repeat(32);
   const txHash = '0x' + 'b'.repeat(64);
@@ -38,11 +50,34 @@ describe('/api/merchant/checkout/[id] payment hardening', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     withRateLimit.mockResolvedValue(null);
+    process.env.NEXT_PUBLIC_RPC_URL = 'http://127.0.0.1:8545';
+    process.env.MERCHANT_PAYMENT_MIN_CONFIRMATIONS = '2';
+
+    decodeEventLog.mockReturnValue({
+      eventName: 'PaymentProcessed',
+      args: {
+        customer: AUTH_ADDRESS,
+        merchant: MERCHANT_ADDRESS,
+        token: TOKEN_ADDRESS,
+        amount: 10000000000000000000n,
+      },
+    });
+
+    createPublicClient.mockReturnValue({
+      readContract: jest.fn().mockResolvedValue(18),
+      getTransactionReceipt: jest.fn().mockResolvedValue({
+        status: 'success',
+        to: PORTAL_ADDRESS,
+        blockNumber: 100n,
+        logs: [{ address: PORTAL_ADDRESS, data: '0x', topics: [] }],
+      }),
+      getBlockNumber: jest.fn().mockResolvedValue(101n),
+    });
   });
 
   it('rejects pay action when invoice is already pending_confirmation', async () => {
     query.mockResolvedValueOnce({
-      rows: [{ id: 42, status: 'pending_confirmation', customer_address: '0x1234567890123456789012345678901234567890' }],
+      rows: [{ id: 42, status: 'pending_confirmation', customer_address: AUTH_ADDRESS, merchant_address: MERCHANT_ADDRESS, token: TOKEN_ADDRESS, total: '10' }],
     });
 
     const request = new NextRequest(`http://localhost:3000/api/merchant/checkout/${paymentLinkId}`, {
@@ -60,7 +95,8 @@ describe('/api/merchant/checkout/[id] payment hardening', () => {
 
   it('only transitions sent/viewed invoices to pending_confirmation', async () => {
     query
-      .mockResolvedValueOnce({ rows: [{ id: 77, status: 'viewed', customer_address: '0x1234567890123456789012345678901234567890' }] })
+      .mockResolvedValueOnce({ rows: [{ id: 77, status: 'viewed', customer_address: AUTH_ADDRESS, merchant_address: MERCHANT_ADDRESS, token: TOKEN_ADDRESS, total: '10' }] })
+      .mockResolvedValueOnce({ rows: [] })
       .mockResolvedValueOnce({ rowCount: 1, rows: [] });
 
     const request = new NextRequest(`http://localhost:3000/api/merchant/checkout/${paymentLinkId}`, {
@@ -74,7 +110,7 @@ describe('/api/merchant/checkout/[id] payment hardening', () => {
     expect(response.status).toBe(200);
     expect(data.success).toBe(true);
 
-    const updateCall = query.mock.calls[1];
+    const updateCall = query.mock.calls[2];
     expect(updateCall[0]).toContain("status IN ('sent', 'viewed')");
     expect(updateCall[1][0]).toBe(txHash);
     expect(updateCall[1][1]).toBe(77);
@@ -82,7 +118,8 @@ describe('/api/merchant/checkout/[id] payment hardening', () => {
 
   it('returns 409 when status changes before update', async () => {
     query
-      .mockResolvedValueOnce({ rows: [{ id: 88, status: 'viewed', customer_address: '0x1234567890123456789012345678901234567890' }] })
+      .mockResolvedValueOnce({ rows: [{ id: 88, status: 'viewed', customer_address: AUTH_ADDRESS, merchant_address: MERCHANT_ADDRESS, token: TOKEN_ADDRESS, total: '10' }] })
+      .mockResolvedValueOnce({ rows: [] })
       .mockResolvedValueOnce({ rowCount: 0, rows: [] });
 
     const request = new NextRequest(`http://localhost:3000/api/merchant/checkout/${paymentLinkId}`, {

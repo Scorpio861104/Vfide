@@ -12,7 +12,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { m, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Video, Shield, Heart, Send, X, Package, Sparkles } from 'lucide-react';
 
 interface LiveProduct {
@@ -31,7 +31,7 @@ interface LivePurchase {
 
 function PurchaseToast({ purchase }: { purchase: LivePurchase }) {
   return (
-    <m.div
+    <motion.div
       initial={{ x: -200, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: 300, opacity: 0 }}
@@ -41,7 +41,7 @@ function PurchaseToast({ purchase }: { purchase: LivePurchase }) {
       <Sparkles size={12} className="text-emerald-400" />
       <span className="text-emerald-400 text-xs font-bold">{purchase.buyer} bought {purchase.productName}!</span>
       <span className="text-white text-xs font-mono">{purchase.amount}</span>
-    </m.div>
+    </motion.div>
   );
 }
 
@@ -68,7 +68,6 @@ export function LiveViewer({
 }: LiveViewerProps) {
   const [commentText, setCommentText] = useState('');
   const [showProducts, setShowProducts] = useState(false);
-  const [_likeCount, setLikeCount] = useState(0);
   const [floatingHearts, setFloatingHearts] = useState<number[]>([]);
   const commentsEndRef = useRef<HTMLDivElement>(null);
 
@@ -78,7 +77,6 @@ export function LiveViewer({
   }, [comments.length]);
 
   const handleLike = () => {
-    setLikeCount(prev => prev + 1);
     const id = Date.now();
     setFloatingHearts(prev => [...prev, id]);
     setTimeout(() => setFloatingHearts(prev => prev.filter(h => h !== id)), 2000);
@@ -115,14 +113,14 @@ export function LiveViewer({
               </div>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 bg-black/40 backdrop-blur rounded-full text-white" aria-label="Close"><X size={18} /></button>
+          <button onClick={onClose} className="p-2 bg-black/40 backdrop-blur rounded-full text-white"><X size={18} /></button>
         </div>
 
         {/* Floating hearts */}
         <div className="absolute right-6 bottom-40 pointer-events-none">
           <AnimatePresence>
             {floatingHearts.map(id => (
-              <m.div
+              <motion.div
                 key={id}
                 initial={{ opacity: 1, y: 0, scale: 1, x: 0 }}
                 animate={{ opacity: 0, y: -150, scale: 0.5, x: Math.random() * 40 - 20 }}
@@ -131,7 +129,7 @@ export function LiveViewer({
                 className="absolute bottom-0"
               >
                 <Heart size={24} fill="#EC4899" stroke="#EC4899" />
-              </m.div>
+              </motion.div>
             ))}
           </AnimatePresence>
         </div>
@@ -145,21 +143,21 @@ export function LiveViewer({
 
         {/* Product showcase button */}
         {products.length > 0 && (
-          <m.button
+          <motion.button
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowProducts(!showProducts)}
-            className="absolute bottom-4 left-3 flex items-center gap-2 px-3 py-2 bg-accent/80 backdrop-blur rounded-xl"
+            className="absolute bottom-4 left-3 flex items-center gap-2 px-3 py-2 bg-cyan-500/80 backdrop-blur rounded-xl"
           >
             <Package size={16} className="text-white" />
             <span className="text-white text-xs font-bold">{products.length} Products</span>
-          </m.button>
+          </motion.button>
         )}
       </div>
 
       {/* Product shelf (slides up) */}
       <AnimatePresence>
         {showProducts && (
-          <m.div
+          <motion.div
             initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }}
             className="bg-zinc-900 border-t border-white/10 overflow-hidden"
           >
@@ -169,14 +167,14 @@ export function LiveViewer({
                   {p.imageUrl && <Image src={p.imageUrl} alt="" className="w-full h-20 rounded-lg object-cover mb-2"  width={48} height={48} />}
                   <div className="text-white text-xs font-medium truncate">{p.name}</div>
                   <div className="flex items-center justify-between mt-1">
-                    <span className="text-accent font-mono text-xs font-bold">{p.currency}{p.price}</span>
+                    <span className="text-cyan-400 font-mono text-xs font-bold">{p.currency}{p.price}</span>
                     <button onClick={() => onBuy?.(p.id)}
-                      className="px-2 py-1 bg-accent/20 text-accent rounded text-[10px] font-bold">Buy</button>
+                      className="px-2 py-1 bg-cyan-500/20 text-cyan-400 rounded text-[10px] font-bold">Buy</button>
                   </div>
                 </div>
               ))}
             </div>
-          </m.div>
+          </motion.div>
         )}
       </AnimatePresence>
 
@@ -186,7 +184,7 @@ export function LiveViewer({
         <div className="h-28 overflow-y-auto px-3 py-2 space-y-1.5 scrollbar-hide">
           {comments.map(c => (
             <div key={c.id} className="flex items-start gap-1.5">
-              <span className="text-accent text-[10px] font-bold shrink-0">{c.user}</span>
+              <span className="text-cyan-400 text-[10px] font-bold shrink-0">{c.user}</span>
               <span className="text-white text-xs">{c.text}</span>
             </div>
           ))}
@@ -201,8 +199,8 @@ export function LiveViewer({
            
             className="flex-1 px-3 py-2 bg-white/5 rounded-full text-white text-xs  focus:outline-none"
           />
-          <button onClick={handleSend} className="p-2 text-accent" aria-label="Send"><Send size={18} /></button>
-          <button onClick={handleLike} className="p-2 text-pink-400" aria-label="Like"><Heart size={18} /></button>
+          <button onClick={handleSend} className="p-2 text-cyan-400"><Send size={18} /></button>
+          <button onClick={handleLike} className="p-2 text-pink-400"><Heart size={18} /></button>
         </div>
       </div>
     </div>
@@ -218,7 +216,7 @@ interface GoLiveButtonProps {
 
 export function GoLiveButton({ onGoLive, isLive }: GoLiveButtonProps) {
   return (
-    <m.button
+    <motion.button
       whileTap={{ scale: 0.95 }}
       onClick={onGoLive}
       className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm ${
@@ -232,6 +230,6 @@ export function GoLiveButton({ onGoLive, isLive }: GoLiveButtonProps) {
       ) : (
         <><Video size={16} />Go Live</>
       )}
-    </m.button>
+    </motion.button>
   );
 }

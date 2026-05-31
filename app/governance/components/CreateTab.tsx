@@ -53,7 +53,7 @@ import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts
 // MerchantRegistryABI is the re-export name for the merged VFIDECommerce.json file,
 // which contains MerchantRegistry + VFIDECommerce + CommerceEscrow function ABIs.
 // We use it here for encoding CommerceEscrow.resolve and CommerceEscrow.setMinDisputeAmountForPenalty calls.
-import { VFIDECommerceABI, FraudRegistryABI, SanctumVaultABI, EcoTreasuryVaultABI } from '@/lib/abis';
+import { MerchantRegistryABI as VFIDECommerceABI, FraudRegistryABI, SanctumVaultABI, EcoTreasuryVaultABI } from '@/lib/abis';
 
 type Mode = 'template' | 'custom';
 type TemplateKey =
@@ -279,8 +279,6 @@ export function CreateTab() {
     if (typeof prefill.resolveBuyerWins === 'boolean') {
       setResolveBuyerWins(prefill.resolveBuyerWins);
     }
-    // The effect intentionally runs only on initial mount + when query string changes.
-     
   }, [searchParams]);
 
   const currentTemplate = TEMPLATES.find((t) => t.key === templateKey)!;

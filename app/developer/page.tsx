@@ -1,164 +1,371 @@
 'use client';
-import dynamic from 'next/dynamic';
 
-import { Suspense, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { m, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
-import { Footer } from '@/components/layout/Footer';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Clock, Code2, Rocket, Wallet, Users } from 'lucide-react';
-import { useLocale } from '@/hooks/useLocale';
-import { STUB_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
-const SplitterTab = dynamic(() => import('./components/SplitterTab').then(m => ({ default: m.SplitterTab })), { ssr: false });
-import { useT } from '@/lib/i18n';
+import { FutureReleaseBanner } from '@/components/feedback/FutureReleaseBanner';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
-type TabId = 'portal' | 'token-launch' | 'splitter';
-const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
-  { id: 'portal',       label: 'Developer Portal', icon: Code2 },
-  { id: 'token-launch', label: 'Token Launch',      icon: Rocket },
-  { id: 'splitter',     label: 'Rev. Splitter',   icon: Users },
-];
+const SDK_CODE_SNIPPET = `// Example checkout widget
 
-function DeveloperPortalTab() {
-  const [locale] = useLocale();
-  const _copy = pickLocaleCopy(STUB_TRANSLATIONS, locale);
-  return (
-    <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-      className="glass-card-premium p-10 max-w-2xl text-center mx-auto"
-    >
-      <div className="text-6xl mb-6" aria-hidden="true">🛠️</div>
-      <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs text-amber-300 mb-5">
-        <Clock size={10} /> In development · Post-testnet
-      </div>
-      <h2 className="text-3xl font-black text-white mb-3">Developer Portal</h2>
-      <p className="text-zinc-400 mb-2 text-sm font-medium">APIs, SDKs, and tools for building on VFIDE.</p>
-      <p className="text-zinc-500 text-sm leading-relaxed mb-8">
-        The developer portal goes live with testnet docs, contract ABIs, and an API playground.
-        Smart contract addresses and event schemas are published in the repo now.
-      </p>
-      <div className="text-left bg-zinc-900/50 rounded-xl p-5 mb-8">
-        <p className="text-xs text-zinc-500 uppercase tracking-widest mb-3">What to expect</p>
-        <ul className="space-y-2">
-          <li className="flex items-start gap-2 text-sm text-zinc-300"><span className="text-accent mt-0.5">→</span>REST API and webhook integrations for merchant flows</li>
-          <li className="flex items-start gap-2 text-sm text-zinc-300"><span className="text-accent mt-0.5">→</span>JavaScript/TypeScript SDK with typed contract ABIs</li>
-          <li className="flex items-start gap-2 text-sm text-zinc-300"><span className="text-accent mt-0.5">→</span>Embed checkout widgets for any storefront</li>
-        </ul>
-      </div>
-      <div className="flex flex-col sm:flex-row gap-3 justify-center">
-        <Link href="/docs"
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-accent hover:bg-accent-light text-zinc-900 font-bold rounded-xl transition-colors text-sm">
-          Read the docs <ArrowRight size={14} />
-        </Link>
-        <Link href="/"
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 border border-white/10 hover:border-white/20 text-zinc-300 rounded-xl transition-colors text-sm">
-          Go back
-        </Link>
-      </div>
-    </m.div>
-  );
+import { VFIDEWidget } from '@vfide/sdk';
+
+// 1. Embed a payment button
+<VFIDEWidget.PaymentButton
+  to="0x1234..."
+  amount="0.01"
+  token="ETH"
+  onSuccess={(tx) => handlePaymentSuccess(tx)}
+/>
+
+// 2. Request payment via API
+const payment = await VFIDE.requestPayment({
+  to: merchantAddress,
+  amount: '10.00',
+  token: 'USDC',
+  metadata: { orderId: '12345' }
+});
+
+// 3. Create streaming payment
+const stream = await VFIDE.createStream({
+  to: recipientAddress,
+  amount: '100',
+  token: 'USDC',
+  duration: 30 * 24 * 60 * 60 // 30 days
+});
+
+// 4. Verify payment
+const verified = await VFIDE.verifyPayment(txHash);`;
+
+const WEBHOOK_CODE = `import crypto from 'node:crypto';
+import express from 'express';
+
+const app = express();
+app.use('/webhooks/vfide', express.raw({ type: '*/*' }));
+
+function verifyWebhook(body, signature, timestampHeader, secret) {
+  const timestamp = Number(timestampHeader);
+  if (!Number.isFinite(timestamp)) return false;
+
+  const now = Math.floor(Date.now() / 1000);
+  if (Math.abs(now - timestamp) > 300) return false;
+
+  const expected = 'v1=' + crypto.createHmac('sha256', secret).update(timestamp + '.' + body).digest('hex');
+  if (signature.length !== expected.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
 }
 
-function TokenLaunchTab() {
-  return (
-    <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-      className="glass-card-premium p-10 max-w-2xl text-center mx-auto"
-    >
-      <div className="text-6xl mb-6" aria-hidden="true">🚀</div>
-      <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs text-amber-300 mb-5">
-        <Clock size={10} /> In development · Post-testnet
-      </div>
-      <h2 className="text-3xl font-black text-white mb-3">Token Launch</h2>
-      <p className="text-zinc-400 mb-2 text-sm font-medium">Fair-launch tooling built on VFIDE infrastructure.</p>
-      <p className="text-zinc-500 text-sm leading-relaxed mb-8">
-        Token launch tooling will enable projects to deploy fair-launch contracts with
-        automatic ProofScore gating and treasury routing built in. Available post-testnet.
-      </p>
-      <div className="text-left bg-zinc-900/50 rounded-xl p-5 mb-8">
-        <p className="text-xs text-zinc-500 uppercase tracking-widest mb-3">Planned features</p>
-        <ul className="space-y-2">
-          <li className="flex items-start gap-2 text-sm text-zinc-300"><span className="text-accent mt-0.5">→</span>One-click fair-launch contract deployment</li>
-          <li className="flex items-start gap-2 text-sm text-zinc-300"><span className="text-accent mt-0.5">→</span>ProofScore-gated participation tiers</li>
-          <li className="flex items-start gap-2 text-sm text-zinc-300"><span className="text-accent mt-0.5">→</span>Automatic sanctum and treasury routing</li>
-        </ul>
-      </div>
-      <Link href="/roadmap"
-        className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-accent hover:bg-accent-light text-zinc-900 font-bold rounded-xl transition-colors text-sm">
-        <Wallet size={14} /> View full roadmap <ArrowRight size={14} />
-      </Link>
-    </m.div>
-  );
-}
+app.post('/webhooks/vfide', (req, res) => {
+  const signature = req.header('X-Webhook-Signature');
+  const timestamp = req.header('X-Webhook-Timestamp');
 
-function DeveloperHubInner() {
-  const t = useT();
-  const searchParams = useSearchParams();
-  const initial = (searchParams.get('tab') as TabId | null) ?? 'portal';
-  const [activeTab, setActiveTab] = useState<TabId>(
-    TABS.find(t => t.id === initial) ? initial : 'portal'
-  );
+  if (!signature || !timestamp || !verifyWebhook(req.body, signature, timestamp, process.env.VFIDE_WEBHOOK_SECRET)) {
+    return res.status(401).json({ error: 'Invalid signature' });
+  }
+
+  const payload = JSON.parse(req.body.toString('utf8'));
+
+  switch (payload.event) {
+    case 'payment.completed':
+      fulfillOrder(payload.data.order_number);
+      break;
+    case 'refund.completed':
+      updateRefundState(payload.data);
+      break;
+    case 'subscription.renewed':
+      extendSubscription(payload.data);
+      break;
+  }
+
+  return res.json({ received: true });
+});`;
+
+export default function DeveloperPage() {
+  const { locale } = useLocale();
+  void locale;
+
+  const [activeTab, setActiveTab] = useState<'sdk' | 'webhooks' | 'api'>('sdk');
 
   return (
-    <LazyMotion features={domAnimation}>
-      <>
-      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] relative overflow-hidden text-white">
-        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-          <div className="absolute -top-40 left-1/3 w-[600px] h-[600px] rounded-full opacity-[0.06]"
-            style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+    <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] pb-8 text-white relative">
+      {/* Ambient orbs */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
+          style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+        <div className="absolute bottom-0 -right-24 w-[500px] h-[500px] rounded-full opacity-[0.05]"
+          style={{ background: 'radial-gradient(circle, #10b981 0%, transparent 70%)' }} />
+      </div>
+      <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
+      <div className="relative container mx-auto max-w-6xl px-4 py-8 space-y-6">
+      {/* Header */}
+      <div>
+        <div className="badge-live mb-3">
+          🔌 Developer API
         </div>
-        <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" aria-hidden="true" />
+        <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
+          <span className="bg-gradient-to-r from-white to-cyan-300 bg-clip-text text-transparent">Integrations Center</span>
+        </h1>
+        <p className="text-sm sm:text-base text-white/60 mt-1">
+          Connect checkout, subscriptions, and payout flows with clear guides and safe defaults.
+        </p>
+      </div>
 
-        <div className="container mx-auto max-w-3xl px-4 py-12 relative z-10">
-          <div className="mb-8 text-center">
-            <div className="badge-live mb-4 justify-center"><Code2 size={12} /> Build on VFIDE</div>
-            <h1 className="text-4xl font-black text-white mb-2 tracking-tight">{t.developer_heading}</h1>
-            <p className="text-zinc-400 text-sm">APIs, SDKs, and launch tools for builders.</p>
+      {/* Access */}
+      <div className="bg-card rounded-xl p-4 border">
+        <h3 className="font-medium mb-2">Access & Safety</h3>
+        <p className="text-sm text-muted-foreground">
+          Keys and secrets are issued from secure merchant settings only. This page does not expose live credentials.
+        </p>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          <a href="/merchant" className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground">
+            Open Merchant Portal
+          </a>
+          <a href="/security-center" className="inline-flex items-center justify-center rounded-lg bg-muted px-4 py-2 text-sm">
+            Review Security Center
+          </a>
+        </div>
+        <p className="text-xs text-muted-foreground mt-3">
+          Never share keys in chat, screenshots, client code, or browser storage.
+        </p>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex flex-wrap gap-2 border-b border-border pb-2">
+        {(['sdk', 'webhooks', 'api'] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`rounded-lg px-4 py-2 text-sm capitalize ${
+              activeTab === tab
+                ? 'bg-primary/10 text-primary'
+                : 'bg-muted/50 text-muted-foreground'
+            }`}
+          >
+            {tab === 'sdk' ? 'SDK' : tab}
+          </button>
+        ))}
+      </div>
+
+      {/* SDK Tab */}
+      {activeTab === 'sdk' && (
+        <div className="space-y-4">
+          <FutureReleaseBanner
+            title="@vfide/sdk not yet published"
+            description={
+              'The drop-in SDK shown below is the integration surface we plan to ship — payment ' +
+              'buttons, streaming, and escrow primitives as one npm package. It is not yet published ' +
+              'to the registry. Copying the import will fail at `npm install`.\n\n' +
+              'For integrations today, talk directly to the merchant API surface (see Webhooks tab ' +
+              'for the working portion) or call the on-chain contracts directly using viem/wagmi.'
+            }
+            requirements={[
+              'Public npm package @vfide/sdk with TypeScript types',
+              'Hosted CDN bundle for script-tag embeds (vanilla HTML)',
+              'Versioning policy + semver discipline for breaking changes',
+              'Documentation site (the snippets below are the reference, not the implementation)',
+              'Integration test suite covering Base + Polygon + zkSync Era once those chains ship',
+            ]}
+            alternative={{
+              href: '/merchant',
+              label: 'Use Merchant Portal directly',
+              description: 'Payment links, invoices, and webhooks work today through /merchant — no SDK required.',
+            }}
+          />
+
+          <div className="bg-card rounded-xl p-4 border opacity-70">
+            <h3 className="font-medium mb-2 flex items-center gap-2">
+              Checkout Quick Start
+              <span className="text-[10px] uppercase tracking-wider text-amber-300 bg-amber-500/15 border border-amber-400/40 px-2 py-0.5 rounded-full">Preview</span>
+            </h3>
+            <pre className="bg-muted p-3 sm:p-4 rounded-lg overflow-x-auto text-xs sm:text-sm font-mono">
+              <code>{SDK_CODE_SNIPPET}</code>
+            </pre>
+            <p className="mt-3 text-xs text-muted-foreground">
+              This is the API shape we&apos;re aiming for, not currently-shipping code. The package does not yet exist on npm.
+            </p>
           </div>
 
-          {/* Tab bar */}
-          <div className="flex justify-center gap-2 mb-10"
-            role="tablist" aria-label="Developer sections">
-            {TABS.map(({ id, label, icon: Icon }) => (
-              <button key={id}
-                role="tab"
-                aria-selected={activeTab === id}
-                onClick={() => setActiveTab(id)}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
-                  activeTab === id ? 'bg-accent text-zinc-900' : 'text-zinc-400 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <Icon size={14} />{label}
-              </button>
-            ))}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 opacity-70">
+            <div className="bg-card rounded-xl p-4 border">
+              <div className="text-2xl mb-2">🔘</div>
+              <h4 className="font-medium">Payment Buttons</h4>
+              <p className="text-sm text-muted-foreground mt-1">
+                Drop-in components for one-click payments
+              </p>
+            </div>
+            <div className="bg-card rounded-xl p-4 border">
+              <div className="text-2xl mb-2">🔄</div>
+              <h4 className="font-medium">Streaming</h4>
+              <p className="text-sm text-muted-foreground mt-1">
+                Create subscriptions with per-second payments
+              </p>
+            </div>
+            <div className="bg-card rounded-xl p-4 border">
+              <div className="text-2xl mb-2">🔐</div>
+              <h4 className="font-medium">Escrow</h4>
+              <p className="text-sm text-muted-foreground mt-1">
+                Conditional payments with programmable release
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Webhooks Tab */}
+      {activeTab === 'webhooks' && (
+        <div className="space-y-4">
+          <div className="bg-card rounded-xl p-4 border">
+            <h3 className="font-medium mb-3">Merchant Webhook Setup</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Register and rotate webhook endpoints in Merchant Portal. VFIDE delivers signed HTTPS POST requests to your server for the events you subscribe to.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Link href="/merchant" className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground">
+                Open Merchant Portal
+              </Link>
+              <Link href="/security-center" className="inline-flex items-center justify-center rounded-lg bg-muted px-4 py-2 text-sm">
+                Review Replay Protection
+              </Link>
+            </div>
+            <div className="mt-4 rounded-lg border bg-muted p-3 text-xs sm:text-sm">
+              <div className="font-medium mb-2">Management API</div>
+              <code className="block break-all">GET /api/merchant/webhooks</code>
+              <code className="block break-all">POST /api/merchant/webhooks</code>
+              <code className="block break-all">PATCH /api/merchant/webhooks</code>
+              <code className="block break-all">DELETE /api/merchant/webhooks?id=&lt;endpointId&gt;</code>
+            </div>
           </div>
 
-          <AnimatePresence mode="wait">
-            <m.div key={activeTab}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.18 }}>
-              {activeTab === 'portal'       && <DeveloperPortalTab />}
-              {activeTab === 'token-launch' && <TokenLaunchTab />}
-              {activeTab === 'splitter'     && <SplitterTab />}
-            </m.div>
-          </AnimatePresence>
-        </div>
-      </div>
-      <Footer />
-    </>
-  );
-}
+          <div className="bg-card rounded-xl p-4 border">
+            <h3 className="font-medium mb-2">Example Handler</h3>
+            <p className="text-sm text-muted-foreground mb-3">
+              Verify the raw request body using the signing secret created in Merchant Portal. Current deliveries include the <code>X-Webhook-Signature</code> and <code>X-Webhook-Timestamp</code> headers.
+            </p>
+            <pre className="bg-muted p-3 sm:p-4 rounded-lg overflow-x-auto text-xs sm:text-sm font-mono">
+              <code>{WEBHOOK_CODE}</code>
+            </pre>
+          </div>
 
-export default function DeveloperHubPage() {
-  const t = useT();
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-accent/20 border-t-accent rounded-full animate-spin" />
+          <div className="bg-card rounded-xl p-4 border">
+            <h3 className="font-medium mb-3">Event Types</h3>
+            <div className="space-y-2">
+              {[
+                { event: 'payment.completed', desc: 'A payment was confirmed on-chain' },
+                { event: 'payment.failed', desc: 'A payment transaction failed' },
+                { event: 'refund.completed', desc: 'A refund finished successfully' },
+                { event: 'escrow.released', desc: 'Escrow funds were released' },
+                { event: 'subscription.renewed', desc: 'A subscription cycle renewed' },
+                { event: 'subscription.payment_failed', desc: 'A subscription renewal payment failed' },
+              ].map((item) => (
+                <div key={item.event} className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 p-2 bg-muted rounded-lg">
+                  <code className="text-xs sm:text-sm font-mono text-primary break-all">{item.event}</code>
+                  <span className="text-xs sm:text-sm text-muted-foreground">{item.desc}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* API Tab */}
+      {activeTab === 'api' && (
+        <div className="space-y-4">
+          <FutureReleaseBanner
+            title="Public /v1 REST API not yet shipping"
+            description={
+              'The /v1 endpoint surface below is the public REST API we plan to ship — a stable, ' +
+              'versioned, externally-callable interface for partners and integrators. It is NOT yet ' +
+              'mounted; calling these URLs will 404.\n\n' +
+              'Internal frontend routes under /api/* (used by this web app) are real and documented ' +
+              'in the manual. They are not stable contracts for outside integration — they can change ' +
+              'between releases without notice. The /v1 surface exists specifically to give partners a ' +
+              'frozen contract they can build against.'
+            }
+            requirements={[
+              'Mount /v1/* routes as a separate namespace with strict versioning (no breaking changes within v1)',
+              'API-key auth model distinct from the wallet-session JWT used by /api/*',
+              'Per-key rate limits, usage analytics, and a partner dashboard',
+              'OpenAPI 3.1 spec published alongside the routes (so partners can codegen clients)',
+              'External-partner onboarding: contract, KYC of the integrator, signed terms',
+            ]}
+            alternative={{
+              href: '/merchant',
+              label: 'Use the Merchant Portal + Webhooks today',
+              description: 'Webhook delivery is real (see Webhooks tab) — the only frozen partner contract we currently honor.',
+            }}
+          />
+
+          <div className="bg-card rounded-xl p-4 border opacity-70">
+            <h3 className="font-medium mb-3 flex items-center gap-2">
+              REST API Endpoints
+              <span className="text-[10px] uppercase tracking-wider text-amber-300 bg-amber-500/15 border border-amber-400/40 px-2 py-0.5 rounded-full">Planned</span>
+            </h3>
+            <p className="text-xs text-muted-foreground mb-3">Shape preview only. These URLs are not yet routable.</p>
+            <div className="space-y-3">
+              {[
+                { method: 'POST', path: '/v1/payments', desc: 'Create a payment request' },
+                { method: 'GET', path: '/v1/payments/:id', desc: 'Get payment status' },
+                { method: 'POST', path: '/v1/streams', desc: 'Create a streaming payment' },
+                { method: 'GET', path: '/v1/streams/:id', desc: 'Get stream details' },
+                { method: 'DELETE', path: '/v1/streams/:id', desc: 'Cancel a stream' },
+                { method: 'POST', path: '/v1/escrow', desc: 'Create conditional escrow' },
+                { method: 'POST', path: '/v1/escrow/:id/release', desc: 'Release escrow funds' },
+              ].map((endpoint) => (
+                <div key={`${endpoint.method}-${endpoint.path}`} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-2 bg-muted rounded-lg min-w-0">
+                  <span className={`px-2 py-0.5 rounded text-xs font-mono ${
+                    endpoint.method === 'POST'
+                      ? 'bg-emerald-500/20 text-emerald-500'
+                      : endpoint.method === 'DELETE'
+                      ? 'bg-red-500/20 text-red-500'
+                      : 'bg-cyan-500/20 text-cyan-500'
+                  }`}>
+                    {endpoint.method}
+                  </span>
+                  <code className="text-xs sm:text-sm font-mono break-all sm:flex-1">{endpoint.path}</code>
+                  <span className="text-xs sm:text-sm text-muted-foreground">{endpoint.desc}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-card rounded-xl p-4 border opacity-70">
+            <h3 className="font-medium mb-2 flex items-center gap-2">
+              Rate Limits
+              <span className="text-[10px] uppercase tracking-wider text-amber-300 bg-amber-500/15 border border-amber-400/40 px-2 py-0.5 rounded-full">Planned</span>
+            </h3>
+            <p className="text-xs text-muted-foreground mb-3">Target limits for the /v1 surface once it ships.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="p-3 bg-muted rounded-lg">
+                <div className="text-2xl font-bold">1,000</div>
+                <div className="text-sm text-muted-foreground">Requests/minute (test)</div>
+              </div>
+              <div className="p-3 bg-muted rounded-lg">
+                <div className="text-2xl font-bold">10,000</div>
+                <div className="text-sm text-muted-foreground">Requests/minute (prod)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Resources */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <a href="/docs" className="bg-card rounded-xl p-4 border hover:border-primary transition-colors">
+          <div className="text-2xl mb-2">📚</div>
+          <h4 className="font-medium">Documentation</h4>
+          <p className="text-sm text-muted-foreground">Full API reference</p>
+        </a>
+        <a href="https://github.com/Scorpio861104/Vfide" target="_blank" rel="noopener noreferrer" className="bg-card rounded-xl p-4 border hover:border-primary transition-colors">
+          <div className="text-2xl mb-2">💻</div>
+          <h4 className="font-medium">GitHub</h4>
+          <p className="text-sm text-muted-foreground">Open source SDK</p>
+        </a>
+        <a href="https://discord.gg/vfide" target="_blank" rel="noopener noreferrer" className="bg-card rounded-xl p-4 border hover:border-primary transition-colors">
+          <div className="text-2xl mb-2">💬</div>
+          <h4 className="font-medium">Discord</h4>
+          <p className="text-sm text-muted-foreground">Community support</p>
+        </a>
       </div>
-    }>
-      <DeveloperHubInner />
-    </Suspense>
-    </LazyMotion>
+      </div>
+    </div>
   );
 }

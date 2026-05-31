@@ -4,14 +4,14 @@ export const dynamic = 'force-dynamic';
 
 import { Footer } from '@/components/layout/Footer';
 import { useEffect, useMemo, useState } from 'react';
-import { m, LazyMotion, domAnimation } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useAccount } from 'wagmi';
+import { safeLocalStorage } from '@/lib/utils';
+import { useLocale } from '@/lib/locale/LocaleProvider';
+import { LOCALE_OPTIONS, SUPPORT_TRANSLATIONS, pickLocaleCopy, persistLocale } from '@/lib/i18n';
 import { FaqTab } from './components/FaqTab';
 import { TicketsTab } from './components/TicketsTab';
 import { NewTab } from './components/NewTab';
-import { useLocale } from '@/hooks/useLocale';
-import { useT } from '@/lib/i18n';
-import { SUPPORT_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
 
 type TabId = 'faq' | 'tickets' | 'new';
 
@@ -36,39 +36,9 @@ type SupportTicket = {
 
 const TAB_IDS: TabId[] = ['faq', 'tickets', 'new'];
 
-const _COPY = {
-  'en-US': {
-    heading: 'Help & Support Center',
-    subtitle: 'Find answers, manage tickets, and get direct support from the VFIDE team.',
-    tabs: { faq: 'FAQ', tickets: 'My Tickets', new: 'New Ticket' },
-  },
-  'es-ES': {
-    heading: 'Centro de ayuda y soporte',
-    subtitle: 'Encuentra respuestas, administra tickets y recibe ayuda directa del equipo VFIDE.',
-    tabs: { faq: 'FAQ', tickets: 'Mis tickets', new: 'Nuevo ticket' },
-  },
-} as const;
-
-const FAQ_ITEMS = [
-  {
-    question: 'How do I connect my wallet?',
-    answer: 'Open the wallet menu, select your preferred wallet, and approve the VFIDE connection request.',
-  },
-  {
-    question: 'How does ProofScore work?',
-    answer: 'ProofScore rewards trustworthy activity, participation, and successful platform usage over time.',
-  },
-  {
-    question: 'How do I set up guardians?',
-    answer: 'Navigate to the guardians page, choose trusted contacts, and confirm the recovery configuration.',
-  },
-];
-
 export default function SupportPage() {
-  const t = useT();
-  const [locale] = useLocale();
-  const copy = pickLocaleCopy(SUPPORT_TRANSLATIONS, locale);
   const { address, isConnected } = useAccount();
+  const { locale, setLocale } = useLocale();
   const [activeTab, setActiveTab] = useState<TabId>('faq');
   const [search, setSearch] = useState('');
   const [openQuestion, setOpenQuestion] = useState<string | null>(null);
@@ -77,6 +47,7 @@ export default function SupportPage() {
   const [subject, setSubject] = useState('');
   const [details, setDetails] = useState('');
 
+  const copy = pickLocaleCopy(SUPPORT_TRANSLATIONS, locale);
 
   useEffect(() => {
     if (!address) {
@@ -88,7 +59,7 @@ export default function SupportPage() {
     let cancelled = false;
 
     try {
-      const stored = ((): string | null => { try { return typeof localStorage !== 'undefined' ? localStorage.getItem(`support_tickets_${address}`) : null; } catch { return null; } })();
+      const stored = safeLocalStorage.getItem(`support_tickets_${address}`);
       if (stored) {
         const parsed = JSON.parse(stored) as SupportTicket[];
         setTickets(parsed);
@@ -124,18 +95,21 @@ export default function SupportPage() {
 
   useEffect(() => {
     if (!address) return;
-    try { if (typeof localStorage !== 'undefined') localStorage.setItem(`support_tickets_${address}`, JSON.stringify(tickets)); } catch { /* ignore */ }
+    safeLocalStorage.setItem(`support_tickets_${address}`, JSON.stringify(tickets));
   }, [address, tickets]);
 
   const filteredFaq = useMemo(() => {
     const query = search.trim().toLowerCase();
-    if (!query) return FAQ_ITEMS;
-    return FAQ_ITEMS.filter((item) => `${item.question} ${item.answer}`.toLowerCase().includes(query));
-  }, [search]);
+    if (!query) return copy.faqItems;
+    return copy.faqItems.filter((item) => `${item.question} ${item.answer}`.toLowerCase().includes(query));
+  }, [copy.faqItems, search]);
 
   const selectedTicket = tickets.find((ticket) => ticket.id === selectedTicketId) ?? tickets[0] ?? null;
 
-  const persistLocale = (_nextLocale: string) => { /* locale managed centrally by useLocale hook */ };
+  const handleLocaleChange = (nextLocale: string) => {
+    const normalized = persistLocale(nextLocale);
+    setLocale(normalized);
+  };
 
   const handleSubmitTicket = async () => {
     if (!subject.trim() || !details.trim()) {
@@ -241,8 +215,7 @@ export default function SupportPage() {
   };
 
   return (
-    <LazyMotion features={domAnimation}>
-      <div className="relative min-h-screen bg-zinc-950 md:pt-[3.5rem]">
+    <div className="relative min-h-screen bg-zinc-950 md:pt-[3.5rem]">
       {/* Ambient background */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
@@ -252,33 +225,34 @@ export default function SupportPage() {
         <div className="grid-pattern absolute inset-0 opacity-[0.03]" />
       </div>
       <div className="relative container mx-auto px-4 max-w-6xl py-8 space-y-6">
-        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <div className="flex items-center gap-3 mb-3">
-            <span className="badge-live"><span className="badge-live-dot" />Support Center</span>
+            <span className="badge-live"><span className="badge-live-dot" />{copy.badge}</span>
           </div>
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
               <h1 className="text-4xl font-bold mb-2">
-                <span className="bg-gradient-to-r from-accent via-violet-400 to-pink-400 bg-clip-text text-transparent">
-                  {t.support_heading}
+                <span className="bg-gradient-to-r from-cyan-400 via-violet-400 to-pink-400 bg-clip-text text-transparent">
+                  {copy.heading}
                 </span>
               </h1>
-              <p className="text-white/50">{t.support_subtitle}</p>
+              <p className="text-white/50">{copy.subtitle}</p>
             </div>
             <div className="flex items-center gap-3">
-              <label htmlFor="support-language" className="text-sm text-white/50">Language</label>
+              <label htmlFor="support-language" className="text-sm text-white/50">{copy.languageLabel}</label>
               <select
                 id="support-language"
                 value={locale}
-                onChange={(event) => persistLocale(event.target.value)}
+                onChange={(event) => handleLocaleChange(event.target.value)}
                 className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-white text-sm"
               >
-                <option value="en-US">English</option>
-                <option value="es-ES">Español</option>
+                {LOCALE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
               </select>
             </div>
           </div>
-        </m.div>
+        </motion.div>
 
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
             {TAB_IDS.map((id) => (
@@ -288,7 +262,7 @@ export default function SupportPage() {
                 onClick={() => setActiveTab(id)}
                 className={activeTab === id ? 'tab-pill-active' : 'tab-pill-inactive'}
               >
-                {copy.tabs[id]}
+                {id === 'faq' ? copy.faqTabLabel : id === 'tickets' ? copy.ticketsTabLabel : copy.newTicketTabLabel}
               </button>
             ))}
           </div>
@@ -298,6 +272,8 @@ export default function SupportPage() {
               search={search}
               items={filteredFaq}
               openQuestion={openQuestion}
+              searchPlaceholder={copy.searchPlaceholder}
+              noResultsMessage={copy.noFaqResults}
               onSearchChange={setSearch}
               onToggleQuestion={(question) => setOpenQuestion((current) => current === question ? null : question)}
             />
@@ -308,6 +284,12 @@ export default function SupportPage() {
               tickets={tickets}
               selectedTicketId={selectedTicketId}
               selectedTicket={selectedTicket}
+              noTicketsMessage={copy.noTicketsMessage}
+              subjectPrefix={copy.subjectPrefix}
+              ticketIdLabel={copy.ticketIdLabel}
+              supportTeamLabel={copy.supportTeamLabel}
+              youLabel={copy.youLabel}
+              selectTicketMessage={copy.selectTicketMessage}
               onSelectTicket={setSelectedTicketId}
             />
           ) : null}
@@ -317,6 +299,10 @@ export default function SupportPage() {
               isConnected={isConnected}
               subject={subject}
               details={details}
+              connectPrompt={copy.connectPrompt}
+              subjectPlaceholder={copy.subjectPlaceholder}
+              detailsPlaceholder={copy.detailsPlaceholder}
+              submitTicketLabel={copy.submitTicketLabel}
               onSubjectChange={setSubject}
               onDetailsChange={setDetails}
               onSubmitTicket={handleSubmitTicket}
@@ -325,6 +311,5 @@ export default function SupportPage() {
         </div>
       <Footer />
     </div>
-    </LazyMotion>
   );
 }

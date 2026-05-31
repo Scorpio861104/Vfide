@@ -1,5 +1,4 @@
 'use client';
-import _dynamic from 'next/dynamic';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,26 +7,27 @@ import { useState } from "react";
 import { useAccount } from "wagmi";
 import { Heart, Gift, History, Coins } from "lucide-react";
 
-const OverviewTab = _dynamic(() => import('./components/OverviewTab').then(m => ({ default: m.OverviewTab })), { ssr: false });
+import { OverviewTab } from "./components/OverviewTab";
 import { CharitiesTab } from "./components/CharitiesTab";
-const DisbursementsTab = _dynamic(() => import('./components/DisbursementsTab').then(m => ({ default: m.DisbursementsTab })), { ssr: false });
-const DonateTab = _dynamic(() => import('./components/DonateTab').then(m => ({ default: m.DonateTab })), { ssr: false });
-const HistoryTab = _dynamic(() => import('./components/HistoryTab').then(m => ({ default: m.HistoryTab })), { ssr: false });
-import { useT } from '@/lib/i18n';
+import { DisbursementsTab } from "./components/DisbursementsTab";
+import { DonateTab } from "./components/DonateTab";
+import { HistoryTab } from "./components/HistoryTab";
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
-type TabId = 'overview' | 'charities' | 'disbursements' | 'donate' | 'history';
+const tabs = [
+  { id: 'overview', label: 'Overview', icon: Heart },
+  { id: 'charities', label: 'Charities', icon: Gift },
+  { id: 'disbursements', label: 'Disbursements', icon: Coins },
+  { id: 'donate', label: 'Donate', icon: Heart },
+  { id: 'history', label: 'History', icon: History },
+] as const;
 
-
+type TabId = typeof tabs[number]['id'];
 
 export default function SanctumPage() {
-  const t = useT();
-  const tabs = [
-    { id: 'overview', label: t.sanctum_tab_overview, icon: Heart },
-    { id: 'charities', label: t.sanctum_tab_charities, icon: Gift },
-    { id: 'disbursements', label: t.sanctum_tab_disbursements, icon: Coins },
-    { id: 'donate', label: t.sanctum_tab_donate, icon: Heart },
-    { id: 'history', label: t.sanctum_tab_history, icon: History },
-  ];
+  const { locale } = useLocale();
+  void locale;
+
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const { isConnected } = useAccount();
 
@@ -52,11 +52,11 @@ export default function SanctumPage() {
             </h1>
             <Heart className="text-pink-400" size={32} aria-hidden="true" />
           </div>
-          <p className="text-white/60 mb-8">~20% of network fees fund verified charitable causes — routed via BurnRouter (10% of burn) and FeeDistributor (20% of distributed balance)</p>
+          <p className="text-white/60 mb-8">20% of all protocol fees fund verified charitable causes</p>
 
           <div className="sticky top-7 md:top-[5.25rem] z-30 backdrop-blur-xl bg-zinc-950/80 flex gap-2 mb-8 overflow-x-auto pb-2 border-b border-white/5">
             {tabs.map(tab => (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id as TabId)}
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
                 className={activeTab === tab.id ? 'tab-pill-active flex items-center gap-2' : 'tab-pill-inactive flex items-center gap-2'}>
                 <tab.icon size={16} />{tab.label}
               </button>

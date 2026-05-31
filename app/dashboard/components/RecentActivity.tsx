@@ -1,12 +1,26 @@
 'use client';
 
 import Link from 'next/link';
-import { m, LazyMotion, domAnimation } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Activity, ArrowDownLeft, ArrowUpRight, Award, ChevronRight, Vote } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { useEffect, useState } from 'react';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 import { GlassCard, formatTimeAgo } from './shared';
+
+const ACTIVITY_COPY = {
+  'en-US': {
+    title: 'Recent Activity',
+    empty: 'No recent activity. Start transacting to see your history!',
+    viewAll: 'View All Activity',
+  },
+  'es-ES': {
+    title: 'Actividad reciente',
+    empty: 'Sin actividad reciente. Empieza a transaccionar para ver tu historial.',
+    viewAll: 'Ver toda la actividad',
+  },
+};
 
 type ActivityItem = {
   type: string;
@@ -18,12 +32,12 @@ type ActivityItem = {
 
 export function RecentActivitySection() {
   const { address } = useAccount();
+  const { locale } = useLocale();
+  const copy = (ACTIVITY_COPY as Record<string, typeof ACTIVITY_COPY['en-US']>)[locale] ?? ACTIVITY_COPY['en-US'];
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const controller = new AbortController();
-
     const fetchActivity = async () => {
       if (!address) {
         setActivities([]);
@@ -33,7 +47,7 @@ export function RecentActivitySection() {
 
       setIsLoading(true);
       try {
-        const response = await fetch(`/api/activities/${address}`, { signal: controller.signal });
+        const response = await fetch(`/api/activities/${address}`);
         if (!response.ok) {
           return;
         }
@@ -43,7 +57,7 @@ export function RecentActivitySection() {
           (data.activities || []).slice(0, 4).map((activity: { type: string; description: string; timestamp: string }) => ({
             type: activity.type,
             desc: activity.description,
-            time: formatTimeAgo(new Date(activity.timestamp).getTime()),
+            time: formatTimeAgo(new Date(activity.timestamp).getTime(), locale),
             icon:
               activity.type === 'send'
                 ? ArrowUpRight
@@ -75,8 +89,8 @@ export function RecentActivitySection() {
   return (
     <GlassCard className="p-6" hover={false}>
       <h2 className="mb-6 flex items-center gap-2 text-xl font-bold text-white">
-        <Activity className="text-accent" size={24} />
-        Recent Activity
+        <Activity className="text-cyan-400" size={24} />
+        {copy.title}
       </h2>
       {isLoading ? (
         <div className="space-y-3">
@@ -91,11 +105,11 @@ export function RecentActivitySection() {
           ))}
         </div>
       ) : activities.length === 0 ? (
-        <p className="py-8 text-center text-white/60">No recent activity. Start transacting to see your history!</p>
+        <p className="py-8 text-center text-white/60">{copy.empty}</p>
       ) : (
         <div className="space-y-3">
           {activities.map((activity, index) => (
-            <m.div
+            <motion.div
               key={`${activity.type}-${activity.time}-${index}`}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -105,7 +119,7 @@ export function RecentActivitySection() {
               <div
                 className={`shrink-0 rounded-xl p-2 ${
                   activity.color === 'cyan'
-                    ? 'bg-accent/20 text-accent'
+                    ? 'bg-cyan-500/20 text-cyan-400'
                     : activity.color === 'emerald'
                       ? 'bg-emerald-500/20 text-emerald-400'
                       : activity.color === 'amber'
@@ -120,13 +134,13 @@ export function RecentActivitySection() {
                 <p className="text-xs text-white/40">{activity.time}</p>
               </div>
               <ChevronRight className="text-white/20" size={16} />
-            </m.div>
+            </motion.div>
           ))}
         </div>
       )}
       <div className="mt-4 text-center">
-        <Link href="/explorer" className="inline-flex items-center gap-1 text-sm font-medium text-accent hover:text-accent">
-          View All Activity <ChevronRight size={14} />
+        <Link href="/explorer" className="inline-flex items-center gap-1 text-sm font-medium text-cyan-400 hover:text-cyan-300">
+          {copy.viewAll} <ChevronRight size={14} />
         </Link>
       </div>
     </GlassCard>

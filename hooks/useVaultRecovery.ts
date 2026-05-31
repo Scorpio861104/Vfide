@@ -1,11 +1,10 @@
-import { useAccount, useWriteContract, useReadContract, useWatchContractEvent, useChainId, useSwitchChain } from 'wagmi';
+import { useAccount, useWriteContract, useReadContract, useWatchContractEvent, useChainId } from 'wagmi';
 import { useMemo, useEffect, useState } from 'react';
 import { isAddress } from 'viem';
-import { CARD_BOUND_VAULT_ABI, VAULT_HUB_ABI, ZERO_ADDRESS, isConfiguredContractAddress, getContractAddresses } from '@/lib/contracts'
+import { CARD_BOUND_VAULT_ABI, VAULT_HUB_ABI, ZERO_ADDRESS, isConfiguredContractAddress } from '@/lib/contracts'
 import { useContractAddresses } from './useContractAddresses';
 import { parseContractError, logError } from '@/lib/errorHandling';
 import { CURRENT_CHAIN_ID } from '@/lib/testnet';
-import { isSupportedChainId, getChainByChainId } from '@/lib/chains';
 const CARD_BOUND_ROTATION_DELAY_SECONDS = 7 * 24 * 60 * 60;
 
 interface RecoveryStatus {
@@ -17,65 +16,19 @@ interface RecoveryStatus {
   daysRemaining: number | null;
 }
 
-interface _InheritanceStatus {
-  isActive: boolean;
-  approvals: number;
-  threshold: number;
-  denied: boolean;
-  expiryTime: number | null;
-  daysRemaining: number | null;
-}
-
 export function useVaultRecovery(vaultAddress?: `0x${string}`) {
   const CONTRACT_ADDRESSES = useContractAddresses();
   const { address: userAddress } = useAccount();
   const chainId = useChainId();
-  const { switchChainAsync, isPending: isSwitchingChain } = useSwitchChain();
   const { writeContractAsync, isPending: isWritePending } = useWriteContract();
   const hasVaultAddress = !!vaultAddress && isAddress(vaultAddress) && vaultAddress !== ZERO_ADDRESS;
   const isVaultHubAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.VaultHub);
   const recoverySupported = true;
   const inheritanceSupported = false;
 
-  // Resolve which chain we should be writing to. Recovery actions are vault-bound
-  // (they hit the CardBoundVault directly), so the right chain is whichever chain
-  // the vault was deployed on. We use the same fallback chain as useVaultHub:
-  //   1) If wallet is on a supported chain that has VaultHub configured → use that.
-  //   2) Otherwise fall back to NEXT_PUBLIC_DEFAULT_CHAIN_ID.
-  // This avoids the previous bug where actions were hard-pinned to CURRENT_CHAIN_ID
-  // even though the contracts may be deployed on multiple chains (Base + Polygon).
-  const operationalChainId = (() => {
-    if (typeof chainId === 'number' && isSupportedChainId(chainId)) {
-      const addrs = getContractAddresses(chainId);
-      if (isConfiguredContractAddress(addrs.VaultHub)) return chainId;
-    }
-    return CURRENT_CHAIN_ID;
-  })();
-  const isOnCorrectChain = chainId === operationalChainId;
-  const expectedChainName = getChainByChainId(operationalChainId)?.name || `chain ${operationalChainId}`;
-
-  /**
-   * One-click chain switch. Returns true on success, false on failure (e.g.,
-   * user rejected). UI components call this from a "Switch network" button
-   * before invoking a recovery action.
-   */
-  const switchToPreferredChain = async (): Promise<boolean> => {
-    if (isOnCorrectChain) return true;
-    try {
-      await switchChainAsync({ chainId: operationalChainId as 84532 | 8453 | 300 | 137 | 324 | 80002 });
-      return true;
-    } catch (e) {
-      logError('switchToPreferredChain', e);
-      return false;
-    }
-  };
-
   const assertRecoveryActionSupported = () => {
-    if (!isOnCorrectChain) {
-      throw new Error(`Switch to ${expectedChainName} before using recovery actions`);
-    }
-    if (!isVaultHubAvailable) {
-      throw new Error(`Recovery is not available on this network (VaultHub is not configured for ${expectedChainName})`);
+    if (chainId !== CURRENT_CHAIN_ID) {
+      throw new Error('Switch to the configured network before using recovery actions');
     }
   };
 
@@ -217,7 +170,6 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
         abi: CARD_BOUND_VAULT_ABI,
         functionName: 'setGuardian',
         args: [guardianAddress, active],
-        chainId: operationalChainId as 84532 | 8453 | 300 | 137 | 324 | 80002,
       });
     } catch (error) {
       logError('setGuardian', error);
@@ -259,7 +211,6 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
         abi: CARD_BOUND_VAULT_ABI,
         functionName: 'proposeWalletRotation',
         args: [candidateAddress, BigInt(CARD_BOUND_ROTATION_DELAY_SECONDS)],
-        chainId: operationalChainId as 84532 | 8453 | 300 | 137 | 324 | 80002,
       });
     } catch (error) {
       logError('requestRecovery', error);
@@ -280,7 +231,6 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
         address: vaultAddress,
         abi: CARD_BOUND_VAULT_ABI,
         functionName: 'approveWalletRotation',
-        chainId: operationalChainId as 84532 | 8453 | 300 | 137 | 324 | 80002,
       });
     } catch (error) {
       logError('approveRecovery', error);
@@ -301,7 +251,6 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
         address: vaultAddress,
         abi: CARD_BOUND_VAULT_ABI,
         functionName: 'finalizeWalletRotation',
-        chainId: operationalChainId as 84532 | 8453 | 300 | 137 | 324 | 80002,
       });
     } catch (error) {
       logError('finalizeRecovery', error);
@@ -347,13 +296,5 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
     // Refetch functions
     refetchRecoveryState: refetchCardBoundPendingRotation,
     refetchGuardians: () => Promise.resolve(),
-
-    // Chain status — let UI render a "Switch to X" button before invoking
-    // recovery actions instead of throwing after the user clicks.
-    isOnCorrectChain,
-    expectedChainName,
-    expectedChainId: operationalChainId,
-    switchToPreferredChain,
-    isSwitchingChain,
   };
 }

@@ -10,6 +10,7 @@ import { ArrowLeft, Copy, ShieldCheck, Users } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 import { StaffManager, type StaffMember } from '@/components/staff';
 import { buildStaffPermissionsForRole, type StaffRole } from '@/lib/merchantStaff';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 interface StaffRecord {
   id: string;
@@ -30,6 +31,9 @@ interface StaffActivity {
 }
 
 export default function MerchantStaffPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address } = useAccount();
   const [staff, setStaff] = useState<StaffRecord[]>([]);
   const [activity, setActivity] = useState<StaffActivity[]>([]);

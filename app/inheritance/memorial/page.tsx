@@ -45,10 +45,14 @@ import { isAddress, formatUnits, type Abi, type Address, type Hex } from 'viem';
 import CardBoundVaultABI from '@/lib/abis/CardBoundVault.json';
 import CardBoundVaultInheritanceManagerABI from '@/lib/abis/CardBoundVaultInheritanceManager.json';
 import { INHERITANCE_STATE_LABEL } from '@/hooks/useInheritance';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 const ZERO_ADDR = '0x0000000000000000000000000000000000000000' as const;
 
 export default function MemorialPage() {
+  const { locale } = useLocale();
+  void locale;
+
   return (
     <Suspense fallback={<LoadingPage />}>
       <MemorialInner />

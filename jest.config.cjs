@@ -87,6 +87,7 @@ const customJestConfig = {
   ],
   testPathIgnorePatterns: [
     '/node_modules/',
+    '/uploaded_files/',
     '/__mocks__/',
     '/vfide-complete/',
     '/test/hardhat/',
@@ -149,6 +150,9 @@ const customJestConfig = {
     // resolves to undefined). Pending a per-test rewrite — skip for now
     // so it doesn't poison the rest of the suite.
     '__tests__/hooks/useHeadhunterHooksReal\\.test\\.ts$',
+  ],
+  modulePathIgnorePatterns: [
+    '<rootDir>/uploaded_files/',
   ],
 }
 

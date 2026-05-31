@@ -4,45 +4,29 @@ import { useAccount } from 'wagmi'
 import { TrustChallenges } from '@/app/proofscore/components/TrustChallenges'
 import { ScoreStoryFeed } from '@/app/proofscore/components/ScoreStoryFeed'
 import { ProofScoreVisualizer } from '@/components/trust/ProofScoreVisualizer'
-import { useLocale } from '@/hooks/useLocale';
-import { useT } from '@/lib/i18n';
-import { Footer } from '@/components/layout/Footer';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
-// Canonical 7-tier system — 0–10,000 scale (matches Seer contract + ScoringConstants.sol)
-// LOW_FEE_FLOOR=4000, NEUTRAL=5000, MIN_GOVERNANCE=5400, MIN_MERCHANT=5600, HIGH_FEE_CEIL=8000
 const TIERS = [
-  { tier: 'Risky',      min: 0,    max: 3999,  color: 'bg-red-500',    desc: 'No verified identity. High risk. Flat 5% fee.' },
-  { tier: 'Low Trust',  min: 4000, max: 4999,  color: 'bg-orange-400', desc: 'Score above the 4,000 floor. Fee descends from 5.00% toward 3.82%.' },
-  { tier: 'Neutral',    min: 5000, max: 5399,  color: 'bg-yellow-400', desc: 'Basic address ownership verified. Fee: 3.82%–3.34%.' },
-  { tier: 'Governance', min: 5400, max: 5599,  color: 'bg-lime-400',   desc: 'Eligible to vote and propose in the DAO.' },
-  { tier: 'Trusted',    min: 5600, max: 6999,  color: 'bg-green-500',  desc: 'Multi-source trust. Merchant registration eligible.' },
-  { tier: 'Council',    min: 7000, max: 7999,  color: 'bg-cyan-500',   desc: 'Council-eligible. Can endorse and mentor others.' },
-  { tier: 'Elite',      min: 8000, max: 10000, color: 'bg-violet-600', desc: 'Highest trust. Minimum 0.25% fee.' },
+  { tier: 'Risky',      min: 0,   max: 299, color: 'bg-red-500',    desc: 'No verified identity. High risk.' },
+  { tier: 'Low Trust',  min: 300, max: 499, color: 'bg-orange-400', desc: 'Minimal proof. Unstable trust.' },
+  { tier: 'Neutral',    min: 500, max: 599, color: 'bg-yellow-400', desc: 'Basic address ownership verified.' },
+  { tier: 'Governance', min: 600, max: 699, color: 'bg-lime-400',   desc: 'Governance participation active.' },
+  { tier: 'Trusted',    min: 700, max: 799, color: 'bg-green-500',  desc: 'Multi-source trust. Recognised.' },
+  { tier: 'Council',    min: 800, max: 899, color: 'bg-cyan-500',   desc: 'Council-level governance + staking.' },
+  { tier: 'Elite',      min: 900, max: 999, color: 'bg-violet-600', desc: 'Elite — top 1% verified wallets.' },
 ]
 
 export default function ProofScorePage() {
-  const [locale] = useLocale();
-  const t = useT();
-  const { address, isConnected } = useAccount()
+  const { locale } = useLocale();
+  void locale;
+
+  const { address } = useAccount()
 
   return (
-    <>
     <div className="min-h-screen bg-[#070813] text-white">
       {/* ── Hero ── */}
       <section className="flex flex-col items-center pt-10 pb-6">
-        {isConnected ? (
-          <ProofScoreVisualizer address={address} />
-        ) : (
-          <div className="flex flex-col items-center gap-4 py-12 text-center px-4">
-            <div className="w-24 h-24 rounded-full border-2 border-dashed border-zinc-700 flex items-center justify-center">
-              <span className="text-4xl">🔐</span>
-            </div>
-            <h2 className="text-2xl font-bold text-white">Connect your wallet</h2>
-            <p className="text-zinc-400 max-w-sm">
-              Your ProofScore is built on-chain. Connect a wallet to see your live reputation score, fee tier, and trust challenges.
-            </p>
-          </div>
-        )}
+        <ProofScoreVisualizer address={address} />
       </section>
 
       {/* ── 7-Tier Table ── */}
@@ -89,7 +73,5 @@ export default function ProofScorePage() {
 
       {/* ── Deep-dive sections ── */}
     </div>
-    <Footer />
-    </>
   )
 }

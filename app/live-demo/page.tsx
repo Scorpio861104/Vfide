@@ -16,11 +16,14 @@ import { LiveActivityFeed } from '@/components/trust/LiveActivityFeed'
 import { FeeSavingsCalculator } from '@/components/commerce/FeeSavingsCalculator'
 import { LiveSystemStats } from '@/components/stats/LiveSystemStats'
 import { TransactionNotification, useTransactionNotifications } from '@/components/wallet/TransactionNotification'
-import { m, LazyMotion, domAnimation } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { useAccount } from 'wagmi'
-import { DemoDataBanner } from '@/components/layout/DemoDataBanner';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function LiveDemoPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address, isConnected } = useAccount()
   const { notification, showNotification, closeNotification } = useTransactionNotifications()
   
@@ -44,9 +47,7 @@ export default function LiveDemoPage() {
   }
   
   return (
-    <LazyMotion features={domAnimation}>
-      <>
-      <DemoDataBanner />
+    <>
       <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] px-3 sm:px-4 overflow-x-hidden relative">
       {/* Ambient orbs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -63,17 +64,17 @@ export default function LiveDemoPage() {
       
       <div className="relative max-w-7xl mx-auto space-y-6 sm:space-y-8 md:space-y-12 py-10">
         {/* Hero */}
-        <m.div
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center space-y-2 sm:space-y-4"
         >
           <div className="badge-live mb-4 justify-center">
-            <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" /> Interactive Demo
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> Interactive Demo
           </div>
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-zinc-100 tracking-tight">
             Experience{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-violet-500">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-500">
               VFIDE Live
             </span>
           </h1>
@@ -82,23 +83,23 @@ export default function LiveDemoPage() {
             <span className="text-emerald-400 font-bold">excited</span> and want to be{' '}
             <span className="text-amber-400 font-bold">all in</span> on VFIDE
           </p>
-        </m.div>
+        </motion.div>
         
         {/* Network Stats - Full Width */}
-        <m.div
+        <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2 }}
         >
           <LiveSystemStats />
-        </m.div>
+        </motion.div>
         
         {/* Two Column Layout */}
         <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
           {/* Left Column */}
           <div className="space-y-4 sm:space-y-6 md:space-y-8">
             {/* ProofScore Visualizer */}
-            <m.div
+            <motion.div
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
@@ -117,7 +118,7 @@ export default function LiveDemoPage() {
               </div>
               
               {isConnected && (
-                <m.div
+                <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.5 }}
@@ -135,33 +136,33 @@ export default function LiveDemoPage() {
                   >
                     Vote on DAO Proposal
                   </button>
-                </m.div>
+                </motion.div>
               )}
-            </m.div>
+            </motion.div>
             
             {/* Fee Calculator */}
-            <m.div
+            <motion.div
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 }}
-              className="bg-zinc-950/50 backdrop-blur-xl rounded-2xl p-4 sm:p-6 md:p-8 border border-accent/20"
+              className="bg-zinc-950/50 backdrop-blur-xl rounded-2xl p-4 sm:p-6 md:p-8 border border-cyan-400/20"
             >
               <FeeSavingsCalculator />
-            </m.div>
+            </motion.div>
           </div>
           
           {/* Right Column - Activity Feed */}
-          <m.div
+          <motion.div
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.5 }}
-            className="bg-zinc-950/50 backdrop-blur-xl rounded-2xl p-4 sm:p-6 md:p-8 border border-accent/20"
+            className="bg-zinc-950/50 backdrop-blur-xl rounded-2xl p-4 sm:p-6 md:p-8 border border-cyan-400/20"
           >
             <LiveActivityFeed />
             
             {/* Quick Actions */}
             {isConnected && (
-              <m.div
+              <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.7 }}
@@ -169,7 +170,7 @@ export default function LiveDemoPage() {
               >
                 <button
                   onClick={() => handleDemoTransaction('transfer')}
-                  className="bg-gradient-to-r from-accent to-blue-500 text-white font-bold py-2 sm:py-3 px-2 sm:px-4 rounded-lg hover:scale-105 transition-transform text-xs sm:text-sm"
+                  className="bg-gradient-to-r from-cyan-400 to-blue-500 text-white font-bold py-2 sm:py-3 px-2 sm:px-4 rounded-lg hover:scale-105 transition-transform text-xs sm:text-sm"
                 >
                   Send VFIDE
                 </button>
@@ -179,20 +180,20 @@ export default function LiveDemoPage() {
                 >
                   Pay Merchant
                 </button>
-              </m.div>
+              </motion.div>
             )}
-          </m.div>
+          </motion.div>
         </div>
         
         {/* Bottom CTA */}
-        <m.div
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
           className="relative"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-accent via-[#00FF88] to-amber-400 rounded-2xl blur-2xl opacity-20" />
-          <div className="relative bg-zinc-950/80 backdrop-blur-xl rounded-2xl p-4 sm:p-6 md:p-8 lg:p-12 border-2 border-accent/30 text-center space-y-3 sm:space-y-4 md:space-y-6">
+          <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-[#00FF88] to-amber-400 rounded-2xl blur-2xl opacity-20" />
+          <div className="relative bg-zinc-950/80 backdrop-blur-xl rounded-2xl p-4 sm:p-6 md:p-8 lg:p-12 border-2 border-cyan-400/30 text-center space-y-3 sm:space-y-4 md:space-y-6">
             <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold text-zinc-100">
               Ready for No Processor Fees?
             </h2>
@@ -202,19 +203,19 @@ export default function LiveDemoPage() {
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 md:gap-4 justify-center items-center">
               <Link
                 href="/vault"
-                className="w-full sm:w-auto bg-gradient-to-r from-emerald-400 to-accent text-zinc-950 font-bold py-2 sm:py-3 md:py-4 px-4 sm:px-6 md:px-8 rounded-xl hover:scale-105 transition-transform text-sm sm:text-base md:text-lg text-center"
+                className="w-full sm:w-auto bg-gradient-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold py-2 sm:py-3 md:py-4 px-4 sm:px-6 md:px-8 rounded-xl hover:scale-105 transition-transform text-sm sm:text-base md:text-lg text-center"
               >
                 Create Your Vault
               </Link>
               <Link
                 href="/docs"
-                className="w-full sm:w-auto bg-zinc-950 border-2 border-accent text-accent font-bold py-2 sm:py-3 md:py-4 px-4 sm:px-6 md:px-8 rounded-xl hover:scale-105 transition-transform text-sm sm:text-base md:text-lg text-center"
+                className="w-full sm:w-auto bg-zinc-950 border-2 border-cyan-400 text-cyan-400 font-bold py-2 sm:py-3 md:py-4 px-4 sm:px-6 md:px-8 rounded-xl hover:scale-105 transition-transform text-sm sm:text-base md:text-lg text-center"
               >
                 Read Docs
               </Link>
             </div>
           </div>
-        </m.div>
+        </motion.div>
       </div>
     </div>
     <Footer />

@@ -1,26 +1,58 @@
 'use client';
 
-import { Suspense } from "react";
 import { Footer } from "@/components/layout/Footer";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { m, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Scale, Lock, FileText } from "lucide-react";
-import { PageSkeleton } from '@/components/layout/PageSkeleton';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 type TabType = 'legal' | 'privacy' | 'terms';
 
-const TABS = [
-  { id: 'legal' as TabType, label: 'Disclaimers', icon: Scale },
-  { id: 'privacy' as TabType, label: 'Privacy', icon: Lock },
-  { id: 'terms' as TabType, label: 'Terms', icon: FileText },
-];
+const LEGAL_COPY = {
+  'en-US': {
+    badge: 'Legal',
+    title: 'Legal & Policies',
+    subtitle: 'Important legal information, privacy policy, and terms of service.',
+    tabs: { legal: 'Disclaimers', privacy: 'Privacy', terms: 'Terms' },
+    tablistLabel: 'Legal document sections',
+  },
+  'es-ES': {
+    badge: 'Legal',
+    title: 'Legal y políticas',
+    subtitle: 'Información legal importante, política de privacidad y términos del servicio.',
+    tabs: { legal: 'Descargos', privacy: 'Privacidad', terms: 'Términos' },
+    tablistLabel: 'Secciones de documentos legales',
+  },
+  'fr-FR': {
+    badge: 'Légal',
+    title: 'Mentions légales et politiques',
+    subtitle: 'Informations juridiques importantes, politique de confidentialité et conditions d’utilisation.',
+    tabs: { legal: 'Avertissements', privacy: 'Confidentialité', terms: 'Conditions' },
+    tablistLabel: 'Sections des documents juridiques',
+  },
+  'de-DE': {
+    badge: 'Rechtliches',
+    title: 'Rechtliches und Richtlinien',
+    subtitle: 'Wichtige rechtliche Informationen, Datenschutzrichtlinie und Nutzungsbedingungen.',
+    tabs: { legal: 'Hinweise', privacy: 'Datenschutz', terms: 'Bedingungen' },
+    tablistLabel: 'Rechtsdokument-Bereiche',
+  },
+};
 
 const VALID_TABS: TabType[] = ['legal', 'privacy', 'terms'];
 
-function LegalPageContent() {
+export default function LegalPage() {
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<TabType>('legal');
+  const { locale } = useLocale();
+  const copy = (LEGAL_COPY as Record<string, typeof LEGAL_COPY['en-US']>)[locale] ?? LEGAL_COPY['en-US'];
+
+  const tabs = [
+    { id: 'legal' as const, label: copy.tabs.legal, icon: Scale },
+    { id: 'privacy' as const, label: copy.tabs.privacy, icon: Lock },
+    { id: 'terms' as const, label: copy.tabs.terms, icon: FileText },
+  ];
 
   // Honor ?tab=privacy / ?tab=terms deeplinks (e.g. from /vault/safety).
   useEffect(() => {
@@ -32,7 +64,7 @@ function LegalPageContent() {
 
   return (
     <>
-      <m.main
+      <motion.main
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="min-h-screen bg-zinc-950 md:pt-[3.5rem] relative overflow-hidden"
@@ -47,15 +79,15 @@ function LegalPageContent() {
         {/* Header */}
         <section className="py-10 relative z-10">
           <div className="container mx-auto px-4 max-w-4xl">
-            <m.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
-              <div className="badge-live mb-3 w-fit"><Scale size={11} /> Legal</div>
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+              <div className="badge-live mb-3 w-fit"><Scale size={11} /> {copy.badge}</div>
               <h1 className="text-4xl font-black text-white tracking-tight mb-2">
-                Legal & Policies
+                {copy.title}
               </h1>
               <p className="text-zinc-400">
-                Important legal information, privacy policy, and terms of service.
+                {copy.subtitle}
               </p>
-            </m.div>
+            </motion.div>
           </div>
         </section>
 
@@ -63,8 +95,8 @@ function LegalPageContent() {
         <section className="border-b border-white/8 sticky top-7 md:top-[5.25rem] z-40"
           style={{ background: 'rgba(8,8,14,0.85)', backdropFilter: 'blur(24px)' }}>
           <div className="container mx-auto px-4 max-w-4xl">
-            <div className="flex gap-2 overflow-x-auto py-3 scrollbar-hide" role="tablist" aria-label="Legal document sections">
-              {TABS.map(tab => (
+            <div className="flex gap-2 overflow-x-auto py-3 scrollbar-hide" role="tablist" aria-label={copy.tablistLabel}>
+              {tabs.map(tab => (
                 <button
                   key={tab.id}
                   role="tab"
@@ -86,7 +118,7 @@ function LegalPageContent() {
         {/* Tab Content */}
         <div className="container mx-auto px-4 max-w-4xl py-10 relative z-10">
           <AnimatePresence mode="wait">
-            <m.div
+            <motion.div
               key={activeTab}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
@@ -98,10 +130,10 @@ function LegalPageContent() {
               {activeTab === 'legal' && <LegalDisclaimersTab />}
               {activeTab === 'privacy' && <PrivacyPolicyTab />}
               {activeTab === 'terms' && <TermsOfServiceTab />}
-            </m.div>
+            </motion.div>
           </AnimatePresence>
         </div>
-      </m.main>
+      </motion.main>
       <Footer />
     </>
   );
@@ -126,8 +158,8 @@ function LegalDisclaimersTab() {
         </div>
       </div>
 
-      <div className="bg-zinc-800 border border-accent rounded-xl p-8">
-        <h2 className="text-2xl font-bold text-accent mb-6">✓ What VFIDE Tokens ARE</h2>
+      <div className="bg-zinc-800 border border-cyan-400 rounded-xl p-8">
+        <h2 className="text-2xl font-bold text-cyan-400 mb-6">✓ What VFIDE Tokens ARE</h2>
         <ul className="space-y-3 text-zinc-100">
           <li>✓ <strong>Governance Rights:</strong> Vote on protocol proposals and parameter changes</li>
           <li>✓ <strong>Payment Utility:</strong> Use tokens for merchant payments and transactions</li>
@@ -162,8 +194,8 @@ function LegalDisclaimersTab() {
 function PrivacyPolicyTab() {
   return (
     <div className="space-y-8">
-      <div className="bg-accent/10 border-2 border-accent rounded-xl p-6">
-        <h2 className="text-2xl font-bold text-accent mb-4">Key Privacy Points</h2>
+      <div className="bg-cyan-400/10 border-2 border-cyan-400 rounded-xl p-6">
+        <h2 className="text-2xl font-bold text-cyan-400 mb-4">Key Privacy Points</h2>
         <ul className="space-y-3 text-zinc-100">
           <li>✓ <strong>No KYC Required:</strong> We do not collect personal identification documents</li>
           <li>✓ <strong>No Email Collection:</strong> We don&apos;t require email addresses for protocol use</li>
@@ -174,7 +206,7 @@ function PrivacyPolicyTab() {
       </div>
 
       <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
-        <h2 className="text-2xl font-bold text-accent mb-4">1. Introduction</h2>
+        <h2 className="text-2xl font-bold text-cyan-400 mb-4">1. Introduction</h2>
         <p className="text-zinc-100 leading-relaxed">
           VFIDE (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) is committed to protecting your privacy. This Privacy Policy 
           explains how information is collected, used, and disclosed when you interact with our 
@@ -183,7 +215,7 @@ function PrivacyPolicyTab() {
       </div>
 
       <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
-        <h2 className="text-2xl font-bold text-accent mb-4">2. Information We Collect</h2>
+        <h2 className="text-2xl font-bold text-cyan-400 mb-4">2. Information We Collect</h2>
         <div className="space-y-4 text-zinc-100">
           <p><strong>Public Blockchain Data:</strong> Your wallet address and on-chain transactions are publicly visible on the blockchain.</p>
           <p><strong>Website Analytics:</strong> Anonymous usage data may be collected for improving user experience.</p>
@@ -219,14 +251,14 @@ function TermsOfServiceTab() {
       </div>
 
       <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
-        <h2 className="text-2xl font-bold text-accent mb-4">1. Nature of VFIDE Tokens</h2>
+        <h2 className="text-2xl font-bold text-cyan-400 mb-4">1. Nature of VFIDE Tokens</h2>
         <p className="text-zinc-400 leading-relaxed mb-4">
           VFIDE tokens are <strong className="text-zinc-100">utility tokens</strong> providing access to protocol features. They are <strong className="text-red-400">NOT</strong> securities, equity, or investment instruments.
         </p>
       </div>
 
       <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
-        <h2 className="text-2xl font-bold text-accent mb-4">2. Utility Functions</h2>
+        <h2 className="text-2xl font-bold text-cyan-400 mb-4">2. Utility Functions</h2>
         <ul className="list-disc list-inside text-zinc-400 space-y-2 ml-4">
           <li>Governance voting rights on protocol proposals</li>
           <li>Payment utility within the VFIDE ecosystem</li>
@@ -236,7 +268,7 @@ function TermsOfServiceTab() {
       </div>
 
       <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
-        <h2 className="text-2xl font-bold text-accent mb-4">3. Risk Acknowledgment</h2>
+        <h2 className="text-2xl font-bold text-cyan-400 mb-4">3. Risk Acknowledgment</h2>
         <p className="text-zinc-400 leading-relaxed">
           By using VFIDE, you acknowledge and accept all risks associated with blockchain technology, 
           smart contracts, and cryptocurrency, including total loss of funds.
@@ -244,7 +276,7 @@ function TermsOfServiceTab() {
       </div>
 
       <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
-        <h2 className="text-2xl font-bold text-accent mb-4">4. Self-Custody And Protocol Controls</h2>
+        <h2 className="text-2xl font-bold text-cyan-400 mb-4">4. Self-Custody And Protocol Controls</h2>
         <p className="text-zinc-400 leading-relaxed">
           VFIDE is designed around user-controlled wallets and vaults, and VFIDE does not hold your private keys.
           Some protocol actions, including fraud review, queued withdrawals, guardian recovery, and governance-mediated safety controls,
@@ -254,13 +286,5 @@ function TermsOfServiceTab() {
 
       <p className="text-zinc-400 text-sm text-center">Last updated: December 2025</p>
     </div>
-  );
-}
-
-export default function LegalPage() {
-  return (
-    <Suspense fallback={<PageSkeleton />}>
-      <LegalPageContent />
-    </Suspense>
   );
 }

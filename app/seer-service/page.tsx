@@ -9,6 +9,7 @@ import { Footer } from '@/components/layout/Footer';
 import { DashboardTab } from './components/DashboardTab';
 import { InsightsTab } from './components/InsightsTab';
 import { SettingsTab } from './components/SettingsTab';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 type TabId = 'dashboard' | 'insights' | 'settings';
 
@@ -19,6 +20,9 @@ const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
 ];
 
 export default function SeerServicePage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [activeTab, setActiveTab] = useState<TabId>('dashboard');
 
   return (

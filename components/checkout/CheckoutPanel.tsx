@@ -76,7 +76,7 @@ export function CheckoutPanel({
   onCancel,
 }: CheckoutPanelProps) {
   const { address, isConnected } = useAccount();
-  const { formatCurrency, displayCurrency: _displayCurrency } = useLocale();
+  const { formatCurrency } = useLocale();
   const [selectedToken, setSelectedToken] = useState<string>('VFIDE');
   const [isProcessing, setIsProcessing] = useState(false);
   const [step, setStep] = useState<'review' | 'paying' | 'complete'>('review');

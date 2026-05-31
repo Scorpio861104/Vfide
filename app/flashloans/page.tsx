@@ -13,6 +13,7 @@ const LendersTab = _dynamic(() => import('./components/LendersTab').then(m => ({
 const BorrowInfoTab = _dynamic(() => import('./components/BorrowInfoTab').then(m => ({ default: m.BorrowInfoTab })), { ssr: false });
 const BorrowTab = _dynamic(() => import('./components/BorrowTab').then(m => ({ default: m.BorrowTab })), { ssr: false });
 import { HistoryTab } from './components/HistoryTab';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 type TabId = 'borrow' | 'lenders' | 'info' | 'history';
 
@@ -24,6 +25,9 @@ const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
 ];
 
 export default function FlashLoansPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [activeTab, setActiveTab] = useState<TabId>('borrow');
 
   return (

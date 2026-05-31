@@ -1,28 +1,64 @@
 'use client';
-import _dynamic from 'next/dynamic';
 
 export const dynamic = 'force-dynamic';
 
 import { Footer } from '@/components/layout/Footer';
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
-import { m, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Home, BarChart3, Award, Calculator, Activity, Wallet2, TrendingUp, Zap } from 'lucide-react';
 import { ProofScoreRing, ProofScoreTierProgress } from '@/components/proofscore';
 import { FeeSavingsCard } from '@/components/fees';
 import { OnboardingProgressBar } from '@/components/onboarding';
 import { NonCustodialNotice } from '@/components/compliance';
 import { useProofScore } from '@/hooks/useProofScore';
-import { getTier } from '@/lib/proofScore/tiers';
-const OverviewTab = _dynamic(() => import('./components/OverviewTab').then(m => ({ default: m.OverviewTab })), { ssr: false });
+import { OverviewTab } from './components/OverviewTab';
 import { BadgesTab } from './components/BadgesTab';
-const ScoreSimulatorTab = _dynamic(() => import('./components/ScoreSimulatorTab').then(m => ({ default: m.ScoreSimulatorTab })), { ssr: false });
+import { ScoreSimulatorTab } from './components/ScoreSimulatorTab';
 import { FeeSimulatorTab } from './components/FeeSimulatorTab';
 import { RecentActivity } from './components/RecentActivity';
-import { useT } from '@/lib/i18n';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
+const DASHBOARD_COPY = {
+  'en-US': {
+    badge: 'Dashboard',
+    welcome: 'Welcome back',
+    proofScoreLabel: 'ProofScore',
+    feeRateLabel: 'Fee Rate',
+    txLabel: 'Transactions',
+    tabs: {
+      overview: 'Overview',
+      badges: 'Badges',
+      score: 'Score Sim',
+      fees: 'Fee Sim',
+      activity: 'Activity',
+    },
+  },
+  'es-ES': {
+    badge: 'Panel',
+    welcome: 'Bienvenido de nuevo',
+    proofScoreLabel: 'ProofScore',
+    feeRateLabel: 'Comisión',
+    txLabel: 'Transacciones',
+    tabs: {
+      overview: 'Resumen',
+      badges: 'Insignias',
+      score: 'Sim score',
+      fees: 'Sim comisión',
+      activity: 'Actividad',
+    },
+  },
+};
 
-type TabId = 'overview' | 'badges' | 'score' | 'fees' | 'activity';
+const tabIcons = {
+  overview: Home,
+  badges: Award,
+  score: Calculator,
+  fees: BarChart3,
+  activity: Activity,
+} as const;
+
+type TabId = keyof typeof tabIcons;
 
 function truncateAddress(address?: string) {
   if (!address) return null;
@@ -30,20 +66,20 @@ function truncateAddress(address?: string) {
 }
 
 export default function DashboardPage() {
-  const t = useT();
-  const tabs = [
-    { id: 'overview', label: t.dashboard_tab_overview, icon: Home },
-    { id: 'badges',   label: t.dashboard_tab_badges, icon: Award },
-    { id: 'score',    label: t.dashboard_tab_score, icon: Calculator },
-    { id: 'fees',     label: t.dashboard_tab_fees, icon: BarChart3 },
-    { id: 'activity', label: t.dashboard_tab_activity, icon: Activity },
-  ] as const;
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const { address } = useAccount();
-  const { score: proofScore, burnFee: feeRate, isDisconnected: _scoreDisconnected } = useProofScore();
-  const tier = getTier(proofScore ?? 5000);
+  const { locale } = useLocale();
+  const copy = (DASHBOARD_COPY as Record<string, typeof DASHBOARD_COPY['en-US']>)[locale] ?? DASHBOARD_COPY['en-US'];
+  const { score: proofScore, burnFee: feeRate } = useProofScore();
   const [txCount, setTxCount] = useState(0);
   const [totalVolume, setTotalVolume] = useState(0);
+  const tabs = [
+    { id: 'overview' as const, label: copy.tabs.overview, icon: tabIcons.overview },
+    { id: 'badges' as const, label: copy.tabs.badges, icon: tabIcons.badges },
+    { id: 'score' as const, label: copy.tabs.score, icon: tabIcons.score },
+    { id: 'fees' as const, label: copy.tabs.fees, icon: tabIcons.fees },
+    { id: 'activity' as const, label: copy.tabs.activity, icon: tabIcons.activity },
+  ];
 
   useEffect(() => {
     if (!address) return;
@@ -62,21 +98,16 @@ export default function DashboardPage() {
   }, [address]);
 
   return (
-    <LazyMotion features={domAnimation}>
-      <>
+    <>
       <OnboardingProgressBar />
 
       <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] relative">
-        {/* Ambient orbs — colour follows ProofScore tier */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-          <div
-            className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07] transition-colors duration-[1000ms]"
-            style={{ background: `radial-gradient(circle, ${tier.hex} 0%, transparent 70%)` }}
-          />
-          <div
-            className="absolute top-1/2 -right-32 w-[500px] h-[500px] rounded-full opacity-[0.05] transition-colors duration-[1000ms]"
-            style={{ background: `radial-gradient(circle, ${tier.hex} 0%, transparent 70%)` }}
-          />
+        {/* Ambient orbs */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
+            style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+          <div className="absolute top-1/2 -right-32 w-[500px] h-[500px] rounded-full opacity-[0.05]"
+            style={{ background: 'radial-gradient(circle, #8b5cf6 0%, transparent 70%)' }} />
         </div>
         <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         {/* ── Dashboard hero header ── */}
@@ -84,54 +115,54 @@ export default function DashboardPage() {
           <div className="container mx-auto px-4 max-w-6xl py-10">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <m.div
+                <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
                 >
-                  <div className="badge-live mb-2" style={{ color: tier.hex }}>
-                    <span className="w-1.5 h-1.5 rounded-full animate-pulse transition-colors duration-[1000ms]" style={{ backgroundColor: tier.hex }} /> Dashboard
+                  <div className="badge-live mb-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> {copy.badge}
                   </div>
                   <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-                    Welcome back
+                    {copy.welcome}
                   </h1>
                   {address && (
                     <p className="mt-1.5 text-sm text-zinc-500 font-mono">
                       {truncateAddress(address)}
                     </p>
                   )}
-                </m.div>
+                </motion.div>
               </div>
 
               {/* Quick stats badges */}
-              <m.div
+              <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: 0.15 }}
                 className="flex items-center gap-3 flex-wrap"
               >
                 <div className="glass-card-premium px-4 py-2.5 flex items-center gap-2.5">
-                  <TrendingUp size={15} className="transition-colors duration-[1000ms]" style={{ color: tier.hex }} />
+                  <TrendingUp size={15} className="text-cyan-400" />
                   <div>
-                    <p className="text-[10px] text-zinc-500 uppercase tracking-wider">ProofScore</p>
-                    <p className="text-lg font-bold leading-none transition-colors duration-[1000ms]" style={{ color: tier.hex }}>{(proofScore ?? 0).toLocaleString()}</p>
+                    <p className="text-[10px] text-zinc-500 uppercase tracking-wider">{copy.proofScoreLabel}</p>
+                    <p className="text-lg font-bold text-glow-cyan leading-none">{proofScore.toLocaleString()}</p>
                   </div>
                 </div>
                 <div className="glass-card-premium px-4 py-2.5 flex items-center gap-2.5">
                   <Zap size={15} className="text-amber-400" />
                   <div>
-                    <p className="text-[10px] text-zinc-500 uppercase tracking-wider">Fee Rate</p>
-                    <p className="text-lg font-bold text-amber-400 leading-none">{((feeRate ?? 381) / 100).toFixed(2)}%</p>
+                    <p className="text-[10px] text-zinc-500 uppercase tracking-wider">{copy.feeRateLabel}</p>
+                    <p className="text-lg font-bold text-amber-400 leading-none">{(feeRate / 100).toFixed(2)}%</p>
                   </div>
                 </div>
                 <div className="glass-card-premium px-4 py-2.5 flex items-center gap-2.5">
                   <Wallet2 size={15} className="text-emerald-400" />
                   <div>
-                    <p className="text-[10px] text-zinc-500 uppercase tracking-wider">Transactions</p>
+                    <p className="text-[10px] text-zinc-500 uppercase tracking-wider">{copy.txLabel}</p>
                     <p className="text-lg font-bold text-emerald-400 leading-none">{txCount}</p>
                   </div>
                 </div>
-              </m.div>
+              </motion.div>
             </div>
           </div>
         </div>
@@ -141,19 +172,19 @@ export default function DashboardPage() {
 
           {/* Score + Fee row */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
-            <m.div
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
               className="analytics-card p-6 flex flex-col items-center"
             >
-              <ProofScoreRing score={proofScore ?? 0} size={160} />
+              <ProofScoreRing score={proofScore} size={160} />
               <div className="w-full mt-5">
-                <ProofScoreTierProgress score={proofScore ?? 0} />
+                <ProofScoreTierProgress score={proofScore} />
               </div>
-            </m.div>
+            </motion.div>
 
-            <m.div
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.18 }}
@@ -161,16 +192,16 @@ export default function DashboardPage() {
               <FeeSavingsCard
                 totalVolume={totalVolume}
                 transactionCount={txCount}
-                buyerFeeBps={feeRate ?? 50}
+                buyerFeeBps={50}
               />
-            </m.div>
+            </motion.div>
           </div>
 
           {/* Non-custodial notice */}
           <NonCustodialNotice className="mb-6" />
 
           {/* Tab navigation */}
-          <m.div
+          <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.25 }}
@@ -190,23 +221,23 @@ export default function DashboardPage() {
                 {tab.label}
               </button>
             ))}
-          </m.div>
+          </motion.div>
 
           {/* Tab content */}
           <AnimatePresence mode="wait">
-            <m.div
+            <motion.div
               key={activeTab}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.3 }}
             >
-              {activeTab === 'overview'  && <OverviewTab proofscore={proofScore ?? 0} feeRate={feeRate ?? 0} address={address} />}
+              {activeTab === 'overview'  && <OverviewTab proofscore={proofScore} feeRate={feeRate} address={address} />}
               {activeTab === 'badges'    && <BadgesTab address={address as `0x${string}` | undefined} />}
-              {activeTab === 'score'     && <ScoreSimulatorTab currentScore={proofScore ?? 0} />}
-              {activeTab === 'fees'      && <FeeSimulatorTab currentScore={proofScore ?? 0} />}
+              {activeTab === 'score'     && <ScoreSimulatorTab currentScore={proofScore} />}
+              {activeTab === 'fees'      && <FeeSimulatorTab currentScore={proofScore} />}
               {activeTab === 'activity'  && <RecentActivity />}
-            </m.div>
+            </motion.div>
           </AnimatePresence>
 
         </div>

@@ -17,8 +17,12 @@ import { ProductionSetupPanel } from './components/ProductionSetupPanel';
 import { TransactionHistory } from './components/TransactionHistory';
 import { ConnectWalletPrompt } from './components/ConnectWalletPrompt';
 import { OwnerGuard } from './components/SecurityComponents';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function ControlPanelPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address, isConnected } = useAccount();
   const [activeTab, setActiveTab] = useState('overview');
 

@@ -7,8 +7,12 @@ import { Target } from 'lucide-react';
 import DailyQuestsPanel from '@/components/gamification/DailyQuestsPanel';
 import OnboardingChecklist from '@/components/gamification/OnboardingChecklist';
 import { Footer } from '@/components/layout/Footer';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function QuestsPage() {
+  const { locale } = useLocale();
+  void locale;
+
   return (
     <LazyMotion features={domAnimation}>
       <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] pb-8 relative">

@@ -9,6 +9,7 @@ import { Footer } from '@/components/layout/Footer';
 import { AvailableTab } from './components/AvailableTab';
 import { CollectionTab } from './components/CollectionTab';
 import { HistoryTab } from './components/HistoryTab';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 type TabId = 'collection' | 'available' | 'history';
 
@@ -19,6 +20,9 @@ const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
 ];
 
 export default function BadgesPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [activeTab, setActiveTab] = useState<TabId>('collection');
 
   return (

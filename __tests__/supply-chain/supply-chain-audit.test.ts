@@ -62,8 +62,10 @@ describe('C15 – Supply Chain and Dependency Risk', () => {
   describe('R-074 – Lifecycle script safety', () => {
     it('postinstall remains restricted to environment validation flow', () => {
       const postinstall = packageJson.scripts?.postinstall ?? '';
-      // postinstall runs env validation via direct node script
-      expect(postinstall).toMatch(/postinstall-validate-env|validate:env/);
+      const isValidationFlow =
+        postinstall.includes('npm run validate:env') ||
+        postinstall.includes('postinstall-validate-env.cjs');
+      expect(isValidationFlow).toBe(true);
     });
 
     it('supply-chain script scans lifecycle scripts for dangerous patterns', () => {

@@ -1,38 +1,52 @@
 'use client';
 
 import Link from 'next/link';
-import { m, LazyMotion, domAnimation } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { ChevronRight, Trophy } from 'lucide-react';
 
 import { BadgeGallery } from '@/components/badge/BadgeGallery';
 import { BadgeProgress } from '@/components/badge/BadgeProgress';
 import { useUserBadges } from '@/lib/vfide-hooks';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 import { GlassCard, containerVariants, itemVariants } from './shared';
 
+const BADGES_COPY = {
+  'en-US': {
+    title: 'Your Badges',
+    viewAll: 'View All',
+  },
+  'es-ES': {
+    title: 'Tus insignias',
+    viewAll: 'Ver todas',
+  },
+};
+
 export function BadgesTab({ address }: { address: `0x${string}` | undefined }) {
   const { badgeIds: _badgeIds, isLoading } = useUserBadges(address);
+  const { locale } = useLocale();
+  const copy = (BADGES_COPY as Record<string, typeof BADGES_COPY['en-US']>)[locale] ?? BADGES_COPY['en-US'];
 
   return (
-    <m.div variants={containerVariants} initial="hidden" animate="show" className="space-y-6">
-      <m.div variants={itemVariants}>
+    <motion.div variants={containerVariants} initial="hidden" animate="show" className="space-y-6">
+      <motion.div variants={itemVariants}>
         <GlassCard className="p-6" hover={false}>
           <div className="mb-6 flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-xl font-bold text-white">
               <Trophy className="text-amber-400" size={24} />
-              Your Badges
+              {copy.title}
             </h2>
-            <Link href="/badges" className="inline-flex items-center gap-1 text-sm font-medium text-accent hover:text-accent">
-              View All <ChevronRight size={14} />
+            <Link href="/badges" className="inline-flex items-center gap-1 text-sm font-medium text-cyan-400 hover:text-cyan-300">
+              {copy.viewAll} <ChevronRight size={14} />
             </Link>
           </div>
 
           {isLoading ? (
             <div className="flex justify-center py-12">
-              <m.div
+              <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                className="h-8 w-8 rounded-full border-2 border-accent/20 border-t-accent"
+                className="h-8 w-8 rounded-full border-2 border-cyan-500/20 border-t-cyan-500"
               />
             </div>
           ) : (
@@ -44,7 +58,7 @@ export function BadgesTab({ address }: { address: `0x${string}` | undefined }) {
             </>
           )}
         </GlassCard>
-      </m.div>
-    </m.div>
+      </motion.div>
+    </motion.div>
   );
 }

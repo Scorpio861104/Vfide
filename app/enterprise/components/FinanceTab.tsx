@@ -9,7 +9,7 @@ import {
   LifeBuoy,
   Shield,
   TrendingDown,
-  TrendingUp
+  TrendingUp,
 } from 'lucide-react';
 import { formatEther } from 'viem';
 import { useEnterpriseTreasury } from '@/hooks/useEnterpriseTreasury';

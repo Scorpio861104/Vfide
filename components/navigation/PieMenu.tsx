@@ -8,11 +8,11 @@ import {
   ProofScoreRing,
   QuickActions,
   useHaptics,
-  useLongPress
+  useLongPress,
 } from './PieMenuEnhancements';
 import {
   X,
-  ChevronLeft
+  ChevronLeft,
 } from 'lucide-react';
 
 // ============================================================================

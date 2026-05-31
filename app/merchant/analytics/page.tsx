@@ -7,8 +7,12 @@ import { Footer } from '@/components/layout/Footer';
 import { MerchantAnalytics } from '@/components/analytics/MerchantAnalytics';
 import { useAccount } from 'wagmi';
 import { BarChart3 } from 'lucide-react';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function MerchantAnalyticsPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address } = useAccount();
 
   return (

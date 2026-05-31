@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 
 // TYPE-2: Explicit React type import for React.ElementType usage in MAIN_TABS definition
 import type React from 'react';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 /**
  * Social Hub — consolidated social surface.
@@ -25,7 +26,7 @@ import type React from 'react';
  */
 
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
-import { AnimatePresence, m, LazyMotion, domAnimation } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   Hash,
   MessageCircle,
@@ -33,9 +34,8 @@ import {
   BarChart2,
   Sparkles,
   Users,
-  Camera,
 } from 'lucide-react';
-import { useEffect, useMemo, useState, Suspense} from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAccount } from 'wagmi';
 import { Footer } from '@/components/layout/Footer';
@@ -55,14 +55,6 @@ import { DiscoverTab } from '@/app/social-messaging/components/DiscoverTab';
 // Pay Friends tab — from social-payments
 import { UnifiedActivityFeed } from '@/components/social/UnifiedActivityFeed';
 
-
-// Stories tab — from social/stories components
-import nextDynamic from 'next/dynamic';
-const StoriesContent = nextDynamic(
-  () => import('@/app/stories/components/StoriesContent'),
-  { loading: () => <div className="flex items-center justify-center py-20"><div className="w-8 h-8 border-2 border-accent/30 border-t-accent rounded-full animate-spin" /></div>, ssr: false }
-);
-
 // Analytics tab — from social
 import { OverviewTab as SocialOverviewTab } from '@/app/social/components/OverviewTab';
 import { EngagementTab } from '@/app/social/components/EngagementTab';
@@ -70,14 +62,13 @@ import { GrowthTab } from '@/app/social/components/GrowthTab';
 
 // ── Tab definitions ───────────────────────────────────────────────────────────
 
-type MainTab = 'feed' | 'stories' | 'messages' | 'pay' | 'analytics';
+type MainTab = 'feed' | 'messages' | 'pay' | 'analytics';
 type FeedFilter = 'all' | 'following' | 'trending';
 type MsgTab = 'messages' | 'circles' | 'groups' | 'discover';
 type AnalyticsTab = 'overview' | 'engagement' | 'growth';
 
 const MAIN_TABS: { id: MainTab; label: string; icon: React.ElementType }[] = [
   { id: 'feed',      label: 'Feed',        icon: Hash          },
-  { id: 'stories',   label: 'Stories',     icon: Camera        },
   { id: 'messages',  label: 'Messages',    icon: MessageCircle },
   { id: 'pay',       label: 'Pay Friends', icon: Banknote      },
   { id: 'analytics', label: 'Analytics',   icon: BarChart2     },
@@ -105,9 +96,12 @@ const ANALYTICS_TABS: { id: AnalyticsTab; label: string }[] = [
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 // UX-1: Valid tab IDs for type-safe URL parsing
-const VALID_MAIN_TABS = new Set<MainTab>(['feed', 'stories', 'messages', 'pay', 'analytics']);
+const VALID_MAIN_TABS = new Set<MainTab>(['feed', 'messages', 'pay', 'analytics']);
 
-function SocialHubPageInner() {
+export default function SocialHubPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { isConnected, address } = useAccount();
   // UX-1: Read initial tab from URL search params so ?tab= links work correctly
   // and browser Back/Forward preserves the active tab context
@@ -126,27 +120,15 @@ function SocialHubPageInner() {
   const [postsLoading, setPostsLoading] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
     if (!isConnected || mainTab !== 'feed') { setPosts([]); setPostsLoading(false); return; }
     // UX-4: Set loading=true before fetch so the count shows skeleton not "0"
     setPostsLoading(true);
     fetch('/api/community/posts')
       .then((r) => (r.ok ? r.json() : { posts: [] }))
-      .then((d) => {
-        const raw: SocialPost[] = Array.isArray(d.posts) ? d.posts : [];
-        let likedSet: string[] = []; try { likedSet = JSON.parse(localStorage.getItem(`vfide_liked_posts_${address ?? 'anon'}`) ?? '[]'); } catch { likedSet = []; }
-        let bookmarkSet: string[] = []; try { bookmarkSet = JSON.parse(localStorage.getItem(`vfide_bookmarked_posts_${address ?? 'anon'}`) ?? '[]'); } catch { bookmarkSet = []; }
-        setPosts(raw.map((p) => ({
-          ...p,
-          id: String(p.id),
-          liked:      likedSet.includes(String(p.id)),
-          bookmarked: bookmarkSet.includes(String(p.id)),
-        })));
-      })
+      .then((d) => setPosts(Array.isArray(d.posts) ? d.posts : []))
       .catch(() => setPosts([]))
       .finally(() => setPostsLoading(false));
-    return () => { cancelled = true; };
-    }, [isConnected, mainTab]);
+  }, [isConnected, mainTab]);
 
   const filteredPosts = useMemo(() => {
     if (feedFilter === 'following') return posts.filter((p) => p.isFollowing);
@@ -182,51 +164,6 @@ function SocialHubPageInner() {
     }
   };
 
-  // ── Like / Bookmark handlers ──────────────────────────────────────────────
-  const getLikedKey  = () => `vfide_liked_posts_${address  ?? 'anon'}`;
-  const getBookmarkKey = () => `vfide_bookmarked_posts_${address ?? 'anon'}`;
-
-  const handleLike = async (postId: string) => {
-    const key = getLikedKey();
-    let likedSet: string[] = []; try { likedSet = JSON.parse(localStorage.getItem(`vfide_liked_posts_${address ?? 'anon'}`) ?? '[]'); } catch { likedSet = []; }
-    const alreadyLiked = likedSet.includes(postId);
-    const action = alreadyLiked ? 'unlike' : 'like';
-
-    // Optimistic update
-    setPosts((prev) => prev.map((p) =>
-      p.id === postId
-        ? { ...p, liked: !alreadyLiked, likes: Math.max(0, (p.likes ?? 0) + (alreadyLiked ? -1 : 1)) }
-        : p
-    ));
-    const next = alreadyLiked ? likedSet.filter((id) => id !== postId) : [...likedSet, postId];
-    localStorage.setItem(key, JSON.stringify(next));
-
-    // Persist to server (best-effort — numeric IDs only)
-    if (/^\d+$/.test(postId)) {
-      fetch(`/api/community/posts/${postId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action }),
-      }).then(async (res) => {
-        if (res.ok) {
-          const { likes } = await res.json();
-          setPosts((prev) => prev.map((p) => p.id === postId ? { ...p, likes } : p));
-        }
-      }).catch(() => { /* server sync failed — optimistic state stands */ });
-    }
-  };
-
-  const handleBookmark = (postId: string) => {
-    const key = getBookmarkKey();
-    let bookmarked: string[] = []; try { bookmarked = JSON.parse(localStorage.getItem(key) ?? '[]'); } catch { bookmarked = []; }
-    const already = bookmarked.includes(postId);
-    const next = already ? bookmarked.filter((id) => id !== postId) : [...bookmarked, postId];
-    localStorage.setItem(key, JSON.stringify(next));
-    setPosts((prev) => prev.map((p) =>
-      p.id === postId ? { ...p, bookmarked: !already } : p
-    ));
-  };
-
   return (
     <div className="relative min-h-screen bg-zinc-950 md:pt-[3.5rem]">
       {/* Ambient background */}
@@ -242,14 +179,14 @@ function SocialHubPageInner() {
 
       <div className="relative container mx-auto px-4 max-w-6xl py-8">
         {/* Header */}
-        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
           <div className="flex items-center gap-3 mb-3">
             <span className="badge-live"><span className="badge-live-dot" />Community</span>
           </div>
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
               <h1 className="text-4xl font-bold mb-2">
-                <span className="bg-gradient-to-r from-accent via-violet-400 to-pink-400 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-cyan-400 via-violet-400 to-pink-400 bg-clip-text text-transparent">
                   Social
                 </span>
               </h1>
@@ -261,7 +198,7 @@ function SocialHubPageInner() {
                 {postsLoading ? (
                   <div className="h-7 w-10 mx-auto rounded bg-white/10 animate-pulse" />
                 ) : (
-                  <div className="text-xl font-bold text-accent">{posts.length}</div>
+                  <div className="text-xl font-bold text-cyan-400">{posts.length}</div>
                 )}
                 <div className="text-xs text-white/40">Posts</div>
               </div>
@@ -271,7 +208,7 @@ function SocialHubPageInner() {
               </div>
             </div>
           </div>
-        </m.div>
+        </motion.div>
 
         {/* Main tab bar */}
         <div
@@ -295,22 +232,22 @@ function SocialHubPageInner() {
 
         {/* Gate: require wallet */}
         {!isConnected ? (
-          <m.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
             className="glass-card-premium max-w-lg mx-auto text-center py-16 px-8">
-            <div className="w-16 h-16 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center mx-auto mb-6">
-              <Sparkles className="text-accent" size={28} />
+            <div className="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center mx-auto mb-6">
+              <Sparkles className="text-cyan-400" size={28} />
             </div>
             <h2 className="text-2xl font-bold text-white mb-3">Join the Conversation</h2>
             <p className="text-white/50 mb-8">Connect your wallet to unlock the VFIDE social experience.</p>
             <div className="flex justify-center">
               <VfideConnectButton size="md" />
             </div>
-          </m.div>
+          </motion.div>
         ) : (
           <AnimatePresence mode="wait">
             {/* ── FEED ── */}
             {mainTab === 'feed' && (
-              <m.div key="feed"
+              <motion.div key="feed"
                 role="tabpanel" id="social-panel-feed" aria-labelledby="social-tab-feed"
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.18 }}>
@@ -328,14 +265,14 @@ function SocialHubPageInner() {
                     <CreatePostCard onPost={handlePost} />
                     <AnimatePresence>
                       {postError && (
-                        <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                           className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
                           {postError}
-                        </m.div>
+                        </motion.div>
                       )}
                     </AnimatePresence>
                     {filteredPosts.map((post, i) => (
-                      <PostCard key={post.id || i} post={post} onLike={() => handleLike(String(post.id))} onBookmark={() => handleBookmark(String(post.id))} />
+                      <PostCard key={post.id || i} post={post} onLike={() => {}} onBookmark={() => {}} />
                     ))}
                     {filteredPosts.length === 0 && (
                       <div className="glass-card-premium py-16 text-center">
@@ -349,12 +286,12 @@ function SocialHubPageInner() {
                     <TrendingSidebar trending={[]} suggested={[]} />
                   </div>
                 </div>
-              </m.div>
+              </motion.div>
             )}
 
             {/* ── MESSAGES ── */}
             {mainTab === 'messages' && (
-              <m.div key="messages"
+              <motion.div key="messages"
                 role="tabpanel" id="social-panel-messages" aria-labelledby="social-tab-messages"
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.18 }}>
@@ -371,40 +308,26 @@ function SocialHubPageInner() {
                 {msgTab === 'circles'  && <CirclesTab  />}
                 {msgTab === 'groups'   && <GroupsTab   />}
                 {msgTab === 'discover' && <DiscoverTab />}
-              </m.div>
+              </motion.div>
             )}
 
             {/* ── PAY FRIENDS ── */}
             {mainTab === 'pay' && (
-              <m.div key="pay"
+              <motion.div key="pay"
                 role="tabpanel" id="social-panel-pay" aria-labelledby="social-tab-pay"
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.18 }}>
-                <div className="mb-6 flex items-center justify-between flex-wrap gap-3">
-                  <div>
-                    <h2 className="text-xl font-bold text-white mb-1">Pay Friends</h2>
-                    <p className="text-white/40 text-sm">Social payment activity from your network. Use Pay to send crypto directly.</p>
-                  </div>
-                  <a href="/pay"
-                    className="btn-premium-primary inline-flex items-center gap-2 text-sm px-4 py-2">
-                    <Banknote size={16} />Send Payment
-                  </a>
+                <div className="mb-6">
+                  <h2 className="text-xl font-bold text-white mb-1">Pay Friends</h2>
+                  <p className="text-white/40 text-sm">Send crypto to contacts, split bills, and view social payment activity.</p>
                 </div>
                 <UnifiedActivityFeed />
-              </m.div>
+              </motion.div>
             )}
 
             {/* ── ANALYTICS ── */}
-            {mainTab === 'stories' && (
-              <m.div key="stories"
-                role="tabpanel" id="social-panel-stories" aria-labelledby="social-tab-stories"
-                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.18 }}>
-                <StoriesContent />
-              </m.div>
-            )}
             {mainTab === 'analytics' && (
-              <m.div key="analytics"
+              <motion.div key="analytics"
                 role="tabpanel" id="social-panel-analytics" aria-labelledby="social-tab-analytics"
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.18 }}>
@@ -419,22 +342,12 @@ function SocialHubPageInner() {
                 {analyticsTab === 'overview'   && <SocialOverviewTab />}
                 {analyticsTab === 'engagement' && <EngagementTab />}
                 {analyticsTab === 'growth'     && <GrowthTab />}
-              </m.div>
+              </motion.div>
             )}
           </AnimatePresence>
         )}
       </div>
       <Footer />
     </div>
-  );
-}
-
-export default function SocialHubPage() {
-  return (
-    <LazyMotion features={domAnimation}>
-      <Suspense fallback={<div className="min-h-screen bg-zinc-950" />}>
-      <SocialHubPageInner />
-    </Suspense>
-    </LazyMotion>
   );
 }

@@ -331,8 +331,7 @@ export function useStreamControls() {
       functionName: 'pauseStream',
       args: [streamId],
     });
-     
-  }, [PayrollManager, writeContractAsync, requireConfigured]);
+  }, [PayrollManager, requireConfigured, writeContractAsync]);
 
   const resumeStream = useCallback(async (streamId: bigint) => {
     requireConfigured();
@@ -342,8 +341,7 @@ export function useStreamControls() {
       functionName: 'resumeStream',
       args: [streamId],
     });
-     
-  }, [PayrollManager, writeContractAsync, requireConfigured]);
+  }, [PayrollManager, requireConfigured, writeContractAsync]);
 
   const cancelStream = useCallback(async (streamId: bigint) => {
     requireConfigured();
@@ -353,8 +351,7 @@ export function useStreamControls() {
       functionName: 'cancelStream',
       args: [streamId],
     });
-     
-  }, [PayrollManager, writeContractAsync, requireConfigured]);
+  }, [PayrollManager, requireConfigured, writeContractAsync]);
 
   const claimExpiredStream = useCallback(async (streamId: bigint) => {
     requireConfigured();
@@ -364,8 +361,7 @@ export function useStreamControls() {
       functionName: 'claimExpiredStream',
       args: [streamId],
     });
-     
-  }, [PayrollManager, writeContractAsync, requireConfigured]);
+  }, [PayrollManager, requireConfigured, writeContractAsync]);
 
   return { pauseStream, resumeStream, cancelStream, claimExpiredStream, isPending, isConfirming, isConfirmed, txHash: txHash ?? null, error: error as Error | null };
 }

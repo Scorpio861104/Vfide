@@ -14,6 +14,7 @@ import { FiatTab } from './components/FiatTab';
 const FinanceTab = _dynamic(() => import('./components/FinanceTab').then(m => ({ default: m.FinanceTab })), { ssr: false });
 import { GatewayTab } from './components/GatewayTab';
 import { OverviewTab } from './components/OverviewTab';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 const TABS = [
   { id: 'overview', label: 'Overview',           icon: Building2  },
@@ -25,6 +26,9 @@ const TABS = [
 type TabId = typeof TABS[number]['id'];
 
 export default function EnterprisePage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const { isConnected } = useAccount();
 

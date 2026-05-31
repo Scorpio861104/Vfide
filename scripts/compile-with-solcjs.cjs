@@ -41,16 +41,6 @@ function walkSol(dir, acc = []) {
   return acc;
 }
 
-// Resolve an import path (relative to the importer, or absolute repo path)
-function _resolveImport(importPath, importerPath) {
-  // Strip ./ and ../
-  if (importPath.startsWith("./") || importPath.startsWith("../")) {
-    return path.resolve(path.dirname(importerPath), importPath);
-  }
-  // Bare repo-rooted paths
-  return path.resolve(ROOT, importPath);
-}
-
 // Build the Standard JSON Input
 function buildInput(files) {
   const sources = {};

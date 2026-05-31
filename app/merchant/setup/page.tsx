@@ -16,8 +16,12 @@ import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { m, LazyMotion, domAnimation } from 'framer-motion';
 import { Store, Wallet } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function MerchantSetupPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const router = useRouter();
   const { isConnected } = useAccount();
 

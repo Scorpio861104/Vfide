@@ -41,7 +41,7 @@ interface PendingItem {
 }
 
 export function GuardianPendingQueueWidget() {
-  const { address, isConnected } = useAccount();
+  const { address: _address, isConnected } = useAccount();
   const { entries } = useGuardianWatchlist();
 
   if (!isConnected) {
@@ -89,7 +89,6 @@ export function GuardianPendingQueueWidget() {
           key={entry.address}
           vault={entry.address}
           label={entry.label}
-          connectedAddress={address}
         />
       ))}
     </div>
@@ -99,10 +98,9 @@ export function GuardianPendingQueueWidget() {
 interface PendingQueueRowProps {
   vault: `0x${string}`;
   label?: string;
-  connectedAddress?: `0x${string}`;
 }
 
-function PendingQueueRow({ vault, label, connectedAddress: _connectedAddress }: PendingQueueRowProps) {
+function PendingQueueRow({ vault, label }: PendingQueueRowProps) {
   const [refreshKey, setRefreshKey] = useState(0);
   const bumpRefresh = useCallback(() => setRefreshKey((k) => k + 1), []);
 

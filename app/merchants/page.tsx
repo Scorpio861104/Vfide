@@ -11,6 +11,7 @@ import { m, LazyMotion, domAnimation } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Search, Star, MapPin, ShoppingBag, Package, Briefcase, Download } from 'lucide-react';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 interface MerchantCard {
   merchant_address: string;
@@ -39,6 +40,9 @@ interface Pagination {
 }
 
 export default function MerchantDirectoryPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [merchants, setMerchants] = useState<MerchantCard[]>([]);
   const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: 20, total: 0, pages: 0 });
   const [search, setSearch] = useState('');

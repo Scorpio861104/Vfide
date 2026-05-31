@@ -1,6 +1,6 @@
 'use client';
 
-import { m } from 'framer-motion';
+import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { Package, Camera, Plus, X, ArrowLeft, Rocket, Loader2 } from 'lucide-react';
 import { type QuickProduct } from './merchant-setup-types';
@@ -33,21 +33,21 @@ export function SetupStepProducts({
   };
 
   return (
-    <m.div key="step2" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
+    <motion.div key="step2" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-          <Package className="text-accent" size={24} /> Add your products
+          <Package className="text-cyan-400" size={24} /> Add your products
         </h2>
         <p className="text-gray-400 mt-1">Add at least one product. You can add more after setup.</p>
       </div>
 
       <div className="space-y-4">
-        {products.map((product, _idx) => (
-          <m.div key={product.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+        {products.map((product) => (
+          <motion.div key={product.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             className="bg-white/3 border border-white/10 rounded-xl p-4">
             <div className="flex items-start gap-3">
               <button onClick={() => handleImageCapture(product.id)}
-                className="w-16 h-16 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0 overflow-hidden hover:border-accent/30 transition-colors">
+                className="w-16 h-16 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0 overflow-hidden hover:border-cyan-500/30 transition-colors">
                 {product.imagePreview ? (
                   <Image src={product.imagePreview} alt="" className="w-full h-full object-cover"  width={48} height={48} />
                 ) : (
@@ -69,7 +69,7 @@ export function SetupStepProducts({
                   autoComplete="off"
                   autoCapitalize="sentences"
                   autoCorrect="off"
-                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm min-h-[44px] focus:border-accent/50 focus:outline-none"
+                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm min-h-[44px] focus:border-cyan-500/50 focus:outline-none"
                 />
                 <div className="flex gap-2">
                   <div className="relative flex-1">
@@ -88,7 +88,7 @@ export function SetupStepProducts({
                       inputMode="decimal"
                       pattern="[0-9]*[.,]?[0-9]*"
                       autoComplete="off"
-                      className="w-full pl-7 pr-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm min-h-[44px] focus:border-accent/50 focus:outline-none"
+                      className="w-full pl-7 pr-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm min-h-[44px] focus:border-cyan-500/50 focus:outline-none"
                     />
                   </div>
                   <input
@@ -101,7 +101,7 @@ export function SetupStepProducts({
                     inputMode="text"
                     autoComplete="off"
                     autoCapitalize="sentences"
-                    className="flex-[2] px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm min-h-[44px] focus:border-accent/50 focus:outline-none"
+                    className="flex-[2] px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm min-h-[44px] focus:border-cyan-500/50 focus:outline-none"
                   />
                 </div>
               </div>
@@ -110,11 +110,11 @@ export function SetupStepProducts({
                 <X size={16} />
               </button>
             </div>
-          </m.div>
+          </motion.div>
         ))}
 
         <button onClick={addProduct}
-          className="w-full py-3 border-2 border-dashed border-white/10 rounded-xl text-gray-400 hover:text-accent hover:border-accent/30 transition-all flex items-center justify-center gap-2">
+          className="w-full py-3 border-2 border-dashed border-white/10 rounded-xl text-gray-400 hover:text-cyan-400 hover:border-cyan-500/30 transition-all flex items-center justify-center gap-2">
           <Plus size={18} /> Add another product
         </button>
       </div>
@@ -130,6 +130,6 @@ export function SetupStepProducts({
           {isSubmitting ? <><Loader2 size={18} className="animate-spin" /> Creating store...</> : <><Rocket size={18} /> Go live</>}
         </button>
       </div>
-    </m.div>
+    </motion.div>
   );
 }

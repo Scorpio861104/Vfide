@@ -82,14 +82,16 @@ const nextConfig: NextConfig = {
     // socially engineered around it. Gate the route behind an explicit
     // opt-in env var so it's NOT routable in default production builds.
     if (process.env.NEXT_PUBLIC_ENABLE_PAPER_WALLET !== 'true') {
+      // NAV-WALLET-1: /wallet does not exist as a route; /crypto is the wallet
+      // page (listed in Vault group nav as "Wallet"). Redirect there instead.
       redirects.push({
         source: '/paper-wallet',
-        destination: '/wallet',
+        destination: '/crypto',
         permanent: false,
       });
       redirects.push({
         source: '/paper-wallet/:path*',
-        destination: '/wallet',
+        destination: '/crypto',
         permanent: false,
       });
     }

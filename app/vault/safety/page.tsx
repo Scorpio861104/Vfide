@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ArrowLeft, Shield, Users, Clock, Heart, Lock, Eye, AlertTriangle, ChevronRight } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 import { GlassCard } from '@/components/ui/GlassCard';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 /**
  * /vault/safety — the canonical plain-language explanation of CardBoundVault safety.
@@ -23,6 +24,9 @@ import { GlassCard } from '@/components/ui/GlassCard';
  * a real tradeoff, name the tradeoff.
  */
 export default function VaultSafetyPage() {
+  const { locale } = useLocale();
+  void locale;
+
   return (
     <>
       <div className="min-h-screen md:pt-[3.5rem] text-white">
@@ -322,7 +326,7 @@ export default function VaultSafetyPage() {
             <p>
               For a complete breakdown of what&apos;s visible to whom and how to
               think about privacy on VFIDE, see the{' '}
-              <Link href="/legal?tab=privacy" className="text-cyan-300 hover:text-cyan-200">
+              <Link href="/legal" className="text-cyan-300 hover:text-cyan-200">
                 full privacy explanation
               </Link>.
             </p>

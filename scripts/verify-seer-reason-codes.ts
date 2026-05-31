@@ -114,7 +114,6 @@ async function main() {
   const seerFixture = (await seerFixtureFactory.deploy()) as any;
   await seerFixture.waitForDeployment();
 
-  let _guardianRuntimeChecksPassed = false;
   try {
     const guardianFactory = new ContractFactory(guardianArtifact.abi as any, guardianArtifact.bytecode, dao);
     const guardian = (await guardianFactory.deploy(
@@ -181,7 +180,6 @@ async function main() {
       } catch {}
     }
     assert(found450, 'Missing DAOActionFlaggedCode for manual proposal flag (450)');
-    _guardianRuntimeChecksPassed = true;
   } catch (error) {
     const summary = (error as { shortMessage?: string; message?: string })?.shortMessage
       ?? (error as { message?: string })?.message

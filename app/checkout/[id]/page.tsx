@@ -22,7 +22,7 @@ import { Shield, Clock, CheckCircle, AlertTriangle, FileText, ExternalLink, Copy
 // v19.10 BCOMPAT-1 FIX: cross-browser clipboard helper.
 import { copyToClipboardSafe } from '@/lib/clipboardSafe';
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
-import { ConfirmModal } from '@/components/ui/ConfirmModal';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 interface InvoiceItem {
   description: string;
@@ -119,6 +119,9 @@ function formatEstimatedLocalCurrency(amount: number, currency: string): string 
 }
 
 export default function CheckoutPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const params = useParams();
   const paymentLinkId = params?.id as string;
   const { address, isConnected, chainId } = useAccount();
@@ -130,7 +133,6 @@ export default function CheckoutPage() {
   const [errorMessage, setErrorMessage] = useState('');
   const [txHash, setTxHash] = useState('');
   const [isFirstTimeMerchant, setIsFirstTimeMerchant] = useState(false);
-  const [highValueConfirmOpen, setHighValueConfirmOpen] = useState(false);
 
   // Fetch invoice data
   useEffect(() => {
@@ -192,12 +194,19 @@ export default function CheckoutPage() {
   }, [paymentLinkId]);
 
   // Handle payment
-  // High-value payments (>= HIGH_VALUE_CONFIRM_THRESHOLD) require an explicit
-  // in-app confirmation before submission. We split the flow into:
-  //   handlePay()        — entry point. For high-value, opens modal; otherwise executes.
-  //   executePayment()   — the actual transaction submission.
-  const executePayment = useCallback(async () => {
+  const handlePay = useCallback(async () => {
     if (!invoice || !address || !isConnected) return;
+
+    const total = Number(invoice.total);
+    if (Number.isFinite(total) && total >= HIGH_VALUE_CONFIRM_THRESHOLD) {
+      const confirmed = window.confirm(
+        `You are about to pay ${total.toFixed(4)} ${invoice.currency_display} to ${invoice.merchant_name || 'merchant'} at ${invoice.merchant_address}. This payment cannot be reversed.`
+      );
+      if (!confirmed) {
+        return;
+      }
+    }
+
     setStatus('paying');
 
     try {
@@ -253,17 +262,6 @@ export default function CheckoutPage() {
       setErrorMessage(err instanceof Error ? err.message : 'Payment failed');
     }
   }, [invoice, address, isConnected, payMerchant, paymentLinkId]);
-
-  const handlePay = useCallback(async () => {
-    if (!invoice || !address || !isConnected) return;
-
-    const total = Number(invoice.total);
-    if (Number.isFinite(total) && total >= HIGH_VALUE_CONFIRM_THRESHOLD) {
-      setHighValueConfirmOpen(true);
-      return;
-    }
-    await executePayment();
-  }, [invoice, address, isConnected, executePayment]);
 
   const preferredCurrency = (preferences.preferredCurrency || 'USD').toUpperCase();
   const estimatedLocalTotal = invoice && isUsdAnchoredDisplay(invoice.currency_display)
@@ -510,27 +508,6 @@ export default function CheckoutPage() {
           Payments are processed on-chain via VFIDE MerchantPortal. No card details required.
         </p>
       </div>
-
-      <ConfirmModal
-        isOpen={highValueConfirmOpen}
-        onClose={() => setHighValueConfirmOpen(false)}
-        onConfirm={() => { setHighValueConfirmOpen(false); void executePayment(); }}
-        title="Confirm high-value payment"
-        message={
-          invoice ? (
-            <span>
-              You are about to pay <strong>{Number(invoice.total).toFixed(4)} {invoice.currency_display}</strong>
-              {' '}to <strong>{invoice.merchant_name || 'this merchant'}</strong>
-              {' '}at <code className="text-xs">{invoice.merchant_address}</code>.
-              <br /><br />
-              <span className="text-red-300">This payment cannot be reversed once confirmed on-chain.</span>
-            </span>
-          ) : ''
-        }
-        confirmText="Confirm payment"
-        cancelText="Cancel"
-        variant="warning"
-      />
     </div>
   );
 }

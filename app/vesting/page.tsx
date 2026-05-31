@@ -1,200 +1,165 @@
 'use client';
 
-/**
- * /vesting — Developer Reserve Vesting public viewer.
- *
- * Exposes three tabs:
- *   Overview  – aggregate progress (header: "Token Vesting", "Vesting Progress")
- *   Schedule  – per-month unlock table (heading: "Vesting Schedule")
- *   Claim     – beneficiary claim action ("Available to Claim")
- *
- * All data is read from DevReserveVesting via wagmi hooks.
- * The page re-uses the same CANONICAL_WAGMI_MOCK_V2 mock contract reads
- * expected by __tests__/app/vesting-page.test.tsx.
- */
+export const dynamic = 'force-dynamic';
 
+import { AnimatePresence, motion } from 'framer-motion';
+import { BarChart3, Clock, Gift } from 'lucide-react';
 import { useState } from 'react';
-import { useAccount, useReadContract } from 'wagmi';
-import { formatEther, type Address } from 'viem';
-import { DevReserveVestingABI } from '@/lib/abis';
-import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
+import { useAccount, useReadContract, useWriteContract, usePublicClient } from 'wagmi';
 
-type Tab = 'overview' | 'schedule' | 'claim';
+import { Footer } from '@/components/layout/Footer';
+import { CONTRACT_ADDRESSES, DevReserveVestingABI, isConfiguredContractAddress } from '@/lib/contracts';
+import { parseContractError } from '@/lib/errorHandling';
+
+import { ClaimTab } from './components/ClaimTab';
+import { OverviewTab } from './components/OverviewTab';
+import { ScheduleTab } from './components/ScheduleTab';
+import { useLocale } from '@/lib/locale/LocaleProvider';
+
+const TABS = [
+  { id: 'overview',  label: 'Overview',  icon: Clock    },
+  { id: 'schedule',  label: 'Schedule',  icon: BarChart3 },
+  { id: 'claim',     label: 'Claim',     icon: Gift     },
+] as const;
+
+type TabId = typeof TABS[number]['id'];
+
+const VESTING_ADDRESS = CONTRACT_ADDRESSES.DevReserveVesting;
+const VESTING_ABI = DevReserveVestingABI;
 
 export default function VestingPage() {
-  const [tab, setTab] = useState<Tab>('overview');
-  const { address } = useAccount();
+  const { locale } = useLocale();
+  void locale;
 
-  const vestingAddr = CONTRACT_ADDRESSES.DevReserveVesting as Address | undefined;
-  const configured = isConfiguredContractAddress(vestingAddr);
+  const [activeTab, setActiveTab] = useState<TabId>('overview');
+  const { isConnected, address } = useAccount();
+  const isAvailable = isConfiguredContractAddress(VESTING_ADDRESS);
+  const readQuery = { enabled: isAvailable };
 
-  /* ── overview reads ─────────────────────────────────────── */
-  const { data: statusData } = useReadContract({
-    address: vestingAddr,
-    abi: DevReserveVestingABI,
-    functionName: 'getVestingStatus',
-    query: { enabled: configured },
-  } as Parameters<typeof useReadContract>[0]);
+  const { data: beneficiary }   = useReadContract({ address: VESTING_ADDRESS, abi: VESTING_ABI, functionName: 'BENEFICIARY',       query: readQuery });
+  const { data: claimsPaused }  = useReadContract({ address: VESTING_ADDRESS, abi: VESTING_ABI, functionName: 'claimsPaused',      query: readQuery });
+  const { data: vestingStatus } = useReadContract({ address: VESTING_ADDRESS, abi: VESTING_ABI, functionName: 'getVestingStatus',  query: readQuery });
+  const { data: schedule }      = useReadContract({ address: VESTING_ADDRESS, abi: VESTING_ABI, functionName: 'getVestingSchedule', query: readQuery });
 
-  /* ── schedule reads ─────────────────────────────────────── */
-  const { data: scheduleData } = useReadContract({
-    address: vestingAddr,
-    abi: DevReserveVestingABI,
-    functionName: 'getVestingSchedule',
-    query: { enabled: configured && tab === 'schedule' },
-  } as Parameters<typeof useReadContract>[0]);
+  const typedVestingStatus = vestingStatus as readonly [bigint, bigint, bigint, bigint, number, bigint, boolean] | undefined;
+  const claimable = typedVestingStatus?.[3] ?? 0n;
+  const isBeneficiary = Boolean(address && beneficiary && String(beneficiary).toLowerCase() === String(address).toLowerCase());
 
-  /* ── beneficiary read ───────────────────────────────────── */
-  const { data: beneficiary } = useReadContract({
-    address: vestingAddr,
-    abi: DevReserveVestingABI,
-    functionName: 'BENEFICIARY',
-    query: { enabled: configured },
-  } as Parameters<typeof useReadContract>[0]);
+  // ── Claim wiring ─────────────────────────────────────────────────────
+  const { writeContractAsync } = useWriteContract();
+  const publicClient = usePublicClient();
+  const [isClaiming, setIsClaiming] = useState(false);
+  const [claimError, setClaimError] = useState<string | null>(null);
+  const [claimSuccess, setClaimSuccess] = useState<string | null>(null);
 
-  const isBeneficiary =
-    address && beneficiary && (beneficiary as string).toLowerCase() === address.toLowerCase();
-
-  /* ── derive claimable ───────────────────────────────────── */
-  const status = statusData as readonly [bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint, boolean] | undefined;
-  const claimableNow: bigint = status?.[5] ?? 0n;
-
-  /* ── schedule rows ──────────────────────────────────────── */
-  interface ScheduleRow { month: number; percentage: number; unlockTime: number; unlocked: boolean }
-  const scheduleRows = (scheduleData as ScheduleRow[] | undefined) ?? [];
-
-  /* ── milestone label ─────────────────────────────────────── */
-  const unlocksCompleted = status?.[7] ?? 0n;
-  const totalUnlocks = 30n; // DevReserveVesting: 30 bi-monthly unlocks
-  const milestonePct = totalUnlocks > 0n
-    ? `${unlocksCompleted.toString()} / ${totalUnlocks.toString()} unlocks`
-    : 'Pending';
+  const handleClaim = async () => {
+    setClaimError(null);
+    setClaimSuccess(null);
+    if (!isAvailable) {
+      setClaimError('DevReserveVesting contract is not configured on this network.');
+      return;
+    }
+    setIsClaiming(true);
+    try {
+      const hash = await writeContractAsync({
+        address: VESTING_ADDRESS,
+        abi: VESTING_ABI,
+        functionName: 'claim',
+        args: [],
+      });
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash });
+      }
+      setClaimSuccess('Claim submitted successfully. Vested VFIDE has been transferred to your wallet.');
+    } catch (err) {
+      const parsed = parseContractError(err);
+      setClaimError(`Claim failed: ${parsed.userMessage}`);
+    } finally {
+      setIsClaiming(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 p-6 md:p-10">
-      <div className="max-w-4xl mx-auto space-y-8">
-
-        {/* ── Page header ─────────────────────────────────── */}
-        <div>
-          <h1 className="text-3xl font-bold text-zinc-100">Token Vesting</h1>
-          <p className="text-zinc-400 mt-1">
-            Developer reserve vesting schedule — 50M VFIDE over 5 years.
-          </p>
-        </div>
-
-        {/* ── Tab bar ─────────────────────────────────────── */}
-        <div className="flex gap-2 border-b border-zinc-800 pb-0">
-          {(['overview', 'schedule', 'claim'] as Tab[]).map(t => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`px-4 py-2 text-sm font-medium capitalize rounded-t-lg transition-colors ${
-                tab === t
-                  ? 'bg-zinc-800 text-zinc-100 border border-b-0 border-zinc-700'
-                  : 'text-zinc-400 hover:text-zinc-200'
-              }`}
-            >
-              {t.charAt(0).toUpperCase() + t.slice(1)}
-            </button>
-          ))}
-        </div>
-
-        {/* ── Overview tab ────────────────────────────────── */}
-        {tab === 'overview' && (
-          <div className="space-y-6">
-            <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 space-y-4">
-              <h2 className="text-xl font-bold text-zinc-100">Vesting Progress</h2>
-              <div className="w-full h-4 bg-zinc-800 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-purple-500 to-indigo-500"
-                  style={{ width: status ? `${Math.min(100, Number(unlocksCompleted * 100n / totalUnlocks))}%` : '0%' }}
-                />
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-2">
-                <div className="bg-zinc-800 rounded-lg p-4">
-                  <p className="text-xs text-zinc-400 mb-1">Current Milestone</p>
-                  <p className="text-lg font-bold text-purple-400">{milestonePct}</p>
-                </div>
-                <div className="bg-zinc-800 rounded-lg p-4">
-                  <p className="text-xs text-zinc-400 mb-1">Claimable Now</p>
-                  <p className="text-lg font-bold text-cyan-400">
-                    {parseFloat(formatEther(claimableNow)).toLocaleString()} VFIDE
-                  </p>
-                </div>
-                <div className="bg-zinc-800 rounded-lg p-4">
-                  <p className="text-xs text-zinc-400 mb-1">Total Allocation</p>
-                  <p className="text-lg font-bold text-zinc-100">50,000,000 VFIDE</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ── Schedule tab ────────────────────────────────── */}
-        {tab === 'schedule' && (
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold text-zinc-100">Vesting Schedule</h2>
-            {scheduleRows.length === 0 ? (
-              <p className="text-zinc-400 text-sm">No schedule data available.</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-zinc-700 text-zinc-400 text-left">
-                      <th className="pb-2 pr-4">Month</th>
-                      <th className="pb-2 pr-4">%</th>
-                      <th className="pb-2">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-zinc-800">
-                    {scheduleRows.map((row: ScheduleRow) => (
-                      <tr key={row.month}>
-                        <td className="py-2 pr-4 text-zinc-300">Month {row.month}</td>
-                        <td className="py-2 pr-4 text-zinc-400">{row.percentage}%</td>
-                        <td className="py-2">
-                          {row.unlocked ? (
-                            <span className="text-green-400 font-bold">UNLOCKED</span>
-                          ) : (
-                            <span className="text-zinc-500">Locked</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ── Claim tab ───────────────────────────────────── */}
-        {tab === 'claim' && (
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold text-zinc-100">Claim Tokens</h2>
-            <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-zinc-400 text-sm">Available to Claim</span>
-                <span className="text-cyan-400 font-bold text-lg">
-                  {parseFloat(formatEther(claimableNow)).toLocaleString()} VFIDE
-                </span>
-              </div>
-              {isBeneficiary ? (
-                <button
-                  disabled={claimableNow === 0n}
-                  className="w-full py-3 bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white font-bold rounded-lg transition-colors"
-                >
-                  Claim {parseFloat(formatEther(claimableNow)).toLocaleString()} VFIDE
-                </button>
-              ) : (
-                <p className="text-zinc-500 text-sm">
-                  Only the beneficiary wallet can claim vested tokens.
-                </p>
-              )}
-            </div>
-          </div>
-        )}
-
+    <div className="relative min-h-screen bg-zinc-950 md:pt-[3.5rem]">
+      {/* Ambient background */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
+          style={{ background: 'radial-gradient(circle, #a855f7 0%, transparent 70%)' }} />
+        <div className="absolute top-1/3 -right-40 w-[500px] h-[500px] rounded-full opacity-[0.05]"
+          style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+        <div className="absolute bottom-0 left-1/4 w-[350px] h-[350px] rounded-full opacity-[0.04]"
+          style={{ background: 'radial-gradient(circle, #f59e0b 0%, transparent 70%)' }} />
+        <div className="grid-pattern absolute inset-0 opacity-[0.03]" />
       </div>
+
+      <div className="relative container mx-auto px-4 max-w-6xl py-8">
+        {/* Header */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+          <div className="flex items-center gap-3 mb-3">
+            <span className="badge-live"><span className="badge-live-dot" />Token Release</span>
+          </div>
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div>
+              <h1 className="text-4xl font-bold mb-2">
+                <span className="bg-gradient-to-r from-purple-400 via-violet-400 to-cyan-400 bg-clip-text text-transparent">
+                  Token Vesting
+                </span>
+              </h1>
+              <p className="text-white/50 text-lg">Vesting schedules, unlock timelines, and token claims.</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="analytics-card text-center px-5 py-3">
+                <div className="text-xl font-bold text-purple-400">24mo</div>
+                <div className="text-xs text-white/40">Schedule</div>
+              </div>
+              <div className="analytics-card text-center px-5 py-3">
+                <div className="text-xl font-bold text-cyan-400">
+                  {isBeneficiary ? '✓' : '—'}
+                </div>
+                <div className="text-xs text-white/40">Beneficiary</div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Sticky Tab Bar */}
+        <div className="sticky top-7 md:top-[5.25rem] z-30 -mx-4 px-4 py-3 backdrop-blur-xl border-b border-white/5 mb-8"
+          style={{ background: 'rgba(9,9,11,0.85)' }}>
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+            {TABS.map(({ id, label, icon: Icon }) => (
+              <button key={id} onClick={() => setActiveTab(id)}
+                className={activeTab === id ? 'tab-pill-active' : 'tab-pill-inactive'}>
+                <Icon size={14} />{label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Tab Content */}
+        <AnimatePresence mode="wait">
+          <motion.div key={activeTab}
+            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}>
+            {activeTab === 'overview' && <OverviewTab vestingStatus={typedVestingStatus} />}
+            {activeTab === 'schedule' && (
+              <ScheduleTab schedule={schedule as readonly { month: number; percentage: number; unlockTime: number | bigint; unlocked: boolean; }[] | undefined} />
+            )}
+            {activeTab === 'claim' && (
+              <ClaimTab
+                isConnected={isConnected}
+                isBeneficiary={isBeneficiary}
+                claimable={claimable}
+                claimsPaused={Boolean(claimsPaused)}
+                onClaim={handleClaim}
+                isClaiming={isClaiming}
+                claimError={claimError}
+                claimSuccess={claimSuccess}
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+      <Footer />
     </div>
   );
 }

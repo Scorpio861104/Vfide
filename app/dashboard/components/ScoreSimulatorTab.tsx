@@ -16,12 +16,33 @@
  * is worth a deterministic number of points.
  */
 
-import { useEffect, useMemo, useState } from 'react';
-import { m, LazyMotion, domAnimation } from 'framer-motion';
+import { useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
 import { Sliders, AlertCircle } from 'lucide-react';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 import { GlassCard, containerVariants, itemVariants } from './shared';
-import { useMonumentOverride } from '@/components/layout/MonumentOverrideContext';
+
+const SCORE_SIM_COPY = {
+  'en-US': {
+    title: 'Score Projection',
+    subtitle: 'Estimate where your ProofScore could land over the next few months. Projections are based on the Seer contract\'s real on-chain bounds, not invented per-action point values.',
+    activityLabel: 'Activity level',
+    monthsLabel: 'Months ahead',
+    todayLabel: 'Today',
+    trajectoryLabel: 'Trajectory',
+    nowLabel: 'now',
+  },
+  'es-ES': {
+    title: 'Proyección de score',
+    subtitle: 'Estima dónde puede quedar tu ProofScore en los próximos meses. Las proyecciones usan límites reales on-chain del contrato Seer.',
+    activityLabel: 'Nivel de actividad',
+    monthsLabel: 'Meses hacia adelante',
+    todayLabel: 'Hoy',
+    trajectoryLabel: 'Trayectoria',
+    nowLabel: 'ahora',
+  },
+};
 
 // Real Seer contract constants (see contracts/Seer.sol)
 const MAX_SINGLE_REWARD = 100;         // max delta per operator call
@@ -53,43 +74,33 @@ const ACTIVITY_LABELS: Record<ActivityLevel, string> = {
 };
 
 function project(currentScore: number, monthlyGain: number, months: number): number {
-  // Contract: Seer.decayPerMonth=100, decayStartDays=90.
-  // Decay only triggers after 90 consecutive days of inactivity.
-  // In this simulator, we apply decay only when the user selects "inactive" (monthlyGain === 0).
-  // Active users (any gain > 0) are assumed to reset their inactivity clock each month.
-  const applyDecay = monthlyGain === 0;
   let score = currentScore;
   for (let i = 0; i < months; i++) {
     // Apply gain
     score += monthlyGain;
-    // Apply decay toward NEUTRAL only when inactive
-    if (applyDecay) {
-      if (score > NEUTRAL) {
-        score = Math.max(NEUTRAL, score - DECAY_PER_MONTH);
-      } else if (score < NEUTRAL) {
-        score = Math.min(NEUTRAL, score + DECAY_PER_MONTH);
-      }
+    // Apply decay toward NEUTRAL
+    if (score > NEUTRAL) {
+      score = Math.max(NEUTRAL, score - DECAY_PER_MONTH);
+    } else if (score < NEUTRAL) {
+      score = Math.min(NEUTRAL, score + DECAY_PER_MONTH);
     }
     score = Math.max(0, Math.min(MAX_SCORE, score));
   }
   return Math.round(score);
 }
 
-// Canonical 7-tier system (mirrors ScoringConstants.sol + lib/constants.ts PROOF_SCORE_TIERS)
-// Scale: 0–10,000 (on-chain Seer.getScore() scale)
 function getTier(score: number): { name: string; color: string } {
-  if (score >= 8000) return { name: 'Elite',      color: '#a78bfa' };  // ≥8000
-  if (score >= 7000) return { name: 'Council',    color: '#22d3ee' };  // 7000–7999
-  if (score >= 5600) return { name: 'Trusted',    color: '#34d399' };  // 5600–6999
-  if (score >= 5400) return { name: 'Governance', color: '#38bdf8' };  // 5400–5599
-  if (score >= 5000) return { name: 'Neutral',    color: '#fbbf24' };  // 5000–5399
-  if (score >= 4000) return { name: 'Low Trust',  color: '#fb923c' };  // 4000–4999
-  return                     { name: 'Risky',     color: '#fb7185' };  // 0–3999
+  if (score >= 8000) return { name: 'Emerald (Trusted)', color: '#10B981' };
+  if (score >= 6500) return { name: 'Cyan (Building)', color: '#06B6D4' };
+  if (score >= 5000) return { name: 'Amber (Neutral)', color: '#F59E0B' };
+  return { name: 'Red (Low)', color: '#EF4444' };
 }
 
 export function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
   const [activity, setActivity] = useState<ActivityLevel>('moderate');
   const [months, setMonths] = useState(6);
+  const { locale } = useLocale();
+  const copy = (SCORE_SIM_COPY as Record<string, typeof SCORE_SIM_COPY['en-US']>)[locale] ?? SCORE_SIM_COPY['en-US'];
 
   const monthlyGain = PROJECTED_MONTHLY_GAIN[activity];
 
@@ -105,25 +116,16 @@ export function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
   const tier = getTier(finalScore);
   const currentTier = getTier(currentScore);
 
-  // Live-wire projected score into the global MonumentBackdrop so vertex
-  // colour + intensity update as the user adjusts activity level / months.
-  const { setOverride } = useMonumentOverride();
-  useEffect(() => {
-    setOverride({ score: finalScore });
-    return () => setOverride(null); // restore autonomous pulse on unmount
-  }, [finalScore, setOverride]);
-
   return (
-    <m.div variants={containerVariants} initial="hidden" animate="show" className="mx-auto max-w-3xl space-y-6">
-      <m.div variants={itemVariants}>
+    <motion.div variants={containerVariants} initial="hidden" animate="show" className="mx-auto max-w-3xl space-y-6">
+      <motion.div variants={itemVariants}>
         <GlassCard className="p-8" hover={false}>
           <h2 className="mb-2 flex items-center gap-3 text-2xl font-bold text-white">
-            <Sliders className="text-accent" size={28} />
-            Score Projection
+            <Sliders className="text-cyan-400" size={28} />
+            {copy.title}
           </h2>
           <p className="mb-6 text-white/60">
-            Estimate where your ProofScore could land over the next few months. Projections are based on
-            the Seer contract&apos;s real on-chain bounds, not invented per-action point values.
+            {copy.subtitle}
           </p>
 
           <div className="mb-6 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 flex items-start gap-3">
@@ -133,14 +135,14 @@ export function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
               DAO-approved operators issue score adjustments based on observed activity. There&apos;s no
               fixed &quot;100 points per transaction&quot; formula. The contract caps these adjustments at{' '}
               {MAX_SINGLE_REWARD} points per call, {MAX_DAILY_OPERATOR_REWARD} per operator-pair per day,
-              and {MAX_DAILY_SUBJECT_DELTA} total per day. Inactive wallets (no activity for 90+ days) lose {DECAY_PER_MONTH} points per month
-              toward neutral ({NEUTRAL}); active wallets do not decay.
+              and {MAX_DAILY_SUBJECT_DELTA} total per day, with {DECAY_PER_MONTH}-point monthly decay
+              toward neutral ({NEUTRAL}).
             </div>
           </div>
 
           <div className="space-y-6">
             <div>
-              <label className="mb-2 block text-sm font-medium text-white/80">Activity level</label>
+              <label className="mb-2 block text-sm font-medium text-white/80">{copy.activityLabel}</label>
               <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
                 {(Object.keys(PROJECTED_MONTHLY_GAIN) as ActivityLevel[]).map((level) => (
                   <button
@@ -148,7 +150,7 @@ export function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
                     onClick={() => setActivity(level)}
                     className={`rounded-lg border px-3 py-2 text-xs font-medium capitalize transition-colors ${
                       activity === level
-                        ? 'border-accent bg-accent/15 text-accent'
+                        ? 'border-cyan-500 bg-cyan-500/15 text-cyan-200'
                         : 'border-white/10 bg-white/5 text-white/70 hover:bg-white/10'
                     }`}
                   >
@@ -161,7 +163,7 @@ export function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
 
             <div>
               <label className="mb-2 block text-sm font-medium text-white/80">
-                Months ahead: <span className="text-accent">{months}</span>
+                {copy.monthsLabel}: <span className="text-cyan-300">{months}</span>
               </label>
               <input
                 type="range"
@@ -169,7 +171,7 @@ export function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
                 max={24}
                 value={months}
                 onChange={(e) => setMonths(Number(e.target.value))}
-                className="w-full accent-accent"
+                className="w-full accent-cyan-500"
               />
               <div className="flex justify-between text-xs text-white/40 mt-1">
                 <span>1 month</span>
@@ -179,14 +181,14 @@ export function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                <div className="text-xs uppercase tracking-wide text-white/50 mb-1">Today</div>
+                <div className="text-xs uppercase tracking-wide text-white/50 mb-1">{copy.todayLabel}</div>
                 <div className="text-3xl font-bold" style={{ color: currentTier.color }}>
                   {currentScore.toLocaleString()}
                 </div>
                 <div className="text-xs text-white/60 mt-1">{currentTier.name}</div>
               </div>
-              <div className="rounded-xl border border-accent/30 bg-accent/5 p-4">
-                <div className="text-xs uppercase tracking-wide text-accent mb-1">In {months} months</div>
+              <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/5 p-4">
+                <div className="text-xs uppercase tracking-wide text-cyan-300 mb-1">In {months} months</div>
                 <div className="text-3xl font-bold" style={{ color: tier.color }}>
                   {finalScore.toLocaleString()}
                 </div>
@@ -196,7 +198,7 @@ export function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
 
             {/* Simple sparkline showing the projection */}
             <div className="rounded-xl border border-white/10 bg-white/3 p-4">
-              <div className="text-xs uppercase tracking-wide text-white/50 mb-3">Trajectory</div>
+              <div className="text-xs uppercase tracking-wide text-white/50 mb-3">{copy.trajectoryLabel}</div>
               <div className="flex items-end gap-1 h-32">
                 {projection.map((p, i) => {
                   const height = (p.score / MAX_SCORE) * 100;
@@ -216,7 +218,7 @@ export function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
                 })}
               </div>
               <div className="flex justify-between text-xs text-white/40 mt-2">
-                <span>now</span>
+                <span>{copy.nowLabel}</span>
                 <span>month {months}</span>
               </div>
             </div>
@@ -229,7 +231,7 @@ export function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
             </div>
           </div>
         </GlassCard>
-      </m.div>
-    </m.div>
+      </motion.div>
+    </motion.div>
   );
 }

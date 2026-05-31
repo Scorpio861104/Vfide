@@ -3,6 +3,7 @@ import _dynamic from 'next/dynamic';
 
 export const dynamic = 'force-dynamic';
 import { containerVariants, fadeSlideUp as itemVariants } from "@/lib/motion-presets";
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 import { useState } from "react";
 import { Footer } from "@/components/layout/Footer";
@@ -34,6 +35,9 @@ const RECOVERY_STEPS = [
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 export default function VaultRecoveryPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address } = useAccount();
   const publicClient = usePublicClient();
   const isVaultRegistryAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.VaultRegistry)

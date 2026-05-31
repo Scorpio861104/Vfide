@@ -13,6 +13,7 @@ import { m, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { Plus, Camera, Sparkles } from 'lucide-react';
 import { Story, isStoryExpired } from '@/lib/storiesSystem';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 type UserStoriesGroup = {
   userId: string;
@@ -22,6 +23,9 @@ type UserStoriesGroup = {
 };
 
 export default function StoriesPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address, isConnected } = useAccount();
   const [userStories, setUserStories] = useState<UserStoriesGroup[]>([]);
   const [myStories, setMyStories] = useState<Story[]>([]);

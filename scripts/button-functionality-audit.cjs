@@ -115,21 +115,6 @@ function matchingBrace(src, start) {
   return -1;
 }
 
-// Find matching closing for an opening (paren / brace / bracket).
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function matchingClose(src, start, openCh, closeCh) {
-  let d = 0;
-  for (let i = start; i < src.length; i++) {
-    const c = src[i];
-    if (c === openCh) d++;
-    else if (c === closeCh) {
-      d--;
-      if (d === 0) return i;
-    }
-  }
-  return -1;
-}
-
 // Extract the value of a JSX attribute like `onClick={...}`. Returns the
 // inner expression text (trimmed) and the position of the opening `{`.
 function extractJsxBraceAttr(src, attrIdx, attrName) {
@@ -230,7 +215,6 @@ function scanFile(absPath, rel) {
     let i = tagStart;
     let d = 0;
     let tagEnd = -1;
-    let _selfClose = false;
     while (i < src.length) {
       const c = src[i];
       if (c === '{') d++;
@@ -245,7 +229,6 @@ function scanFile(absPath, rel) {
         }
       } else if (c === '>' && d === 0) {
         tagEnd = i;
-        if (src[i - 1] === '/') _selfClose = true;
         break;
       }
       i++;

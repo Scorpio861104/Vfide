@@ -1,5 +1,4 @@
 'use client';
-import _dynamic from 'next/dynamic';
 
 /**
  * Buyer-side QR scanner page.
@@ -27,13 +26,17 @@ import _dynamic from 'next/dynamic';
 export const dynamic = 'force-dynamic';
 
 import { Suspense } from 'react';
-const ScanContent = _dynamic(() => import('./components/ScanContent').then(m => ({ default: m.ScanContent })), { ssr: false });
+import { ScanContent } from './components/ScanContent';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function ScanPage() {
+  const { locale } = useLocale();
+  void locale;
+
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-accent/20 border-t-accent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
       </div>
     }>
       <ScanContent />

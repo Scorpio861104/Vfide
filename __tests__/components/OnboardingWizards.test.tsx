@@ -1,263 +1,203 @@
-import { describe, expect, it, vi, beforeEach } from '@jest/globals'
-import { render, screen, fireEvent } from '@testing-library/react'
-import React from 'react'
+import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { fireEvent, render, screen } from '@testing-library/react';
+import React from 'react';
 
-// Mock framer-motion
-jest.mock('framer-motion', () => {
-  /* FRAMER_MOTION_MOCK_V1 */
-  const React = require('react');
-  // Reusable component that strips motion-only props and renders the underlying tag.
-  const __MOTION_PROPS = new Set([
-    'initial', 'animate', 'exit', 'transition', 'variants', 'whileHover',
-    'whileTap', 'whileFocus', 'whileDrag', 'whileInView', 'drag',
-    'dragConstraints', 'dragElastic', 'dragMomentum', 'dragTransition',
-    'layout', 'layoutId', 'layoutDependency', 'layoutScroll',
-    'onAnimationStart', 'onAnimationComplete', 'onUpdate', 'onPan',
-    'onPanStart', 'onPanEnd', 'onTap', 'onTapStart', 'onTapCancel',
-    'onHoverStart', 'onHoverEnd', 'onDrag', 'onDragStart', 'onDragEnd',
-    'onDirectionLock', 'onViewportEnter', 'onViewportLeave',
-    'viewport', 'custom', 'transformTemplate', 'inherit',
-  ]);
-  const __makeMotion = (tag) => React.forwardRef((props, ref) => {
-    const sanitized = {};
-    for (const k of Object.keys(props || {})) {
-      if (!__MOTION_PROPS.has(k)) sanitized[k] = props[k];
+const mockWizardState = jest.fn();
+const mockUseAccount = jest.fn();
+const mockUseOnboarding = jest.fn();
+
+jest.mock('framer-motion', () => ({
+  motion: new Proxy(
+    {},
+    {
+      get: () => ({ children, ...props }: any) => <div {...props}>{children}</div>,
     }
-    return React.createElement(tag, { ...sanitized, ref });
-  });
-  const motion = new Proxy({}, {
-    get: (t, prop) => {
-      if (typeof prop !== 'string') return undefined;
-      if (!t[prop]) t[prop] = __makeMotion(prop === 'custom' ? 'div' : prop);
-      return t[prop];
-    },
-  });
-  return {
-    motion,
-    m: motion,
-    AnimatePresence: ({ children }) => children,
-    LayoutGroup: ({ children }) => children,
-    LazyMotion: ({ children }) => children,
-    MotionConfig: ({ children }) => children,
-    Reorder: { Group: ({ children }) => children, Item: ({ children }) => children },
-    domAnimation: {},
-    domMax: {},
-    useAnimation: () => ({ start: jest.fn(), stop: jest.fn(), set: jest.fn() }),
-    useAnimationControls: () => ({ start: jest.fn(), stop: jest.fn(), set: jest.fn() }),
-    useScroll: () => ({ scrollY: { get: () => 0, on: jest.fn(() => jest.fn()) }, scrollX: { get: () => 0, on: jest.fn(() => jest.fn()) }, scrollYProgress: { get: () => 0, on: jest.fn(() => jest.fn()) }, scrollXProgress: { get: () => 0, on: jest.fn(() => jest.fn()) } }),
-    useMotionValue: (v) => ({ get: () => v, set: jest.fn(), on: jest.fn(() => jest.fn()) }),
-    useTransform: (v) => ({ get: () => 0, set: jest.fn(), on: jest.fn(() => jest.fn()) }),
-    useSpring: (v) => ({ get: () => v, set: jest.fn(), on: jest.fn(() => jest.fn()) }),
-    useInView: () => true,
-    useReducedMotion: () => false,
-    useDragControls: () => ({ start: jest.fn() }),
-    usePresence: () => [true, jest.fn()],
-    useIsPresent: () => true,
-    useMotionTemplate: () => ({ get: () => '', set: jest.fn(), on: jest.fn(() => jest.fn()) }),
-    useViewportScroll: () => ({ scrollY: { get: () => 0, on: jest.fn(() => jest.fn()) }, scrollYProgress: { get: () => 0, on: jest.fn(() => jest.fn()) } }),
-    useCycle: (...args) => [args[0], jest.fn()],
-    animate: jest.fn(),
-    stagger: jest.fn(() => 0),
-    transform: jest.fn((v) => v),
-  };
+  ),
+  AnimatePresence: ({ children }: any) => <>{children}</>,
+}));
+
+jest.mock('lucide-react', () => {
+  const Icon = ({ className }: { className?: string }) => <span className={className}>icon</span>;
+  return new Proxy({}, { get: () => Icon });
 });
 
-// Mock wagmi
-jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK_V2 */
-  useAccount: jest.fn(() => ({ address: undefined, isConnected: false, status: 'disconnected', chainId: undefined })),
-  useChainId: () => 84532,
-  useSwitchChain: jest.fn(() => ({ switchChain: jest.fn(), switchChainAsync: jest.fn(), chains: [], status: 'idle', isPending: false, isError: false, error: null, reset: jest.fn() })),
-  useReadContract: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
-  useReadContracts: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
-  useWriteContract: jest.fn(() => ({ writeContract: jest.fn(), writeContractAsync: jest.fn(), data: undefined, isPending: false, isSuccess: false, isError: false, error: null, reset: jest.fn() })),
-  useWaitForTransactionReceipt: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
-  useWatchContractEvent: jest.fn(() => undefined),
-  usePublicClient: jest.fn(() => ({ readContract: jest.fn(), getBlockNumber: jest.fn(), getTransactionReceipt: jest.fn() })),
-  useWalletClient: jest.fn(() => ({ data: undefined, isLoading: false })),
-  useSignTypedData: jest.fn(() => ({ signTypedData: jest.fn(), signTypedDataAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null, reset: jest.fn() })),
-  useSignMessage: jest.fn(() => ({ signMessage: jest.fn(), signMessageAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null, reset: jest.fn() })),
-  useConnect: jest.fn(() => ({ connect: jest.fn(), connectAsync: jest.fn(), connectors: [], status: 'idle' })),
-  useDisconnect: jest.fn(() => ({ disconnect: jest.fn(), disconnectAsync: jest.fn() })),
-  useConnections: jest.fn(() => []),
-  useBalance: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })),
-  useEnsName: jest.fn(() => ({ data: undefined, isLoading: false })),
-  useEnsAvatar: jest.fn(() => ({ data: undefined, isLoading: false })),
-  useBlockNumber: jest.fn(() => ({ data: undefined, isLoading: false, refetch: jest.fn() })),
-  useEstimateGas: jest.fn(() => ({ data: undefined, isLoading: false })),
-  useSendTransaction: jest.fn(() => ({ sendTransaction: jest.fn(), sendTransactionAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null })),
-  useConfig: jest.fn(() => ({})),
-  WagmiProvider: ({ children }) => children,
-  createConfig: jest.fn(() => ({})),
-  createStorage: jest.fn(() => ({ getItem: jest.fn(() => null), setItem: jest.fn(), removeItem: jest.fn() })),
-  cookieStorage: { getItem: jest.fn(() => null), setItem: jest.fn(), removeItem: jest.fn() },
-  http: jest.fn(() => ({})),
-  fallback: jest.fn(() => ({})),
-  useGasPrice: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })),
-  useEstimateFeesPerGas: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })),
-  useReconnect: jest.fn(() => ({ reconnect: jest.fn(), reconnectAsync: jest.fn(), connectors: [], status: 'idle', isPending: false, isSuccess: false, isError: false })),
-  useTransaction: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
-  useTransactionReceipt: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
-  serialize: jest.fn((v) => JSON.stringify(v)),
-  deserialize: jest.fn((v) => { try { return JSON.parse(v); } catch { return v; } }),
-  cookieToInitialState: jest.fn(() => undefined),
-}))
+jest.mock('wagmi', () => ({
+  useAccount: () => mockUseAccount(),
+}));
 
-// Mock RainbowKit
-jest.mock('@rainbow-me/rainbowkit', () => ({
-  ConnectButton: () => <button>Connect Wallet</button>,
-}))
+jest.mock('@/components/onboarding', () => ({
+  useOnboarding: () => mockUseOnboarding(),
+}));
 
-// Mock testnet config
-jest.mock('@/lib/testnet', () => ({
-  CURRENT_CHAIN_ID: 84532,
-  FAUCET_URLS: { eth: 'https://faucet.example.com' },
-  IS_TESTNET: true,
-}))
+jest.mock('@/components/wizard/useWizardState', () => ({
+  CHAPTERS: [
+    { id: 'welcome', title: 'Welcome', shortLabel: 'Welcome' },
+    { id: 'createVault', title: 'Create vault', shortLabel: 'Vault' },
+    { id: 'done', title: 'Done', shortLabel: 'Done' },
+  ],
+  CHAPTER_ORDER: ['welcome', 'createVault', 'done'],
+  useWizardState: () => mockWizardState(),
+}));
 
-// Mock lucide-react icons
-jest.mock('lucide-react', () => (() => { /* LucideProxyFallback */
-  const __orig = ({
-  Wallet: () => <span>WalletIcon</span>,
-  Globe: () => <span>GlobeIcon</span>,
-  Droplets: () => <span>DropletsIcon</span>,
-  CheckCircle: () => <span>CheckIcon</span>,
-  ArrowRight: () => <span>ArrowRightIcon</span>,
-  X: () => <span>XIcon</span>,
-  ExternalLink: () => <span>ExternalLinkIcon</span>,
-  Copy: () => <span>CopyIcon</span>,
-  Check: () => <span>CheckSmallIcon</span>,
-  Loader2: () => <span>LoaderIcon</span>,
-  AlertCircle: () => <span>AlertIcon</span>,
-  Sparkles: () => <span>SparklesIcon</span>,
-  MessageCircle: () => <span>MessageIcon</span>,
-  HelpCircle: () => <span>HelpIcon</span>,
-  ChevronDown: () => <span>ChevronDownIcon</span>,
-  ChevronUp: () => <span>ChevronUpIcon</span>,
-  Search: () => <span>SearchIcon</span>,
-  Star: () => <span>StarIcon</span>,
-  Gem: () => <span>GemIcon</span>,
-  Trophy: () => <span>TrophyIcon</span>,
-  Rocket: () => <span>RocketIcon</span>,
-  Lightbulb: () => <span>LightbulbIcon</span>,
-  Handshake: () => <span>HandshakeIcon</span>,
-  TrendingUp: () => <span>TrendingUpIcon</span>,
-  Shield: () => <span>ShieldIcon</span>,
-  Key: () => <span>KeyIcon</span>,
-  Lock: () => <span>LockIcon</span>,
-  FileText: () => <span>FileTextIcon</span>,
-  RefreshCw: () => <span>RefreshIcon</span>,
-});
-  return new Proxy(__orig, {
-    get: (t, prop) => {
-      if (prop in t) return (t as any)[prop];
-      if (prop === '__esModule') return true;
-      if (typeof prop === 'symbol') return undefined;
-      const name = String(prop);
-      const Icon = ({ className, ...rest }: any) => {
-        const React = require('react');
-        return React.createElement('span', { 'data-testid': `${name.toLowerCase()}-icon`, className, ...rest });
-      };
-      Icon.displayName = `LucideMock(${name})`;
-      return Icon;
-    },
-  });
-})())
+jest.mock('@/components/crypto/VfideConnectButton', () => ({
+  VfideConnectButton: () => <button>Connect Wallet</button>,
+}));
 
-// Mock localStorage
-const localStorageMock = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
-}
-Object.defineProperty(window, 'localStorage', { value: localStorageMock })
+jest.mock('@/components/wizard/chapters/WelcomeChapter', () => ({
+  WelcomeChapter: ({ onContinue }: { onContinue: () => void }) => (
+    <div>
+      <p>Welcome Chapter</p>
+      <button onClick={onContinue}>Continue Welcome</button>
+    </div>
+  ),
+}));
 
-// Import components after mocking
-import { SetupWizard } from '@/components/onboarding/SetupWizard'
+jest.mock('@/components/wizard/chapters/CreateVaultChapter', () => ({
+  CreateVaultChapter: ({ onComplete }: { onComplete: () => void }) => (
+    <div>
+      <p>Create Vault Chapter</p>
+      <button onClick={onComplete}>Complete Create Vault</button>
+    </div>
+  ),
+}));
 
-describe('SetupWizard', () => {
+jest.mock('@/components/wizard/chapters/SpendLimitsChapter', () => ({
+  SpendLimitsChapter: ({ onComplete }: { onComplete: () => void }) => (
+    <button onClick={onComplete}>Complete Spend Limits</button>
+  ),
+}));
+
+jest.mock('@/components/wizard/chapters/GuardiansChapter', () => ({
+  GuardiansChapter: ({ onComplete }: { onComplete: () => void }) => (
+    <button onClick={onComplete}>Complete Guardians</button>
+  ),
+}));
+
+jest.mock('@/components/wizard/chapters/FinalizeGuardiansChapter', () => ({
+  FinalizeGuardiansChapter: ({ onComplete }: { onComplete: () => void }) => (
+    <button onClick={onComplete}>Complete Finalize Guardians</button>
+  ),
+}));
+
+jest.mock('@/components/wizard/chapters/MerchantApprovalChapter', () => ({
+  MerchantApprovalChapter: ({ onComplete }: { onComplete: () => void }) => (
+    <button onClick={onComplete}>Complete Merchant Approval</button>
+  ),
+}));
+
+jest.mock('@/components/wizard/chapters/ProofScoreChapter', () => ({
+  ProofScoreChapter: ({ onComplete }: { onComplete: () => void }) => (
+    <button onClick={onComplete}>Complete ProofScore</button>
+  ),
+}));
+
+jest.mock('@/components/wizard/chapters/DoneChapter', () => ({
+  DoneChapter: ({ onClose }: { onClose: () => void }) => (
+    <button onClick={onClose}>Close Wizard</button>
+  ),
+}));
+
+const renderWizard = (props?: { forceOpen?: boolean; onClose?: () => void }) => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const mod = require('../../components/wizard/VaultSetupWizard');
+  const VaultSetupWizard = mod.VaultSetupWizard as React.ComponentType<any>;
+  return render(<VaultSetupWizard {...props} />);
+};
+
+describe('VaultSetupWizard', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
-    localStorageMock.getItem.mockReturnValue(null)
-  })
-
-  it('renders without crashing', () => {
-    const { container } = render(<SetupWizard />)
-    expect(container).toBeInTheDocument()
-  })
-
-  it('calls onComplete when provided', () => {
-    const onComplete = jest.fn()
-    const { container } = render(<SetupWizard onComplete={onComplete} />)
-    expect(container).toBeInTheDocument()
-  })
-
-  it('handles localStorage check', () => {
-    render(<SetupWizard />)
-    expect(localStorageMock.getItem).toHaveBeenCalledWith('vfide-setup-complete')
-  })
-
-  it('skips wizard if already completed', () => {
-    localStorageMock.getItem.mockReturnValue('true')
-    const onComplete = jest.fn()
-    render(<SetupWizard onComplete={onComplete} />)
-    // Should call onComplete since setup is already done
-    expect(localStorageMock.getItem).toHaveBeenCalled()
-  })
-
-  it('shows network step content', () => {
-    const { container } = render(<SetupWizard />)
-    // Should show some onboarding content
-    expect(container.textContent).toBeTruthy()
-  })
-
-  it('has navigation buttons', () => {
-    render(<SetupWizard />)
-    // Should have next or continue button
-    const buttons = screen.getAllByRole('button')
-    expect(buttons.length).toBeGreaterThan(0)
-  })
-
-  it('handles step progression', () => {
-    render(<SetupWizard />)
-    const nextButton = screen.queryByText(/next|continue/i)
-    if (nextButton) {
-      fireEvent.click(nextButton)
-    }
-    expect(document.body).toBeInTheDocument()
-  })
-
-  it('can copy wallet address', () => {
-    // Mock clipboard
-    Object.assign(navigator, {
-      clipboard: {
-        writeText: jest.fn().mockResolvedValue(undefined),
+    jest.clearAllMocks();
+    mockUseAccount.mockReturnValue({ isConnected: true });
+    mockUseOnboarding.mockReturnValue({ completeStep: jest.fn() });
+    mockWizardState.mockReturnValue({
+      state: {
+        enabled: true,
+        currentChapter: 'welcome',
+        completedChapters: [],
+        skippedChapters: [],
+        pausedAfter: null,
       },
-    })
-    
-    render(<SetupWizard />)
-    const copyButton = screen.queryByText(/copy/i)
-    if (copyButton) {
-      fireEvent.click(copyButton)
-    }
-    expect(document.body).toBeInTheDocument()
-  })
+      isComplete: false,
+      currentIndex: 0,
+      totalChapters: 3,
+      markComplete: jest.fn(),
+      skip: jest.fn(),
+      goTo: jest.fn(),
+      pause: jest.fn(),
+      resume: jest.fn(),
+      reset: jest.fn(),
+      setEnabled: jest.fn(),
+    });
+  });
 
-  it('shows faucet-related content', () => {
-    const { container } = render(<SetupWizard />)
-    // Should show some onboarding content
-    expect(container.firstChild).not.toBeNull()
-  })
+  it('does not render when wizard disabled and not force opened', () => {
+    mockWizardState.mockReturnValue({
+      ...mockWizardState(),
+      state: {
+        enabled: false,
+        currentChapter: 'welcome',
+        completedChapters: [],
+        skippedChapters: [],
+        pausedAfter: null,
+      },
+      isComplete: false,
+    });
 
-  it('handles close action', () => {
-    const onComplete = jest.fn()
-    render(<SetupWizard onComplete={onComplete} />)
-    
-    // Find close button (X)
-    const closeButton = screen.queryByText('XIcon')
-    if (closeButton) {
-      fireEvent.click(closeButton)
-    }
-    expect(document.body).toBeInTheDocument()
-  })
-})
+    const { container } = renderWizard();
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it('renders when forceOpen is true even if disabled', () => {
+    mockWizardState.mockReturnValue({
+      ...mockWizardState(),
+      state: {
+        enabled: false,
+        currentChapter: 'welcome',
+        completedChapters: [],
+        skippedChapters: [],
+        pausedAfter: null,
+      },
+      isComplete: false,
+      currentIndex: 0,
+      totalChapters: 3,
+      markComplete: jest.fn(),
+      skip: jest.fn(),
+      goTo: jest.fn(),
+      pause: jest.fn(),
+      resume: jest.fn(),
+      reset: jest.fn(),
+      setEnabled: jest.fn(),
+    });
+
+    renderWizard({ forceOpen: true });
+    expect(screen.getByText(/Welcome Chapter/i)).toBeTruthy();
+  });
+
+  it('calls markComplete on welcome continue', () => {
+    const markComplete = jest.fn();
+    mockWizardState.mockReturnValue({
+      ...mockWizardState(),
+      state: {
+        enabled: true,
+        currentChapter: 'welcome',
+        completedChapters: [],
+        skippedChapters: [],
+        pausedAfter: null,
+      },
+      isComplete: false,
+      currentIndex: 0,
+      totalChapters: 3,
+      markComplete,
+      skip: jest.fn(),
+      goTo: jest.fn(),
+      pause: jest.fn(),
+      resume: jest.fn(),
+      reset: jest.fn(),
+      setEnabled: jest.fn(),
+    });
+
+    renderWizard();
+    fireEvent.click(screen.getByRole('button', { name: /Continue Welcome/i }));
+    expect(markComplete).toHaveBeenCalledWith('welcome');
+  });
+});

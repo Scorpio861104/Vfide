@@ -1,5 +1,4 @@
 'use client';
-import _dynamic from 'next/dynamic';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,9 +21,9 @@ import type React from 'react';
  * /setup redirects here. /notifications redirects here.
  */
 
-import { AnimatePresence, m, LazyMotion, domAnimation } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Bell, Lock, Settings, Shield, User } from 'lucide-react';
-import { useState, Suspense} from 'react';
+import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Footer } from '@/components/layout/Footer';
 
@@ -33,24 +32,25 @@ import { VaultTab }    from '@/app/setup/components/VaultTab';
 import { SecurityTab } from '@/app/setup/components/SecurityTab';
 
 // Notifications tab — inline from /notifications page content
-const NotificationsTabInline = _dynamic(() => import('./components/NotificationsTabInline').then(m => ({ default: m.NotificationsTabInline })), { ssr: false });
-import { useT } from '@/lib/i18n';
+import { NotificationsTabInline } from './components/NotificationsTabInline';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 type TabId = 'account' | 'vault' | 'security' | 'notifications';
 
-
+const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
+  { id: 'account',       label: 'Account',       icon: User     },
+  { id: 'vault',         label: 'Vault',          icon: Lock     },
+  { id: 'security',      label: 'Security',       icon: Shield   },
+  { id: 'notifications', label: 'Notifications',  icon: Bell     },
+];
 
 // UX-1: Valid tab IDs for type-safe URL parsing
 const VALID_TABS = new Set<TabId>(['account', 'vault', 'security', 'notifications']);
 
-function SettingsPageInner() {
-  const t = useT();
-  const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
-    { id: 'account',       label: t.settings_tab_account,       icon: User     },
-    { id: 'vault',         label: t.settings_tab_vault,          icon: Lock     },
-    { id: 'security',      label: t.settings_tab_security,       icon: Shield   },
-    { id: 'notifications', label: t.settings_tab_notifications,  icon: Bell     },
-  ];
+export default function SettingsPage() {
+  const { locale } = useLocale();
+  void locale;
+
   // UX-1: Read initial tab from URL search params so ?tab= links work correctly
   // and browser Back/Forward preserves the active tab context
   const searchParams = useSearchParams();
@@ -72,7 +72,7 @@ function SettingsPageInner() {
 
       <div className="relative container mx-auto max-w-5xl px-4 py-8">
         {/* Header */}
-        <m.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <div className="badge-live mb-4">
             <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
             Account Controls
@@ -86,7 +86,7 @@ function SettingsPageInner() {
           <p className="text-white/60 text-lg max-w-2xl">
             Manage your account, vault, security, and notification preferences.
           </p>
-        </m.div>
+        </motion.div>
 
         {/* Sticky tab bar */}
         <div className="sticky top-7 md:top-[5.25rem] z-30 -mx-4 px-4 py-3 backdrop-blur-xl border-b border-white/5 mb-8"
@@ -109,7 +109,7 @@ function SettingsPageInner() {
         {/* Tab content */}
         <AnimatePresence mode="wait">
           {/* A11Y-1: role=tabpanel so AT can navigate to the active panel */}
-          <m.div key={activeTab}
+          <motion.div key={activeTab}
             role="tabpanel"
             id={`settings-panel-${activeTab}`}
             aria-labelledby={`settings-tab-${activeTab}`}
@@ -119,21 +119,10 @@ function SettingsPageInner() {
             {activeTab === 'vault'         && <VaultTab />}
             {activeTab === 'security'      && <SecurityTab />}
             {activeTab === 'notifications' && <NotificationsTabInline />}
-          </m.div>
+          </motion.div>
         </AnimatePresence>
       </div>
       <Footer />
     </div>
-  );
-}
-
-export default function SettingsPage() {
-
-  return (
-    <LazyMotion features={domAnimation}>
-      <Suspense fallback={<div className="min-h-screen bg-zinc-950" />}>
-      <SettingsPageInner />
-    </Suspense>
-    </LazyMotion>
   );
 }

@@ -6,9 +6,11 @@ import { useParams, useRouter } from 'next/navigation';
 import { Package, ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { MerchantTrustBadge } from '@/components/merchant/MerchantTrustBadge';
+
 import { ProductGallery } from './components/ProductGallery';
 import { ProductInfo } from './components/ProductInfo';
 import { RelatedProducts } from './components/RelatedProducts';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 interface ProductImage { url: string; alt?: string }
 interface Product {
@@ -22,6 +24,9 @@ interface Product {
 }
 
 export default function ProductDetailPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const params = useParams();
   const router = useRouter();
   const productId = params?.id as string;

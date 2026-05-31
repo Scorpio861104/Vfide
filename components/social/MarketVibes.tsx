@@ -13,7 +13,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
-import { m } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Clock, MapPin, Shield, RotateCcw, Check, Sparkles } from 'lucide-react';
 
 interface VibePost {
@@ -34,13 +34,13 @@ interface MarketVibesCaptureProps {
   timeRemaining: number;
 }
 
-export function MarketVibesCapture({ promptTime: _promptTime, onCapture, timeRemaining }: MarketVibesCaptureProps) {
+export function MarketVibesCapture({ promptTime, onCapture, timeRemaining }: MarketVibesCaptureProps) {
+  void promptTime;
   const videoRef = useRef<HTMLVideoElement>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
   const [frontImage, setFrontImage] = useState<Blob | null>(null);
   const [backImage, setBackImage] = useState<Blob | null>(null);
   const [caption, setCaption] = useState('');
-  const [_capturing, _setCapturing] = useState(false);
   const streamRef = useRef<MediaStream | null>(null);
 
   const startCamera = useCallback(async (facing: 'user' | 'environment') => {
@@ -123,7 +123,7 @@ export function MarketVibesCapture({ promptTime: _promptTime, onCapture, timeRem
             <input value={caption} onChange={e =>  setCaption(e.target.value)}
               className="flex-1 px-4 py-3 bg-white/10 rounded-xl text-white text-sm  focus:outline-none" />
             <button onClick={() => { if (frontImage && backImage) onCapture(frontImage, backImage, caption); }}
-              className="px-4 py-3 bg-gradient-to-r from-accent to-blue-500 text-white font-bold rounded-xl text-sm flex items-center gap-1">
+              className="px-4 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold rounded-xl text-sm flex items-center gap-1">
               <Check size={16} />Post
             </button>
           </div>
@@ -143,39 +143,14 @@ export function MarketVibeCard({ vibe, onReact }: MarketVibeCardProps) {
   const scoreColor = vibe.author.proofScore >= 8000 ? '#10B981' : '#06B6D4';
 
   return (
-    <m.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="rounded-2xl overflow-hidden border border-white/10">
+    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="rounded-2xl overflow-hidden border border-white/10">
       {/* Dual image */}
-      <div
-        role="button"
-        tabIndex={0}
-        aria-label={showFront ? 'Show back camera view' : 'Show front camera view'}
-        className="relative aspect-[3/4] bg-zinc-800 cursor-pointer focus-visible:outline-2 focus-visible:outline-accent"
-        onClick={() => setShowFront(!showFront)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            setShowFront(!showFront);
-          }
-        }}
-      >
+      <div className="relative aspect-[3/4] bg-zinc-800 cursor-pointer" onClick={() => setShowFront(!showFront)}>
         <Image src={showFront ? vibe.frontImageUrl : vibe.backImageUrl} alt="" className="w-full h-full object-cover"  width={48} height={48} />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
         {/* PIP of the other camera */}
-        <div
-          role="button"
-          tabIndex={0}
-          aria-label="Swap camera view"
-          className="absolute top-3 left-3 w-20 h-28 rounded-xl overflow-hidden border-2 border-white/30 focus-visible:outline-2 focus-visible:outline-accent"
-          onClick={e => { e.stopPropagation(); setShowFront(!showFront); }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              e.stopPropagation();
-              setShowFront(!showFront);
-            }
-          }}
-        >
+        <div className="absolute top-3 left-3 w-20 h-28 rounded-xl overflow-hidden border-2 border-white/30" onClick={e => { e.stopPropagation(); setShowFront(!showFront); }}>
           <Image src={showFront ? vibe.backImageUrl : vibe.frontImageUrl} alt="" className="w-full h-full object-cover"  width={48} height={48} />
         </div>
 
@@ -204,6 +179,6 @@ export function MarketVibeCard({ vibe, onReact }: MarketVibeCardProps) {
           </button>
         ))}
       </div>
-    </m.div>
+    </motion.div>
   );
 }

@@ -1,36 +1,21 @@
 'use client';
-import dynamic from 'next/dynamic';
 
 import { Footer } from '@/components/layout/Footer';
-import { m, useScroll, useTransform, LazyMotion, domAnimation } from 'framer-motion';
-import { ArrowRight, ChevronRight, CheckCircle2, ShoppingBag, Store } from 'lucide-react';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import { ArrowRight, ChevronRight, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { FeeSavingsCalculator } from '@/components/fees';
 import { OnboardingPathChooser, useOnboarding } from '@/components/onboarding';
 import { useRef } from 'react';
+import { useLocale } from '@/lib/locale/LocaleProvider';
+import { HOME_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
 
-const LiveProofScoreHero = dynamic(() => import('./components/LiveProofScoreHero').then(m => ({ default: m.LiveProofScoreHero })), { ssr: false });
-const FeeFlowRiver = dynamic(() => import('./components/FeeFlowRiver').then(m => ({ default: m.FeeFlowRiver })), { ssr: false });
-const MonumentBackdrop = dynamic(() => import('./components/MonumentBackdrop').then(m => ({ default: m.MonumentBackdrop })), { ssr: false });
+import { LiveProofScoreHero } from './components/LiveProofScoreHero';
+import { FeeFlowRiver } from './components/FeeFlowRiver';
+import { MonumentBackdrop } from './components/MonumentBackdrop';
 import { FeatureCard } from './components/FeatureCard';
 import { StatItem } from './components/StatItem';
 import { Step } from './components/Step';
-import { PlainEnglishCard } from './components/PlainEnglishCard';
-const ConstitutionSection = dynamic(() => import('./components/ConstitutionSection').then(m => ({ default: m.ConstitutionSection })), { ssr: false });
-import { useLocale } from '@/hooks/useLocale';
-import { HOME_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
-
-/* ── Marquee items ─────────────────────────────────────────── */
-const PROTOCOL_METRICS = [
-  { label: 'Merchant fee', value: '0%', icon: '💸' },
-  { label: 'Settlement', value: '<3s', icon: '⚡' },
-  { label: 'Custody', value: 'You hold the keys', icon: '🗝️' },
-  { label: 'Buyer fee at top reputation', value: '0.25%', icon: '🏆' },
-  { label: 'Recovery', value: 'Guardian-assisted', icon: '🔐' },
-  { label: 'Network', value: 'Base (L2)', icon: '🌐' },
-  { label: 'Open source', value: 'Yes', icon: '📖' },
-  { label: 'KYC for basic use', value: 'No', icon: '✅' },
-];
 
 /* ── Feature data ──────────────────────────────────────────── */
 const FEATURES = [
@@ -78,32 +63,33 @@ const FEATURES = [
   },
 ];
 
-const TRUST_POINTS = [
-  'Send and receive payments anywhere in the world, instantly',
-  'Sell products or services — the platform takes nothing from you',
-  'No bank account required. No KYC for basic use.',
-  'No company can freeze, reverse, or seize your funds — by design',
-  'Your reputation grows with each honest transaction, lowering your fees over time',
-];
-
 export default function Home() {
-  const [locale] = useLocale();
-  const _copy = pickLocaleCopy(HOME_TRANSLATIONS, locale);
   const { state } = useOnboarding();
+  const { locale } = useLocale();
+  const copy = pickLocaleCopy(HOME_TRANSLATIONS, locale);
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
   const heroY = useTransform(scrollYProgress, [0, 1], ['0%', '15%']);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
+  const protocolMetrics = [
+    { label: copy.merchantFeesLabel, value: '0%', icon: '💸' },
+    { label: copy.maxProofScoreLabel, value: '10,000', icon: '🏆' },
+    { label: copy.burnRateLabel, value: '40%', icon: '🔥' },
+    { label: copy.sanctumFundLabel, value: '10%', icon: '🛡️' },
+    { label: 'Avg Settlement', value: '<3s', icon: '⚡' },
+    { label: 'Guardian Nodes', value: '3-of-5', icon: '🔐' },
+    { label: 'ProofScore Tiers', value: '7 Tiers', icon: '🎯' },
+    { label: 'Self-Custody', value: '100%', icon: '🗝️' },
+  ];
 
   return (
-    <LazyMotion features={domAnimation}>
-      <>
+    <>
       <div className="min-h-screen bg-zinc-950 relative overflow-hidden">
 
         {/* ════════════════════════════════════════
             HERO SECTION — Cinematic
         ════════════════════════════════════════ */}
-        <section ref={heroRef} className="hero-section relative isolate pt-20 pb-16 sm:pt-36 sm:pb-32 overflow-hidden">
+        <section ref={heroRef} className="hero-section relative isolate pt-28 pb-24 sm:pt-36 sm:pb-32 overflow-hidden">
           {/* Animated mesh background */}
           <div className="hero-mesh-bg" aria-hidden="true">
             <div className="mesh-orb-cyan" style={{ width: '60%', height: '60%', top: '-15%', left: '-10%' }} />
@@ -116,99 +102,74 @@ export default function Home() {
 
           <MonumentBackdrop variant="hero" />
 
-          <m.div
+          <motion.div
             style={{ y: heroY, opacity: heroOpacity }}
             className="container mx-auto px-4 max-w-6xl relative"
           >
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 items-center">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
               {/* Text column */}
-              <m.div
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7 }}
                 className="lg:col-span-5"
               >
                 {/* Animated badge */}
-                <m.div
+                <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.5, delay: 0.1 }}
                   className="badge-live mb-6 w-fit"
                 >
-                  Buy and sell anything · Zero seller fees · Your keys, always
-                </m.div>
+                  {copy.liveBadge}
+                </motion.div>
 
-                <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white mb-5 leading-[1.05] tracking-tight">
-                  Payments for people,{' '}
-                  <span className="gradient-text-hero">not platforms.</span>
+                <h1 className="text-5xl sm:text-6xl md:text-7xl font-black text-white mb-6 leading-[1.02] tracking-tight">
+                  {copy.heroPrefix}{' '}
+                  <span className="gradient-text-hero">
+                    {copy.heroAccent}
+                  </span>
                 </h1>
 
-                <p className="text-lg sm:text-xl text-zinc-300 mb-6 sm:mb-3 max-w-md leading-relaxed">
-                  VFIDE is a payments app — like PayPal or Stripe, but{' '}
-                  <span className="text-white font-semibold">sellers pay zero fees</span>,
-                  and no company can freeze your account or reverse your transaction.
-                  Ever.
-                </p>
-                <p className="hidden sm:block text-base text-zinc-400 mb-2 max-w-md leading-relaxed">
-                  Built because billions of people have been failed by traditional
-                  financial systems — through extraction, exclusion, and gatekeeping.
-                  No bank account required. No middleman. No permission needed.
-                </p>
-                <p className="hidden sm:block text-base text-zinc-400 mb-8 max-w-md leading-relaxed">
-                  Buyers pay a small fee that drops automatically as their reputation
-                  grows — down to 0.25% at the highest trust level. Sellers pay nothing.
+                <p className="text-lg sm:text-xl text-zinc-400 mb-8 max-w-md leading-relaxed">
+                  {copy.heroDescription}
                 </p>
 
-                {/*
-                  CTA FIX (clarity sweep):
-                  The page now offers two clear doors — Shop and Sell —
-                  followed by a softer "How it works" link for visitors
-                  who aren't ready to pick a side yet. Previously both
-                  CTAs led to merchant flows, which left shoppers with
-                  nowhere to go.
-                */}
+                {/* CTA buttons */}
                 <div className="flex flex-wrap gap-3 mb-8">
-                  <Link
-                    href="/marketplace"
-                    className="btn-premium btn-premium-primary text-sm"
-                    aria-label="Shop on VFIDE"
-                  >
-                    <ShoppingBag size={16} aria-hidden="true" /> Shop
-                  </Link>
                   <Link
                     href="/merchant/setup"
                     className="btn-premium btn-premium-primary text-sm"
-                    aria-label="Sell on VFIDE"
                   >
-                    <Store size={16} aria-hidden="true" /> Sell
+                    {copy.primaryCta} <ArrowRight size={16} />
                   </Link>
                   <Link
-                    href="#how-it-works"
+                    href="/marketplace"
                     className="btn-premium btn-premium-ghost text-sm"
                   >
-                    How it works <ChevronRight size={14} aria-hidden="true" />
+                    {copy.secondaryCta}
                   </Link>
                 </div>
 
                 {/* Trust points */}
                 <div className="space-y-2">
-                  {TRUST_POINTS.map((point, i) => (
-                    <m.div
+                  {copy.trustPoints.map((point, i) => (
+                    <motion.div
                       key={point}
                       initial={{ opacity: 0, x: -15 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.5, delay: 0.3 + i * 0.08 }}
-                      className={`${i >= 2 ? 'hidden sm:flex' : 'flex'} items-center gap-2 text-sm text-zinc-400`}
+                      className="flex items-center gap-2 text-sm text-zinc-400"
                     >
-                      <CheckCircle2 size={14} className="text-accent shrink-0" aria-hidden="true" />
+                      <CheckCircle2 size={14} className="text-cyan-400 shrink-0" />
                       {point}
-                    </m.div>
+                    </motion.div>
                   ))}
                 </div>
-              </m.div>
+              </motion.div>
 
               {/* Widget column */}
-              <m.div
+              <motion.div
                 initial={{ opacity: 0, y: 32 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.25 }}
@@ -218,24 +179,15 @@ export default function Home() {
                   <LiveProofScoreHero />
                 </div>
                 <p className="mt-3 text-center text-xs text-zinc-500">
-                  Live demo · Drag the slider to see how your reputation
-                  (ProofScore) lowers your fee in real time.
+                  {copy.sliderHint}
                 </p>
-              </m.div>
+              </motion.div>
             </div>
-          </m.div>
+          </motion.div>
 
           {/* Bottom glow */}
           <div className="hero-glow-bottom" aria-hidden="true" />
         </section>
-
-        {/*
-          PLAIN-ENGLISH JARGON TRANSLATOR (clarity sweep):
-          Three proper nouns — ProofScore, Guardian, Sanctum — appear
-          throughout the rest of the page. Defining them here, in one
-          line each, makes the entire site readable to a stranger.
-        */}
-        <PlainEnglishCard />
 
         {/* ════════════════════════════════════════
             PROTOCOL METRICS MARQUEE
@@ -243,11 +195,11 @@ export default function Home() {
         <section className="py-5 border-y border-white/5 bg-zinc-950/80 backdrop-blur-sm overflow-hidden">
           <div className="marquee-wrapper">
             <div className="marquee-track">
-              {[...PROTOCOL_METRICS, ...PROTOCOL_METRICS].map((metric, i) => (
+              {[...protocolMetrics, ...protocolMetrics].map((m, i) => (
                 <div key={i} className="metric-chip mx-3">
-                  <span>{metric.icon}</span>
-                  <span className="metric-chip-value">{metric.value}</span>
-                  <span className="text-zinc-500">{metric.label}</span>
+                  <span>{m.icon}</span>
+                  <span className="metric-chip-value">{m.value}</span>
+                  <span className="text-zinc-500">{m.label}</span>
                 </div>
               ))}
             </div>
@@ -278,58 +230,28 @@ export default function Home() {
         ════════════════════════════════════════ */}
         <section className="py-16 border-y border-white/5">
           <div className="container mx-auto px-4 max-w-6xl">
-            <m.div
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              className="mb-8 text-center"
+              className="mb-12 text-center"
             >
-              <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">The problem</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">{copy.statsKicker}</p>
               <h2 className="text-3xl sm:text-4xl font-bold text-white">
-                The global financial system{' '}
-                <span className="gradient-text-hero">is failing billions</span>
+                {copy.statsTitlePrefix}{' '}
+                <span className="gradient-text-cyan-blue">{copy.statsTitleAccent}</span>
               </h2>
-            </m.div>
-
-            {/* Problem stats row */}
-            <m.div
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10 rounded-2xl border border-red-500/10 bg-red-500/[0.03] p-6"
-            >
-              {[
-                { stat: "1.4B",    label: "adults excluded from banking",        sub: "World Bank Findex 2024"    },
-                { stat: "$58B",    label: "lost to remittance fees each year",   sub: "World Bank 2024"           },
-                { stat: "2.9–4.4%",label: "average merchant fee (PayPal/Stripe)",sub: "Square 2025"              },
-              ].map((item) => (
-                <div key={item.stat} className="text-center">
-                  <div className="text-3xl font-black text-red-400/90 mb-1">{item.stat}</div>
-                  <div className="text-sm text-zinc-300 font-semibold leading-snug mb-0.5">{item.label}</div>
-                  <div className="text-xs text-zinc-600">Source: {item.sub}</div>
-                </div>
-              ))}
-            </m.div>
-
-            {/* Divider with VFIDE answer */}
-            <div className="flex items-center gap-4 mb-10">
-              <div className="flex-1 h-px bg-white/5" />
-              <div className="flex items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-500/[0.07] px-4 py-1.5">
-                <span className="text-xs font-bold uppercase tracking-widest text-emerald-400">VFIDE&apos;s answer</span>
-              </div>
-              <div className="flex-1 h-px bg-white/5" />
-            </div>
+            </motion.div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {[
-                { value: 0,     label: 'Merchant fee',         suffix: '%',   color: 'cyan'    },
-                { value: 100,   label: 'Self-custody',         suffix: '%',   color: 'amber'   },
-                { value: 3,     label: 'Settlement (seconds)', suffix: '',    color: 'emerald' },
-                { value: 20,    label: 'Community & charity fund', suffix: '%',   color: 'pink'    },
+                { value: 0,     label: copy.merchantFeesLabel,  suffix: '%',   color: 'cyan'    },
+                { value: 10000, label: copy.maxProofScoreLabel, suffix: '',    color: 'amber'   },
+                { value: 40,    label: copy.burnRateLabel,      suffix: '%',   color: 'emerald' },
+                { value: 10,    label: copy.sanctumFundLabel,   suffix: '%',   color: 'pink'    },
               ].map((stat, i) => (
-                <m.div
+                <motion.div
                   key={stat.label}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -343,16 +265,11 @@ export default function Home() {
                     suffix={stat.suffix}
                     color={stat.color}
                   />
-                </m.div>
+                </motion.div>
               ))}
             </div>
           </div>
         </section>
-
-        {/* ════════════════════════════════════════
-            CONSTITUTIONAL GUARANTEES
-        ════════════════════════════════════════ */}
-        <ConstitutionSection />
 
         {/* ════════════════════════════════════════
             FEATURES GRID
@@ -363,7 +280,7 @@ export default function Home() {
           </div>
 
           <div className="container mx-auto px-4 max-w-6xl relative">
-            <m.div
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -379,7 +296,7 @@ export default function Home() {
                 Three primitives that compose into a complete financial layer: a vault you control,
                 a reputation engine that rewards honesty, and a fee model that funds the network.
               </p>
-            </m.div>
+            </motion.div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {FEATURES.map((feature) => (
@@ -394,7 +311,7 @@ export default function Home() {
         ════════════════════════════════════════ */}
         <section className="py-24 bg-zinc-950/60">
           <div className="container mx-auto px-4">
-            <m.div
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -406,7 +323,7 @@ export default function Home() {
                 See how much you{' '}
                 <span className="text-glow-cyan">save</span>
               </h2>
-            </m.div>
+            </motion.div>
             <FeeSavingsCalculator />
           </div>
         </section>
@@ -414,9 +331,9 @@ export default function Home() {
         {/* ════════════════════════════════════════
             HOW IT WORKS — premium steps
         ════════════════════════════════════════ */}
-        <section id="how-it-works" className="py-24 scroll-mt-24">
+        <section className="py-24">
           <div className="container mx-auto px-4 max-w-4xl">
-            <m.div
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -428,7 +345,7 @@ export default function Home() {
                 Get started in{' '}
                 <span className="gradient-text-cyan-blue">60 seconds</span>
               </h2>
-            </m.div>
+            </motion.div>
 
             <div className="space-y-5">
               <Step number={1} title="Create your account"  description="Connect your wallet — that's it. No email, no KYC for basic use, no approval wait."  time="10 sec" index={0} />
@@ -443,25 +360,23 @@ export default function Home() {
         ════════════════════════════════════════ */}
         <section className="py-24 px-4">
           <div className="container mx-auto max-w-4xl">
-            <m.div
+            <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.7 }}
-              className="cta-gradient-bg p-8 sm:p-12 text-center"
+              className="cta-gradient-bg p-12 text-center"
             >
               <div className="badge-live mb-6 w-fit mx-auto">
                 Zero fees. Open source. Self-custody.
               </div>
               <h2 className="text-4xl sm:text-5xl font-black text-white mb-5 leading-tight tracking-tight">
-                The payments app that{' '}
-                <span className="gradient-text-hero">works for you.</span>
+                Ready to own your{' '}
+                <span className="gradient-text-hero">payments?</span>
               </h2>
               <p className="text-zinc-400 text-lg mb-10 max-w-2xl mx-auto">
-                Whether you&apos;re a seller in Lagos, a buyer in São Paulo, or
-                a freelancer in Manila — VFIDE charges sellers nothing,
-                lets you hold your own money, and gets cheaper for buyers
-                the more they use it. No account freezes. No permission slips.
+                Join thousands building the future of decentralized commerce.
+                Your ProofScore starts now.
               </p>
               <div className="flex flex-wrap items-center justify-center gap-4">
                 <Link
@@ -480,7 +395,7 @@ export default function Home() {
               <p className="mt-8 text-xs text-zinc-500">
                 No credit card. No bank account. Just your wallet.
               </p>
-            </m.div>
+            </motion.div>
           </div>
         </section>
 

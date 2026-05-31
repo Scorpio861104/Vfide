@@ -34,6 +34,7 @@ import { Footer } from '@/components/layout/Footer';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useVaultHub } from '@/hooks/useVaultHub';
 import { ACTIVE_VAULT_ABI } from '@/lib/contracts';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 const SECONDS_PER_DAY = 86_400;
 const MIN_DAYS = 3;
@@ -86,6 +87,9 @@ function formatDays(seconds: bigint | number): string {
 }
 
 export default function ChallengeWindowPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { vaultAddress, hasVault } = useVaultHub();
   const { address: connectedAddress } = useAccount();
   const publicClient = usePublicClient();

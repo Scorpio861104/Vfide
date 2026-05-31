@@ -1,6 +1,7 @@
 'use client';
 
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 export const dynamic = 'force-dynamic';
 
 /**
@@ -100,6 +101,9 @@ function formatStatusBadge(status: RefundEntry['status']) {
 }
 
 export default function MerchantRefundsPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address } = useAccount();
   const { entries, isLoading, error, refetch } = useRefundHistory('merchant');
   const { initiateRefund, completeRefund, isWritePending } = useMerchantPayments();

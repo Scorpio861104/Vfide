@@ -19,6 +19,7 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { LinkInBioClient } from './LinkInBioClient';
+import { DEFAULT_LOCALE } from '@/lib/i18n';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -63,6 +64,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function LinkInBioPage({ params }: PageProps) {
+  const locale = DEFAULT_LOCALE;
+  void locale;
+
   const { slug } = await params;
   const [merchant, products] = await Promise.all([
     fetchMerchantProfile(slug),

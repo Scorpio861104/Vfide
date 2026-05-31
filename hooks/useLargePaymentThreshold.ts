@@ -13,11 +13,9 @@
  * means more payments flow instantly; lowering it adds friction for larger amounts.
  *
  * Contract flow:
- *   1. Vault owner calls vault.setLargePaymentThreshold(threshold)
- *      → vault delegates to paymentQueueManager.setLargePaymentThreshold(threshold, SENSITIVE_ADMIN_DELAY)
- *      → SENSITIVE_ADMIN_DELAY is HARD-CODED in the vault as 7 days; the UI
- *        does NOT control the delay.
- *   2. After 7 days, anyone calls vault.applyLargePaymentThreshold()
+ *   1. Vault owner calls vault.setLargePaymentThreshold(threshold, delay)
+ *      → vault delegates to paymentQueueManager.setLargePaymentThreshold(...)
+ *   2. After `delay` seconds, anyone calls vault.applyLargePaymentThreshold()
  *      → vault delegates to paymentQueueManager.applyLargePaymentThreshold()
  *   3. Optionally cancel before delay expires via vault.cancelLargePaymentThreshold()
  *      → delegates to paymentQueueManager.cancelLargePaymentThreshold() [added R77]
@@ -27,21 +25,17 @@
  */
 
 import { useCallback, useState } from 'react';
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { type Address } from 'viem';
 import { ACTIVE_VAULT_ABI, ZERO_ADDRESS } from '@/lib/contracts';
 import { CardBoundVaultPaymentQueueManagerABI } from '@/lib/abis';
 
-/**
- * Fixed timelock delay enforced by the vault contract for large-payment-threshold
- * changes (CardBoundVault.SENSITIVE_ADMIN_DELAY = 7 days). Exposed for UI display
- * only — callers cannot override this value on-chain.
- */
-export const FIXED_THRESHOLD_DELAY_SECONDS = 7 * 24 * 3600;
+/** Minimum timelock delay in seconds (1 hour). The vault enforces this. */
+export const MIN_THRESHOLD_DELAY_SECONDS = 3600;
+/** Maximum timelock delay in seconds (7 days). Sane UI cap. */
+export const MAX_THRESHOLD_DELAY_SECONDS = 7 * 24 * 3600;
 
 export function useLargePaymentThreshold(vaultAddress: Address | undefined) {
-  const { address: _address } = useAccount();
-
   const enabled = !!vaultAddress && vaultAddress !== ZERO_ADDRESS;
 
   // ─── Read: paymentQueueManager address from vault ──────────────────────────
@@ -93,24 +87,26 @@ export function useLargePaymentThreshold(vaultAddress: Address | undefined) {
   const [proposeError, setProposeError] = useState<string | null>(null);
 
   /**
-   * propose — call vault.setLargePaymentThreshold(threshold)
-   *
-   * The vault contract internally applies SENSITIVE_ADMIN_DELAY (7 days) — the
-   * caller does NOT supply a delay. After 7 days, anyone can call
-   * applyLargePaymentThreshold() to commit the change.
+   * propose — call vault.setLargePaymentThreshold(threshold, delay)
    *
    * @param thresholdWei  New threshold in wei (bigint)
+   * @param delaySeconds  Timelock delay in seconds (number)
    */
   const propose = useCallback(
-    async (thresholdWei: bigint) => {
+    async (thresholdWei: bigint, delaySeconds: number) => {
       if (!vaultAddress) throw new Error('No vault address');
+      if (delaySeconds < MIN_THRESHOLD_DELAY_SECONDS) {
+        throw new Error(
+          `Delay must be at least ${MIN_THRESHOLD_DELAY_SECONDS / 3600}h`
+        );
+      }
       setProposeError(null);
       try {
         await writeContractAsync({
           address: vaultAddress,
           abi: ACTIVE_VAULT_ABI as any,
           functionName: 'setLargePaymentThreshold',
-          args: [thresholdWei],
+          args: [thresholdWei, BigInt(delaySeconds)],
         });
         setTimeout(() => {
           refetchThreshold();

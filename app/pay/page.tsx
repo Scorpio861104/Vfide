@@ -1,32 +1,21 @@
 'use client';
-import _dynamic from 'next/dynamic';
 
 export const dynamic = 'force-dynamic';
 
 import { Suspense } from 'react';
 import { Footer } from '@/components/layout/Footer';
-const PayContent = _dynamic(() => import('./components/PayContent').then(m => ({ default: m.PayContent })), { ssr: false });
-import { ErrorBoundary } from '@/components/error/ErrorBoundary';
-import { useLocale } from '@/hooks/useLocale';
-import { useT } from '@/lib/i18n';
-
-function PayFallback() {
-  return (
-    <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] flex items-center justify-center">
-      <div className="w-8 h-8 border-2 border-accent/20 border-t-accent rounded-full animate-spin" />
-    </div>
-  );
-}
+import { PayContent } from './components/PayContent';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function PayPage() {
-  const t = useT();
+  const { locale } = useLocale();
+  void locale;
+
   return (
     <>
-      <ErrorBoundary>
-        <Suspense fallback={<PayFallback />}>
-          <PayContent />
-        </Suspense>
-      </ErrorBoundary>
+      <Suspense fallback={<div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] flex items-center justify-center"><div className="w-8 h-8 border-2 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" /></div>}>
+        <PayContent />
+      </Suspense>
       <Footer />
     </>
   );

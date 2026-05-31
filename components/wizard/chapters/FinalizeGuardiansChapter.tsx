@@ -173,12 +173,12 @@ export function FinalizeGuardiansChapter({
   return (
     <ChapterShell
       chapter="finalizeGuardians"
-      description="Lock in your guardian configuration. After this, changes go through timelocks so an attacker who steals your wallet can't instantly swap guardians."
+      description="Activate recovery protection. Planning ahead now reduces the risk of permanent loss if your wallet is compromised or access is lost."
       onPrimary={handleFinalize}
       onSkip={onSkip}
       isWorking={isWorking}
       primaryDisabled={!canFinalize}
-      primaryLabel="Finalize guardian setup"
+      primaryLabel="Enable Recovery Features"
       notice={
         error
           ? { tone: 'error', text: error }
@@ -228,8 +228,8 @@ export function FinalizeGuardiansChapter({
 
         <div className="flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-amber-100">
           <AlertTriangle className="mt-0.5 flex-shrink-0 text-amber-300" size={14} aria-hidden />
-          The protocol also requires at least one independent guardian (an address that isn&rsquo;t your
-          owner wallet). If you only have one, add another before finalizing.
+          Recovery works best with independent guardians. Add trusted family, close friends, or partners
+          who can reliably support emergency approvals.
         </div>
 
         <div className="flex items-center gap-2 text-xs text-white/50">

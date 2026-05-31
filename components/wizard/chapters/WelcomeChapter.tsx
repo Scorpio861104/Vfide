@@ -17,21 +17,21 @@ export function WelcomeChapter({ onContinue, onSkipAll }: WelcomeChapterProps) {
   return (
     <ChapterShell
       chapter="welcome"
-      description="Five quick chapters to get your vault, guardians, and first payment ready. You can stop after any step and come back later — the only required one is creating your vault."
+      description="Most crypto leaves users on their own. VFIDE combines protected vaults, recovery systems, trust tooling, and payment rails so you can stay in control with better safety defaults."
       onPrimary={isConnected ? onContinue : () => {/* no-op until connected */}}
-      primaryLabel={isConnected ? 'Start setup' : 'Connect wallet to start'}
+      primaryLabel={isConnected ? 'Begin Setup' : 'Connect wallet to begin'}
       primaryDisabled={!isConnected}
       onSkip={onSkipAll}
     >
       {/* Wallet connect prompt — shown only when not connected */}
       {!isConnected && (
-        <div className="mb-4 flex flex-col items-center gap-3 rounded-xl border border-accent/30 bg-accent/8 p-4 text-center">
-          <Wallet className="text-accent" size={28} aria-hidden />
+        <div className="mb-4 flex flex-col items-center gap-3 rounded-xl border border-cyan-500/30 bg-cyan-500/8 p-4 text-center">
+          <Wallet className="text-cyan-300" size={28} aria-hidden />
           <p className="text-sm text-white/80 font-medium">
             Connect your wallet to begin setup
           </p>
           <p className="text-xs text-white/50">
-            Your vault is owned by your wallet — VFIDE never holds your funds.
+            Your wallet belongs to you. VFIDE never controls your wallet or assets.
           </p>
           <VfideConnectButton size="md" />
         </div>
@@ -41,39 +41,39 @@ export function WelcomeChapter({ onContinue, onSkipAll }: WelcomeChapterProps) {
         {[
           {
             icon: Shield,
-            color: 'text-accent',
-            title: 'Create your vault',
-            sub: 'Required — everything else depends on it.',
+            color: 'text-cyan-300',
+            title: 'Secure vault protection',
+            sub: 'Create a protected vault foundation for safer asset storage.',
           },
           {
             icon: Wallet,
             color: 'text-emerald-300',
-            title: 'Set spend limits',
-            sub: 'Per-transfer and per-day caps protect against drain.',
+            title: 'Trusted recovery options',
+            sub: 'Enable recovery workflows so loss does not mean permanent loss.',
           },
           {
             icon: KeyRound,
             color: 'text-purple-300',
-            title: 'Add guardians',
-            sub: 'Trusted contacts who can help rotate your wallet.',
+            title: 'Guardian protection',
+            sub: 'Choose trusted people who can support emergency recovery.',
           },
           {
             icon: CreditCard,
             color: 'text-amber-300',
-            title: 'Approve merchant payments',
-            sub: 'Optional — only if you plan to pay merchants directly.',
+            title: 'Merchant-friendly payments',
+            sub: 'Prepare your vault for real-world payment and commerce use.',
           },
           {
             icon: BarChart3,
             color: 'text-pink-300',
-            title: 'ProofScore & first payment',
-            sub: 'How trust translates to lower fees.',
+            title: 'Trust and ProofScore',
+            sub: 'Build reputation through responsible participation.',
           },
           {
             icon: Sparkles,
-            color: 'text-accent',
-            title: 'You can turn the wizard off',
-            sub: 'Toggle it back on later from settings if you change your mind.',
+            color: 'text-cyan-300',
+            title: 'Community governance',
+            sub: 'Participate in shaping VFIDE as the ecosystem evolves.',
           },
         ].map((item) => (
           <li

@@ -8,6 +8,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { StoreClient } from '@/app/(commerce)/store/[slug]/components/StoreClient';
+import { DEFAULT_LOCALE } from '@/lib/i18n';
 
 interface StorePageProps {
   params: Promise<{ slug: string }>;
@@ -50,6 +51,9 @@ export async function generateMetadata({ params }: StorePageProps): Promise<Meta
 }
 
 export default async function StorePage({ params }: StorePageProps) {
+  const locale = DEFAULT_LOCALE;
+  void locale;
+
   const { slug } = await params;
   const [merchant, products] = await Promise.all([
     fetchMerchant(slug),

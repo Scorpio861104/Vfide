@@ -4,7 +4,7 @@ import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 export const dynamic = 'force-dynamic';
 
 import { useState } from 'react'
-import { m, LazyMotion, domAnimation } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { useAccount } from 'wagmi'
 import {
   Copy,
@@ -21,10 +21,12 @@ import {
 import Link from 'next/link'
 import { useCopyToClipboard } from '@/lib/hooks/useCopyToClipboard'
 import { safeWindowOpen } from '@/lib/security/urlValidation'
-import { useT } from '@/lib/i18n';
+import { DEFAULT_LOCALE } from '@/lib/i18n';
 
 export default function InviteFriendsPage() {
-  const t = useT();
+  const locale = DEFAULT_LOCALE;
+  void locale;
+
   const { address } = useAccount()
   const { copied, copy } = useCopyToClipboard()
   const [_selectedMethod, setSelectedMethod] = useState<string | null>(null)
@@ -82,7 +84,7 @@ export default function InviteFriendsPage() {
       icon: Zap,
       title: 'Boost ProofScore',
       description: 'Increase your ProofScore with every successful invite',
-      color: 'text-accent',
+      color: 'text-cyan-400',
     },
   ]
 
@@ -112,10 +114,9 @@ export default function InviteFriendsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-zinc-900 to-black text-white">
-      <LazyMotion features={domAnimation}>
       <div className="max-w-4xl mx-auto px-4 py-8 md:py-12">
         {/* Header */}
-        <m.div
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
@@ -123,23 +124,23 @@ export default function InviteFriendsPage() {
           <div className="inline-flex items-center justify-center p-3 bg-gradient-to-br from-pink-500/20 to-purple-500/20 rounded-full mb-4">
             <Users className="w-8 h-8 text-pink-400" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-pink-400 via-purple-500 to-accent bg-clip-text text-transparent mb-4">
-            {t.invite_heading}
+          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-pink-400 via-purple-500 to-cyan-400 bg-clip-text text-transparent mb-4">
+            Invite Friends
           </h1>
           <p className="text-gray-400 text-lg">
             Share VFIDE with your network and grow the governance community
           </p>
-        </m.div>
+        </motion.div>
 
         {/* Rewards Section */}
-        <m.div
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
           className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12"
         >
           {rewards.map((reward, index) => (
-            <m.div
+            <motion.div
               key={reward.title}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -151,12 +152,12 @@ export default function InviteFriendsPage() {
               </div>
               <h3 className="text-lg font-bold mb-2">{reward.title}</h3>
               <p className="text-sm text-gray-400">{reward.description}</p>
-            </m.div>
+            </motion.div>
           ))}
-        </m.div>
+        </motion.div>
 
         {/* Referral Link Section */}
-        <m.div
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
@@ -198,16 +199,16 @@ export default function InviteFriendsPage() {
             <QrCode className="w-5 h-5 text-gray-400" />
             <p className="text-sm text-gray-400">
               Visit{' '}
-              <Link href="/profile" className="text-accent hover:underline">
+              <Link href="/profile" className="text-cyan-400 hover:underline">
                 your profile
               </Link>{' '}
               to generate a QR code for this invite link
             </p>
           </div>
-        </m.div>
+        </motion.div>
 
         {/* Share Methods */}
-        <m.div
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
@@ -216,7 +217,7 @@ export default function InviteFriendsPage() {
           <h2 className="text-2xl font-bold mb-6">Share Via</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {shareMethod.map((method) => (
-              <m.button
+              <motion.button
                 key={method.id}
                 onClick={() => {
                   setSelectedMethod(method.id)
@@ -228,13 +229,13 @@ export default function InviteFriendsPage() {
               >
                 <method.icon className="w-8 h-8 text-white" />
                 <span className="font-semibold text-white">{method.label}</span>
-              </m.button>
+              </motion.button>
             ))}
           </div>
-        </m.div>
+        </motion.div>
 
         {/* Stats Section */}
-        <m.div
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
@@ -255,14 +256,14 @@ export default function InviteFriendsPage() {
               <p className="text-sm text-gray-400 mt-1">Badges</p>
             </div>
             <div className="text-center">
-              <p className="text-3xl font-bold text-accent">0</p>
+              <p className="text-3xl font-bold text-cyan-400">0</p>
               <p className="text-sm text-gray-400 mt-1">Points</p>
             </div>
           </div>
-        </m.div>
+        </motion.div>
 
         {/* Footer Note */}
-        <m.div
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.7 }}
@@ -275,9 +276,8 @@ export default function InviteFriendsPage() {
             <div className="mt-6 flex justify-center">
               <VfideConnectButton size="md" />
             </div>
-        </m.div>
+        </motion.div>
       </div>
     </div>
-    </LazyMotion>
   )
 }

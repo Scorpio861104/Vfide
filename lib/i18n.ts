@@ -1,265 +1,340 @@
-// Safe localStorage wrapper — avoids SSR crash when window is undefined
-function safeGet(key: string): string | null {
-  try { return typeof localStorage !== 'undefined' ? localStorage.getItem(key) : null; } catch { return null; }
-}
-function safeSet(key: string, val: string): void {
-  try { if (typeof localStorage !== 'undefined') localStorage.setItem(key, val); } catch { /* ignore */ }
-}
+import { safeLocalStorage } from '@/lib/utils';
+import { LOCALE_STORAGE_KEY, LEGACY_LOCALE_STORAGE_KEY } from '@/lib/locale';
 
-export const SUPPORTED_LOCALES = ['en-US', 'en-GB', 'es-ES', 'fr-FR', 'de-DE', 'ar-SA', 'fil-PH', 'hi-IN', 'id-ID', 'th-TH', 'ja-JP', 'zh-CN'] as const;
+export const SUPPORTED_LOCALES = ['en-US', 'en-GB', 'es-ES', 'fr-FR', 'de-DE'] as const;
 export type SupportedLocale = typeof SUPPORTED_LOCALES[number];
+
 export const DEFAULT_LOCALE: SupportedLocale = 'en-US';
 
 export const LOCALE_OPTIONS: Array<{ value: SupportedLocale; label: string }> = [
   { value: 'en-US', label: 'English (US)' },
   { value: 'en-GB', label: 'English (UK)' },
-  { value: 'es-ES', label: 'Spanish' },
-  { value: 'fr-FR', label: 'French' },
-  { value: 'de-DE', label: 'German' },
-  { value: 'ar-SA', label: 'Arabic' },
-  { value: 'fil-PH', label: 'Filipino' },
-  { value: 'hi-IN', label: 'Hindi' },
-  { value: 'id-ID', label: 'Indonesian' },
-  { value: 'th-TH', label: 'Thai' },
-  { value: 'ja-JP', label: 'Japanese' },
-  { value: 'zh-CN', label: 'Chinese' },
+  { value: 'es-ES', label: 'Español' },
+  { value: 'fr-FR', label: 'Français' },
+  { value: 'de-DE', label: 'Deutsch' },
 ];
 
 const LANGUAGE_FALLBACKS: Record<string, SupportedLocale> = {
-  en: 'en-US', es: 'es-ES', fr: 'fr-FR', de: 'de-DE', ar: 'ar-SA',
-  fil: 'fil-PH', hi: 'hi-IN', id: 'id-ID', th: 'th-TH', ja: 'ja-JP', zh: 'zh-CN',
+  en: 'en-US',
+  es: 'es-ES',
+  fr: 'fr-FR',
+  de: 'de-DE',
 };
 
 export function normalizeLocale(input?: string | null): SupportedLocale {
   if (!input) return DEFAULT_LOCALE;
-  const firstToken = input.split(',').map((part) => part.split(';')[0]?.trim()).find(Boolean);
+
+  const firstToken = input
+    .split(',')
+    .map((part) => part.split(';')[0]?.trim())
+    .find(Boolean);
+
   if (!firstToken) return DEFAULT_LOCALE;
+
   const sanitized = firstToken.replace('_', '-');
-  if (SUPPORTED_LOCALES.includes(sanitized as SupportedLocale)) return sanitized as SupportedLocale;
-  const base = sanitized.split('-')[0]?.toLowerCase();
-  return (base && LANGUAGE_FALLBACKS[base]) || DEFAULT_LOCALE;
+  if (SUPPORTED_LOCALES.includes(sanitized as SupportedLocale)) {
+    return sanitized as SupportedLocale;
+  }
+
+  const base = sanitized.slice(0, 2).toLowerCase();
+  return LANGUAGE_FALLBACKS[base] ?? DEFAULT_LOCALE;
 }
 
-export function useLocale(): { locale: SupportedLocale } {
-  const stored = safeGet('locale');
-  const locale = stored ? normalizeLocale(stored) : normalizeLocale(
-    typeof navigator !== 'undefined' ? navigator.language : undefined
-  );
-  return { locale };
-}
-
-export type TranslationMap<T> = Record<SupportedLocale, T>;
-
-// Helper functions
-export function pickLocaleCopy<T extends object>(
-  map: TranslationMap<T>,
-  locale: SupportedLocale
-): T {
-  return map[locale] || map[DEFAULT_LOCALE];
+export function getHtmlLang(input?: string | null): string {
+  return normalizeLocale(input).split('-')[0] ?? 'en';
 }
 
 export function getBrowserLocale(): SupportedLocale {
-  return normalizeLocale(typeof navigator !== 'undefined' ? navigator.language : undefined);
+  if (typeof window === 'undefined') return DEFAULT_LOCALE;
+
+  const queryLocale = new URLSearchParams(window.location.search).get('lang');
+  const storedLocale = safeLocalStorage.getItem(LOCALE_STORAGE_KEY)
+    || safeLocalStorage.getItem(LEGACY_LOCALE_STORAGE_KEY);
+  const navigatorLocale = typeof navigator !== 'undefined' ? navigator.language : DEFAULT_LOCALE;
+
+  return normalizeLocale(queryLocale ?? storedLocale ?? navigatorLocale);
 }
 
-export function getHtmlLang(_locale?: SupportedLocale): string {
-  try {
-    const stored = safeGet('locale');
-    if (stored) return stored.split('-')[0] ?? 'en';
-  } catch { /* ignore */ }
-  return 'en';
+export function persistLocale(locale: string): SupportedLocale {
+  const normalized = normalizeLocale(locale);
+
+  safeLocalStorage.setItem(LOCALE_STORAGE_KEY, normalized);
+  // Keep legacy key for backwards compatibility while old code paths are retired.
+  safeLocalStorage.setItem(LEGACY_LOCALE_STORAGE_KEY, normalized);
+
+  if (typeof document !== 'undefined') {
+    document.documentElement.lang = getHtmlLang(normalized);
+    document.documentElement.setAttribute('data-locale', normalized);
+    document.cookie = `${LOCALE_STORAGE_KEY}=${normalized}; path=/; max-age=31536000; samesite=lax`;
+    document.cookie = `${LEGACY_LOCALE_STORAGE_KEY}=${normalized}; path=/; max-age=31536000; samesite=lax`;
+  }
+
+  return normalized;
 }
 
-export function persistLocale(locale: SupportedLocale): void {
-  safeSet('locale', locale);
-  try {
-    document.cookie = `locale=${locale};path=/;max-age=31536000`;
-  } catch { /* ignore */ }
-}
+type TranslationMap<T> = Partial<Record<SupportedLocale, T>> & { 'en-US': T };
 
-// ─── Translation interfaces & maps ───────────────────────────────────────────
+export function pickLocaleCopy<T>(translations: TranslationMap<T>, locale: string | null | undefined): T {
+  const normalized = normalizeLocale(locale);
+  return translations[normalized] ?? translations['en-US'];
+}
 
 export interface SupportCopy {
+  badge: string;
   heading: string;
   subtitle: string;
-  tabs: { faq: string; tickets: string; new: string };
+  languageLabel: string;
+  faqTabLabel: string;
+  ticketsTabLabel: string;
+  newTicketTabLabel: string;
+  faqItems: Array<{ question: string; answer: string }>;
+  searchPlaceholder: string;
+  noFaqResults: string;
+  noTicketsMessage: string;
+  createTicketHint: string;
+  subjectPrefix: string;
+  ticketIdLabel: string;
+  supportTeamLabel: string;
+  youLabel: string;
+  selectTicketMessage: string;
+  connectPrompt: string;
+  subjectPlaceholder: string;
+  detailsPlaceholder: string;
+  submitTicketLabel: string;
 }
 
-const _en_support: SupportCopy = {
+const supportEnglish: SupportCopy = {
+  badge: '24/7 Support',
   heading: 'Help & Support Center',
   subtitle: 'Find answers, manage tickets, and get direct support from the VFIDE team.',
-  tabs: { faq: 'FAQ', tickets: 'My Tickets', new: 'New Ticket' },
+  languageLabel: 'Language',
+  faqTabLabel: 'FAQ',
+  ticketsTabLabel: 'My Tickets',
+  newTicketTabLabel: 'New Ticket',
+  faqItems: [
+    {
+      question: 'How do I connect my wallet?',
+      answer: 'Open the wallet menu, select your preferred wallet, and approve the VFIDE connection request.',
+    },
+    {
+      question: 'How does ProofScore work?',
+      answer: 'ProofScore rewards trustworthy activity, participation, and successful platform usage over time.',
+    },
+    {
+      question: 'How do I set up guardians?',
+      answer: 'Navigate to the guardians page, choose trusted contacts, and confirm the recovery configuration.',
+    },
+  ],
+  searchPlaceholder: 'Search for answers...',
+  noFaqResults: 'No matching FAQs found.',
+  noTicketsMessage: 'No tickets yet. Create one from the new ticket tab.',
+  createTicketHint: 'Choose a ticket to see the conversation.',
+  subjectPrefix: 'Subject',
+  ticketIdLabel: 'Ticket ID',
+  supportTeamLabel: 'Support Team',
+  youLabel: 'You',
+  selectTicketMessage: 'Choose a ticket to see the conversation.',
+  connectPrompt: 'Connect your wallet to create support tickets.',
+  subjectPlaceholder: 'Brief summary of your issue',
+  detailsPlaceholder: 'Describe what happened, what you expected, and any transaction IDs.',
+  submitTicketLabel: 'Submit Ticket',
 };
+
 export const SUPPORT_TRANSLATIONS: TranslationMap<SupportCopy> = {
-  'en-US': _en_support, 'en-GB': _en_support, 'es-ES': { heading: 'Centro de ayuda y soporte', subtitle: 'Encuentra respuestas, administra tickets y recibe ayuda directa del equipo VFIDE.', tabs: { faq: 'FAQ', tickets: 'Mis tickets', new: 'Nuevo ticket' } },
-  'fr-FR': _en_support, 'de-DE': _en_support, 'ar-SA': _en_support, 'fil-PH': _en_support,
-  'hi-IN': _en_support, 'id-ID': _en_support, 'th-TH': _en_support, 'ja-JP': _en_support, 'zh-CN': _en_support,
+  'en-US': supportEnglish,
+  'en-GB': supportEnglish,
+  'es-ES': {
+    badge: 'Soporte 24/7',
+    heading: 'Centro de ayuda y soporte',
+    subtitle: 'Encuentra respuestas, administra tickets y recibe ayuda directa del equipo VFIDE.',
+    languageLabel: 'Language',
+    faqTabLabel: 'FAQ',
+    ticketsTabLabel: 'Mis tickets',
+    newTicketTabLabel: 'Nuevo ticket',
+    faqItems: [
+      {
+        question: '¿Cómo conecto mi billetera?',
+        answer: 'Abre el menú de billetera, elige tu billetera preferida y aprueba la solicitud de conexión de VFIDE.',
+      },
+      {
+        question: '¿Cómo funciona ProofScore?',
+        answer: 'ProofScore recompensa la actividad confiable, la participación y el uso exitoso de la plataforma con el tiempo.',
+      },
+      {
+        question: '¿Cómo configuro guardians?',
+        answer: 'Ve a la página de guardians, elige contactos de confianza y confirma la configuración de recuperación.',
+      },
+    ],
+    searchPlaceholder: 'Buscar respuestas...',
+    noFaqResults: 'No se encontraron preguntas frecuentes.',
+    noTicketsMessage: 'Aún no tienes tickets. Crea uno desde la pestaña de nuevo ticket.',
+    createTicketHint: 'Elige un ticket para ver la conversación.',
+    subjectPrefix: 'Asunto',
+    ticketIdLabel: 'ID del ticket',
+    supportTeamLabel: 'Equipo de soporte',
+    youLabel: 'Tú',
+    selectTicketMessage: 'Elige un ticket para ver la conversación.',
+    connectPrompt: 'Conecta tu billetera para crear tickets de soporte.',
+    subjectPlaceholder: 'Resumen breve del problema',
+    detailsPlaceholder: 'Describe qué ocurrió, qué esperabas y cualquier ID de transacción.',
+    submitTicketLabel: 'Enviar ticket',
+  },
+  'fr-FR': {
+    badge: 'Assistance 24/7',
+    heading: 'Centre d’aide et d’assistance',
+    subtitle: 'Trouvez des réponses, gérez vos tickets et obtenez un support direct de l’équipe VFIDE.',
+    languageLabel: 'Language',
+    faqTabLabel: 'FAQ',
+    ticketsTabLabel: 'Mes tickets',
+    newTicketTabLabel: 'Nouveau ticket',
+    faqItems: supportEnglish.faqItems,
+    searchPlaceholder: 'Rechercher des réponses...',
+    noFaqResults: supportEnglish.noFaqResults,
+    noTicketsMessage: supportEnglish.noTicketsMessage,
+    createTicketHint: supportEnglish.createTicketHint,
+    subjectPrefix: supportEnglish.subjectPrefix,
+    ticketIdLabel: supportEnglish.ticketIdLabel,
+    supportTeamLabel: supportEnglish.supportTeamLabel,
+    youLabel: supportEnglish.youLabel,
+    selectTicketMessage: supportEnglish.selectTicketMessage,
+    connectPrompt: supportEnglish.connectPrompt,
+    subjectPlaceholder: supportEnglish.subjectPlaceholder,
+    detailsPlaceholder: supportEnglish.detailsPlaceholder,
+    submitTicketLabel: supportEnglish.submitTicketLabel,
+  },
+  'de-DE': {
+    badge: '24/7-Support',
+    heading: 'Hilfe- und Supportcenter',
+    subtitle: 'Finden Sie Antworten, verwalten Sie Tickets und erhalten Sie direkten Support vom VFIDE-Team.',
+    languageLabel: 'Language',
+    faqTabLabel: 'FAQ',
+    ticketsTabLabel: 'Meine Tickets',
+    newTicketTabLabel: 'Neues Ticket',
+    faqItems: supportEnglish.faqItems,
+    searchPlaceholder: 'Nach Antworten suchen...',
+    noFaqResults: supportEnglish.noFaqResults,
+    noTicketsMessage: supportEnglish.noTicketsMessage,
+    createTicketHint: supportEnglish.createTicketHint,
+    subjectPrefix: supportEnglish.subjectPrefix,
+    ticketIdLabel: supportEnglish.ticketIdLabel,
+    supportTeamLabel: supportEnglish.supportTeamLabel,
+    youLabel: supportEnglish.youLabel,
+    selectTicketMessage: supportEnglish.selectTicketMessage,
+    connectPrompt: supportEnglish.connectPrompt,
+    subjectPlaceholder: supportEnglish.subjectPlaceholder,
+    detailsPlaceholder: supportEnglish.detailsPlaceholder,
+    submitTicketLabel: supportEnglish.submitTicketLabel,
+  },
 };
 
-export interface NavCopy {
-  home: string; pay: string; merchant: string; social: string; more: string;
-  close: string; search: string; openHub: string;
+export interface HomeCopy {
+  liveBadge: string;
+  heroPrefix: string;
+  heroAccent: string;
+  heroDescription: string;
+  trustPoints: [string, string, string, string];
+  primaryCta: string;
+  secondaryCta: string;
+  sliderHint: string;
+  statsKicker: string;
+  statsTitlePrefix: string;
+  statsTitleAccent: string;
+  merchantFeesLabel: string;
+  maxProofScoreLabel: string;
+  burnRateLabel: string;
+  sanctumFundLabel: string;
 }
-const _en_nav: NavCopy = { home: 'Home', pay: 'Pay', merchant: 'Merchant', social: 'Social', more: 'More', close: 'Close', search: 'Search anywhere...', openHub: 'Open full hub' };
-export const NAV_TRANSLATIONS: TranslationMap<NavCopy> = {
-  'en-US': _en_nav, 'en-GB': _en_nav,
-  'es-ES': { home: 'Inicio', pay: 'Pagar', merchant: 'Comerciante', social: 'Social', more: 'Más', close: 'Cerrar', search: 'Buscar...', openHub: 'Abrir hub completo' },
-  'fr-FR': { home: 'Accueil', pay: 'Payer', merchant: 'Marchand', social: 'Social', more: 'Plus', close: 'Fermer', search: 'Rechercher...', openHub: 'Ouvrir le hub' },
-  'de-DE': { home: 'Start', pay: 'Zahlen', merchant: 'Händler', social: 'Sozial', more: 'Mehr', close: 'Schließen', search: 'Suchen...', openHub: 'Hub öffnen' },
-  'ar-SA': { home: 'الرئيسية', pay: 'ادفع', merchant: 'التاجر', social: 'اجتماعي', more: 'المزيد', close: 'إغلاق', search: 'ابحث...', openHub: 'فتح المركز' },
-  'fil-PH': { home: 'Tahanan', pay: 'Bayad', merchant: 'Merchant', social: 'Sosyal', more: 'Higit pa', close: 'Isara', search: 'Maghanap...', openHub: 'Buksan ang hub' },
-  'hi-IN': { home: 'होम', pay: 'भुगतान', merchant: 'व्यापारी', social: 'सामाजिक', more: 'अधिक', close: 'बंद करें', search: 'खोजें...', openHub: 'हब खोलें' },
-  'id-ID': { home: 'Beranda', pay: 'Bayar', merchant: 'Pedagang', social: 'Sosial', more: 'Lainnya', close: 'Tutup', search: 'Cari...', openHub: 'Buka hub' },
-  'th-TH': { home: 'หน้าแรก', pay: 'ชำระเงิน', merchant: 'ผู้ค้า', social: 'โซเชียล', more: 'เพิ่มเติม', close: 'ปิด', search: 'ค้นหา...', openHub: 'เปิดฮับ' },
-  'ja-JP': { home: 'ホーム', pay: '支払い', merchant: 'マーチャント', social: 'ソーシャル', more: 'もっと', close: '閉じる', search: '検索...', openHub: 'ハブを開く' },
-  'zh-CN': { home: '首页', pay: '付款', merchant: '商家', social: '社交', more: '更多', close: '关闭', search: '搜索...', openHub: '打开中心' },
+
+const homeEnglish: HomeCopy = {
+  liveBadge: 'Trust-Scored Payments · Now on Base',
+  heroPrefix: 'Keep what you',
+  heroAccent: 'earn',
+  heroDescription: 'Zero merchant fees. Guardian-protected self-custody. Reputation that pays you back. Built for everyone the platforms forgot.',
+  trustPoints: [
+    'Non-custodial: your keys, your coins',
+    'Open-source contracts on Base',
+    'Guardian multi-sig recovery',
+    'On-chain audit trail for every tx',
+  ],
+  primaryCta: 'Start selling',
+  secondaryCta: 'Browse marketplace',
+  sliderHint: 'Try the slider — drag your trust score and watch the fee curve respond in real time.',
+  statsKicker: 'Protocol stats',
+  statsTitlePrefix: 'Numbers that',
+  statsTitleAccent: 'matter',
+  merchantFeesLabel: 'Merchant Fees',
+  maxProofScoreLabel: 'Max ProofScore',
+  burnRateLabel: 'Burn Rate',
+  sanctumFundLabel: 'Sanctum Fund',
 };
 
-export interface StubCopy {
-  comingSoon: string; description: string; notifyMe: string; backToHome: string;
-}
-const _en_stub: StubCopy = { comingSoon: 'Coming Soon', description: 'This feature is under active development and will be available on mainnet launch.', notifyMe: 'Notify Me', backToHome: 'Back to Home' };
-export const STUB_TRANSLATIONS: TranslationMap<StubCopy> = {
-  'en-US': _en_stub, 'en-GB': _en_stub, 'es-ES': _en_stub, 'fr-FR': _en_stub, 'de-DE': _en_stub,
-  'ar-SA': _en_stub, 'fil-PH': _en_stub, 'hi-IN': _en_stub, 'id-ID': _en_stub,
-  'th-TH': _en_stub, 'ja-JP': _en_stub, 'zh-CN': _en_stub,
-};
-
-export interface AboutCopy { heading: string; subtitle: string; mission: string; }
-const _en_about: AboutCopy = { heading: 'About VFIDE', subtitle: 'A non-custodial payment protocol built for the world\'s unbanked.', mission: 'Financial infrastructure that works for people, not against them.' };
-export const ABOUT_TRANSLATIONS: TranslationMap<AboutCopy> = {
-  'en-US': _en_about, 'en-GB': _en_about, 'es-ES': _en_about, 'fr-FR': _en_about, 'de-DE': _en_about,
-  'ar-SA': _en_about, 'fil-PH': _en_about, 'hi-IN': _en_about, 'id-ID': _en_about,
-  'th-TH': _en_about, 'ja-JP': _en_about, 'zh-CN': _en_about,
-};
-
-export interface HomeCopy { hero: string; subtitle: string; cta: string; homeAriaShop: string; homeAriaSell: string; }
-const _en_home: HomeCopy = { hero: 'Pay anyone. Zero merchant fees.', subtitle: 'The non-custodial payment protocol built for the world\'s unbanked — powered by ProofScore.', cta: 'Get started', homeAriaShop: 'Browse the marketplace', homeAriaSell: 'Set up your merchant account' };
 export const HOME_TRANSLATIONS: TranslationMap<HomeCopy> = {
-  'en-US': _en_home,
-  'en-GB': { hero: 'Pay anyone. Zero merchant fees.', subtitle: 'The non-custodial payment protocol built for the world\'s unbanked — powered by ProofScore.', cta: 'Get started', homeAriaShop: 'Browse the marketplace', homeAriaSell: 'Set up your merchant account' },
-  'es-ES': { hero: 'Paga a cualquiera. Sin comisiones para comerciantes.', subtitle: 'El protocolo de pago no custodio para los no bancarizados del mundo — impulsado por ProofScore.', cta: 'Comenzar', homeAriaShop: 'Explorar el mercado', homeAriaSell: 'Configurar cuenta de comerciante' },
-  'fr-FR': { hero: 'Payez n\'importe qui. Zéro frais marchand.', subtitle: 'Le protocole de paiement non-custodial pour les non-bancarisés du monde — propulsé par ProofScore.', cta: 'Commencer', homeAriaShop: 'Parcourir le marché', homeAriaSell: 'Créer un compte marchand' },
-  'de-DE': { hero: 'Zahle jeden. Null Händlergebühren.', subtitle: 'Das nicht-verwahrende Zahlungsprotokoll für die Unbanked weltweit — betrieben von ProofScore.', cta: 'Loslegen', homeAriaShop: 'Marktplatz durchsuchen', homeAriaSell: 'Händlerkonto einrichten' },
-  'ar-SA': { hero: 'ادفع لأي شخص. بدون رسوم على التجار.', subtitle: 'بروتوكول الدفع غير الوصائي للمحرومين من الخدمات المصرفية — مدعوم بـ ProofScore.', cta: 'ابدأ الآن', homeAriaShop: 'تصفح السوق', homeAriaSell: 'إعداد حساب التاجر' },
-  'fil-PH': { hero: 'Magbayad sa sinuman. Walang bayad para sa mga merchant.', subtitle: 'Ang non-custodial na protocol ng pagbabayad para sa mga walang bangko — pinapagana ng ProofScore.', cta: 'Magsimula', homeAriaShop: 'I-browse ang marketplace', homeAriaSell: 'I-setup ang merchant account' },
-  'hi-IN': { hero: 'किसी को भी भुगतान करें। शून्य व्यापारी शुल्क।', subtitle: 'दुनिया के बैंक रहित लोगों के लिए नॉन-कस्टोडियल पेमेंट प्रोटोकॉल — ProofScore द्वारा संचालित।', cta: 'शुरू करें', homeAriaShop: 'मार्केटप्लेस देखें', homeAriaSell: 'व्यापारी खाता सेट करें' },
-  'id-ID': { hero: 'Bayar siapa saja. Nol biaya pedagang.', subtitle: 'Protokol pembayaran non-kustodial untuk yang tidak memiliki rekening bank — didukung ProofScore.', cta: 'Mulai', homeAriaShop: 'Jelajahi marketplace', homeAriaSell: 'Buat akun merchant' },
-  'th-TH': { hero: 'จ่ายให้ใครก็ได้ ไม่มีค่าธรรมเนียมผู้ค้า', subtitle: 'โปรโตคอลการชำระเงินแบบไม่ฝากทรัพย์สำหรับผู้ที่ไม่มีบัญชีธนาคาร — ขับเคลื่อนด้วย ProofScore', cta: 'เริ่มต้น', homeAriaShop: 'เรียกดูตลาด', homeAriaSell: 'ตั้งค่าบัญชีผู้ค้า' },
-  'ja-JP': { hero: '誰にでも支払える。マーチャント手数料ゼロ。', subtitle: '銀行口座を持たない世界の人々のための非カストディアル決済プロトコル — ProofScore搭載。', cta: '始める', homeAriaShop: 'マーケットプレイスを見る', homeAriaSell: 'マーチャントアカウント設定' },
-  'zh-CN': { hero: '向任何人付款。商家零手续费。', subtitle: '为全球无银行账户人群打造的非托管支付协议 — 由 ProofScore 驱动。', cta: '开始使用', homeAriaShop: '浏览市场', homeAriaSell: '设置商家账户' },
+  'en-US': homeEnglish,
+  'en-GB': homeEnglish,
+  'es-ES': {
+    liveBadge: 'Pagos con trust score · Ya disponible en Base',
+    heroPrefix: 'Conserva lo que',
+    heroAccent: 'ganas',
+    heroDescription: 'Cero comisiones para comerciantes. Autocustodia protegida por guardians. Reputación que te devuelve valor. Diseñado para quienes las plataformas olvidaron.',
+    trustPoints: [
+      'Sin custodia: tus llaves, tus fondos',
+      'Contratos de código abierto en Base',
+      'Recuperación multi-sig con guardians',
+      'Rastreo on-chain para cada transacción',
+    ],
+    primaryCta: 'Empezar a vender',
+    secondaryCta: 'Explorar marketplace',
+    sliderHint: 'Prueba el deslizador: mueve tu trust score y observa cómo responde la curva de comisiones en tiempo real.',
+    statsKicker: 'Estadísticas del protocolo',
+    statsTitlePrefix: 'Números que',
+    statsTitleAccent: 'importan',
+    merchantFeesLabel: 'Comisiones de comerciantes',
+    maxProofScoreLabel: 'ProofScore máximo',
+    burnRateLabel: 'Tasa de quema',
+    sanctumFundLabel: 'Fondo Sanctum',
+  },
+  'fr-FR': {
+    liveBadge: 'Paiements scorés par la confiance · Désormais sur Base',
+    heroPrefix: 'Gardez ce que vous',
+    heroAccent: 'gagnez',
+    heroDescription: 'Zéro frais marchand. Auto-garde protégée par guardians. Une réputation qui vous récompense. Conçu pour celles et ceux que les plateformes ont oubliés.',
+    trustPoints: [
+      'Non custodial : vos clés, vos fonds',
+      'Contrats open source sur Base',
+      'Récupération multi-signature avec guardians',
+      'Traçabilité on-chain pour chaque transaction',
+    ],
+    primaryCta: 'Commencer à vendre',
+    secondaryCta: 'Parcourir le marketplace',
+    sliderHint: 'Testez le curseur : ajustez votre trust score et observez la courbe des frais en temps réel.',
+    statsKicker: 'Statistiques du protocole',
+    statsTitlePrefix: 'Des chiffres qui',
+    statsTitleAccent: 'comptent',
+    merchantFeesLabel: 'Frais marchands',
+    maxProofScoreLabel: 'ProofScore max',
+    burnRateLabel: 'Taux de burn',
+    sanctumFundLabel: 'Fonds Sanctum',
+  },
+  'de-DE': {
+    liveBadge: 'Vertrauensbasierte Zahlungen · Jetzt auf Base',
+    heroPrefix: 'Behalte, was du',
+    heroAccent: 'verdienst',
+    heroDescription: 'Keine Händlergebühren. Guardian-geschützte Selbstverwahrung. Reputation, die sich auszahlt. Für alle gebaut, die Plattformen vergessen haben.',
+    trustPoints: [
+      'Non-custodial: deine Keys, deine Coins',
+      'Open-Source-Verträge auf Base',
+      'Guardian Multi-Sig Recovery',
+      'On-Chain-Audit-Track für jede Transaktion',
+    ],
+    primaryCta: 'Verkauf starten',
+    secondaryCta: 'Marketplace öffnen',
+    sliderHint: 'Teste den Regler: Bewege deinen Trust Score und sieh, wie die Gebührenkurve in Echtzeit reagiert.',
+    statsKicker: 'Protokoll-Statistiken',
+    statsTitlePrefix: 'Zahlen, die',
+    statsTitleAccent: 'zählen',
+    merchantFeesLabel: 'Händlergebühren',
+    maxProofScoreLabel: 'Max ProofScore',
+    burnRateLabel: 'Burn Rate',
+    sanctumFundLabel: 'Sanctum-Fonds',
+  },
 };
-
-export interface MerchantCopy { heading: string; subtitle: string; getStarted: string; }
-const _en_merchant: MerchantCopy = { heading: 'Merchant Hub', subtitle: 'Sell anything. Keep 100% of every payment.', getStarted: 'Get started' };
-export const MERCHANT_TRANSLATIONS: TranslationMap<MerchantCopy> = {
-  'en-US': _en_merchant, 'en-GB': _en_merchant,
-  'es-ES': { heading: 'Centro de Comerciantes', subtitle: 'Vende lo que quieras. Conserva el 100% de cada pago.', getStarted: 'Comenzar' },
-  'fr-FR': { heading: 'Espace Marchand', subtitle: 'Vendez n\'importe quoi. Gardez 100% de chaque paiement.', getStarted: 'Commencer' },
-  'de-DE': { heading: 'Händler-Hub', subtitle: 'Verkaufe alles. Behalte 100% jeder Zahlung.', getStarted: 'Loslegen' },
-  'ar-SA': { heading: 'مركز التجار', subtitle: 'بع أي شيء. احتفظ بـ 100٪ من كل دفعة.', getStarted: 'ابدأ' },
-  'fil-PH': { heading: 'Merchant Hub', subtitle: 'Ibenta ang anumang bagay. Itago ang 100% ng bawat bayad.', getStarted: 'Magsimula' },
-  'hi-IN': { heading: 'मर्चेंट हब', subtitle: 'कुछ भी बेचें। हर भुगतान का 100% अपने पास रखें।', getStarted: 'शुरू करें' },
-  'id-ID': { heading: 'Hub Merchant', subtitle: 'Jual apa saja. Simpan 100% setiap pembayaran.', getStarted: 'Mulai' },
-  'th-TH': { heading: 'ศูนย์ผู้ค้า', subtitle: 'ขายอะไรก็ได้ รับ 100% ของทุกการชำระเงิน', getStarted: 'เริ่มต้น' },
-  'ja-JP': { heading: 'マーチャントハブ', subtitle: '何でも売れる。全ての支払いの100%を受け取れる。', getStarted: '始める' },
-  'zh-CN': { heading: '商家中心', subtitle: '销售任何商品。保留每笔付款的100%。', getStarted: '开始使用' },
-};
-
-export interface OnboardingCopy { heading: string; subtitle: string; launch: string; reset: string; }
-const _en_onboarding: OnboardingCopy = { heading: 'Setup Wizard', subtitle: 'Get started with VFIDE in under 2 minutes.', launch: 'Open wizard', reset: 'Reset & restart' };
-export const ONBOARDING_TRANSLATIONS: TranslationMap<OnboardingCopy> = {
-  'en-US': _en_onboarding, 'en-GB': _en_onboarding, 'es-ES': _en_onboarding, 'fr-FR': _en_onboarding, 'de-DE': _en_onboarding,
-  'ar-SA': _en_onboarding, 'fil-PH': _en_onboarding, 'hi-IN': _en_onboarding, 'id-ID': _en_onboarding,
-  'th-TH': _en_onboarding, 'ja-JP': _en_onboarding, 'zh-CN': _en_onboarding,
-};
-
-export interface PayCopy { heading: string; subtitle: string; }
-const _en_pay: PayCopy = { heading: 'Send Payment', subtitle: 'Pay any wallet. Zero merchant fees.' };
-export const PAY_TRANSLATIONS: TranslationMap<PayCopy> = {
-  'en-US': _en_pay, 'en-GB': _en_pay, 'es-ES': _en_pay, 'fr-FR': _en_pay, 'de-DE': _en_pay,
-  'ar-SA': _en_pay, 'fil-PH': _en_pay, 'hi-IN': _en_pay, 'id-ID': _en_pay,
-  'th-TH': _en_pay, 'ja-JP': _en_pay, 'zh-CN': _en_pay,
-};
-
-export interface ProofscoreCopy { heading: string; subtitle: string; }
-const _en_proofscore: ProofscoreCopy = { heading: 'Your ProofScore', subtitle: 'On-chain reputation that earns you cheaper fees.' };
-export const PROOFSCORE_TRANSLATIONS: TranslationMap<ProofscoreCopy> = {
-  'en-US': _en_proofscore, 'en-GB': _en_proofscore,
-  'es-ES': { heading: 'Tu ProofScore', subtitle: 'Reputación on-chain que te consigue comisiones más bajas.' },
-  'fr-FR': { heading: 'Votre ProofScore', subtitle: 'Réputation on-chain qui vous permet d\'obtenir des frais moins élevés.' },
-  'de-DE': { heading: 'Dein ProofScore', subtitle: 'On-Chain-Reputation, die dir günstigere Gebühren einbringt.' },
-  'ar-SA': { heading: 'درجة ProofScore الخاصة بك', subtitle: 'سمعة على السلسلة تمنحك رسوماً أقل.' },
-  'fil-PH': _en_proofscore, 'hi-IN': { heading: 'आपका ProofScore', subtitle: 'ऑन-चेन प्रतिष्ठा जो आपको कम शुल्क दिलाती है।' },
-  'id-ID': _en_proofscore, 'th-TH': _en_proofscore,
-  'ja-JP': { heading: 'あなたのProofScore', subtitle: 'オンチェーンの信頼スコアで手数料を下げよう。' },
-  'zh-CN': { heading: '您的 ProofScore', subtitle: '链上声誉，助您获得更低手续费。' },
-};
-
-export interface RemittanceCopy { heading: string; subtitle: string; }
-const _en_remittance: RemittanceCopy = { heading: 'Send Money Home', subtitle: 'International transfers at near-zero cost.' };
-export const REMITTANCE_TRANSLATIONS: TranslationMap<RemittanceCopy> = {
-  'en-US': _en_remittance, 'en-GB': _en_remittance, 'es-ES': _en_remittance, 'fr-FR': _en_remittance, 'de-DE': _en_remittance,
-  'ar-SA': _en_remittance, 'fil-PH': _en_remittance, 'hi-IN': _en_remittance, 'id-ID': _en_remittance,
-  'th-TH': _en_remittance, 'ja-JP': _en_remittance, 'zh-CN': _en_remittance,
-};
-
-export interface SecurityCenterCopy { heading: string; subtitle: string; }
-const _en_security: SecurityCenterCopy = { heading: 'Security Center', subtitle: 'Monitor sessions, signing keys, and protocol activity.' };
-export const SECURITY_CENTER_TRANSLATIONS: TranslationMap<SecurityCenterCopy> = {
-  'en-US': _en_security, 'en-GB': _en_security, 'es-ES': _en_security, 'fr-FR': _en_security, 'de-DE': _en_security,
-  'ar-SA': _en_security, 'fil-PH': _en_security, 'hi-IN': _en_security, 'id-ID': _en_security,
-  'th-TH': _en_security, 'ja-JP': _en_security, 'zh-CN': _en_security,
-};
-
-export interface DashboardCopy { heading: string; subtitle: string; }
-const _en_dashboard: DashboardCopy = { heading: 'Dashboard', subtitle: 'Your VFIDE activity at a glance.' };
-export const DASHBOARD_TRANSLATIONS: TranslationMap<DashboardCopy> = {
-  'en-US': _en_dashboard, 'en-GB': _en_dashboard, 'es-ES': { heading: 'Panel de control', subtitle: 'Tu actividad VFIDE de un vistazo.' },
-  'fr-FR': { heading: 'Tableau de bord', subtitle: 'Votre activité VFIDE en un coup d\'œil.' },
-  'de-DE': { heading: 'Dashboard', subtitle: 'Ihre VFIDE-Aktivität auf einen Blick.' },
-  'ar-SA': { heading: 'لوحة التحكم', subtitle: 'نشاطك في VFIDE بنظرة واحدة.' },
-  'fil-PH': { heading: 'Dashboard', subtitle: 'Ang iyong aktibidad sa VFIDE sa isang tingin.' },
-  'hi-IN': { heading: 'डैशबोर्ड', subtitle: 'एक नजर में आपकी VFIDE गतिविधि।' },
-  'id-ID': { heading: 'Dasbor', subtitle: 'Aktivitas VFIDE Anda sekilas.' },
-  'th-TH': { heading: 'แดชบอร์ด', subtitle: 'กิจกรรม VFIDE ของคุณในมุมมองเดียว' },
-  'ja-JP': { heading: 'ダッシュボード', subtitle: 'VFIDEの活動を一目で確認。' },
-  'zh-CN': { heading: '仪表板', subtitle: '一览您的 VFIDE 活动。' },
-};
-
-export interface BenefitsCopy { heading: string; subtitle: string; }
-const _en_benefits: BenefitsCopy = { heading: 'Benefits & Rewards', subtitle: 'Earn more as your ProofScore grows.' };
-export const BENEFITS_TRANSLATIONS: TranslationMap<BenefitsCopy> = {
-  'en-US': _en_benefits, 'en-GB': _en_benefits,
-  'es-ES': { heading: 'Beneficios y recompensas', subtitle: 'Gana más a medida que crece tu ProofScore.' },
-  'fr-FR': { heading: 'Avantages et récompenses', subtitle: 'Gagnez plus à mesure que votre ProofScore augmente.' },
-  'de-DE': { heading: 'Vorteile & Belohnungen', subtitle: 'Verdiene mehr, je höher dein ProofScore steigt.' },
-  'ar-SA': { heading: 'المزايا والمكافآت', subtitle: 'اكسب أكثر كلما نما رصيد الإثبات الخاص بك.' },
-  'fil-PH': { heading: 'Mga Benepisyo at Gantimpala', subtitle: 'Kumita ng higit pa habang lumalaki ang iyong ProofScore.' },
-  'hi-IN': { heading: 'लाभ और पुरस्कार', subtitle: 'आपका ProofScore बढ़ने के साथ अधिक कमाएं।' },
-  'id-ID': { heading: 'Manfaat & Hadiah', subtitle: 'Dapatkan lebih banyak seiring ProofScore Anda bertumbuh.' },
-  'th-TH': { heading: 'สิทธิประโยชน์และรางวัล', subtitle: 'รับมากขึ้นเมื่อ ProofScore ของคุณเติบโต' },
-  'ja-JP': { heading: 'ベネフィットと報酬', subtitle: 'ProofScoreが上がるほど多く獲得できます。' },
-  'zh-CN': { heading: '福利与奖励', subtitle: '随着 ProofScore 提升获得更多收益。' },
-};
-
-export interface GovernanceCopy { heading: string; subtitle: string; }
-const _en_governance: GovernanceCopy = { heading: 'Governance', subtitle: 'Vote on proposals. Shape the protocol.' };
-export const GOVERNANCE_TRANSLATIONS: TranslationMap<GovernanceCopy> = {
-  'en-US': _en_governance, 'en-GB': _en_governance,
-  'es-ES': { heading: 'Gobernanza', subtitle: 'Vota propuestas. Da forma al protocolo.' },
-  'fr-FR': { heading: 'Gouvernance', subtitle: 'Votez les propositions. Façonnez le protocole.' },
-  'de-DE': { heading: 'Governance', subtitle: 'Stimme über Vorschläge ab. Gestalte das Protokoll.' },
-  'ar-SA': { heading: 'الحوكمة', subtitle: 'صوّت على المقترحات. شكّل البروتوكول.' },
-  'fil-PH': { heading: 'Pamamahala', subtitle: 'Bumoto sa mga panukala. Hubugin ang protokol.' },
-  'hi-IN': { heading: 'शासन', subtitle: 'प्रस्तावों पर मतदान करें। प्रोटोकॉल को आकार दें।' },
-  'id-ID': { heading: 'Tata Kelola', subtitle: 'Voting proposal. Bentuk protokolnya.' },
-  'th-TH': { heading: 'การกำกับดูแล', subtitle: 'ลงคะแนนข้อเสนอ กำหนดทิศทางโปรโตคอล' },
-  'ja-JP': { heading: 'ガバナンス', subtitle: '提案に投票してプロトコルを形成する。' },
-  'zh-CN': { heading: '治理', subtitle: '对提案投票，塑造协议走向。' },
-};
-
-
-// ── Universal translation hook (re-exported for convenience) ────────────────
-export { useT } from './i18n/useT';
-export type { TranslationKeys } from './i18n/useT';

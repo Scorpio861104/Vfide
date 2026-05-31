@@ -8,6 +8,7 @@ import { ArrowLeft, Heart } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { Footer } from '@/components/layout/Footer';
 import { LoyaltyProgram, type LoyaltyConfig } from '@/components/loyalty/LoyaltyProgram';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 const DEFAULT_CONFIG: LoyaltyConfig = {
   enabled: true,
@@ -19,6 +20,9 @@ const DEFAULT_CONFIG: LoyaltyConfig = {
 };
 
 export default function MerchantLoyaltyPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address } = useAccount();
   const [config, setConfig] = useState<LoyaltyConfig>(DEFAULT_CONFIG);
   const [members, setMembers] = useState(0);

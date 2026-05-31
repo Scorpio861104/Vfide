@@ -35,10 +35,10 @@ export function ProofScoreChapter({ onComplete, onSkip }: ProofScoreChapterProps
   return (
     <ChapterShell
       chapter="proofScore"
-      description="ProofScore is your trust score on the protocol. The higher it is, the lower your fees and the more features open up — and you build it by transacting, paying back loans, and getting endorsements."
+      description="Building trust matters. ProofScore reflects responsible behavior across the ecosystem and can improve fees, participation, and merchant confidence."
       onPrimary={onComplete}
       onSkip={onSkip}
-      primaryLabel="Got it"
+      primaryLabel="Continue"
     >
       <div className="space-y-4">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -86,8 +86,8 @@ export function ProofScoreChapter({ onComplete, onSkip }: ProofScoreChapterProps
         <div className="rounded-xl border border-accent/30 bg-accent/5 p-4 text-sm text-accent">
           <p className="font-semibold text-white">Your first payment</p>
           <p className="mt-1 text-white/80">
-            Each completed payment, on-time loan repayment, and merchant endorsement nudges your
-            score up. Find a merchant, scan their QR or open their checkout link, and pay.
+            Positive participation improves your standing over time. Complete payments, build trusted
+            interactions, and use protocol features responsibly to strengthen your score.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <Link

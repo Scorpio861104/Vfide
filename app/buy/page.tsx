@@ -10,6 +10,7 @@ const BuyTab = _dynamic(() => import('./components/BuyTab').then(m => ({ default
 import { HistoryTab } from './components/HistoryTab';
 const SwapTab = _dynamic(() => import('./components/SwapTab').then(m => ({ default: m.SwapTab })), { ssr: false });
 import { ShoppingCart, ArrowLeftRight, Clock } from 'lucide-react';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 type TabId = 'buy' | 'swap' | 'history';
 
@@ -20,6 +21,9 @@ const TABS = [
 ];
 
 export default function BuyPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [activeTab, setActiveTab] = useState<TabId>('buy');
 
   return (

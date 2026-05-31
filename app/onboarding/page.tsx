@@ -11,21 +11,22 @@ export const dynamic = 'force-dynamic';
  * everything else (it auto-mounts via WizardMount in ClientLayout).
  */
 
-import { Suspense, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { m, LazyMotion, domAnimation } from 'framer-motion';
-import { Sparkles, ArrowRight, Power, ExternalLink, Smartphone, Key, ShieldCheck } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Sparkles, ArrowRight, Power } from 'lucide-react';
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { useAccount } from 'wagmi';
 
 import { Footer } from '@/components/layout/Footer';
 import { useWizardState } from '@/components/wizard';
 import { CHAPTERS } from '@/components/wizard';
-import { useLocale } from '@/hooks/useLocale';
-import { ONBOARDING_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
-import { PageSkeleton } from '@/components/layout/PageSkeleton';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
-function OnboardingPageContent() {
+export default function OnboardingPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isConnected } = useAccount();
@@ -56,9 +57,8 @@ function OnboardingPageContent() {
   const hasProgress = completedCount > 0 || wizard.state.skippedChapters.length > 0;
 
   return (
-    <LazyMotion features={domAnimation}>
-      <>
-      <m.div
+    <>
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="min-h-screen bg-zinc-950 md:pt-[3.5rem] relative overflow-hidden"
@@ -73,68 +73,36 @@ function OnboardingPageContent() {
         <div className="grid-pattern pointer-events-none absolute inset-0 opacity-30" aria-hidden="true" />
 
         <div className="container mx-auto max-w-3xl px-4 pt-16 pb-16 relative z-10">
-          <m.div
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="glass-card-premium p-8"
           >
             <div className="mb-6 flex items-center gap-3">
-              <div className="rounded-2xl bg-gradient-to-br from-accent/20 to-violet-500/20 border border-accent/20 p-3">
-                <Sparkles className="text-accent" size={24} aria-hidden />
+              <div className="rounded-2xl bg-gradient-to-br from-cyan-500/20 to-violet-500/20 border border-cyan-500/20 p-3">
+                <Sparkles className="text-cyan-300" size={24} aria-hidden />
               </div>
               <div>
                 <div className="badge-live mb-1 w-fit"><Sparkles size={10} /> Setup Wizard</div>
-                <h1 className="text-2xl font-black text-white tracking-tight">Setup Wizard</h1>
+                <h1 className="text-2xl font-black text-white tracking-tight">Welcome to VFIDE</h1>
                 <p className="text-sm text-zinc-400">
-                  A chapter-by-chapter walk through everything your vault needs.
+                  A guided setup for wallet connection, vault protection, trusted recovery, and secure payments.
                 </p>
               </div>
             </div>
 
             {!isConnected ? (
-              <div className="space-y-5">
+              <div className="space-y-4">
                 <p className="text-sm text-zinc-400">
-                  VFIDE uses a crypto wallet instead of a username and password — your
-                  wallet IS your account. You hold your own keys; no company controls your money.
+                  Connect your wallet to start setup. The first chapter creates your CardBound
+                  vault — everything after is skippable.
                 </p>
-
-                {/* No wallet yet? 3-step explainer */}
-                <div className="rounded-xl border border-white/8 bg-white/[0.02] p-4 space-y-3">
-                  <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">
-                    No wallet yet? Takes 2 minutes.
-                  </p>
-                  {[
-                    { icon: Smartphone, step: '1', text: 'Install Coinbase Wallet or MetaMask on your phone or browser.' },
-                    { icon: Key,        step: '2', text: 'Open the app and tap "Create new wallet". Write down your 12-word phrase and keep it safe.' },
-                    { icon: ShieldCheck, step: '3', text: "Come back here and tap \"Connect wallet\" below. That's it — no email, no KYC." },
-                  ].map(({ icon: Icon, step, text }) => (
-                    <div key={step} className="flex items-start gap-3">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent/15 text-xs font-bold text-accent">
-                        {step}
-                      </span>
-                      <div className="flex items-start gap-2">
-                        <Icon size={14} className="text-zinc-400 shrink-0 mt-0.5" aria-hidden="true" />
-                        <p className="text-sm text-zinc-300">{text}</p>
-                      </div>
-                    </div>
-                  ))}
-                  <a
-                    href="https://www.coinbase.com/wallet"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs text-accent hover:underline mt-1"
-                  >
-                    <ExternalLink size={11} aria-hidden="true" />
-                    Get Coinbase Wallet (free)
-                  </a>
-                </div>
-
                 <VfideConnectButton size="md" />
               </div>
             ) : (
               <div className="space-y-4">
                 {hasProgress && (
-                  <div className="rounded-xl border border-accent/20 bg-accent/5 p-4 text-sm text-accent">
+                  <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-4 text-sm text-cyan-100">
                     <p className="font-semibold text-white">Resuming where you left off</p>
                     <p className="mt-1 text-zinc-400">
                       {completedCount} of {totalChapters} chapters completed
@@ -172,21 +140,10 @@ function OnboardingPageContent() {
                 )}
               </div>
             )}
-          </m.div>
+          </motion.div>
         </div>
-      </m.div>
+      </motion.div>
       <Footer />
     </>
-  );
-}
-
-export default function OnboardingPage() {
-  const [locale] = useLocale();
-  const _copy = pickLocaleCopy(ONBOARDING_TRANSLATIONS, locale); // onboarding page i18n
-  return (
-    <Suspense fallback={<PageSkeleton />}>
-      <OnboardingPageContent />
-    </Suspense>
-    </LazyMotion>
   );
 }

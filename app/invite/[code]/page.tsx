@@ -6,8 +6,12 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { m, LazyMotion, domAnimation } from 'framer-motion';
 import { Gift, Shield, ArrowRight, Loader2 } from 'lucide-react';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function InvitePage() {
+  const { locale } = useLocale();
+  void locale;
+
   const params = useParams();
   const code = params?.code as string;
   const [status, setStatus] = useState<'loading' | 'valid' | 'invalid' | 'claimed'>('loading');

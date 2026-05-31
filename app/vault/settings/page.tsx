@@ -23,12 +23,15 @@ import { AppLockSettings } from '@/components/security/AppLockSettings'
 import { ErrorBoundary } from '@/components/error/ErrorBoundary'
 import { Vault, Shield, Settings, Sliders, Fingerprint, AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
-import { m, LazyMotion, domAnimation } from 'framer-motion'
+import { motion } from 'framer-motion'
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function VaultSettingsPage() {
+  const { locale } = useLocale();
+  void locale;
+
   return (
-    <LazyMotion features={domAnimation}>
-      <>
+    <>
       <div className="min-h-screen bg-gradient-to-b from-gray-950 to-black text-white md:pt-[3.5rem]">
         <div className="container mx-auto px-4 py-12 max-w-6xl">
           {/* Header */}
@@ -45,7 +48,7 @@ export default function VaultSettingsPage() {
           </div>
 
           {/* Emergency link — visible up top */}
-          <m.div
+          <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             className="mb-8"
@@ -63,11 +66,11 @@ export default function VaultSettingsPage() {
               </div>
               <span className="text-red-400 text-sm font-medium">Open →</span>
             </Link>
-          </m.div>
+          </motion.div>
 
           {/* Content Grid */}
           <div className="grid grid-cols-1 gap-8 mb-12">
-            <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
               <div className="flex items-center gap-2 mb-4">
                 <Settings className="w-6 h-6 text-purple-400" />
                 <h2 className="text-2xl font-bold">Transaction Controls</h2>
@@ -75,23 +78,23 @@ export default function VaultSettingsPage() {
               <ErrorBoundary>
                 <VaultSettingsPanel />
               </ErrorBoundary>
-            </m.div>
+            </motion.div>
 
-            <m.div
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 }}
             >
               <div className="flex items-center gap-2 mb-4">
-                <Sliders className="w-6 h-6 text-accent" />
+                <Sliders className="w-6 h-6 text-cyan-400" />
                 <h2 className="text-2xl font-bold">Spend Limits</h2>
               </div>
               <ErrorBoundary>
                 <SpendLimitsConfigurator />
               </ErrorBoundary>
-            </m.div>
+            </motion.div>
 
-            <m.div
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
@@ -103,9 +106,9 @@ export default function VaultSettingsPage() {
               <ErrorBoundary>
                 <GuardianManagementPanel />
               </ErrorBoundary>
-            </m.div>
+            </motion.div>
 
-            <m.div
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}
@@ -117,7 +120,7 @@ export default function VaultSettingsPage() {
               <ErrorBoundary>
                 <AppLockSettings />
               </ErrorBoundary>
-            </m.div>
+            </motion.div>
           </div>
 
           {/* Features Grid — CardBound features only */}
@@ -126,10 +129,10 @@ export default function VaultSettingsPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div className="text-center">
-                <div className="w-16 h-16 mx-auto mb-3 bg-accent/20 border-2 border-accent rounded-xl flex items-center justify-center">
+                <div className="w-16 h-16 mx-auto mb-3 bg-cyan-600/20 border-2 border-cyan-500 rounded-xl flex items-center justify-center">
                   <span className="text-3xl">🔑</span>
                 </div>
-                <div className="font-bold text-accent mb-2">Wallet Rotation</div>
+                <div className="font-bold text-cyan-400 mb-2">Wallet Rotation</div>
                 <div className="text-xs text-gray-400">
                   Move the active signer for the vault to a new wallet address with guardian approval and a timelock
                 </div>
