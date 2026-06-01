@@ -246,6 +246,12 @@ contract SubscriptionManager is ReentrancyGuard {
     uint16 public constant SUBSCRIPTION_PAYER_REWARD = 2;    // +0.2 per payment
     /// @notice SUBSCRIPTION_MERCHANT_REWARD
     uint16 public constant SUBSCRIPTION_MERCHANT_REWARD = 3; // +0.3 per payment
+    /// @notice SUBSCRIPTION_VOLUME_PER_REWARD
+    uint256 public constant SUBSCRIPTION_VOLUME_PER_REWARD = 10_000 * 1e18;
+    /// @notice subscriberRewardVolume
+    mapping(address => uint256) public subscriberRewardVolume;
+    /// @notice subMerchantRewardVolume
+    mapping(address => uint256) public subMerchantRewardVolume;
 
     /// @notice onlyDAO
     modifier onlyDAO() {
@@ -361,6 +367,7 @@ contract SubscriptionManager is ReentrancyGuard {
         string calldata memo
     ) external returns (uint256 subId) {
         if (merchant == address(0)) revert SM_InvalidMerchant();
+        if (merchant == msg.sender) revert SM_InvalidMerchant();
         if (amount == 0) revert SM_InvalidAmount();
         if (interval < 1 hours) revert SM_InvalidInterval();
 
@@ -515,15 +522,18 @@ contract SubscriptionManager is ReentrancyGuard {
     function emergencyCancel(uint256 subId) external onlyDAO {
         Subscription storage sub = subscriptions[subId];
         require(sub.active, "SM: already inactive");
-        require(pendingEmergencyCancelAt[subId] == 0, "SM: cancel already queued");
 
         if (address(emergencyBreaker) == address(0) || !emergencyBreaker.halted()) {
             revert SM_EmergencyNotActive();
         }
 
-        uint64 effectiveAt = uint64(block.timestamp) + EMERGENCY_CANCEL_DELAY;
-        pendingEmergencyCancelAt[subId] = effectiveAt;
-        emit EmergencyCancelQueued(subId, effectiveAt);
+        if (pendingEmergencyCancelAt[subId] != 0) {
+            delete pendingEmergencyCancelAt[subId];
+            emit EmergencyCancelRevoked(subId);
+        }
+
+        sub.active = false;
+        emit EmergencyCancelled(subId, msg.sender);
     }
 
     /// @notice applyEmergencyCancel

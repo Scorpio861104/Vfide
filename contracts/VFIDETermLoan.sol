@@ -1124,6 +1124,18 @@ contract VFIDETermLoan is ReentrancyGuard {
         }
 
         uint256 liabilityPer = guarantorLiabilityEach[id];
+        {
+            uint256 gCount = guarantors[id].length;
+            if (gCount > 0) {
+                uint256 principalOutstanding =
+                    l.principal > l.amountRepaid ? (l.principal - l.amountRepaid) : 0;
+                uint256 cappedPer =
+                    (principalOutstanding * GUARANTOR_LIABILITY_PCT) / (100 * gCount);
+                if (cappedPer < liabilityPer) {
+                    liabilityPer = cappedPer;
+                }
+            }
+        }
         address[] storage g = guarantors[id];
         uint256 totalThisRound = 0;
         uint256 skippedThisRound = 0;

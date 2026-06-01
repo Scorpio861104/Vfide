@@ -174,6 +174,8 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     uint256 public constant MAX_SWAP_PATH_LENGTH = 3;
     /// @notice REFUND_COMPLETION_WINDOW
     uint256 public constant REFUND_COMPLETION_WINDOW = 30 days;
+    /// @notice PAYMENT_VOLUME_PER_REWARD
+    uint256 public constant PAYMENT_VOLUME_PER_REWARD = 10_000 * 1e18;
     /// @notice MAX_PULL_PERMIT_DURATION
     uint64 public constant MAX_PULL_PERMIT_DURATION = 90 days;
     
@@ -316,6 +318,10 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     mapping(address => address) public pendingPayoutAddress;
     /// @notice pendingPayoutAddressEffectiveAt
     mapping(address => uint64) public pendingPayoutAddressEffectiveAt;
+    /// @notice merchantRewardVolume
+    mapping(address => uint256) public merchantRewardVolume;
+    /// @notice customerRewardVolume
+    mapping(address => uint256) public customerRewardVolume;
     /// @notice PayoutAddressProposed
     /// @param merchant merchant
     /// @param proposedAddress proposedAddress
@@ -1070,7 +1076,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
             PaymentChannel.IN_PERSON
         );
 
-        _rewardPaymentParticipants(customer, intent.merchant);
+        _rewardPaymentParticipants(customer, intent.merchant, intent.amount);
         _logEv(customer, "m_pay", intent.amount, orderId);
     }
     // slither-disable-end reentrancy-no-eth
@@ -1293,7 +1299,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
             channel
         );
 
-        _rewardPaymentParticipants(customer, merchant);
+        _rewardPaymentParticipants(customer, merchant, amount);
         
         _logEv(customer, "m_pay", amount, orderId);
     }
@@ -1415,10 +1421,23 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     /// @notice _rewardPaymentParticipants
     /// @param customer customer
     /// @param merchant merchant
-    function _rewardPaymentParticipants(address customer, address merchant) internal {
+    function _rewardPaymentParticipants(address customer, address merchant, uint256 amount) internal {
         if (address(seer) == address(0)) return;
-        try seer.reward(merchant, 3, "m_pay") {} catch {}
-        try seer.reward(customer, 1, "c_pay") {} catch {}
+        if (customer == merchant) {
+            return;
+        }
+
+        merchantRewardVolume[merchant] += amount;
+        if (merchantRewardVolume[merchant] >= PAYMENT_VOLUME_PER_REWARD) {
+            merchantRewardVolume[merchant] = 0;
+            try seer.reward(merchant, 3, "m_pay") {} catch {}
+        }
+
+        customerRewardVolume[customer] += amount;
+        if (customerRewardVolume[customer] >= PAYMENT_VOLUME_PER_REWARD) {
+            customerRewardVolume[customer] = 0;
+            try seer.reward(customer, 1, "c_pay") {} catch {}
+        }
     }
 
     /// @notice _recordMerchantStats
