@@ -1,17 +1,16 @@
 # Frontend Page Coverage Audit
 
-Generated: 2026-05-29T22:43:38.108Z
+Generated: 2026-06-01T00:02:28.489Z
 
-Total routes: 135
-Directly covered routes: 135
-Missing direct route tests: 0
+Total routes: 142
+Directly covered routes: 124
+Missing direct route tests: 18
 
 ## Covered Routes
 
 - / -> __tests__/app/home-page.test.tsx
 - /(commerce)/embed/[slug] -> __tests__/app/embed-slug-route-page.test.tsx
 - /(marketing)/s/[slug] -> __tests__/app/marketing-s-slug-route-page.test.tsx
-- /about -> __tests__/app/about-page.test.tsx
 - /achievements -> __tests__/app/achievements-page.test.tsx
 - /admin -> __tests__/app/admin-route-page.test.tsx
 - /agent -> __tests__/app/agent-route-page.test.tsx
@@ -24,15 +23,11 @@ Missing direct route tests: 0
 - /checkout/[id] -> __tests__/app/checkout-id-page-param-guard.test.tsx
 - /control-panel -> __tests__/app/control-panel-page.test.tsx
 - /council -> __tests__/app/council-page.test.tsx
-- /cross-chain -> __tests__/app/cross-chain-page.test.tsx
-- /crypto -> __tests__/app/crypto-page.test.tsx
 - /dao-hub -> __tests__/app/dao-hub-page.test.tsx
 - /dashboard -> __tests__/app/dashboard-page.test.tsx
 - /demo/crypto-social -> __tests__/app/demo-crypto-social-page.test.tsx
-- /developer -> __tests__/app/developer-page.test.tsx
-- /disputes -> __tests__/app/uploaded-handoff-pages.test.tsx
+- /developer -> __tests__/app/token-launch-page.test.tsx
 - /docs -> __tests__/app/docs-page.test.tsx
-- /elections -> __tests__/app/uploaded-handoff-pages.test.tsx
 - /endorsements -> __tests__/app/endorsements-page.test.tsx
 - /enterprise -> __tests__/app/enterprise-page.test.tsx
 - /escrow -> __tests__/app/escrow-page.test.tsx
@@ -58,10 +53,9 @@ Missing direct route tests: 0
 - /invite/[code] -> __tests__/app/invite-code-page-param-guard.test.tsx, __tests__/app/invite-code-page.test.tsx
 - /leaderboard -> __tests__/app/leaderboard-page.test.tsx
 - /legal -> __tests__/app/legal-page.test.tsx
-- /lending -> __tests__/app/uploaded-handoff-pages.test.tsx
 - /live-demo -> __tests__/app/live-demo-page.test.tsx
 - /marketplace -> __tests__/app/marketplace-route-page.test.tsx
-- /me -> __tests__/app/me-page.test.tsx
+- /me -> __tests__/app/me-page.test.tsx, __tests__/app/profile-page.test.tsx
 - /merchant -> __tests__/app/merchant-page.test.tsx
 - /merchant/analytics -> __tests__/app/merchant-analytics-route-page.test.tsx
 - /merchant/bookings -> __tests__/app/merchant-bookings-page.test.tsx
@@ -80,7 +74,6 @@ Missing direct route tests: 0
 - /merchant/profile/setup -> __tests__/app/merchant-profile-setup-route-page.test.tsx
 - /merchant/refunds -> __tests__/app/merchant-refunds-route-page.test.tsx
 - /merchant/returns -> __tests__/app/merchant-returns-route-page.test.tsx
-- /merchant/setup -> __tests__/app/merchant-setup-page.test.tsx
 - /merchant/staff -> __tests__/app/merchant-staff-route-page.test.tsx
 - /merchant/subscriptions -> __tests__/app/merchant-subscriptions-page.test.tsx
 - /merchant/suppliers -> __tests__/app/merchant-suppliers-route-page.test.tsx
@@ -99,16 +92,14 @@ Missing direct route tests: 0
 - /pos -> __tests__/app/pos-page.test.tsx
 - /price-alerts -> __tests__/app/price-alerts-page.test.tsx
 - /product/[id] -> __tests__/app/product-id-page-param-guard.test.tsx
-- /profile -> __tests__/app/profile-page.test.tsx
 - /proofscore -> __tests__/app/proofscore-route-page.test.tsx
 - /quests -> __tests__/app/quests-page.test.tsx
 - /remittance -> __tests__/app/remittance-route-page.test.tsx
 - /reporting -> __tests__/app/reporting-route-page.test.tsx
-- /rewards -> __tests__/app/rewards-page.test.tsx
+- /rewards-hub -> __tests__/app/rewards-page.test.tsx
 - /sanctum -> __tests__/app/sanctum-page.test.tsx
 - /sanctum/charities/[id] -> __tests__/app/sanctum-charity-id-route-page.test.tsx
 - /scan -> __tests__/app/scan-page.test.tsx
-- /security-center -> __tests__/app/security-center-page.test.tsx
 - /seer-academy -> __tests__/app/seer-academy-page.test.tsx
 - /seer-service -> __tests__/app/seer-service-page.test.tsx
 - /settings -> __tests__/app/settings-route-page.test.tsx
@@ -119,11 +110,9 @@ Missing direct route tests: 0
 - /social-payments -> __tests__/app/social-payments-page.test.tsx
 - /splitter -> __tests__/app/splitter-route-page.test.tsx
 - /staking -> __tests__/app/staking-route-page.test.tsx
-- /stealth -> __tests__/app/stealth-page.test.tsx
 - /store/[slug] -> __tests__/app/store-slug-route-page.test.tsx
 - /stories -> __tests__/app/stories-page.test.tsx
 - /streaming -> __tests__/app/streaming-page.test.tsx
-- /subscriptions -> __tests__/app/subscriptions-page.test.tsx
 - /support -> __tests__/app/support-page.test.tsx
 - /taxes -> __tests__/app/taxes-page.test.tsx
 - /testnet -> __tests__/app/testnet-page.test.tsx
@@ -131,7 +120,6 @@ Missing direct route tests: 0
 - /theme-manager -> __tests__/app/theme-manager-page.test.tsx
 - /theme-showcase -> __tests__/app/theme-showcase-page.test.tsx
 - /time-locks -> __tests__/app/time-locks-page.test.tsx
-- /token-launch -> __tests__/app/token-launch-page.test.tsx
 - /treasury -> __tests__/app/treasury-page.test.tsx
 - /vault -> __tests__/app/vault-page.test.tsx
 - /vault/lock -> __tests__/app/vault-lock-page.test.tsx
@@ -143,6 +131,25 @@ Missing direct route tests: 0
 - /vault/settings -> __tests__/app/vault-settings-page.test.tsx
 - /verifier -> __tests__/app/verifier-route-page.test.tsx
 - /vesting -> __tests__/app/vesting-page.test.tsx
+- /wallet -> __tests__/app/cross-chain-page.test.tsx, __tests__/app/crypto-page.test.tsx, __tests__/app/stealth-page.test.tsx
 
 ## Missing Routes
 
+- /about (app/about/page.tsx)
+- /cross-chain (app/cross-chain/page.tsx)
+- /crypto (app/crypto/page.tsx)
+- /demo (app/demo/page.tsx)
+- /disputes (app/disputes/page.tsx)
+- /elections (app/elections/page.tsx)
+- /lending (app/lending/page.tsx)
+- /merchant/setup (app/merchant/setup/page.tsx)
+- /profile (app/profile/page.tsx)
+- /recovery-challenge (app/recovery-challenge/page.tsx)
+- /recovery-sign (app/recovery-sign/page.tsx)
+- /recovery-status (app/recovery-status/page.tsx)
+- /rewards (app/rewards/page.tsx)
+- /roadmap (app/roadmap/page.tsx)
+- /security-center (app/security-center/page.tsx)
+- /stealth (app/stealth/page.tsx)
+- /subscriptions (app/subscriptions/page.tsx)
+- /token-launch (app/token-launch/page.tsx)
