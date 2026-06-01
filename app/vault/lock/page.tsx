@@ -41,5 +41,6 @@ export default function LockVaultPage() {
       </div>
       <Footer />
     </>
+    </LazyMotion>
   );
 }

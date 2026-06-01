@@ -274,10 +274,11 @@ export default function InheritanceSetupPage() {
     return (
       <LazyMotion features={domAnimation}>
         <ProposalSuccessPage
-        txHash={submittedTxHash}
-        heirs={heirs}
-        onDownloadEnvelope={downloadEnvelope}
-      />
+          txHash={submittedTxHash}
+          heirs={heirs}
+          onDownloadEnvelope={downloadEnvelope}
+        />
+      </LazyMotion>
     );
   }
 
@@ -964,6 +965,5 @@ function ProposalSuccessPage({
         Go to status page
       </a>
     </div>
-    </LazyMotion>
   );
 }

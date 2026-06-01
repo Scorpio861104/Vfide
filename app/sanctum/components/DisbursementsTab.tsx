@@ -183,7 +183,6 @@ export function DisbursementsTab({ isConnected: _isConnected }: { isConnected: b
                       d={d}
                       status={status}
                       approvalsRequired={approvalsRequired}
-                      connectedAddress={connectedAddress}
                       pending={isCurrentAction && isWritePending}
                       onApprove={() => handleApprove(d.id)}
                       onExecute={() => handleExecute(d.id)}

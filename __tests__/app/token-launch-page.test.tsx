@@ -23,10 +23,11 @@ const renderPage = () => {
 };
 
 describe('Token launch page (now /developer?tab=token-launch)', () => {
-  it('renders Developer Hub heading and Token Launch tab', () => {
+  it('renders integrations heading and developer tabs', () => {
     renderPage();
-    expect(screen.getByRole('heading', { name: /Developer Hub/i })).toBeTruthy();
-    // Token Launch appears in the tab bar and possibly heading — use getAllByText
-    expect(screen.getAllByText(/Token Launch/i).length).toBeGreaterThan(0);
+    expect(screen.getByRole('heading', { name: /Integrations Center/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /SDK/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /webhooks/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /api/i })).toBeTruthy();
   });
 });

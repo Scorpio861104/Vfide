@@ -22,7 +22,12 @@ jest.mock('@/components/analytics/MerchantAnalytics', () => ({
 }));
 
 jest.mock('framer-motion', () => ({
-  motion: new Proxy({}, { get: () => ({ children }: any) => <div>{children}</div> }),
+  __esModule: true,
+  m: new Proxy({}, { get: () => ({ children, ...props }: any) => <div {...props}>{children}</div> }),
+  motion: new Proxy({}, { get: () => ({ children, ...props }: any) => <div {...props}>{children}</div> }),
+  AnimatePresence: ({ children }: any) => <>{children}</>,
+  LazyMotion: ({ children }: any) => <>{children}</>,
+  domAnimation: {},
 }));
 
 jest.mock('@/components/layout/Footer', () => ({

@@ -10,12 +10,22 @@ const renderLockVaultPage = () => {
 };
 
 jest.mock('framer-motion', () => ({
+  __esModule: true,
+  m: new Proxy(
+    {},
+    {
+      get: () => ({ children, ...props }: any) => <div {...props}>{children}</div>,
+    }
+  ),
   motion: new Proxy(
     {},
     {
       get: () => ({ children, ...props }: any) => <div {...props}>{children}</div>,
     }
   ),
+  AnimatePresence: ({ children }: any) => <>{children}</>,
+  LazyMotion: ({ children }: any) => <>{children}</>,
+  domAnimation: {},
 }));
 
 jest.mock('lucide-react', () => ({

@@ -81,7 +81,7 @@ export function OptimizedImage({
         sizes={sizes}
         quality={quality}
         priority={priority}
-        placeholder={placeholder}
+        placeholder={_placeholder}
        
         blurDataURL={blurDataURL}
         onLoad={handleLoad}

@@ -211,6 +211,7 @@ export default function RoadmapPage() {
       </div>
       <Footer />
     </>
+    </LazyMotion>
   );
 }
 
@@ -277,6 +278,5 @@ function Section({ title, features, phaseMeta }: SectionProps) {
         ))}
       </div>
     </div>
-    </LazyMotion>
   );
 }

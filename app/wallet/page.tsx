@@ -346,6 +346,7 @@ function WalletHubInner() {
       </div>
       <Footer />
     </>
+    </LazyMotion>
   );
 }
 
@@ -358,6 +359,5 @@ export default function WalletHubPage() {
     }>
       <WalletHubInner />
     </Suspense>
-    </LazyMotion>
   );
 }

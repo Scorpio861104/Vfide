@@ -44,8 +44,12 @@ jest.mock('@/hooks/useInheritance', () => ({
 }));
 
 jest.mock('framer-motion', () => ({
-  motion: new Proxy({}, { get: () => ({ children }: any) => <div>{children}</div> }),
+  __esModule: true,
+  m: new Proxy({}, { get: () => ({ children, ...props }: any) => <div {...props}>{children}</div> }),
+  motion: new Proxy({}, { get: () => ({ children, ...props }: any) => <div {...props}>{children}</div> }),
+  LazyMotion: ({ children }: any) => <>{children}</>,
   AnimatePresence: ({ children }: any) => <>{children}</>,
+  domAnimation: {},
 }));
 
 jest.mock('lucide-react', () => {

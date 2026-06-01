@@ -137,6 +137,7 @@ export default function MeHubPage() {
         </div>
         <Footer />
       </>
+      </LazyMotion>
     );
   }
 
@@ -311,6 +312,5 @@ function NextStep({ score }: { score: number }) {
       </Link>{' '}
       to help them build trust, and you&apos;re paying the minimum 0.25% fee on every payment.
     </p>
-    </LazyMotion>
   );
 }

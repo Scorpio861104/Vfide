@@ -252,5 +252,6 @@ export default function MerchantGiftCardsPage() {
       </div>
       <Footer />
     </>
+    </LazyMotion>
   );
 }

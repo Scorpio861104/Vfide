@@ -477,5 +477,6 @@ export default function MerchantRefundsPage() {
       </div>
       <Footer />
     </>
+    </LazyMotion>
   );
 }

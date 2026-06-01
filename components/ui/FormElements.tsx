@@ -261,7 +261,7 @@ export function Input({
         <input
           type={type}
           value={value}
-          placeholder={placeholder}
+          placeholder={_placeholder}
           onChange={(e) =>  onChange(e.target.value)}
          
           disabled={disabled}
