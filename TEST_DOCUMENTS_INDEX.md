@@ -1,39 +1,16 @@
-]633;E;echo "# Test Documents Index";8c7da57e-9dc1-49cd-9ee6-fd8a30785090]633;C# Test Documents Index
+]633;E;echo "# Test Documents Index";22875b77-2af0-412e-ae00-abdc729f3c2b]633;C# Test Documents Index
 
 Generated: 2026-06-01
 
 This index lists test-related documentation and audit/readiness artifacts discovered via filename/path scan.
 
 ## Files
-- AUDIT_CLOSURE_REPORT.md
-- AUDIT_SWEEP_FINAL.md
-- BELIEF_GOAL_ALIGNMENT_AUDIT.md
-- BUTTON_AUDIT.md
-- CONTRACTS_AUDIT.md
-- DEEP_FRONTEND_AUDIT.md
-- FRONTEND_AUDIT.md
 - FRONTEND_PAGE_COVERAGE_AUDIT.md
-- FRONTEND_ROUTE_AUDIT_FINAL.md
-- FULL_READINESS_TODO.md
-- INTERNAL_PAGES_AUDIT.md
 - LOCAL_VALIDATION_RUNBOOK.md
 - MAINNET_DEPLOY_READINESS.md
-- MAINNET_FINAL_AUDIT.md
-- MAINNET_READINESS_FINAL_SUMMARY.md
-- MAINNET_READINESS_TODO.md
-- PAGE_AUDIT.md
-- SECURITY_AUDIT.md
-- TESTNET_HOWTO.md
 - TESTNET_RUNBOOK.md
 - TEST_DOCUMENTS_INDEX.md
-- VFIDE_AUDIT_FUNDING_NOTES.md
-- VFIDE_CBV_FRONTEND_AUDIT.md
-- VFIDE_CONTRACTS_PARITY_AUDIT.md
-- VFIDE_INHERITANCE_AUDIT_PACKAGE.md
-- VFIDE_SYSTEM_AUDIT.md
 - VFIDE_TESTNET_READINESS.md
-- VFIDE_VRC_FRONTEND_AUDIT.md
-- WALLET_TO_VAULT_AUDIT.md
 - __tests__/a11y/README.md
 - __tests__/integration/IMPLEMENTATION_SUMMARY.md
 - __tests__/integration/README.md
@@ -62,6 +39,29 @@ This index lists test-related documentation and audit/readiness artifacts discov
 - docs/SEER_AUTONOMOUS_ACTIVATION_RUNBOOK.md
 - docs/TESTNET_DEPLOY_RUNBOOK.md
 - docs/TESTNET_TESTER_VFIDE_PROVISIONING.md
+- docs/archive/root-legacy/AUDIT_CLOSURE_REPORT.md
+- docs/archive/root-legacy/AUDIT_SWEEP_FINAL.md
+- docs/archive/root-legacy/BELIEF_GOAL_ALIGNMENT_AUDIT.md
+- docs/archive/root-legacy/BUTTON_AUDIT.md
+- docs/archive/root-legacy/CONTRACTS_AUDIT.md
+- docs/archive/root-legacy/DEEP_FRONTEND_AUDIT.md
+- docs/archive/root-legacy/FRONTEND_AUDIT.md
+- docs/archive/root-legacy/FRONTEND_ROUTE_AUDIT_FINAL.md
+- docs/archive/root-legacy/FULL_READINESS_TODO.md
+- docs/archive/root-legacy/INTERNAL_PAGES_AUDIT.md
+- docs/archive/root-legacy/MAINNET_FINAL_AUDIT.md
+- docs/archive/root-legacy/MAINNET_READINESS_FINAL_SUMMARY.md
+- docs/archive/root-legacy/MAINNET_READINESS_TODO.md
+- docs/archive/root-legacy/PAGE_AUDIT.md
+- docs/archive/root-legacy/SECURITY_AUDIT.md
+- docs/archive/root-legacy/TESTNET_HOWTO.md
+- docs/archive/root-legacy/VFIDE_AUDIT_FUNDING_NOTES.md
+- docs/archive/root-legacy/VFIDE_CBV_FRONTEND_AUDIT.md
+- docs/archive/root-legacy/VFIDE_CONTRACTS_PARITY_AUDIT.md
+- docs/archive/root-legacy/VFIDE_INHERITANCE_AUDIT_PACKAGE.md
+- docs/archive/root-legacy/VFIDE_SYSTEM_AUDIT.md
+- docs/archive/root-legacy/VFIDE_VRC_FRONTEND_AUDIT.md
+- docs/archive/root-legacy/WALLET_TO_VAULT_AUDIT.md
 - docs/audit-artifacts/FRONTEND_PAGE_FUNCTION_INVENTORY.json
 - docs/audit-artifacts/FRONTEND_PAGE_TEST_COVERAGE_MAP.json
 - docs/audit-artifacts/L3_TEST_QUALITY_PRIORITY.md
