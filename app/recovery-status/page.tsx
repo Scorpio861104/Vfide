@@ -52,6 +52,7 @@ function formatTime(secs: number): string {
 function RecoveryStatusInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const [finalized, setFinalized] = useState(false);
 
   const claimStatusStr = searchParams.get('claimStatus');
   const vault = searchParams.get('vault') ?? '0x0';
@@ -78,7 +79,6 @@ function RecoveryStatusInner() {
 
   const claimStatus = STATUS_NAME_MAP[claimStatusStr] ?? RecoveryClaimStatus.None;
   const meta = STATUS_META[claimStatus];
-  const [finalized, setFinalized] = useState(false);
 
   const isTerminal = [
     RecoveryClaimStatus.Challenged,

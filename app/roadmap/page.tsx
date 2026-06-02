@@ -13,11 +13,10 @@
  *                         or user-vault-multi-sig (architectural design review needed)
  */
 
-import { m, LazyMotion, domAnimation } from 'framer-motion';
+import { m , LazyMotion, domAnimation } from 'framer-motion';
 import { Clock, CheckCircle, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { Footer } from '@/components/layout/Footer';
-import { useT } from '@/lib/i18n';
 
 interface RoadmapFeature {
   emoji: string;
@@ -166,7 +165,6 @@ const PHASE_META: Record<RoadmapFeature['phase'], { label: string; badge: string
 };
 
 export default function RoadmapPage() {
-  const t = useT();
   const v1   = FEATURES.filter(f => f.phase === 'v1');
   const v11  = FEATURES.filter(f => f.phase === 'v1.1');
   const v2   = FEATURES.filter(f => f.phase === 'v2');
@@ -190,7 +188,7 @@ export default function RoadmapPage() {
             <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs text-amber-300 mb-4">
               <Clock size={10} /> In development
             </div>
-            <h1 className="text-4xl font-black text-white mb-3">{t.roadmap_heading}</h1>
+            <h1 className="text-4xl font-black text-white mb-3">VFIDE Product Roadmap</h1>
             <p className="text-zinc-400 text-sm max-w-md mx-auto">
               Phase assignments reflect the canonical{' '}
               <code className="text-xs text-zinc-500">deploy-full.ts</code> and{' '}

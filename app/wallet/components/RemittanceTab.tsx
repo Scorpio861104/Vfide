@@ -8,8 +8,6 @@ import { useAccount } from 'wagmi';
 import { ArrowRight, Globe } from 'lucide-react';
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import Link from 'next/link';
-import { useLocale } from '@/hooks/useLocale';
-import { REMITTANCE_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
 
 const CORRIDORS = [
   { from: '🇺🇸 USD', to: '🇬🇭 GHS', rate: '1 USD ≈ 13.2 GHS',   fee: '0.0%', time: '< 3 sec', saving: 'Save ~$12 vs. Western Union' },
@@ -26,8 +24,6 @@ const STEPS = [
 ];
 
 export function RemittanceTab() {
-  const [locale] = useLocale();
-  const _copy = pickLocaleCopy(REMITTANCE_TRANSLATIONS, locale);
   const { isConnected } = useAccount();
   const [amount, setAmount] = useState('100');
   const [selectedCorridor, setSelectedCorridor] = useState(0);
@@ -36,7 +32,6 @@ export function RemittanceTab() {
   // Recipient receives the full sent amount. Any burn fee is determined by
   // the sender's ProofScore and settled separately in VFIDE, not deducted here.
   const parsedAmount = parseFloat(amount || '0') || 0;
-  const buyerFee = 0;
   const netAmount = parsedAmount;
 
   return (

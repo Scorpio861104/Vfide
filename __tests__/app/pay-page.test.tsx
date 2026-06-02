@@ -34,12 +34,23 @@ jest.mock('framer-motion', () => ({
     div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
     button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
   },
+  m: {
+    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+    button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+  },
 }));
 
 jest.mock('wagmi', () => ({
   useAccount: () => ({
     isConnected: true,
     address: '0x1111111111111111111111111111111111111111' as const,
+  }),
+  useChainId: () => 8453,
+  useReadContract: () => ({
+    data: undefined,
+    isError: false,
+    isLoading: false,
+    refetch: jest.fn(),
   }),
 }));
 

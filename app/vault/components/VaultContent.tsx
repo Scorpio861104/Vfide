@@ -4,19 +4,22 @@ import dynamic from 'next/dynamic';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Footer } from '@/components/layout/Footer';
 import { TransactionHistory } from '@/components/vault/TransactionHistory';
+import { VaultGuardianSetupBanner } from '@/components/vault/VaultGuardianSetupBanner';
+import { VaultPendingChangesBanner } from '@/components/vault/VaultPendingChangesBanner';
+import { IncomingRefunds } from '@/components/vault/IncomingRefunds';
 import { TrendingUp } from 'lucide-react';
 
 import { useVaultOperations } from './useVaultOperations';
 import { useVaultTransactions } from '@/hooks/useVaultTransactions';
 import { VaultHeader } from './VaultHeader';
 import { VaultOverviewStats } from './VaultOverviewStats';
+import { VaultSecuritySection } from './VaultSecuritySection';
 import { VaultQuickActions } from './VaultQuickActions';
+import { VaultInheritancePanel } from './VaultInheritancePanel';
+import { WithdrawModal } from './WithdrawModal';
 const MerchantApprovalPanel = dynamic(() => import('./MerchantApprovalPanel').then(m => ({ default: m.MerchantApprovalPanel })), { ssr: false });
 const VaultRecoveryPanel = dynamic(() => import('./VaultRecoveryPanel').then(m => ({ default: m.VaultRecoveryPanel })), { ssr: false });
 const VaultQueueSection = dynamic(() => import('./VaultQueueSection').then(m => ({ default: m.VaultQueueSection })), { ssr: false });
-import { VaultPendingChangesBanner } from '@/components/vault/VaultPendingChangesBanner';
-import { VaultGuardianSetupBanner } from '@/components/vault/VaultGuardianSetupBanner';
-import { IncomingRefunds } from '@/components/vault/IncomingRefunds';
 
 export function VaultContent() {
   const ops = useVaultOperations();

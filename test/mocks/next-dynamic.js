@@ -1,39 +1,33 @@
 /**
- * Synchronous mock for next/dynamic — resolves dynamic imports immediately in Jest.
- * Replaces async lazy loading with synchronous require() so components render in tests.
+ * Synchronous mock for next/dynamic used in Jest.
+ * Resolves the imported module on the next microtask and renders once available.
  */
-const React = require('react');
+import React, { useEffect, useState } from 'react';
 
-function dynamic(importFn, _options) {
-  // We can't synchronously resolve ES module dynamic imports in CJS Jest.
-  // Instead, return a component that triggers the import and renders after resolution.
-  
-  let ResolvedComponent = null;
-  
-  // Kick off resolution immediately
-  importFn().then((mod) => {
-    ResolvedComponent = mod.default || mod;
-  }).catch(() => {});
+export default function dynamic(importFn, _options) {
+  let resolvedComponent = null;
 
-  // Return a simple wrapper — Jest's act() will flush the microtask queue
-  const Wrapper = React.forwardRef(function DynamicWrapper(props, ref) {
-    const [Comp, setComp] = React.useState(ResolvedComponent);
-    
-    React.useEffect(() => {
+  void importFn()
+    .then((mod) => {
+      resolvedComponent = mod.default || mod;
+    })
+    .catch(() => {});
+
+  function DynamicWrapper(props) {
+    const [Comp, setComp] = useState(resolvedComponent);
+
+    useEffect(() => {
       if (!Comp) {
-        importFn().then((mod) => {
+        void importFn().then((mod) => {
           setComp(mod.default || mod);
         });
       }
-    }, []);
-    
-    if (!Comp) return null;
-    return React.createElement(Comp, { ...props, ref });
-  });
-  
-  Wrapper.displayName = 'NextDynamic';
-  return Wrapper;
-}
+    }, [Comp]);
 
-module.exports = dynamic;
-module.exports.default = dynamic;
+    if (!Comp) return null;
+    return React.createElement(Comp, props);
+  }
+
+  DynamicWrapper.displayName = 'NextDynamic';
+  return DynamicWrapper;
+}

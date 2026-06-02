@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { m, LazyMotion, domAnimation } from 'framer-motion';
+import { m } from 'framer-motion';
 import { CreditCard, Loader2, Shield } from 'lucide-react';
-import { useProofScore, getScoreTierObject } from '@/hooks/useProofScore';
+import { useProofScore } from '@/hooks/useProofScore';
 import { useAccount } from 'wagmi';
 import { isAddress, verifyMessage } from 'viem';
 
@@ -105,7 +105,7 @@ export function PayContent() {
   }, [merchant, requestedAmount, orderId, paymentSource, settlement, expiryFromQuery]);
 
   useEffect(() => {
-    let cancelled = false;
+    let _cancelled = false;
 
     const verifyQrSignature = async () => {
       if (paymentSource !== 'qr') {
@@ -132,11 +132,11 @@ export function PayContent() {
           message: qrMessage,
           signature: signature as `0x${string}`,
         });
-        if (!cancelled) {
+        if (!_cancelled) {
           setSignatureState(valid ? 'valid' : 'invalid');
         }
       } catch {
-        if (!cancelled) {
+        if (!_cancelled) {
           setSignatureState('invalid');
         }
       }
@@ -145,12 +145,12 @@ export function PayContent() {
     void verifyQrSignature();
 
     return () => {
-      cancelled = true;
+      _cancelled = true;
     };
   }, [paymentSource, signature, expiryFromQuery, qrExpiryInvalid, qrMessage, merchant]);
 
   useEffect(() => {
-    let cancelled = false;
+    let _cancelled = false;
     if (paymentSource !== 'qr') return;
     if (!['missing', 'invalid', 'expired'].includes(signatureState)) return;
 
@@ -187,7 +187,7 @@ export function PayContent() {
     }).catch(() => {
       // Best-effort telemetry: do not interrupt checkout UX.
     });
-    return () => { cancelled = true; };
+    return () => { _cancelled = true; };
     }, [
     signatureState,
     paymentSource,
