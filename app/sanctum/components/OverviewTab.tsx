@@ -56,7 +56,7 @@ export function OverviewTab() {
             },
             {
               step: '4',
-              title: 'Multi-Sig Approval',
+              title: 'Guardian Approval',
               desc: 'A threshold of approvers must sign each disbursement before it can execute',
             },
             {
@@ -85,7 +85,7 @@ export function OverviewTab() {
           <div className="bg-black/30 rounded-xl p-4 border border-white/5">
             <div className="flex items-center gap-2 mb-2">
               <Shield className="w-5 h-5 text-cyan-400" />
-              <span className="text-white font-bold">Multi-Signature Required</span>
+              <span className="text-white font-bold">Guardian Approval Required</span>
             </div>
             <p className="text-sm text-gray-400">
               All disbursements require approval from multiple trusted signers before execution.

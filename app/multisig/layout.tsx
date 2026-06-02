@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import { buildPageMetadata } from '@/lib/seo/buildPageMetadata';
 
 export const metadata: Metadata = buildPageMetadata({
-  title: 'Multi-Signature Wallet (Coming Soon)',
+  title: 'Guardian Approval Wallet (Coming Soon)',
   description:
-    'Multi-signature wallet for shared treasuries and high-value vaults. Designed and named in navigation, not yet shipped — see Guardians for the recovery protection available today.',
+    'Guardian Approval wallet for shared treasuries and high-value vaults — multiple trusted people approve before funds move. See Guardians for the protection available today.',
   path: '/multisig',
   robots: { index: false },
 });

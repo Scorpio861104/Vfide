@@ -227,7 +227,7 @@ export function SanctumTab({ isConnected }: { isConnected: boolean }) {
                         {d.approvalCount}/{approvalsRequired} Approvals
                       </div>
                       <div className="text-xs text-zinc-400">
-                        {isReady ? 'Ready to execute' : 'Multi-sig in progress'}
+                        {isReady ? 'Ready to execute' : 'Guardian Approval in progress'}
                       </div>
                     </div>
                   </div>

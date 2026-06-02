@@ -58,7 +58,7 @@ const MORE_MATCH = [
   '/guardians', '/governance', '/dao-hub', '/council', '/elections',
   '/disputes', '/sanctum', '/rewards', '/leaderboard', '/quests',
   '/proofscore', '/security-center', '/notifications', '/treasury',
-  '/multisig', '/time-locks', '/vesting', '/appeals', '/insights',
+  '/time-locks', '/vesting', '/appeals', '/insights',
   '/taxes', '/budgets', '/performance', '/reporting', '/price-alerts',
   '/explorer', '/paper-wallet', '/hardware-wallet', '/enterprise',
   '/token-launch', '/payroll', '/cross-chain', '/stealth', '/benefits',

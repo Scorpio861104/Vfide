@@ -129,10 +129,10 @@ const FEATURES: RoadmapFeature[] = [
   {
     emoji: '🔐',
     slug: 'multisig',
-    title: 'Multi-Signature Vaults',
+    title: 'Guardian Approval Vaults',
     tagline: 'Require multiple wallet signatures before funds move from a shared vault.',
     description:
-      'User-facing vault multi-sig — M-of-N approval for shared treasuries and business accounts — is scheduled for the governance release. Guardian-assisted recovery provides a strong social recovery alternative today.',
+      'User-facing Guardian Approval vaults — M-of-N approval for shared treasuries and business accounts — is scheduled for the governance release. Guardian-assisted recovery provides a strong social recovery alternative today.',
     bullets: [
       'Require M-of-N signatures before any vault transfer executes',
       'Business treasury controls with designated co-signatories',

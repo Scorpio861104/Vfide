@@ -42,6 +42,12 @@ export function OverviewTab() {
           Guardians are trusted individuals who can help vault owners recover access if they lose their wallet.
           Being a guardian is a <strong>responsibility</strong>, not a privilege.
         </p>
+        <div className="bg-accent/5 rounded-xl p-4 border border-accent/20 mb-4 text-sm text-gray-300">
+          <strong className="text-accent">Looking for a shared-approval (&ldquo;multi-sig&rdquo;) wallet?</strong> This is it. Instead of a
+          separate shared-approval wallet, VFIDE protects your funds with guardians: multiple people
+          you choose must collectively approve before your vault can be rotated to a new key — the same
+          protection against a single lost or stolen key, built into your CardBoundVault.
+        </div>
         <div className="bg-white/5 rounded-xl p-4 border border-white/10">
           <p className="text-gray-400 text-sm">
             <strong className="text-amber-400">⚠️ Important:</strong> Guardians cannot access funds directly.

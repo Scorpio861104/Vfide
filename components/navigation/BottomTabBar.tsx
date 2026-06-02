@@ -20,7 +20,7 @@ const NAV_TABS = [
 // Routes that belong to the "More" drawer group so the More tab
 // shows as active when the user is on one of these pages.
 const MORE_ROUTES = [
-  '/vault', '/guardians', '/multisig', '/time-locks', '/vesting',
+  '/vault', '/guardians', '/time-locks', '/vesting',
   '/merchant', '/pos', '/escrow', '/flashloans', '/payroll',
   '/streaming', '/cross-chain', '/subscriptions', '/agent',
   '/social-hub', '/stories', '/feed',

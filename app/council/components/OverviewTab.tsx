@@ -160,7 +160,7 @@ export function OverviewTab() {
               bg: 'from-emerald-500/20 to-emerald-500/5',
               border: 'border-emerald-500/20',
               title: 'Treasury Oversight',
-              desc: 'Approve multi-sig transactions and manage fund allocations',
+              desc: 'Approve Guardian Approval transactions and manage fund allocations',
             },
             {
               icon: TrendingUp,
