@@ -4,7 +4,7 @@ import _dynamic from 'next/dynamic';
 export const dynamic = 'force-dynamic';
 
 import { useState } from 'react';
-import { m, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
+import { m, AnimatePresence , LazyMotion, domAnimation } from 'framer-motion';
 import { Footer } from '@/components/layout/Footer';
 const BuyTab = _dynamic(() => import('./components/BuyTab').then(m => ({ default: m.BuyTab })), { ssr: false });
 import { HistoryTab } from './components/HistoryTab';

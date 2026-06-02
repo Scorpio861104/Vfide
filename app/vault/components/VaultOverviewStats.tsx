@@ -23,9 +23,11 @@
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { containerVariants, itemVariants } from '@/lib/motion-presets';
-import { m, LazyMotion, domAnimation } from 'framer-motion';
+import { m } from 'framer-motion';
 import { DollarSign, Users } from 'lucide-react';
 import { safeParseFloat } from '@/lib/validation';
+import { useLocale } from '@/lib/locale/LocaleProvider';
+import { pickLocaleCopy, VAULT_OVERVIEW_TRANSLATIONS } from '@/lib/i18n';
 
 interface VaultOverviewStatsProps {
   vaultBalance: string;
@@ -34,6 +36,9 @@ interface VaultOverviewStatsProps {
 }
 
 export function VaultOverviewStats({ vaultBalance, isLoadingBalance, guardianCount }: VaultOverviewStatsProps) {
+  const { locale } = useLocale();
+  const copy = pickLocaleCopy(VAULT_OVERVIEW_TRANSLATIONS, locale);
+
   return (
     <section className="py-8 relative z-10">
       <div className="container mx-auto px-4 max-w-6xl">
@@ -42,7 +47,7 @@ export function VaultOverviewStats({ vaultBalance, isLoadingBalance, guardianCou
           <m.div variants={itemVariants}>
             <GlassCard className="p-6">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-white/60 text-sm">Total Balance</span>
+                <span className="text-white/60 text-sm">{copy.totalBalance}</span>
                 <div className="p-2 rounded-xl bg-accent/20">
                   <DollarSign className="text-accent" size={18} />
                 </div>
@@ -57,7 +62,7 @@ export function VaultOverviewStats({ vaultBalance, isLoadingBalance, guardianCou
                   <div className="text-3xl font-bold text-white mb-1">
                     {safeParseFloat(vaultBalance, 0).toLocaleString(undefined, { maximumFractionDigits: 2 })} VFIDE
                   </div>
-                  <div className="text-xs text-white/40 mt-2">Updated in real time</div>
+                  <div className="text-xs text-white/40 mt-2">{copy.updatedRealtime}</div>
                 </>
               )}
             </GlassCard>
@@ -67,7 +72,7 @@ export function VaultOverviewStats({ vaultBalance, isLoadingBalance, guardianCou
           <m.div variants={itemVariants}>
             <GlassCard className="p-6">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-white/60 text-sm">Guardians</span>
+                <span className="text-white/60 text-sm">{copy.guardians}</span>
                 <div className="p-2 rounded-xl bg-purple-500/20">
                   <Users className="text-purple-400" size={18} />
                 </div>
@@ -77,8 +82,8 @@ export function VaultOverviewStats({ vaultBalance, isLoadingBalance, guardianCou
               </div>
               <div className="text-white/40 text-sm">
                 {guardianCount && guardianCount >= 2
-                  ? 'Wallet rotation enabled'
-                  : 'Add guardians to enable wallet rotation'}
+                  ? copy.rotationEnabled
+                  : copy.rotationDisabled}
               </div>
               <div className="text-xs text-white/40 mt-2">
                 CardBound wallet rotation needs at least 2 guardians

@@ -27,7 +27,7 @@ export function CollectionTab() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
+    let _cancelled = false;
     if (!address) return;
     setLoading(true);
     setError(null);
@@ -36,7 +36,7 @@ export function CollectionTab() {
       .then((data) => setBadges(data.badges ?? []))
       .catch(() => setError('Failed to load badges'))
       .finally(() => setLoading(false));
-    return () => { cancelled = true; };
+    return () => { _cancelled = true; };
     }, [address]);
 
   if (!address) {

@@ -19,7 +19,7 @@
  *   the site, to signal gravity. This is the part that matters.
  */
 
-import { m, LazyMotion, domAnimation } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Lock, FileCode2, Flame, ExternalLink, ShieldCheck } from 'lucide-react';
 
 interface Guarantee {

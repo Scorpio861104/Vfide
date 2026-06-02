@@ -31,7 +31,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { m, useReducedMotion, LazyMotion, domAnimation } from 'framer-motion';
+import { m, useReducedMotion } from 'framer-motion';
 import { Activity } from 'lucide-react';
 
 import { Numeric } from '@/components/ui/Numeric';

@@ -28,7 +28,7 @@ export const dynamic = 'force-dynamic';
 
 import { useAccount } from 'wagmi';
 import Link from 'next/link';
-import { m, LazyMotion, domAnimation } from 'framer-motion';
+import { m , LazyMotion, domAnimation } from 'framer-motion';
 import {
   User,
   Shield,

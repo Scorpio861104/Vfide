@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 // TYPE-2: Explicit React type import for React.ElementType usage in MAIN_TABS definition
 import type React from 'react';
 import { useLocale } from '@/lib/locale/LocaleProvider';
+import { TabTrigger } from '@/components/ui/TabTrigger';
 
 /**
  * Social Hub — consolidated social surface.
@@ -218,14 +219,12 @@ export default function SocialHubPage() {
           {/* A11Y-1: role=tablist so AT announces this as a tab widget */}
           <div role="tablist" aria-label="Social Hub sections" className="flex gap-2 overflow-x-auto scrollbar-hide">
             {MAIN_TABS.map(({ id, label, icon: Icon }) => (
-              <button key={id} onClick={() => setMainTab(id)}
-                role="tab"
-                aria-selected={mainTab === id}
+              <TabTrigger key={id} active={mainTab === id} onClick={() => setMainTab(id)}
                 aria-controls={"social-panel-" + id}
                 id={"social-tab-" + id}
                 className={mainTab === id ? 'tab-pill-active' : 'tab-pill-inactive'}>
                 <Icon size={14} />{label}
-              </button>
+              </TabTrigger>
             ))}
           </div>
         </div>

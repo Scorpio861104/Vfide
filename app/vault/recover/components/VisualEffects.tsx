@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { m, useMotionValue, useSpring, useTransform, LazyMotion, domAnimation } from 'framer-motion';
+import { m, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { KeyRound } from 'lucide-react';
 
 export { GlassCard } from '@/components/ui/GlassCard';

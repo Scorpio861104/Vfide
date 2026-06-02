@@ -26,14 +26,14 @@ export function StreamsTab() {
   const [filter, setFilter] = useState<'all' | 'sending' | 'receiving'>('all');
 
   useEffect(() => {
-    let cancelled = false;
+    let _cancelled = false;
     if (!address) return;
     setLoading(true);
     fetch(`/api/streams?address=${address}&role=all`)
       .then((r) => r.json())
       .then((data) => setStreams((data.streams ?? []).filter((s: Stream) => s.status === 'active')))
       .finally(() => setLoading(false));
-    return () => { cancelled = true; };
+    return () => { _cancelled = true; };
     }, [address]);
 
   const filtered = streams.filter((s) => {

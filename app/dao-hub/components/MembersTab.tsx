@@ -31,7 +31,7 @@ export function MembersTab() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
+    let _cancelled = false;
     setLoading(true);
     Promise.all([
       fetch('/api/proposals?limit=200').then((r) => r.json()),
@@ -53,7 +53,7 @@ export function MembersTab() {
         setContributors(Object.values(map).sort((a, b) => b.proposals - a.proposals).slice(0, 20));
       })
       .finally(() => setLoading(false));
-    return () => { cancelled = true; };
+    return () => { _cancelled = true; };
     }, []);
 
   return (

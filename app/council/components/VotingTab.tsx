@@ -1,5 +1,5 @@
 'use client';
-import { m, LazyMotion, domAnimation } from 'framer-motion';
+import { m } from 'framer-motion';
 import { AlertTriangle, CheckCircle2 as CheckCircle, Clock, Vote } from 'lucide-react';
 import { SampleDataBanner } from '@/components/ui/SampleDataBanner';
 

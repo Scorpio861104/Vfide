@@ -29,7 +29,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useChainId } from 'wagmi';
-import { m, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
+import { m, AnimatePresence , LazyMotion, domAnimation } from 'framer-motion';
 import {
   Users,
   Shield,

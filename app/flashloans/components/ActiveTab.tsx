@@ -27,7 +27,7 @@ export function ActiveTab() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
+    let _cancelled = false;
     if (!address) return;
     setLoading(true);
     setError(null);
@@ -36,7 +36,7 @@ export function ActiveTab() {
       .then((data) => setLanes((data.lanes ?? []).filter((l: Lane) => ACTIVE_STAGES.has(l.stage))))
       .catch(() => setError('Failed to load active lanes'))
       .finally(() => setLoading(false));
-    return () => { cancelled = true; };
+    return () => { _cancelled = true; };
     }, [address]);
 
   if (!address) {

@@ -3,7 +3,7 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import React, { useState } from 'react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
-import { parseUnits, maxUint256 } from 'viem';
+import { parseUnits } from 'viem';
 import { CONTRACT_ADDRESSES, VFIDETokenABI, isConfiguredContractAddress } from '@/lib/contracts';
 
 import { SubscriptionManagerABI } from '@/lib/abis/future';

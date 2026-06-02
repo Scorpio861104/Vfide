@@ -25,13 +25,13 @@ export function SettingsTab() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
+    let _cancelled = false;
     setLoading(true);
     fetch(`/api/seer/analytics?windowHours=${window}`)
       .then((r) => r.json())
       .then(setAnalytics)
       .finally(() => setLoading(false));
-    return () => { cancelled = true; };
+    return () => { _cancelled = true; };
     }, [window]);
 
   return (

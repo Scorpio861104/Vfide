@@ -8,7 +8,7 @@ import { StoryRing } from '@/components/social/StoryRing';
 import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import { useAccount } from 'wagmi';
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
-import { m, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { Plus, Camera, Sparkles } from 'lucide-react';
 import { Story, isStoryExpired } from '@/lib/storiesSystem';
@@ -30,7 +30,7 @@ export default function StoriesContent() {
   const [_isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    let cancelled = false;
+    let _cancelled = false;
     const fetchStories = async () => {
       setIsLoading(true);
       try {
@@ -46,7 +46,7 @@ export default function StoriesContent() {
       }
     };
     fetchStories();
-    return () => { cancelled = true; };
+    return () => { _cancelled = true; };
     }, []);
 
   useEffect(() => {

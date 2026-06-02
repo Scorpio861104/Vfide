@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { m, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import {
   Store,
   ShoppingBag,
@@ -65,8 +65,6 @@ export function MerchantTab() {
   const [activeStep, setActiveStep] = useState<StepId>('setup');
   const [animatingPay, setAnimatingPay] = useState(false);
   const [paid, setPaid] = useState(false);
-
-  const stepIndex = STEPS.findIndex((s) => s.id === activeStep);
 
   function handlePay() {
     if (animatingPay || paid) return;

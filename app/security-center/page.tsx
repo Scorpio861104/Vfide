@@ -13,6 +13,7 @@ import { useSecurityLogs } from '@/hooks/useSecurityLogs';
 import { useThreatDetection } from '@/hooks/useThreatDetection';
 import { Shield, Fingerprint, FileText, AlertTriangle, LayoutDashboard, ChevronRight, Search, Lock } from 'lucide-react';
 import { useLocale } from '@/lib/locale/LocaleProvider';
+import { TabTrigger } from '@/components/ui/TabTrigger';
 
 type TabView = 'overview' | 'biometric' | 'logs' | 'threats';
 
@@ -87,10 +88,9 @@ export default function SecurityCenterPage() {
               {TABS.map(tab => {
                 const isActive = activeTab === tab.id;
                 return (
-                  <button
+                  <TabTrigger
                     key={tab.id}
-                    role="tab"
-                    aria-selected={isActive}
+                    active={isActive}
                     aria-controls={`tabpanel-${tab.id}`}
                     onClick={() => setActiveTab(tab.id)}
                     className={`flex items-center gap-1.5 px-4 py-2 rounded-xl font-semibold text-sm whitespace-nowrap transition-all duration-200 ${
@@ -99,7 +99,7 @@ export default function SecurityCenterPage() {
                   >
                     <tab.icon size={15} />
                     <span className="hidden sm:inline">{tab.label}</span>
-                  </button>
+                  </TabTrigger>
                 );
               })}
             </div>

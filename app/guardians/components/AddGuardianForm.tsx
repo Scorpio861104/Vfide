@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { isAddress } from 'viem';
-import { m, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { UserPlus, CheckCircle2, AlertCircle } from 'lucide-react';
 
 interface AddGuardianFormProps {

@@ -34,7 +34,7 @@
 
 import { useState } from 'react';
 import { useAccount } from 'wagmi';
-import { AnimatePresence, m, LazyMotion, domAnimation } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import {
   AlertCircle,
   ArrowRight,

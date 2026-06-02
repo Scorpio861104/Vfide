@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { m, LazyMotion, domAnimation } from 'framer-motion';
+import { m } from 'framer-motion';
 import {
   Bookmark,
   Flag,

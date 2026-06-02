@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { m, LazyMotion, domAnimation } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Home, ArrowLeft, LayoutDashboard, Vault, Store, BookOpen } from 'lucide-react';
 
 const QUICK_LINKS = [

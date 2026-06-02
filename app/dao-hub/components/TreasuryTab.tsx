@@ -21,13 +21,13 @@ export function TreasuryTab() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
+    let _cancelled = false;
     setLoading(true);
     fetch('/api/stats/protocol')
       .then((r) => r.json())
       .then(setStats)
       .finally(() => setLoading(false));
-    return () => { cancelled = true; };
+    return () => { _cancelled = true; };
     }, []);
 
   if (loading) {

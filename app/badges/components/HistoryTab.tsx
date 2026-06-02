@@ -20,7 +20,7 @@ export function HistoryTab() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
+    let _cancelled = false;
     if (!address) return;
     setLoading(true);
     setError(null);
@@ -34,7 +34,7 @@ export function HistoryTab() {
       })
       .catch(() => setError('Failed to load badge history'))
       .finally(() => setLoading(false));
-    return () => { cancelled = true; };
+    return () => { _cancelled = true; };
     }, [address]);
 
   if (!address) {

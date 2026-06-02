@@ -14,10 +14,10 @@
 import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
-import { m, LazyMotion, domAnimation, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence , LazyMotion, domAnimation } from 'framer-motion';
 import {
-  Shield, UserCheck, AlertCircle, Key, XCircle,
-  CheckCircle2, Users, Clock, Unlock, Loader2,
+  Shield, UserCheck, AlertCircle, Key,
+  CheckCircle2, Loader2,
   Fingerprint, HelpCircle,
 } from 'lucide-react';
 import Link from 'next/link';

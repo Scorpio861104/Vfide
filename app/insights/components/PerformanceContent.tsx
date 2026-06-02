@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic';
 
 import { useMemo, useState } from 'react';
-import { m, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Activity, AlertTriangle, BarChart3, FileText, RefreshCcw, Users } from 'lucide-react';
 import { calculateHealthScore } from '@/config/performance-dashboard';
 import { useErrorTracking } from '@/hooks/useErrorTracking';

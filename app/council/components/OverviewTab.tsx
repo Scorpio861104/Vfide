@@ -18,7 +18,7 @@
 
 import Link from 'next/link';
 import { GlassCard } from '@/components/ui/GlassCard';
-import { m, LazyMotion, domAnimation } from 'framer-motion';
+import { m } from 'framer-motion';
 import {
   DollarSign,
   Shield,

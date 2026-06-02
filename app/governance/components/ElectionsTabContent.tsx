@@ -7,7 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAccount, useReadContract } from 'wagmi';
-import { m, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Vote, Users, Shield, Star, Award, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
 import { isConfiguredContractAddress, ZERO_ADDRESS } from '@/lib/contracts';
 import { CouncilElectionABI } from '@/lib/abis/future';

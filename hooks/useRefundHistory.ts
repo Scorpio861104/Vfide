@@ -318,9 +318,9 @@ export function useRefundHistory(role: RefundRole, viewerAddress?: Address) {
   }, [portalConfigured, target, publicClient, portalAddress, role]);
 
   useEffect(() => {
-    let cancelled = false;
+    let _cancelled = false;
     void refetch();
-    return () => { cancelled = true; };
+    return () => { _cancelled = true; };
     }, [refetch]);
 
   // Watch for new events while the page is mounted.

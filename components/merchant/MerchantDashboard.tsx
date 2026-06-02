@@ -61,7 +61,7 @@ export function MerchantDashboard() {
 
   // #142 FIX: keep off-chain merchant profile in sync after successful on-chain registration.
   useEffect(() => {
-    let cancelled = false;
+    let _cancelled = false;
     if (!registrationSuccess || !address || !businessName.trim()) return
 
     const payload = {
@@ -90,7 +90,7 @@ export function MerchantDashboard() {
         // Best-effort sync only; do not block successful on-chain registration UX.
       }
     })()
-    return () => { cancelled = true; };
+    return () => { _cancelled = true; };
     }, [registrationSuccess, address, businessName, category])
 
   // Refetch auto-convert state after transaction confirms

@@ -20,7 +20,7 @@ import { useState, useCallback } from 'react';
 import { useReadContract, useWriteContract } from 'wagmi';
 import { useAccount } from 'wagmi';
 import { keccak256, toBytes, isAddress, encodeAbiParameters, parseAbiParameters } from 'viem';
-import { m, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import {
   Shield,
   Heart,

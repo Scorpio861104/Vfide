@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { m, LazyMotion, domAnimation } from 'framer-motion';
+import { m , LazyMotion, domAnimation } from 'framer-motion';
 import { AlertTriangle } from 'lucide-react';
 import { LockVaultPanel } from '@/components/vault/LockVaultPanel';
 import { Footer } from '@/components/layout/Footer';

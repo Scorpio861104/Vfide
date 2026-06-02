@@ -30,7 +30,7 @@
  */
 
 import { useState } from 'react';
-import { m, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import {
   Shield,
   Clock,

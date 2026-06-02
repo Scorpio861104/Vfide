@@ -38,7 +38,7 @@ import {
   isAddress,
 } from 'viem';
 import { GlassCard } from '@/components/ui/GlassCard';
-import { m, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import {
   Heart,
   UserPlus,

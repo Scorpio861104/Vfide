@@ -1,7 +1,7 @@
 'use client';
 import dynamic from 'next/dynamic';
 
-import { AnimatePresence, m, LazyMotion, domAnimation } from 'framer-motion';
+import { AnimatePresence, m , LazyMotion, domAnimation } from 'framer-motion';
 import { History, LayoutDashboard, PlusCircle, Waves } from 'lucide-react';
 import { useState } from 'react';
 import { useLocale } from '@/lib/locale/LocaleProvider';

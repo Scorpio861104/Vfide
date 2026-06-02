@@ -66,13 +66,13 @@ export function BrowseTab() {
   // loan from OPEN to COSIGNING; the user should see it disappear
   // from the browse list once the chain confirms.
   useEffect(() => {
-    let cancelled = false;
+    let _cancelled = false;
     if (isConfirmed && accepting) {
       refetch();
       refetchStats();
       setAccepting(null);
     }
-    return () => { cancelled = true; };
+    return () => { _cancelled = true; };
     }, [isConfirmed, accepting, refetch, refetchStats]);
 
   const openOffers = useMemo(

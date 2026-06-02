@@ -23,7 +23,7 @@ export function ActiveTab() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
+    let _cancelled = false;
     if (!address) return;
     setLoading(true);
     setError(null);
@@ -32,7 +32,7 @@ export function ActiveTab() {
       .then((data) => setSubs((data.subscriptions ?? []).filter((s: Subscription) => s.status === 'active')))
       .catch(() => setError('Failed to load subscriptions'))
       .finally(() => setLoading(false));
-    return () => { cancelled = true; };
+    return () => { _cancelled = true; };
     }, [address]);
 
   if (!address) {

@@ -12,7 +12,7 @@ import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
-import { m, LazyMotion, domAnimation } from 'framer-motion';
+import { m , LazyMotion, domAnimation } from 'framer-motion';
 
 const VAULT_FAKE = '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb1' as const;
 

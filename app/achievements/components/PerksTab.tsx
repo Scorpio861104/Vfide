@@ -1,6 +1,6 @@
 'use client';
 
-import { m, LazyMotion, domAnimation } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Zap } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { LEVEL_PERKS, useGamification } from '@/lib/gamification';

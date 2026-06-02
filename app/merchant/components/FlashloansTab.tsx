@@ -4,7 +4,7 @@
  * Re-uses the existing /flashloans component tree via dynamic imports.
  */
 import { useState } from 'react';
-import { AnimatePresence, m, LazyMotion, domAnimation } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import { History, Info, Users, Zap } from 'lucide-react';
 import nextDynamic from 'next/dynamic';
 
@@ -36,8 +36,9 @@ export function FlashloansTab() {
         {TABS.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
+            type="button"
             onClick={() => setActiveTab(id)}
-            aria-selected={activeTab === id}
+            aria-pressed={activeTab === id}
             className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap -mb-px
               ${activeTab === id
                 ? 'text-accent border-b-2 border-accent bg-accent/8'

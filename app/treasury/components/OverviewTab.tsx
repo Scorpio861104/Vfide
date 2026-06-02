@@ -3,7 +3,7 @@
 import { Heart, PieChart, TrendingUp, Users, Wallet, AlertTriangle } from 'lucide-react';
 import { useReadContract } from 'wagmi';
 import { type Address, formatEther } from 'viem';
-import { m, LazyMotion, domAnimation } from 'framer-motion';
+import { m } from 'framer-motion';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useEnterpriseTreasury } from '@/hooks/useEnterpriseTreasury';
 import { useSanctumVault } from '@/hooks/useSanctumVault';

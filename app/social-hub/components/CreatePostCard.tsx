@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { AnimatePresence, m, LazyMotion, domAnimation } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import { ImageIcon, MapPin, Send, Smile, Video } from 'lucide-react';
 
 export function CreatePostCard({ onPost }: { onPost: (content: string) => void }) {

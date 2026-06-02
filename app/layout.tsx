@@ -45,7 +45,7 @@ import '@/lib/ssr-animations.css';
 // and layout reflow on first wallet-connect click.
 import '@rainbow-me/rainbowkit/styles.css';
 import { CoreProviders } from '@/lib/providers/CoreProviders';
-import { getHtmlLang, normalizeLocale, SUPPORTED_LOCALES } from '@/lib/i18n';
+import { getHtmlLang, normalizeLocale } from '@/lib/i18n';
 
 // JetBrains Mono backs every numeric value across the product via the
 // <Numeric> component and the .font-numeric utility. Subsetted to latin

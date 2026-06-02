@@ -10,6 +10,7 @@ import { Shield, Users, Key, FileText, Clock, Heart } from "lucide-react";
 
 import type { TabType } from './components/types';
 import { useLocale } from '@/lib/locale/LocaleProvider';
+import { TabTrigger } from '@/components/ui/TabTrigger';
 
 // ── Lazy-loaded tab components (code-split per tab) ─────────────────────────
 const OverviewTab = lazy(() => import('./components/OverviewTab').then(m => ({ default: m.OverviewTab })));
@@ -89,8 +90,10 @@ export default function GuardiansPage() {
               {visibleTabs.map(tab => {
                 const isActive = activeTab === tab.id;
                 return (
-                  <button
-                    key={tab.id} role="tab" aria-selected={isActive} aria-controls={`tabpanel-${tab.id}`}
+                  <TabTrigger
+                    key={tab.id}
+                    active={isActive}
+                    aria-controls={`tabpanel-${tab.id}`}
                     onClick={() => setActiveTab(tab.id)}
                     className={`flex items-center gap-1.5 px-4 py-2 rounded-xl font-semibold text-sm whitespace-nowrap transition-all duration-200 ${
                       isActive ? 'tab-pill-active' : 'tab-pill-inactive'
@@ -98,7 +101,7 @@ export default function GuardiansPage() {
                   >
                     <tab.icon size={15} />
                     <span className="hidden sm:inline">{tab.label}</span>
-                  </button>
+                  </TabTrigger>
                 );
               })}
             </div>

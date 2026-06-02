@@ -41,7 +41,7 @@ export const PATCH = withAuth(async (request: NextRequest, _user: JWTPayload, co
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
     return NextResponse.json({ likes: result.rows[0]?.likes ?? 0, liked: action === 'like' });
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json({ error: 'Failed to update post' }, { status: 500 });
   }
 });

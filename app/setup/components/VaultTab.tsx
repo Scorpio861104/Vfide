@@ -29,7 +29,7 @@ export function VaultTab() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
+    let _cancelled = false;
     if (!address) return;
     setLoading(true);
     Promise.all([
@@ -41,7 +41,7 @@ export function VaultTab() {
         setStats(p);
       })
       .finally(() => setLoading(false));
-    return () => { cancelled = true; };
+    return () => { _cancelled = true; };
     }, [address]);
 
   // UX-2: Disconnected-wallet guard — show prompt instead of trying to fetch

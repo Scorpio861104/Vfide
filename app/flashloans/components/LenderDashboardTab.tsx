@@ -56,20 +56,20 @@ export function LenderDashboardTab() {
   // Also clear the input that the user just acted on, so the form is
   // reset only AFTER the chain confirms, not before.
   useEffect(() => {
-    let cancelled = false;
+    let _cancelled = false;
     if (depositConfirmed) {
       refetch();
       setDepositInput('');
     }
-    return () => { cancelled = true; };
+    return () => { _cancelled = true; };
     }, [depositConfirmed, refetch]);
   useEffect(() => {
-    let cancelled = false;
+    let _cancelled = false;
     if (withdrawConfirmed) {
       refetch();
       setWithdrawInput('');
     }
-    return () => { cancelled = true; };
+    return () => { _cancelled = true; };
     }, [withdrawConfirmed, refetch]);
 
   // VFIDE balance check for deposit pre-flight (avoid confusing ERC20

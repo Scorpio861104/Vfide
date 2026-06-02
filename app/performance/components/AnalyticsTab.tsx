@@ -1,6 +1,6 @@
 'use client';
 
-import { m, LazyMotion, domAnimation } from 'framer-motion';
+import { m } from 'framer-motion';
 import { UserAnalyticsDashboard } from '@/components/performance/UserAnalyticsDashboard';
 
 interface AnalyticsTabProps {

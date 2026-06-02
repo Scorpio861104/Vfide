@@ -38,7 +38,7 @@ export function SecurityTab() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
+    let _cancelled = false;
     if (!address) return;
     setLoading(true);
     fetch('/api/security/logs?limit=30')
@@ -46,7 +46,7 @@ export function SecurityTab() {
       .then((data) => setLogs(data.logs ?? []))
       .catch(() => setError('Failed to load security events'))
       .finally(() => setLoading(false));
-    return () => { cancelled = true; };
+    return () => { _cancelled = true; };
     }, [address]);
 
   if (!address) {

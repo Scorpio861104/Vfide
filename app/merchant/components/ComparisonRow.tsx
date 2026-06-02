@@ -1,6 +1,6 @@
 'use client';
 
-import { m, LazyMotion, domAnimation } from 'framer-motion';
+import { m } from 'framer-motion';
 
 const COLOR_STYLES = {
   blue: 'from-blue-500/15 to-accent/10 border-blue-500/30 text-blue-300',

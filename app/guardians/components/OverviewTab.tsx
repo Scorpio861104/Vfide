@@ -1,6 +1,6 @@
 'use client';
 
-import { m, LazyMotion, domAnimation } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Shield, Clock } from 'lucide-react';
 import { GuardianConstellation } from '@/components/security/GuardianConstellation';
 

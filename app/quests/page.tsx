@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { m, LazyMotion, domAnimation } from 'framer-motion';
+import { m , LazyMotion, domAnimation } from 'framer-motion';
 import { Target } from 'lucide-react';
 import DailyQuestsPanel from '@/components/gamification/DailyQuestsPanel';
 import OnboardingChecklist from '@/components/gamification/OnboardingChecklist';

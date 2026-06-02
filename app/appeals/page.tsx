@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic';
 
 import { useState } from 'react';
-import { m, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
+import { m, AnimatePresence , LazyMotion, domAnimation } from 'framer-motion';
 import { Footer } from '@/components/layout/Footer';
 import { ActiveTab } from './components/ActiveTab';
 import { ResolvedTab } from './components/ResolvedTab';

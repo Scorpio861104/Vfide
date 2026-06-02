@@ -20,7 +20,7 @@ export function OverviewTab() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
+    let _cancelled = false;
     if (!address) return;
     setLoading(true);
     Promise.all([
@@ -33,7 +33,7 @@ export function OverviewTab() {
         setPosts(myPosts.length);
       })
       .finally(() => setLoading(false));
-    return () => { cancelled = true; };
+    return () => { _cancelled = true; };
     }, [address]);
 
   const byType = activities.reduce<Record<string, number>>((acc, a) => {

@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { AnimatePresence, m, LazyMotion, domAnimation } from 'framer-motion';
+import { AnimatePresence, m , LazyMotion, domAnimation } from 'framer-motion';
 import { Activity, LayoutDashboard, Trophy } from 'lucide-react';
 import { useState } from 'react';
 import { useLocale } from '@/lib/locale/LocaleProvider';

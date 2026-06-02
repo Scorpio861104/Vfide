@@ -23,14 +23,13 @@
 import { useState } from 'react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { parseUnits, formatUnits, isAddress } from 'viem';
-import { Zap, Loader2, CheckCircle, AlertTriangle, Info } from 'lucide-react';
+import { Loader2, CheckCircle, AlertTriangle, Info } from 'lucide-react';
 import { useFlashFee, useFindBestLender } from '@/hooks/useFlashLoan';
 import { useContractAddresses } from '@/hooks/useContractAddresses';
 import { isConfiguredContractAddress } from '@/lib/contracts';
 import { VFIDEFlashLoanABI } from '@/lib/abis';
 
 const VFIDE_DECIMALS = 18;
-const DEFAULT_MAX_FEE_BPS = 9n; // 0.09%
 
 interface FormState {
   receiverAddress: string;

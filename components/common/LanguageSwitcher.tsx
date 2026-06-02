@@ -18,6 +18,9 @@ const FLAG: Record<SupportedLocale, string> = {
   'th-TH': '🇹🇭',
   'ja-JP': '🇯🇵',
   'zh-CN': '🇨🇳',
+  'sw-KE': '🇰🇪',
+  'ha-NG': '🇳🇬',
+  'pt-BR': '🇧🇷',
 };
 
 interface LanguageSwitcherProps {

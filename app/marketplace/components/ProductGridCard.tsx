@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Heart, Package, Star } from 'lucide-react';
-import { m, LazyMotion, domAnimation } from 'framer-motion';
+import { m } from 'framer-motion';
 
 type ProductImage = { url: string; alt?: string };
 

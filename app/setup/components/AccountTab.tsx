@@ -33,7 +33,7 @@ export function AccountTab() {
   const [form, setForm] = useState({ username: '', display_name: '', bio: '', avatar_url: '' });
 
   useEffect(() => {
-    let cancelled = false;
+    let _cancelled = false;
     if (!address) return;
     setLoading(true);
     fetch(`/api/users/${address}`)
@@ -51,7 +51,7 @@ export function AccountTab() {
       })
       .catch(() => setError('Failed to load profile'))
       .finally(() => setLoading(false));
-    return () => { cancelled = true; };
+    return () => { _cancelled = true; };
     }, [address]);
 
   async function handleSave(e: React.FormEvent) {

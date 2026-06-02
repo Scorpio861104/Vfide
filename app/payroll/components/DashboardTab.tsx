@@ -26,14 +26,14 @@ export function DashboardTab() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
+    let _cancelled = false;
     if (!address) return;
     setLoading(true);
     fetch(`/api/streams?address=${address}&role=all`)
       .then((r) => r.json())
       .then((data) => setStreams(data.streams ?? []))
       .finally(() => setLoading(false));
-    return () => { cancelled = true; };
+    return () => { _cancelled = true; };
     }, [address]);
 
   const activeStreams = streams.filter((s) => s.status === 'active' && !s.is_paused);

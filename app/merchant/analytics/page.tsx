@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { m, LazyMotion, domAnimation } from 'framer-motion';
+import { m , LazyMotion, domAnimation } from 'framer-motion';
 import { Footer } from '@/components/layout/Footer';
 import { MerchantAnalytics } from '@/components/analytics/MerchantAnalytics';
 import { useAccount } from 'wagmi';

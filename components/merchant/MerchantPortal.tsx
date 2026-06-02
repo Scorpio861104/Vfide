@@ -230,7 +230,7 @@ export default function MerchantPortal() {
   }, [bulkJobs]);
 
   useEffect(() => {
-    let cancelled = false;
+    let _cancelled = false;
     if (!address) {
       setPaymentRequests([]);
       return;
@@ -260,7 +260,7 @@ export default function MerchantPortal() {
     };
 
     fetchRequests();
-    return () => { cancelled = true; };
+    return () => { _cancelled = true; };
     }, [address]);
 
   const revenueData = useMemo(() => buildRevenueSeries(paymentRequests, 90), [paymentRequests]);
@@ -1197,7 +1197,7 @@ function WebhooksSection({ merchantAddress }: { merchantAddress: string }) {
   ];
 
   useEffect(() => {
-    let cancelled = false;
+    let _cancelled = false;
     (async () => {
       try {
         const res = await fetch('/api/merchant/webhooks', {
@@ -1210,7 +1210,7 @@ function WebhooksSection({ merchantAddress }: { merchantAddress: string }) {
       } catch { /* ignore */ }
       setLoading(false);
     })();
-    return () => { cancelled = true; };
+    return () => { _cancelled = true; };
     }, [merchantAddress]);
 
   useEffect(() => {
@@ -1780,7 +1780,7 @@ function ProductsSection({ merchantAddress }: { merchantAddress: string }) {
   const [platformCategories, setPlatformCategories] = useState<Array<{ id: number; name: string; slug: string; children?: Array<{ id: number; name: string; slug: string }> }>>([]);
 
   useEffect(() => {
-    let cancelled = false;
+    let _cancelled = false;
     fetch(`/api/merchant/products?merchant=${encodeURIComponent(merchantAddress)}`)
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d?.products) setProducts(d.products); })
@@ -1790,7 +1790,7 @@ function ProductsSection({ merchantAddress }: { merchantAddress: string }) {
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d?.categories) setPlatformCategories(d.categories); })
       .catch(() => {});
-    return () => { cancelled = true; };
+    return () => { _cancelled = true; };
     }, [merchantAddress]);
 
   const addProduct = async () => {
@@ -1881,12 +1881,12 @@ function OrdersSection({ merchantAddress }: { merchantAddress: string }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let cancelled = false;
+    let _cancelled = false;
     fetch(`/api/merchant/orders?role=merchant`, )
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d?.orders) setOrders(d.orders); })
       .finally(() => setLoading(false));
-    return () => { cancelled = true; };
+    return () => { _cancelled = true; };
     }, [merchantAddress]);
 
   const updateStatus = async (id: string, status: string) => {
@@ -1971,7 +1971,7 @@ function ReviewsSection({ merchantAddress }: { merchantAddress: string }) {
   const [replyText, setReplyText] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    let cancelled = false;
+    let _cancelled = false;
     fetch(`/api/merchant/reviews?merchant=${encodeURIComponent(merchantAddress)}`)
       .then(r => r.ok ? r.json() : null)
       .then(d => {
@@ -1979,7 +1979,7 @@ function ReviewsSection({ merchantAddress }: { merchantAddress: string }) {
         if (d?.stats) setStats(d.stats);
       })
       .finally(() => setLoading(false));
-    return () => { cancelled = true; };
+    return () => { _cancelled = true; };
     }, [merchantAddress]);
 
   const submitReply = async (reviewId: string) => {
@@ -2048,12 +2048,12 @@ function BookingsSection({ merchantAddress }: { merchantAddress: string }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let cancelled = false;
+    let _cancelled = false;
     fetch(`/api/merchant/bookings?role=merchant`, )
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d?.bookings) setBookings(d.bookings); })
       .finally(() => setLoading(false));
-    return () => { cancelled = true; };
+    return () => { _cancelled = true; };
     }, [merchantAddress]);
 
   const updateBookingStatus = async (id: string, status: string) => {
@@ -2108,12 +2108,12 @@ function DigitalGoodsSection({ merchantAddress }: { merchantAddress: string }) {
   const [form, setForm] = useState({ product_id: '', file_name: '', file_url: '', file_size: '', license_keys: '' });
 
   useEffect(() => {
-    let cancelled = false;
+    let _cancelled = false;
     fetch(`/api/merchant/digital?role=merchant`, )
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d?.assets) setAssets(d.assets); })
       .finally(() => setLoading(false));
-    return () => { cancelled = true; };
+    return () => { _cancelled = true; };
     }, [merchantAddress]);
 
   const addAsset = async () => {

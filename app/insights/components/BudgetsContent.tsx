@@ -6,7 +6,7 @@ import React, { useState, useCallback } from 'react';
 import { useFinancialIntelligence, Budget } from '@/lib/financialIntelligence';
 import { useAccount } from 'wagmi';
 import { toast } from '@/lib/toast';
-import { m, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { PieChart, PlusCircle, Edit2, Trash2, BarChart3 } from 'lucide-react';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 

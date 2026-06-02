@@ -18,7 +18,7 @@
  */
 
 import { GlassCard } from '@/components/ui/GlassCard';
-import { m, LazyMotion, domAnimation } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Zap, RefreshCw } from 'lucide-react';
 
 interface VaultQuickActionsProps {

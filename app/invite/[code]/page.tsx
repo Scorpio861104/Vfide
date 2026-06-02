@@ -4,7 +4,7 @@ import { Footer } from '@/components/layout/Footer';
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { m, LazyMotion, domAnimation } from 'framer-motion';
+import { m , LazyMotion, domAnimation } from 'framer-motion';
 import { Gift, Shield, ArrowRight, Loader2 } from 'lucide-react';
 import { useLocale } from '@/lib/locale/LocaleProvider';
 

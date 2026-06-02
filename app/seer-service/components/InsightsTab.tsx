@@ -16,13 +16,13 @@ export function InsightsTab() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
+    let _cancelled = false;
     fetch('/api/analytics?limit=50')
       .then((r) => r.json())
       .then((data) => setEvents(data.events ?? data.data ?? []))
       .catch(() => setError('Failed to load insights'))
       .finally(() => setLoading(false));
-    return () => { cancelled = true; };
+    return () => { _cancelled = true; };
     }, []);
 
   if (loading) {

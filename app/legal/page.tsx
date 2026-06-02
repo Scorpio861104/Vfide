@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Scale, Lock, FileText } from "lucide-react";
 import { useLocale } from '@/lib/locale/LocaleProvider';
+import { TabTrigger } from '@/components/ui/TabTrigger';
 
 type TabType = 'legal' | 'privacy' | 'terms';
 
@@ -97,10 +98,9 @@ export default function LegalPage() {
           <div className="container mx-auto px-4 max-w-4xl">
             <div className="flex gap-2 overflow-x-auto py-3 scrollbar-hide" role="tablist" aria-label={copy.tablistLabel}>
               {tabs.map(tab => (
-                <button
+                <TabTrigger
                   key={tab.id}
-                  role="tab"
-                  aria-selected={activeTab === tab.id}
+                  active={activeTab === tab.id}
                   aria-controls={`tabpanel-${tab.id}`}
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-1.5 px-4 py-2 rounded-xl font-semibold text-sm whitespace-nowrap transition-all duration-200 ${
@@ -109,7 +109,7 @@ export default function LegalPage() {
                 >
                   <tab.icon size={15} />
                   <span>{tab.label}</span>
-                </button>
+                </TabTrigger>
               ))}
             </div>
           </div>

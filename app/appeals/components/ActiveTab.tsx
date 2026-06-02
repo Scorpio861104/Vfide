@@ -28,7 +28,7 @@ export function ActiveTab() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
+    let _cancelled = false;
     setLoading(true);
     const analyticsP = fetch('/api/seer/analytics?windowHours=720').then((r) => r.json()).catch(() => null);
     const ticketsP = address
@@ -41,7 +41,7 @@ export function ActiveTab() {
         setTickets(all.filter((tk) => tk.status === 'open'));
       })
       .finally(() => setLoading(false));
-    return () => { cancelled = true; };
+    return () => { _cancelled = true; };
     }, [address]);
 
   return (

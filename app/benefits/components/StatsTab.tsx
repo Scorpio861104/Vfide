@@ -9,7 +9,7 @@ import { useHeadhunterStats } from '@/hooks/useHeadhunterHooks';
 
 export function StatsTab({ isConnected = false, address }: { isConnected?: boolean; address?: `0x${string}` }) {
   const { balance, isLoading: balLoading } = useVFIDEBalance(address);
-  const { score, tier, isLoading: scoreLoading } = useProofScore(address);
+  const { score, isLoading: scoreLoading } = useProofScore(address);
   const { currentYearPoints } = useHeadhunterStats();
 
   const tierObj = getScoreTierObject(score ?? 0);

@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { AnimatePresence, m, LazyMotion, domAnimation } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import { Flag, Search, ShieldAlert } from 'lucide-react';
 import { useState } from 'react';
 

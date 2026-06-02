@@ -4,11 +4,12 @@ export const dynamic = 'force-dynamic';
 
 import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { m, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
+import { m, AnimatePresence , LazyMotion, domAnimation } from 'framer-motion';
 import {
   Target, Award, Star, Crown, Medal, Tag, Search, Info,
 } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
+import { TabTrigger } from '@/components/ui/TabTrigger';
 import DailyQuestsPanel from '@/components/gamification/DailyQuestsPanel';
 import OnboardingChecklist from '@/components/gamification/OnboardingChecklist';
 
@@ -19,20 +20,8 @@ const AchievementsTabContent = nextDynamic(
   () => import('@/app/achievements/components/AchievementsTab').then(m => ({ default: m.AchievementsTab })),
   { loading: () => <LoadingSpinner />, ssr: false }
 );
-const PerksTabContent = nextDynamic(
-  () => import('@/app/achievements/components/PerksTab').then(m => ({ default: m.PerksTab })),
-  { loading: () => <LoadingSpinner />, ssr: false }
-);
 const BadgeCollectionTab = nextDynamic(
   () => import('@/app/badges/components/CollectionTab').then(m => ({ default: m.CollectionTab })),
-  { loading: () => <LoadingSpinner />, ssr: false }
-);
-const BadgeAvailableTab = nextDynamic(
-  () => import('@/app/badges/components/AvailableTab').then(m => ({ default: m.AvailableTab })),
-  { loading: () => <LoadingSpinner />, ssr: false }
-);
-const LeaderboardAllTab = nextDynamic(
-  () => import('@/app/leaderboard/components/AllTab').then(m => ({ default: m.AllTab })),
   { loading: () => <LoadingSpinner />, ssr: false }
 );
 const BenefitsOverviewTab = nextDynamic(
@@ -123,10 +112,9 @@ function RewardsHubInner() {
           aria-label="Rewards sections"
         >
           {TABS.map(({ id, label, icon: Icon }) => (
-            <button
+            <TabTrigger
               key={id}
-              role="tab"
-              aria-selected={activeTab === id}
+              active={activeTab === id}
               onClick={() => setActiveTab(id)}
               className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold rounded-t whitespace-nowrap transition-colors ${
                 activeTab === id
@@ -136,7 +124,7 @@ function RewardsHubInner() {
             >
               <Icon size={14} />
               {label}
-            </button>
+            </TabTrigger>
           ))}
         </div>
 

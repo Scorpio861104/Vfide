@@ -25,7 +25,7 @@ export default function AddressPage() {
   // Validate address format
   const isValidAddress = address && address.startsWith('0x') && address.length === 42
   
-  const { score, tier, tierName, canVote, canMerchant, isLoading } = useProofScore(
+  const { score, tierName, canVote, canMerchant, isLoading } = useProofScore(
     isValidAddress ? address : undefined
   )
   // Suppress unused variable warning - score is part of returned data structure

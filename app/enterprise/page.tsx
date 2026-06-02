@@ -3,7 +3,7 @@ import _dynamic from 'next/dynamic';
 
 export const dynamic = 'force-dynamic';
 
-import { AnimatePresence, m, LazyMotion, domAnimation } from 'framer-motion';
+import { AnimatePresence, m , LazyMotion, domAnimation } from 'framer-motion';
 import { Building2, CreditCard, TrendingUp, Zap } from 'lucide-react';
 import { useState } from 'react';
 import { useAccount } from 'wagmi';

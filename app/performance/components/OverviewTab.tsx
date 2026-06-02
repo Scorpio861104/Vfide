@@ -1,6 +1,6 @@
 'use client';
 
-import { m, LazyMotion, domAnimation } from 'framer-motion';
+import { m } from 'framer-motion';
 import { PerformanceMetricsGrid } from '@/components/performance/PerformanceMetricsGrid';
 
 interface OverviewTabProps {

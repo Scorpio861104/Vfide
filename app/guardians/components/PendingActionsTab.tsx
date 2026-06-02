@@ -3,7 +3,7 @@
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { useState, useMemo } from 'react';
 import { useAccount } from 'wagmi';
-import { m, LazyMotion, domAnimation } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Shield } from 'lucide-react';
 import { useGuardianWatchlist, useGuardianAttestations, mergeInboxEntries } from './hooks';
 import { GuardianPendingRecoveryCard } from './GuardianPendingRecoveryCard';

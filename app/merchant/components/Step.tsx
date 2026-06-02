@@ -1,6 +1,6 @@
 'use client';
 
-import { m, LazyMotion, domAnimation } from 'framer-motion';
+import { m } from 'framer-motion';
 
 export function Step({ number, title, description }: { number: number; title: string; description: string }) {
   return (

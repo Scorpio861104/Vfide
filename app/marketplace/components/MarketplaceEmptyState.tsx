@@ -18,7 +18,7 @@
  */
 
 import Link from 'next/link';
-import { m, LazyMotion, domAnimation } from 'framer-motion';
+import { m } from 'framer-motion';
 import {
   Store, ArrowRight, Package, Laptop, Wrench,
   Shirt, Music, Globe, Sparkles,

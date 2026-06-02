@@ -21,7 +21,7 @@ export function DashboardTab() {
   const [window, setWindow] = useState(24);
 
   useEffect(() => {
-    let cancelled = false;
+    let _cancelled = false;
     setLoading(true);
     setError(null);
     fetch(`/api/seer/analytics?windowHours=${window}`)
@@ -29,7 +29,7 @@ export function DashboardTab() {
       .then((d) => setData(d))
       .catch(() => setError('Failed to load SEER analytics'))
       .finally(() => setLoading(false));
-    return () => { cancelled = true; };
+    return () => { _cancelled = true; };
     }, [window]);
 
   const stats = data

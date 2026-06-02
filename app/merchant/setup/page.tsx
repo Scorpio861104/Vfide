@@ -13,7 +13,7 @@ import { Footer } from '@/components/layout/Footer';
 import { MerchantQuickSetup } from '@/components/merchant/MerchantQuickSetup';
 import { useAccount } from 'wagmi';
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
-import { m, LazyMotion, domAnimation } from 'framer-motion';
+import { m , LazyMotion, domAnimation } from 'framer-motion';
 import { Store, Wallet } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useLocale } from '@/lib/locale/LocaleProvider';

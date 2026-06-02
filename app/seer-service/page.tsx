@@ -1,6 +1,6 @@
 'use client';
 
-import { AnimatePresence, m, LazyMotion, domAnimation } from 'framer-motion';
+import { AnimatePresence, m , LazyMotion, domAnimation } from 'framer-motion';
 import { BarChart2, Eye, Settings } from 'lucide-react';
 import { useState } from 'react';
 

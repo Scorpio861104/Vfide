@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { m, LazyMotion, domAnimation } from 'framer-motion';
+import { m , LazyMotion, domAnimation } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Search, Star, MapPin, ShoppingBag, Package, Briefcase, Download } from 'lucide-react';

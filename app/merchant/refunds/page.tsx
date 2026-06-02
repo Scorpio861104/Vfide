@@ -41,7 +41,7 @@ export const dynamic = 'force-dynamic';
 import { useState } from 'react';
 import Link from 'next/link';
 import { useAccount } from 'wagmi';
-import { m, LazyMotion, domAnimation } from 'framer-motion';
+import { m , LazyMotion, domAnimation } from 'framer-motion';
 import { parseEther, formatEther, isAddress, type Address } from 'viem';
 import {
   ArrowLeft,

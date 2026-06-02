@@ -26,6 +26,7 @@ import { Bell, Lock, Settings, Shield, User } from 'lucide-react';
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Footer } from '@/components/layout/Footer';
+import { TabTrigger } from '@/components/ui/TabTrigger';
 
 import { AccountTab }  from '@/app/setup/components/AccountTab';
 import { VaultTab }    from '@/app/setup/components/VaultTab';
@@ -94,14 +95,12 @@ export default function SettingsPage() {
           {/* A11Y-1: role=tablist so AT announces this as a tab widget */}
           <div role="tablist" aria-label="Settings sections" className="flex gap-2 overflow-x-auto scrollbar-hide">
             {TABS.map(({ id, label, icon: Icon }) => (
-              <button key={id} onClick={() => setActiveTab(id)}
-                role="tab"
-                aria-selected={activeTab === id}
+              <TabTrigger key={id} active={activeTab === id} onClick={() => setActiveTab(id)}
                 aria-controls={`settings-panel-${id}`}
                 id={`settings-tab-${id}`}
                 className={activeTab === id ? 'tab-pill-active' : 'tab-pill-inactive'}>
                 <Icon size={14} />{label}
-              </button>
+              </TabTrigger>
             ))}
           </div>
         </div>

@@ -1,6 +1,6 @@
 # Frontend Page Coverage Audit
 
-Generated: 2026-06-01T00:02:28.489Z
+Generated: 2026-06-01T15:44:05.032Z
 
 Total routes: 142
 Directly covered routes: 124

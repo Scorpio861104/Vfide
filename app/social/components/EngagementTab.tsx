@@ -31,7 +31,7 @@ export function EngagementTab() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
+    let _cancelled = false;
     if (!address) return;
     setLoading(true);
     Promise.all([
@@ -44,7 +44,7 @@ export function EngagementTab() {
         setEndorsements(a.activities ?? []);
       })
       .finally(() => setLoading(false));
-    return () => { cancelled = true; };
+    return () => { _cancelled = true; };
     }, [address]);
 
   if (!address) {

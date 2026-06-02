@@ -17,12 +17,13 @@
 
 import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { m, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
+import { m, AnimatePresence , LazyMotion, domAnimation } from 'framer-motion';
 import {
-  Wallet, HardDrive, FileText, Shield, Users, ArrowRight, CheckCircle2,
-  Lock, Activity, EyeOff, ArrowLeftRight, Coins, Globe,
+  Wallet, HardDrive, FileText, Users, ArrowRight, CheckCircle2,
+  Lock, Activity, EyeOff, ArrowLeftRight,
 } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
+import { TabTrigger } from '@/components/ui/TabTrigger';
 import dynamic from 'next/dynamic';
 
 const StakingTab = dynamic(
@@ -311,9 +312,8 @@ function WalletHubInner() {
             role="tablist" aria-label="Wallet sections">
             <div className="flex gap-2 overflow-x-auto scrollbar-hide">
               {TABS.map(({ id, label, icon: Icon }) => (
-                <button key={id}
-                  role="tab"
-                  aria-selected={activeTab === id}
+                <TabTrigger key={id}
+                  active={activeTab === id}
                   onClick={() => setActiveTab(id)}
                   className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-colors whitespace-nowrap ${
                     activeTab === id
@@ -322,7 +322,7 @@ function WalletHubInner() {
                   }`}
                 >
                   <Icon size={14} />{label}
-                </button>
+                </TabTrigger>
               ))}
             </div>
           </div>

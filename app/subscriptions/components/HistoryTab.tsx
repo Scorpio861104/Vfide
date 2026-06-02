@@ -29,7 +29,7 @@ export function HistoryTab() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
+    let _cancelled = false;
     if (!address) return;
     setLoading(true);
     setError(null);
@@ -38,7 +38,7 @@ export function HistoryTab() {
       .then((data) => setSubs(data.subscriptions ?? []))
       .catch(() => setError('Failed to load subscription history'))
       .finally(() => setLoading(false));
-    return () => { cancelled = true; };
+    return () => { _cancelled = true; };
     }, [address]);
 
   if (!address) {

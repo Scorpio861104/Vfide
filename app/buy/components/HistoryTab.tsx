@@ -25,14 +25,14 @@ export function HistoryTab() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
+    let _cancelled = false;
     if (!address) return;
     setLoading(true);
     fetch(`/api/activities?userAddress=${address}&limit=50`)
       .then((r) => r.json())
       .then((d) => setActivities(d.activities ?? []))
       .finally(() => setLoading(false));
-    return () => { cancelled = true; };
+    return () => { _cancelled = true; };
     }, [address]);
 
   const txActivities = activities.filter((a) =>

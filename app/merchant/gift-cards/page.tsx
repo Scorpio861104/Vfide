@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Gift, Plus, Copy, Check, MessageCircle, Clock, ArrowLeft } from 'lucide-react';
-import { m, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
+import { m, AnimatePresence , LazyMotion, domAnimation } from 'framer-motion';
 import { useAccount } from 'wagmi';
 import { Footer } from '@/components/layout/Footer';
 import { useLocale } from '@/lib/locale/LocaleProvider';
