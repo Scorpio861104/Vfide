@@ -130,8 +130,13 @@ export function CreatorDashboard() {
 
         const supporterMap = new Map<string, { address: string; displayName: string; amount: string }>();
         for (const activity of [...tipRows, ...unlockRows, ...subscriberRows]) {
-          const supporterAddress = String(activity.user_address ?? activity.data?.from ?? '0x0000000000000000000000000000000000000000');
-          const displayName = String(activity.user_username ?? `${supporterAddress.slice(0, 6)}…${supporterAddress.slice(-4)}`);
+          const supporterAddress = String(activity.user_address ?? activity.data?.from ?? 'Unknown');
+          const displayName = String(
+            activity.user_username ??
+              (supporterAddress.startsWith('0x') && supporterAddress.length > 10
+                ? `${supporterAddress.slice(0, 6)}…${supporterAddress.slice(-4)}`
+                : 'Unknown supporter')
+          );
           if (!supporterMap.has(displayName)) {
             supporterMap.set(displayName, {
               address: supporterAddress,

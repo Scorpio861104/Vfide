@@ -78,13 +78,15 @@ export function ClaimsTab() {
   const previewConfigured =
     isConfiguredContractAddress(viewAddress) && !!address && periods.length > 0;
   const { data: previewData, isLoading: previewLoading } = useReadContracts({
-    contracts: periods.map((p) => ({
-      address: viewAddress,
-      abi: EcosystemVaultViewABI as any,
-      functionName: 'previewHeadhunterReward',
-      // abi-parity-ok: previewHeadhunterReward(uint256 year, uint256 quarter, address user) — 3 args, statically present
-      args: [p.year, p.quarter, address ?? '0x0000000000000000000000000000000000000000'] as const,
-    })),
+    contracts: previewConfigured
+      ? periods.map((p) => ({
+          address: viewAddress,
+          abi: EcosystemVaultViewABI as any,
+          functionName: 'previewHeadhunterReward',
+          // abi-parity-ok: previewHeadhunterReward(uint256 year, uint256 quarter, address user) — 3 args, statically present
+          args: [p.year, p.quarter, address] as const,
+        }))
+      : [],
     query: { enabled: previewConfigured },
   });
 

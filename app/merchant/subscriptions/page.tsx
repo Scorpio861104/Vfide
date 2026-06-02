@@ -17,6 +17,7 @@ import {
   Users,
 } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
+import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
 
 type PlanStatus = 'active' | 'paused' | 'archived';
 type Interval = 'weekly' | 'monthly' | 'quarterly' | 'yearly';
@@ -258,7 +259,10 @@ function CreatePlanModal({ onClose, onCreated, onError }: { onClose: () => void;
   const [interval, setInterval] = useState<Interval>('monthly');
   const [trialDays, setTrialDays] = useState(0);
   const [maxSubs, setMaxSubs] = useState<number | ''>('');
-  const [token] = useState(process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS ?? '0x0000000000000000000000000000000000000000');
+  const configuredToken = isConfiguredContractAddress(CONTRACT_ADDRESSES.VFIDEToken)
+    ? CONTRACT_ADDRESSES.VFIDEToken
+    : '';
+  const [token] = useState(configuredToken);
   const [submitting, setSubmitting] = useState(false);
 
   const canSubmit = name.trim().length > 0 && amount > 0 && ADDRESS_REGEX.test(token) && !submitting;
@@ -306,6 +310,11 @@ function CreatePlanModal({ onClose, onCreated, onError }: { onClose: () => void;
         </div>
 
         <div className="space-y-4">
+          {!configuredToken && (
+            <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-200">
+              VFIDE token contract is not configured. Set NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS before creating subscription plans.
+            </div>
+          )}
           <label className="block">
             <span className="text-xs text-zinc-400 mb-1 block">Name *</span>
             <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="VIP Monthly" className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none" />

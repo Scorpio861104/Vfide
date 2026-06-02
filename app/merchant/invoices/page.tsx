@@ -20,6 +20,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
+import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -296,8 +297,6 @@ function InvoiceRow({ invoice, onMarkPaid, onCancel, onSend }: { invoice: Invoic
 
 // ── Create modal ────────────────────────────────────────────────────────────
 
-const VFIDE_TOKEN_PLACEHOLDER = '0x0000000000000000000000000000000000000000';
-
 function CreateInvoiceModal({
   merchantAddress: _merchantAddress,
   onClose,
@@ -318,9 +317,10 @@ function CreateInvoiceModal({
   const [taxRate, setTaxRate] = useState(0);
   const [memo, setMemo] = useState('');
   const [dueDate, setDueDate] = useState('');
-  const [token, _setToken] = useState<string>(
-    process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS ?? VFIDE_TOKEN_PLACEHOLDER,
-  );
+  const configuredToken = isConfiguredContractAddress(CONTRACT_ADDRESSES.VFIDEToken)
+    ? CONTRACT_ADDRESSES.VFIDEToken
+    : '';
+  const [token, _setToken] = useState<string>(configuredToken);
   const [sendImmediately, setSendImmediately] = useState(true);
 
   const subtotal = useMemo(() => items.reduce((s, it) => s + (Number(it.quantity) * Number(it.unit_price)), 0), [items]);
@@ -382,6 +382,11 @@ function CreateInvoiceModal({
         </div>
 
         <div className="space-y-5">
+          {!configuredToken && (
+            <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-200">
+              VFIDE token contract is not configured. Set NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS before creating invoices.
+            </div>
+          )}
           {/* Customer */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <label className="block">

@@ -46,7 +46,10 @@ export default function SplitterPage() {
   void locale;
 
   const [splitterInput, setSplitterInput] = useState('');
-  const [tokenInput, setTokenInput] = useState<string>(CONTRACT_ADDRESSES.VFIDEToken ?? '');
+  const defaultTokenInput = isConfiguredContractAddress(CONTRACT_ADDRESSES.VFIDEToken)
+    ? CONTRACT_ADDRESSES.VFIDEToken
+    : '';
+  const [tokenInput, setTokenInput] = useState<string>(defaultTokenInput);
   const [submitting, setSubmitting] = useState(false);
 
   const splitter: Address | null = isAddress(splitterInput)

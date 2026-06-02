@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
+import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
 
 type LinkStatus = 'active' | 'paused' | 'archived' | 'exhausted';
 
@@ -297,7 +298,10 @@ function CreateLinkModal({ onClose, onCreated, onError }: { onClose: () => void;
   const [maxUses, setMaxUses] = useState<number | ''>('');
   const [expiresDate, setExpiresDate] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [token] = useState(process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS ?? '0x0000000000000000000000000000000000000000');
+  const configuredToken = isConfiguredContractAddress(CONTRACT_ADDRESSES.VFIDEToken)
+    ? CONTRACT_ADDRESSES.VFIDEToken
+    : '';
+  const [token] = useState(configuredToken);
 
   const canSubmit =
     title.trim().length > 0 &&
@@ -350,6 +354,11 @@ function CreateLinkModal({ onClose, onCreated, onError }: { onClose: () => void;
         </div>
 
         <div className="space-y-4">
+          {!configuredToken && (
+            <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-200">
+              VFIDE token contract is not configured. Set NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS before creating payment links.
+            </div>
+          )}
           <label className="block">
             <span className="text-xs text-zinc-400 mb-1 block">Title *</span>
             <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Saturday haircut deposit" className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none" />
