@@ -430,18 +430,19 @@ export function MerchantDashboard() {
           </div>
 
           <p className="text-sm text-gray-400 mb-4">
-            Auto-convert VFIDE payments to stablecoins via DEX swap to protect against volatility.
-            DEX swap fees (~0.3%) + gas costs apply. 5% max slippage protection included.
+            Auto-convert enablement is not available in this release. VFIDE payments settle directly, and merchants can still use the payout address flow below.
           </p>
 
           <div className="flex items-center justify-between mb-4">
-            <span className="text-white">Auto-Convert Enabled</span>
+            <span className="text-white">Auto-Convert</span>
             <m.button
               onClick={() => {
-                setAutoConvert(!autoConvertEnabled)
-                playNotification()
+                if (autoConvertEnabled) {
+                  setAutoConvert(false)
+                  playNotification()
+                }
               }}
-              disabled={isSettingConvert}
+              disabled={isSettingConvert || !autoConvertEnabled}
               className={`w-14 h-8 rounded-full transition-colors ${
                 autoConvertEnabled ? 'bg-green-600' : 'bg-gray-600'
               } relative`}
@@ -454,6 +455,12 @@ export function MerchantDashboard() {
               />
             </m.button>
           </div>
+
+          {!autoConvertEnabled && (
+            <p className="text-xs text-gray-400 mb-2">
+              Auto-convert is disabled until a real swap path is shipped.
+            </p>
+          )}
 
           {convertSuccess && (
             <div className="bg-green-900/20 border border-green-500 rounded-lg p-2 text-center text-green-400 text-xs">
