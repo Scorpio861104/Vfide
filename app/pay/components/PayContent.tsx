@@ -109,7 +109,6 @@ export function PayContent() {
 
     const verifyQrSignature = async () => {
       if (paymentSource !== 'qr') {
-        setSignatureState('valid');
         return;
       }
       if (!signature || !expiryFromQuery || !qrMessage) {

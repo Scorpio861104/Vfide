@@ -1,18 +1,38 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type React from 'react';
 
-const mockSearchParams = new URLSearchParams();
+let mockSearchParams = new URLSearchParams();
 const mockCreateEscrow = jest.fn(async (_merchant: `0x${string}`, _amount: string, _orderId: string) => {});
 const mockPayMerchant = jest.fn(async (_merchant: `0x${string}`, _token: `0x${string}`, _amount: string, _orderId: string) => {});
 const mockShowToast = jest.fn();
 const mockVerifyMessage = jest.fn(async () => true);
 const mockFetch: jest.MockedFunction<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>> = jest.fn();
-const renderPayPage = () => {
+
+const stripMotionProps = (props: Record<string, unknown>) => {
+  const {
+    whileHover: _whileHover,
+    whileTap: _whileTap,
+    initial: _initial,
+    animate: _animate,
+    exit: _exit,
+    transition: _transition,
+    variants: _variants,
+    layout: _layout,
+    ...rest
+  } = props;
+  return rest;
+};
+
+const renderPayPage = async () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const pageModule = require('../../app/pay/page');
   const PayPage = pageModule.default as React.ComponentType;
-  return render(<PayPage />);
+  let rendered: ReturnType<typeof render> | undefined;
+  await act(async () => {
+    rendered = render(<PayPage />);
+  });
+  return rendered;
 };
 
 jest.mock('next/navigation', () => ({
@@ -31,12 +51,12 @@ jest.mock('@/lib/locale/LocaleProvider', () => ({
 
 jest.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-    button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+    div: ({ children, ...props }: any) => <div {...stripMotionProps(props)}>{children}</div>,
+    button: ({ children, ...props }: any) => <button {...stripMotionProps(props)}>{children}</button>,
   },
   m: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-    button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+    div: ({ children, ...props }: any) => <div {...stripMotionProps(props)}>{children}</div>,
+    button: ({ children, ...props }: any) => <button {...stripMotionProps(props)}>{children}</button>,
   },
 }));
 
@@ -106,9 +126,7 @@ jest.mock('@/lib/escrow/useEscrow', () => ({
 
 describe('Pay page QR checkout', () => {
   beforeEach(() => {
-    mockSearchParams.forEach((_, key) => {
-      mockSearchParams.delete(key);
-    });
+    mockSearchParams = new URLSearchParams();
     mockCreateEscrow.mockClear();
     mockPayMerchant.mockClear();
     mockShowToast.mockClear();
@@ -141,10 +159,13 @@ describe('Pay page QR checkout', () => {
     mockSearchParams.set('amount', '100');
     attachSignedQrParams();
 
-    renderPayPage();
+    await renderPayPage();
 
     expect(screen.getByText('Amount (VFIDE)')).toBeTruthy();
     expect(screen.getByText('100')).toBeTruthy();
+    await waitFor(() => {
+      expect(mockVerifyMessage).toHaveBeenCalled();
+    });
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /Pay Instantly \(100 VFIDE\)/i })).toBeTruthy();
     });
@@ -159,7 +180,11 @@ describe('Pay page QR checkout', () => {
     mockSearchParams.set('exp', String(Math.floor(Date.now() / 1000) + 600));
     mockSearchParams.set('sig', '0xabcdef');
 
-    renderPayPage();
+    await renderPayPage();
+
+    await waitFor(() => {
+      expect(mockVerifyMessage).toHaveBeenCalled();
+    });
 
     const escrowButton = await screen.findByRole('button', { name: /Create Escrow/i });
     fireEvent.click(escrowButton);
@@ -174,25 +199,27 @@ describe('Pay page QR checkout', () => {
     expect(mockPayMerchant).not.toHaveBeenCalled();
   });
 
-  it('disables payment when amount is missing or invalid', () => {
+  it('disables payment when amount is missing or invalid', async () => {
     mockSearchParams.set('merchant', '0x1111111111111111111111111111111111111111');
     mockSearchParams.set('amount', 'not-a-number');
     attachSignedQrParams();
 
-    renderPayPage();
+    await renderPayPage();
 
-    const payButton = screen.getByRole('button', { name: /Amount required/i });
-    expect(payButton.hasAttribute('disabled')).toBe(true);
+    await waitFor(() => {
+      expect(screen.queryByText('Unsigned QR payload. Merchant must sign and lock this QR.')).toBeNull();
+      expect(screen.getByRole('button', { name: /Amount required/i }).hasAttribute('disabled')).toBe(true);
+    });
   });
 
-  it('blocks QR checkout when signature is missing', () => {
+  it('blocks QR checkout when signature is missing', async () => {
     mockSearchParams.set('merchant', '0x1111111111111111111111111111111111111111');
     mockSearchParams.set('amount', '10');
     mockSearchParams.set('source', 'qr');
     mockSearchParams.set('settlement', 'instant');
     mockSearchParams.set('exp', String(Math.floor(Date.now() / 1000) + 600));
 
-    renderPayPage();
+    await renderPayPage();
 
     expect(screen.getByRole('button', { name: /QR signature required/i }).hasAttribute('disabled')).toBe(true);
   });
@@ -203,9 +230,10 @@ describe('Pay page QR checkout', () => {
     attachSignedQrParams();
     mockVerifyMessage.mockResolvedValue(false);
 
-    renderPayPage();
+    await renderPayPage();
 
     await waitFor(() => {
+      expect(screen.getByText('QR signature invalid. Potential tampering detected.')).toBeTruthy();
       expect(screen.getByRole('button', { name: /QR signature required/i }).hasAttribute('disabled')).toBe(true);
     });
   });
@@ -217,7 +245,7 @@ describe('Pay page QR checkout', () => {
     mockSearchParams.set('settlement', 'instant');
     mockSearchParams.set('exp', String(Math.floor(Date.now() / 1000) + 600));
 
-    renderPayPage();
+    await renderPayPage();
 
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith(
@@ -238,7 +266,7 @@ describe('Pay page QR checkout', () => {
     mockSearchParams.set('settlement', 'instant');
     mockPayMerchant.mockRejectedValueOnce(new Error('User rejected transaction'));
 
-    renderPayPage();
+    await renderPayPage();
 
     fireEvent.click(await screen.findByRole('button', { name: /Pay Instantly/i }));
 
@@ -252,7 +280,7 @@ describe('Pay page QR checkout', () => {
     mockSearchParams.set('amount', '10');
     mockSearchParams.set('settlement', 'instant');
 
-    renderPayPage();
+    await renderPayPage();
 
     fireEvent.click(await screen.findByRole('button', { name: /Pay Instantly/i }));
 
