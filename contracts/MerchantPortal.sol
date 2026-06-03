@@ -1088,7 +1088,9 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
      */
     function setAutoConvert(bool enabled) external onlyMerchant {
         if (enabled) {
-            if (address(swapRouter) == address(0) || stablecoin == address(0)) revert MERCH_NotConfigured();
+            // Auto-convert execution is not implemented in _transferWithAutoConvert yet.
+            // Fail fast here so merchants cannot enable a mode that would later revert on payment.
+            revert MERCH_Deprecated();
         }
         autoConvert[msg.sender] = enabled;
         emit AutoConvertSet(msg.sender, enabled);
