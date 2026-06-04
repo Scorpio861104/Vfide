@@ -1062,12 +1062,15 @@ contract SessionKeyManager is ReentrancyGuard {
             return;
         }
 
+        // NON-CUSTODIAL INVARIANT: the system can never freeze or seize a user's funds.
+        // Seer is advisory/monitoring only — a delayed/blocked/penalized verdict is surfaced via
+        // SessionActionDelayed for off-chain monitoring but NEVER reverts a payment. Punishment, if
+        // any, flows through the Seer score → fee curve, never by halting fund movement.
+        // (Previously result>=3 reverted; that freeze capability is removed.)
         // 0=Allowed,1=Warned,2=Delayed,3=Blocked,4=Penalized
-        if (result == 2) {
+        if (result >= 2) {
             emit SessionActionDelayed(subject, counterparty, action, amount);
-            return;
         }
-        if (result >= 3) revert SKM_ActionBlocked(result);
     }
 }
 

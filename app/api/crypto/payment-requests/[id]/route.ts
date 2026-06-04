@@ -298,6 +298,20 @@ export const PATCH = withAuth(async (request: NextRequest, user: JWTPayload, con
     // With a tx_hash, we verify the transaction succeeded on-chain.
     // If verification is unavailable, fail closed.
     const normalizedStatus = body.status;
+
+    // F-BE-023 follow-up: PATCH is the completion endpoint only. Every other
+    // transition (cancel/reject/accept) must go through PUT, which enforces the
+    // role + state-machine rules. Without this guard a party could use PATCH to
+    // bypass those rules — e.g. a recipient setting 'cancelled', or either party
+    // reopening a closed request to 'pending' and NULLing the recorded tx_hash,
+    // erasing on-chain payment proof.
+    if (normalizedStatus !== 'completed') {
+      return NextResponse.json(
+        { error: "PATCH only supports the 'completed' transition; use PUT for cancel/reject/accept." },
+        { status: 400 }
+      );
+    }
+
     if (normalizedStatus === 'completed') {
       if (!normalizedTxHash) {
         return NextResponse.json(
@@ -361,10 +375,20 @@ export const PATCH = withAuth(async (request: NextRequest, user: JWTPayload, con
     const result = await query(
       `UPDATE payment_requests
        SET status = $2, tx_hash = $3, updated_at = NOW()
-       WHERE id = $1
+       WHERE id = $1 AND status IN ('pending', 'accepted')
        RETURNING *`,
       [id, normalizedStatus, normalizedTxHash]
     );
+
+    if (result.rows.length === 0) {
+      // Race-loss: status changed between the precheck and this update. Surface
+      // 409 rather than silently no-op'ing (and never clobber a non-pending/
+      // accepted row, which would erase a prior completion's tx_hash).
+      return NextResponse.json(
+        { error: 'Payment request was already updated' },
+        { status: 409 }
+      );
+    }
 
     return NextResponse.json({ success: true, request: result.rows[0] });
   } catch (error) {

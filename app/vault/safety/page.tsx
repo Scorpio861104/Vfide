@@ -59,7 +59,7 @@ export default function VaultSafetyPage() {
             <p>
               When you open a vault on VFIDE, the only person who can move money
               out of it is you. There is no admin key. There is no &quot;reset
-              password&quot; button. Nobody at VFIDE, nobody at Anthropic, nobody
+              password&quot; button. Nobody at VFIDE, no DAO vote, nobody
               at any company can freeze your account, reverse your transactions,
               or take what&apos;s yours.
             </p>

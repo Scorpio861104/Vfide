@@ -85,6 +85,31 @@ const ENV_OVERRIDE: Partial<Record<FeatureKey, string | undefined>> = {
   subscriptions: process.env.NEXT_PUBLIC_ENABLE_SUBSCRIPTIONS,
   flashloans: process.env.NEXT_PUBLIC_ENABLE_FLASHLOANS,
   bridge: process.env.NEXT_PUBLIC_ENABLE_BRIDGE,
+  // Every remaining flag is also env-overridable so ANY feature can be activated
+  // by configuration at deploy time — no code edit to STATIC_DEFAULTS required.
+  // (Each NEXT_PUBLIC_* must be a static literal for Next build-time inlining.)
+  socialFeed: process.env.NEXT_PUBLIC_ENABLE_SOCIAL_FEED,
+  socialMessaging: process.env.NEXT_PUBLIC_ENABLE_SOCIAL_MESSAGING,
+  socialPayments: process.env.NEXT_PUBLIC_ENABLE_SOCIAL_PAYMENTS,
+  stories: process.env.NEXT_PUBLIC_ENABLE_STORIES,
+  endorsements: process.env.NEXT_PUBLIC_ENABLE_ENDORSEMENTS,
+  marketplace: process.env.NEXT_PUBLIC_ENABLE_MARKETPLACE,
+  storefront: process.env.NEXT_PUBLIC_ENABLE_STOREFRONT,
+  offlinePOS: process.env.NEXT_PUBLIC_ENABLE_OFFLINE_POS,
+  budgets: process.env.NEXT_PUBLIC_ENABLE_BUDGETS,
+  taxes: process.env.NEXT_PUBLIC_ENABLE_TAXES,
+  stealthAddresses: process.env.NEXT_PUBLIC_ENABLE_STEALTH_ADDRESSES,
+  paperWallet: process.env.NEXT_PUBLIC_ENABLE_PAPER_WALLET,
+  hardwareWallet: process.env.NEXT_PUBLIC_ENABLE_HARDWARE_WALLET,
+  seerService: process.env.NEXT_PUBLIC_ENABLE_SEER_SERVICE,
+  seerAcademy: process.env.NEXT_PUBLIC_ENABLE_SEER_ACADEMY,
+  flashloan: process.env.NEXT_PUBLIC_ENABLE_FLASHLOAN,
+  whatsappReceipts: process.env.NEXT_PUBLIC_ENABLE_WHATSAPP_RECEIPTS,
+  csvExport: process.env.NEXT_PUBLIC_ENABLE_CSV_EXPORT,
+  analytics: process.env.NEXT_PUBLIC_ENABLE_ANALYTICS,
+  themeManager: process.env.NEXT_PUBLIC_ENABLE_THEME_MANAGER,
+  themeShowcase: process.env.NEXT_PUBLIC_ENABLE_THEME_SHOWCASE,
+  pieMenu: process.env.NEXT_PUBLIC_ENABLE_PIE_MENU,
 };
 
 function resolveFlag(key: FeatureKey): boolean {

@@ -116,6 +116,21 @@ export function ElectionsTabContent() {
 
   return (
     <div className="space-y-8">
+      {/* CouncilElection ships in V1 but a council only exists once one is
+          ELECTED. This is people-gated, not a future code release — so frame it
+          as "awaiting an election," not "coming later." */}
+      {!enabled && (
+        <div className="rounded-lg border border-amber-400/30 bg-amber-500/5 p-4 text-sm">
+          <p className="font-semibold text-amber-200">No council has been elected yet.</p>
+          <p className="mt-1 text-amber-100/80">
+            The elected-council layer is part of V1 — it activates as soon as the DAO opens an
+            election and the community votes members in. Until then, governance runs on direct
+            ProofScore-weighted voting (see the Proposals tab). The council size, term length, and
+            minimum-score values below are the rules an election will use; live results appear here
+            once a council is voted in.
+          </p>
+        </div>
+      )}
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[

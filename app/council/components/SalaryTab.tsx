@@ -11,7 +11,7 @@ export function SalaryTab({ isConnected: _isConnected }: { isConnected: boolean 
 
   return (
     <div className="space-y-8">
-      <SampleDataBanner label="Council salary distribution requires the CouncilSalary contract, which launches in a future release. The figures below are illustrative placeholders — no salary periods have run at V1." />
+      <SampleDataBanner label="Council salary runs once a council has been elected and the DAO funds salary cycles — it is part of V1, awaiting an election, not a future release. No salary periods have run yet; the figures below are illustrative." />
       {/* Salary Overview */}
       <m.div 
         initial={{ opacity: 0 }}

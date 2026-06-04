@@ -3,7 +3,7 @@ import { buildPageMetadata } from '@/lib/seo/buildPageMetadata';
 
 export const metadata: Metadata = buildPageMetadata({
   title: 'Sanctum — Verified Charities',
-  description: 'Donate to DAO-verified charities with on-chain proof. Sanctum receives ~20% of network fees (composite of BurnRouter and FeeDistributor allocations) to fund vetted causes worldwide.',
+  description: 'Donate to DAO-verified charities with on-chain proof. Sanctum receives 10% of every network fee (via ProofScoreBurnRouter) to fund vetted causes worldwide.',
   path: '/sanctum',
 });
 

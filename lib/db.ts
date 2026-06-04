@@ -33,11 +33,15 @@ async function applyDbUserAddressContext(client: PoolClient, userAddress: string
   await client.query("SELECT set_config('app.current_user_address', $1, false)", [userAddress]);
 }
 
-async function resetDbUserAddressContext(client: PoolClient) {
+async function resetDbUserAddressContext(client: PoolClient): Promise<boolean> {
   try {
     await client.query('RESET app.current_user_address');
+    return true;
   } catch {
-    // Best-effort cleanup only; do not mask original query/release errors.
+    // Reset failed: the connection may still carry app.current_user_address. Signal
+    // failure so the caller DESTROYS the connection instead of returning a tainted one
+    // to the pool, where a later (e.g. unauthenticated) query could inherit its RLS scope.
+    return false;
   }
 }
 
@@ -201,8 +205,11 @@ export async function query<T extends QueryResultRow = QueryResultRow>(
         await applyDbUserAddressContext(client, userAddress);
         res = await client.query<T>(text, params);
       } finally {
-        await resetDbUserAddressContext(client);
-        client.release();
+        const resetOk = await resetDbUserAddressContext(client);
+        // If RESET failed, destroy the connection (release with an error) so a connection
+        // still carrying app.current_user_address never re-enters the pool and leaks RLS
+        // context to a later (e.g. unauthenticated) query.
+        client.release(resetOk ? undefined : new Error('RLS context reset failed; destroying connection'));
       }
     } else {
       res = await pool.query<T>(text, params);
@@ -284,8 +291,10 @@ export async function getClient(): Promise<PoolClient> {
     await applyDbUserAddressContext(client, userAddress);
     const originalRelease = client.release.bind(client);
     client.release = ((err?: Error | boolean) => {
-      void resetDbUserAddressContext(client).finally(() => {
-        originalRelease(err);
+      void resetDbUserAddressContext(client).then((resetOk) => {
+        // Preserve any caller-supplied error; otherwise destroy the connection if RESET
+        // failed so a tainted connection never re-enters the pool.
+        originalRelease(err || (resetOk ? undefined : new Error('RLS context reset failed; destroying connection')));
       });
     }) as PoolClient['release'];
   }

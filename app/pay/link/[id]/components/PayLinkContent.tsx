@@ -92,7 +92,8 @@ export function PayLinkContent({ linkId }: { linkId: string }) {
     params.set('merchant', link.merchant_address);
     params.set('amount', payAmount.toFixed(2));
     params.set('source', 'paylink');
-    params.set('settlement', 'escrow');
+    // Settlement is decided by /pay's trust-tiered default (escrow for a low-trust payee, instant for
+    // a trusted one) with a payer opt-out — no longer forced to escrow here.
     params.set('linkId', link.link_id);
     if (email.trim()) params.set('email', email.trim());
     router.push(`/pay?${params.toString()}`);

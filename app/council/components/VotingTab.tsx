@@ -18,7 +18,7 @@ export function VotingTab({ isConnected }: { isConnected: boolean }) {
 
   return (
     <div className="space-y-8">
-      <SampleDataBanner label="Member-removal voting requires the council governance contracts, which launch in a future release. The entries below are illustrative placeholders — no live removal votes exist at V1." />
+      <SampleDataBanner label="Member-removal voting becomes available once a council has been elected — it is part of V1, awaiting an election, not a future release. No live removal votes exist yet; the entries below are illustrative." />
       {/* Voting Overview */}
       <m.div 
         initial={{ opacity: 0 }}

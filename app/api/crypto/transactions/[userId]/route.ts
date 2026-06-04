@@ -1,6 +1,12 @@
 /**
  * /api/crypto/transactions/[userId]
- * GET — paginated transaction history for a user (numeric DB user ID or wallet address).
+ * GET — paginated transaction history for the AUTHENTICATED caller.
+ *
+ * The [userId] path segment is retained for backward-compatible URLs but is
+ * NOT used to select rows. Results are always scoped to the authenticated
+ * wallet — as owner, sender, or receiver — mirroring the transactions_party_access
+ * RLS policy. This prevents reading another user's history by passing their id,
+ * and ensures authorization does not rely on RLS alone (defense-in-depth).
  *
  * Query params:
  *   limit  — max records, clamped to 100 (default 50)
@@ -13,29 +19,27 @@ import { requireAuth } from '@/lib/auth/middleware';
 
 export const runtime = 'nodejs';
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ userId: string }> }
-) {
+export async function GET(request: NextRequest) {
   // Rate-limit guard
   const rateLimitResponse = await withRateLimit(request, 'read');
   if (rateLimitResponse) return rateLimitResponse;
 
-  // Auth guard — requireAuth returns a NextResponse (401/403) when unauthorized,
-  // or { user } when authenticated. We only block if it returns a Response-like object.
-  const authResult = await Promise.resolve(requireAuth(request));
-  if (authResult && 'status' in (authResult as object) && !('user' in (authResult as object))) {
-    return authResult as unknown as NextResponse;
+  // Auth guard — requireAuth returns a NextResponse (401) when unauthorized,
+  // or { user } when authenticated.
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
   }
 
-  const { userId } = await params;
-
-  // Validate userId — must be numeric
-  if (!/^\d+$/.test(userId)) {
-    return NextResponse.json({ error: 'Invalid userId' }, { status: 400 });
+  // Scope strictly to the authenticated wallet. requireAuth guarantees a
+  // verified token; defensively re-validate the address shape.
+  const callerAddress =
+    typeof authResult.user.address === 'string'
+      ? authResult.user.address.trim().toLowerCase()
+      : '';
+  if (!/^0x[a-f0-9]{40}$/.test(callerAddress)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-
-  const numericUserId = parseInt(userId, 10);
 
   // Validate & clamp pagination params
   const { searchParams } = new URL(request.url);
@@ -52,16 +56,18 @@ export async function GET(
   const limit = Math.min(rawLimit ? parseInt(rawLimit, 10) : 50, 100);
   const offset = Math.min(rawOffset ? parseInt(rawOffset, 10) : 0, 10000);
 
-  // Verify the user exists
-  const userResult = await query('SELECT id FROM users WHERE id = $1', [numericUserId]);
-  if (!userResult.rows.length) {
-    return NextResponse.json({ error: 'User not found' }, { status: 404 });
-  }
-
-  // Fetch paginated transactions
+  // Fetch paginated transactions where the caller is a party (owner, sender,
+  // or receiver). RLS (transactions_party_access) enforces the same restriction
+  // at the row level; this WHERE mirrors it so the route does not rely on RLS
+  // alone. query() also sets app.current_user_address to the caller for RLS.
   const txResult = await query(
-    `SELECT * FROM transactions WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
-    [numericUserId, limit, offset]
+    `SELECT * FROM transactions
+       WHERE LOWER(COALESCE(user_address, '')) = $1
+          OR LOWER(COALESCE(from_address, '')) = $1
+          OR LOWER(COALESCE(to_address, '')) = $1
+     ORDER BY created_at DESC
+     LIMIT $2 OFFSET $3`,
+    [callerAddress, limit, offset]
   );
 
   return NextResponse.json({

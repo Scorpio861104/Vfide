@@ -8,10 +8,10 @@
  *   - Drag the score (0 → 10,000) and watch the burn fee curve move.
  *   - At the same moment a sample $50 payment recalculates: the fee
  *     FeeDistributor default split (FeeDistributor.sol L279, DAO-adjustable within protocol bounds):
- *     burnBps=3500 (35%) | sanctumBps=2000 (20%) | daoPayrollBps=1500 (15%)
+ *     Canonical end-to-end split: burn 40% | Sanctum 10% | DAO payroll 25%
  *     merchantPoolBps=2000 (20%) | headhunterPoolBps=1000 (10%)
  *     Note: BurnRouter also routes 10% of buyer fee directly to Sanctum + 40% to burn before
- *     passing 50% to FeeDistributor. Net composite over full buyer fee: 57.5% burn | 20% Sanctum.
+ *     | merchant pool 15% | referral 10%. See FEE_MODEL_CANONICAL.md.
  *   - The Monument's vertex brightens with the score.
  *   - The tier badge changes label + colour as you cross thresholds.
  *
@@ -86,13 +86,13 @@ function tierForScore(score: number): Tier {
  */
 
 /** FeeDistributor default split (FeeDistributor.sol L279, DAO-adjustable within protocol bounds):
- *  burnBps=3500 (35%) | sanctumBps=2000 (20%) | daoPayrollBps=1500 (15%) | merchantPoolBps=2000 (20%) | headhunterPoolBps=1000 (10%) */
+ *  burn 40% | Sanctum 10% | DAO payroll 25% | merchant pool 15% | referral 10% (end-to-end) */
 const FEE_SPLITS: { id: string; label: string; pct: number; hex: string; help: string }[] = [
-  { id: 'burn',      label: 'Burn',           pct: 35,   hex: '#f97316', help: 'Permanently removed from supply — FeeDistributor default 35%' },
-  { id: 'sanctum',   label: 'Sanctum Fund',   pct: 20,   hex: '#ec4899', help: 'Charity + community grants — FeeDistributor default 20%' },
-  { id: 'merchant',  label: 'Merchant pool',  pct: 20,   hex: '#10b981', help: 'Volume rewards for top merchants — FeeDistributor default 20%' },
-  { id: 'payroll',   label: 'DAO payroll',    pct: 15,   hex: '#06b6d4', help: 'Pays elected council members — FeeDistributor default 15%' },
-  { id: 'headhunt',  label: 'Referral pool',  pct: 10,   hex: '#a855f7', help: 'Rewards for inviting active users — FeeDistributor default 10%' },
+  { id: 'burn',      label: 'Burn',           pct: 40,   hex: '#f97316', help: 'Permanently removed from supply — 40% of every fee (ProofScoreBurnRouter)' },
+  { id: 'sanctum',   label: 'Sanctum Fund',   pct: 10,   hex: '#ec4899', help: 'Charity + community grants — 10% of every fee (ProofScoreBurnRouter)' },
+  { id: 'merchant',  label: 'Merchant pool',  pct: 15,   hex: '#10b981', help: 'Volume rewards for top merchants — 15% of every fee (FeeDistributor)' },
+  { id: 'payroll',   label: 'DAO payroll',    pct: 25,   hex: '#06b6d4', help: 'Pays elected council members — 25% of every fee (FeeDistributor)' },
+  { id: 'headhunt',  label: 'Referral pool',  pct: 10,   hex: '#a855f7', help: 'Rewards for inviting active users — 10% of every fee (FeeDistributor)' },
 ];
 
 // ── Component ────────────────────────────────────────────────────────

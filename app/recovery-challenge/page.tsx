@@ -1,33 +1,50 @@
 'use client';
 
 /**
- * /recovery-challenge — test harness route for the OwnerChallengeBanner.
+ * /recovery-challenge — DEV/TEST-ONLY harness for the OwnerChallengeBanner.
  *
- * Playwright navigates here to test the owner-challenge flow.
+ * NOTE: Playwright does NOT navigate to this real page — its recovery-flow
+ * spec hits the standalone mock server (playwright/test-server.js), which
+ * serves its own /recovery-challenge HTML. This page is gated to 404 in
+ * production (see default export) so it can't surface a fake security alarm.
  * Renders the banner with mock state derived from query params:
  *   ?vault=0x...&claimStatus=GuardianApproved
  */
 
 import { Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { m , LazyMotion, domAnimation } from 'framer-motion';
 
-const VAULT_FAKE = '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb1' as const;
-
 function RecoveryChallengeInner() {
   const searchParams = useSearchParams();
-  const vault = (searchParams.get('vault') ?? VAULT_FAKE) as `0x${string}`;
-  const claimStatusParam = searchParams.get('claimStatus') ?? 'GuardianApproved';
+  const router = useRouter();
+  const claimStatusParam = searchParams.get('claimStatus');
+  const vault = (searchParams.get('vault') ?? '0x0') as `0x${string}`;
 
-  const isPending = claimStatusParam === 'Pending';
-  const canChallenge = !isPending;
+  // No mock param => a real visitor. Send them to their vault, where the live
+  // OwnerChallengeBanner appears when an actual recovery claim exists. The demo
+  // state below only renders when an explicit claimStatus param is supplied.
+  useEffect(() => {
+    if (!claimStatusParam) router.replace('/vault');
+  }, [claimStatusParam, router]);
 
   const [showModal, setShowModal] = useState(false);
   const [reason, setReason] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  if (!claimStatusParam) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-zinc-900">
+        <Loader2 className="h-8 w-8 animate-spin text-white/60" />
+      </div>
+    );
+  }
+
+  const isPending = claimStatusParam === 'Pending';
+  const canChallenge = !isPending;
 
   const handleChallenge = async () => {
     setIsSubmitting(true);
@@ -149,6 +166,9 @@ function RecoveryChallengeInner() {
 }
 
 export default function RecoveryChallengeTestPage() {
+  // Not gated: a real visitor with no mock param is redirected to /vault (see
+  // RecoveryChallengeInner). The demo banner only renders for an explicit
+  // ?claimStatus=... param, so no fabricated alarm is shown in production.
   return (
     <Suspense fallback={null}>
       <RecoveryChallengeInner />
