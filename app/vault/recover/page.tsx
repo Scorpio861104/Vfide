@@ -30,7 +30,7 @@ const ClaimFlowModal = _dynamic(() => import('./components/ClaimFlowModal').then
 const RECOVERY_STEPS = [
   { step: 1, icon: Search, title: "Find Your Vault", description: "Search using your recovery ID, email, username, or through a trusted guardian", gradient: "cyan" as const },
   { step: 2, icon: Users, title: "Guardian Verification", description: "Your pre-designated guardians verify your identity and approve the recovery request", gradient: "purple" as const },
-  { step: 3, icon: Unlock, title: "Secure Transfer", description: "After a 7-day challenge period, ownership securely transfers to your new wallet", gradient: "green" as const },
+  { step: 3, icon: Unlock, title: "Secure Transfer", description: "After a challenge period of 7–14 days (extended automatically if the vault has been active recently), ownership securely transfers to your new wallet", gradient: "green" as const },
 ];
 
 // ── Page ─────────────────────────────────────────────────────────────────────

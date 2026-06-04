@@ -100,6 +100,7 @@ error CBV_UseProposeApply();
 error CBV_TransferFailed();
 error CBV_ChallengePeriodTooShort();
 error CBV_ChallengePeriodTooLong();
+error CBV_CannotRescueVFIDE();
 
 // ── Storage layout mirror (MUST match CardBoundVault slot order) ──────────────
 
@@ -374,7 +375,9 @@ contract CardBoundVaultAdminFacet is CBVStorageLayout {
         }
     }
 
-    function cancelTokenApproval() external onlyAdmin {
+    function cancelTokenApproval() external {
+        // Guardian-veto parity (see cancelRescueNative): admin OR any guardian may cancel.
+        if (msg.sender != admin && !isGuardian[msg.sender]) revert CBV_NotGuardian();
         (address token, address spender,) = IAdminManager_F(_adminManager()).cancelTokenApproval();
         emit TokenApprovalCancelled(token, spender);
     }
@@ -431,14 +434,18 @@ contract CardBoundVaultAdminFacet is CBVStorageLayout {
         emit NativeRescueProposed(to, amount, uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY);
     }
 
-    function applyRescueNative() external onlyAdmin {
+    function applyRescueNative() external onlyAdmin whenNotPaused {
         (address payable to, uint256 amount) = IAdminManager_F(_adminManager()).applyNativeRescue();
         (bool ok,) = to.call{value: amount}("");
         if (!ok) revert CBV_TransferFailed();
         emit NativeRescue(to, amount);
     }
 
-    function cancelRescueNative() external onlyAdmin {
+    function cancelRescueNative() external {
+        // Guardian-veto parity with cancelQueuedWithdrawal: admin OR any guardian may cancel a pending
+        // rescue during the 7-day timelock, so a compromised admin key cannot force it through and a
+        // guardian (the protocol's stolen-key backstop) can intervene.
+        if (msg.sender != admin && !isGuardian[msg.sender]) revert CBV_NotGuardian();
         (address payable to, uint256 amount) = IAdminManager_F(_adminManager()).cancelNativeRescue();
         emit NativeRescueCancelled(to, amount);
     }
@@ -447,17 +454,29 @@ contract CardBoundVaultAdminFacet is CBVStorageLayout {
 
     function rescueERC20(address token, address to, uint256 amount) external onlyAdmin {
         if (token == address(0) || to == address(0)) revert CBV_Zero();
+        // Drain-protection: the user's VFIDE balance must only ever move via the signed-intent
+        // system (executePayMerchant / executeVaultToVaultTransfer / executeFundEscrow), which is
+        // bounded by maxPerTransfer + dailyTransferLimit, queued for large amounts, and guardian-
+        // cancellable. Rescue is for STRAY non-protocol tokens only. Without this guard a compromised
+        // admin key could rescueERC20(vfideToken, attacker, fullBalance) and bypass every transfer
+        // limit, the withdrawal queue, the activeWallet signature, AND the guardian veto.
+        if (token == _vfideToken()) revert CBV_CannotRescueVFIDE();
         IAdminManager_F(_adminManager()).proposeERC20Rescue(token, to, amount);
         emit ERC20RescueProposed(token, to, amount, uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY);
     }
 
-    function applyRescueERC20() external onlyAdmin {
+    function applyRescueERC20() external onlyAdmin whenNotPaused {
         (address token, address to, uint256 amount) = IAdminManager_F(_adminManager()).applyERC20Rescue();
+        // Defense-in-depth: re-check at apply time (the propose-time guard in rescueERC20 already
+        // blocks staging a VFIDE rescue; this protects against any pending entry staged by another path).
+        if (token == _vfideToken()) revert CBV_CannotRescueVFIDE();
         IERC20(token).safeTransfer(to, amount);
         emit ERC20Rescue(token, to, amount);
     }
 
-    function cancelRescueERC20() external onlyAdmin {
+    function cancelRescueERC20() external {
+        // Guardian-veto parity (see cancelRescueNative): admin OR any guardian may cancel.
+        if (msg.sender != admin && !isGuardian[msg.sender]) revert CBV_NotGuardian();
         (address token, address to, uint256 amount) = IAdminManager_F(_adminManager()).cancelERC20Rescue();
         emit ERC20RescueCancelled(token, to, amount);
     }
@@ -505,7 +524,13 @@ contract CardBoundVaultAdminFacet is CBVStorageLayout {
         ICardBoundVaultInheritanceManager_F(inheritanceManager).vetoInheritanceClaim(msg.sender);
     }
 
-    function ownerOverrideClaim() external onlyAdmin {
+    function ownerOverrideClaim() external {
+        // No onlyAdmin: the inheritance manager authorizes msg.sender against BOTH snapshotOwnerAdmin
+        // and snapshotProofOfLifeWallet (and requires VETO_PERIOD), so this single wrapper reaches the
+        // owner-admin AND the proof-of-life override paths; a caller that is neither reverts
+        // INH_NotProofOfLifeWallet in the manager. The previous onlyAdmin was redundant (the manager
+        // already re-checks the admin) and blocked the proof-of-life wallet — defeating its purpose
+        // (cancelling a false inheritance claim when the owner has lost their admin key).
         ICardBoundVaultInheritanceManager_F(inheritanceManager).ownerOverrideClaim(msg.sender);
     }
 }

@@ -3,7 +3,9 @@
 /**
  * /recovery-sign — test harness route for the ClaimFlowModal.
  *
- * Playwright navigates here to test the vault recovery initiation flow.
+ * NOTE: Playwright does NOT hit this real page — its recovery-flow spec uses
+ * the standalone mock server (playwright/test-server.js). Gated to 404 in
+ * production (see default export).
  * Query params:
  *   step=1|2|3   — which step to start on
  *   vault=0x...  — vault address
@@ -12,8 +14,8 @@
  */
 
 import { Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import { m, AnimatePresence , LazyMotion, domAnimation } from 'framer-motion';
 import {
   Shield, UserCheck, AlertCircle, Key,
@@ -24,16 +26,32 @@ import Link from 'next/link';
 
 function RecoverySignInner() {
   const searchParams = useSearchParams();
-  const initialStep = Number(searchParams.get('step') ?? 1);
-  const vault = searchParams.get('vault') ?? '0xdeadbeef';
+  const router = useRouter();
+  const stepParam = searchParams.get('step');
+  const initialStep = Number(stepParam ?? 1);
+  const vault = searchParams.get('vault') ?? '0x0';
   const newWallet = searchParams.get('wallet') ?? '';
   const preSubmitted = searchParams.get('submitted') === 'true';
+
+  // No mock param => a real visitor. Send them to the live recovery flow. The
+  // demo steps below only render when an explicit ?step=... param is supplied.
+  useEffect(() => {
+    if (!stepParam) router.replace('/vault/recover');
+  }, [stepParam, router]);
 
   const [step, setStep] = useState(preSubmitted ? 3 : initialStep);
   const [recoveryId, setRecoveryId] = useState('');
   const [reason, setReason] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  if (!stepParam) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+      </div>
+    );
+  }
 
   const handleSubmit = async () => {
     setError(null);
@@ -253,6 +271,9 @@ function RecoverySignInner() {
 }
 
 export default function RecoverySignPage() {
+  // Not gated: a real visitor with no mock param is redirected to /vault/recover
+  // (see RecoverySignInner). Demo steps only render for an explicit ?step=...
+  // param, so no simulated submission is reachable in production.
   return (
     <Suspense fallback={null}>
       <RecoverySignInner />

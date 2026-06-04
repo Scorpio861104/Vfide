@@ -1287,12 +1287,10 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
             }
         }
 
-        address fraudCheckAddr = scoringFrom;
-        bool escrowTransferRequired =
-            address(fraudRegistry) != address(0) &&
-            !systemExempt[from] &&
-            !systemExempt[logicalTo] &&
-            fraudRegistry.requiresEscrow(fraudCheckAddr);
+        // NON-CUSTODIAL: the fraud-escrow 30-day HOLD is removed. A flagged sender is
+        // surfaced to counterparties as a risk signal (FraudRegistry / frontend risk card)
+        // and penalized via the Seer score → fee curve, but their transfer is NEVER held,
+        // delayed, or seized. requiresEscrow() now returns false and is no longer consulted here.
 
         // 2. Anti-whale checks (skip for exempt addresses like exchanges, mints, burns)
         // EE-1 GAS FIX: _checkWhaleProtection now returns the daily window state it read from
@@ -1338,7 +1336,6 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
         // Dynamic fees via burn router (if present and not exempt and not bypassed)
         if (
-            !escrowTransferRequired &&
             address(burnRouter) != address(0) &&
             !isFeeBypassed() &&
             !(systemExempt[from] || systemExempt[logicalTo])
@@ -1426,22 +1423,11 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
             _recordActualDailyTransfer(from, amount, _cachedWindowStart, _cachedStoredUsed);
         }
 
-        // ── Fraud escrow: flagged senders get 30-day delay ─────
-        // Not a freeze. Tokens are held for 30 days then delivered.
-        // Community-driven: requires 3 complaints from trusted users.
-        if (escrowTransferRequired) {
-            // C-1 FIX: Credit balance AND register escrow atomically.
-            // If escrowTransfer reverts (e.g., 500-escrow limit), the entire
-            // transfer reverts — no silent token loss.
-            _balances[address(fraudRegistry)] += remaining;
-            emit Transfer(from, address(fraudRegistry), remaining);
-            // slither-disable-next-line unused-return  // escrowTransfer reverts on failure; bool not consumed by design
-            fraudRegistry.escrowTransfer(from, custodyTo, remaining);
-        } else {
-            // Normal delivery — tokens go directly to receiver
-            _balances[custodyTo] += remaining;
-            emit Transfer(from, custodyTo, remaining);
-        }
+        // NON-CUSTODIAL: tokens are ALWAYS delivered directly to the recipient. The former
+        // fraud-escrow 30-day hold has been removed — the system never holds, delays, or seizes
+        // a user's funds. Fraud is handled by reputation/risk-signal + fee, never by withholding.
+        _balances[custodyTo] += remaining;
+        emit Transfer(from, custodyTo, remaining);
 
     // F-31 FIX: Basic transfer invariant check for defense-in-depth monitoring.
     // The receiver's net amount can never exceed the original transfer amount.
@@ -1458,17 +1444,13 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     function _enforceSeerAction(address subject, uint8 action, uint256 amount, address counterparty) internal {
         if (address(seerAutonomous) == address(0)) return;
         try seerAutonomous.beforeAction(subject, action, amount, counterparty) returns (uint8 r) {
-            // NON-CUSTODIAL ALIGNMENT: match DAO._enforceSeerAction semantics.
-            // 0 = Allowed → proceed silently
-            // 1 = Warned  → proceed and emit signal (do not block)
-            // ≥2 (Delayed / Blocked / Penalized) → revert; these are explicit
-            //      "do not proceed" responses from Seer's policy layer, not
-            //      advisories. Per protocol non-custodial doctrine we never
-            //      block on advisory signals; only on explicit deny responses.
-            if (r == 1) {
+            // NON-CUSTODIAL INVARIANT: the system can never freeze or seize a user's funds.
+            // Seer is advisory/monitoring only. Any non-zero (warn/restrict/block) verdict is
+            // surfaced via SeerWarned for off-chain monitoring but NEVER reverts the transfer.
+            // Punishment, if any, flows through the Seer score → fee curve — never by halting
+            // fund movement. (Previously r>=2 reverted; that freeze capability is removed.)
+            if (r != 0) {
                 emit SeerWarned(subject, action, amount, counterparty);
-            } else if (r >= 2) {
-                revert VF_SeerBlocked();
             }
         } catch (bytes memory reason) {
             // SEER-04 FIX (#179): Unexpected SeerAutonomous failures should fail open.

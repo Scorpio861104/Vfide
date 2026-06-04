@@ -592,13 +592,10 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
             return;
         }
 
-        // Defense in depth: avoid releasing bridged funds directly to addresses
-        // currently flagged for escrow by the token's fraud controls.
-        if (_receiverRequiresEscrow(receiver)) {
-            _sendBridgeFailureNotification(_origin.srcEid, _guid);
-            emit BridgeDeliveryFailed(_guid, _origin.srcEid, "receiver requires escrow");
-            return;
-        }
+        // NON-CUSTODIAL: bridged funds are ALWAYS delivered to the receiver. The former
+        // "reject delivery if receiver is flagged" branch was a fund-withholding (freeze) path
+        // and is removed. Fraud is handled by risk signal + score + service-ban, never by
+        // withholding a user's incoming funds. (_receiverRequiresEscrow now always returns false.)
 
         // Update statistics
         userStats[receiver].totalReceived += amount;

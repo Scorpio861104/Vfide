@@ -16,6 +16,10 @@ import { useEscrow } from '@/lib/escrow/useEscrow';
 import { buildQrSignatureMessage, parseExpiry } from '@/lib/payments/qrSignature';
 import { safeParseFloat } from '@/lib/validation';
 
+// Payer-protection default: pay a payee whose ProofScore is below neutral (5000) and the flow
+// defaults to escrow protection; trusted payees settle instantly. Always payer-overridable (opt-out).
+const ESCROW_TRUST_THRESHOLD = 5000;
+
 const settlementMessaging = (settlement: 'instant' | 'escrow') => {
   if (settlement === 'instant') {
     return {
@@ -59,10 +63,16 @@ export function PayContent() {
   const signature = (searchParams.get('sig') || '').trim();
   const expiryFromQuery = parseExpiry(searchParams.get('exp'));
   const settlementParam = searchParams.get("settlement");
-  const settlement =
-    settlementParam === "instant" || settlementParam === "escrow"
-      ? settlementParam
-      : (paymentSource === "qr" ? "instant" : "escrow");
+  // Trust-tiered payer protection: an explicit ?settlement= always wins; otherwise the default keys
+  // on the PAYEE's trust once it resolves (see effect below). Until then, fall back to the prior
+  // source heuristic so the first paint is sensible.
+  const explicitSettlement: 'instant' | 'escrow' | null =
+    settlementParam === "instant" || settlementParam === "escrow" ? settlementParam : null;
+  const [settlement, setSettlement] = useState<'instant' | 'escrow'>(
+    explicitSettlement ?? (paymentSource === "qr" ? "instant" : "escrow")
+  );
+  // True once the payer manually picks a path, so the trust-based default never overrides their choice.
+  const [userChoseSettlement, setUserChoseSettlement] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState<'vfide' | 'usdc' | 'usdt'>('vfide');
   const [isProcessing, setIsProcessing] = useState(false);
   const [signatureState, setSignatureState] = useState<'valid' | 'missing' | 'invalid' | 'expired' | 'verifying'>(
@@ -74,8 +84,21 @@ export function PayContent() {
   const isVfideTokenAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.VFIDEToken);
   const { priceUsd, isLoading: priceLoading } = useVfidePrice();
   const { score: buyerScore, tier: buyerTier, burnFee: buyerBurnFee } = useProofScore(address);
+  // PAYEE (merchant) trust drives the protective default. useProofScore tolerates undefined (as it
+  // does for `address` above), returning a null score until/unless a valid payee is present.
+  const payeeAddress = isAddress(merchant) ? (merchant as `0x${string}`) : undefined;
+  const { score: payeeScore } = useProofScore(payeeAddress);
   const { payMerchant, isPaying, isSuccess: instantSuccess, error: instantError } = usePayMerchant();
   const { createEscrow, loading: isEscrowLoading, isSuccess: escrowSuccess, error: escrowError } = useEscrow();
+
+  // Trust-tiered default: once the payee's ProofScore resolves, protect the payer by defaulting to
+  // escrow for a low-trust payee (instant for a trusted one) — unless the URL fixed the path or the
+  // payer manually chose one. Fully overridable via the toggle below; never a forced hold.
+  useEffect(() => {
+    if (explicitSettlement !== null || userChoseSettlement) return;
+    if (payeeScore === null || payeeScore === undefined) return;
+    setSettlement(payeeScore < ESCROW_TRUST_THRESHOLD ? 'escrow' : 'instant');
+  }, [payeeScore, explicitSettlement, userChoseSettlement]);
 
   const amountVfide = safeParseFloat(requestedAmount, 0);
   const hasValidAmount = amountVfide > 0;
@@ -351,6 +374,34 @@ export function PayContent() {
               </div>
               <div className="mt-3 text-xs text-gray-400">
                 {settlementTone.summary}
+              </div>
+              {/* Trust-tiered settlement choice — the payer can always opt out (no forced hold). */}
+              <div className="mt-4">
+                <div className="flex items-center gap-2">
+                  {(['escrow', 'instant'] as const).map((opt) => (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => { setUserChoseSettlement(true); setSettlement(opt); }}
+                      aria-pressed={settlement === opt}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
+                        settlement === opt
+                          ? opt === 'escrow'
+                            ? 'bg-amber-500/20 border-amber-500/40 text-amber-200'
+                            : 'bg-emerald-500/20 border-emerald-500/40 text-emerald-200'
+                          : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:border-white/20'
+                      }`}
+                    >
+                      {opt === 'escrow' ? 'Protected (escrow)' : 'Instant'}
+                    </button>
+                  ))}
+                </div>
+                {!userChoseSettlement && explicitSettlement === null && settlement === 'escrow'
+                  && payeeScore !== null && payeeScore !== undefined && payeeScore < ESCROW_TRUST_THRESHOLD && (
+                  <div className="mt-2 text-[11px] text-amber-200/80" aria-live="polite">
+                    This payee’s ProofScore ({payeeScore.toLocaleString()}) is below neutral — your payment is protected by escrow by default. Switch to Instant above to settle directly.
+                  </div>
+                )}
               </div>
               {!merchant && (
                 <div className="mt-3 text-xs text-amber-300" role="alert" aria-live="polite">

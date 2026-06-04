@@ -143,9 +143,9 @@ export function VaultSafetyPanel({ vaultAddress, compact = false }: Props) {
     items.push({
       id: 'trustees',
       title: 'Recovery starters (trustees)',
-      summary: 'Nobody can start a recovery on your behalf — you must do it yourself',
+      summary: 'No trustees set — a recovery can be started by anyone, not just you (your guardians must still approve, and you get a veto window to cancel)',
       explanation:
-        "Trustees are guardians you've granted a special power: the ability to START a recovery if you've lost your phone and can't start one yourself. Without any trustees, recovery has to be started by you from a new device — which works if you can reach the app, but is impossible if you can't. Designating 1-2 trustees lets a trusted family member or close friend kick off the recovery process for you. You always have a window to cancel if they start one inappropriately.",
+        "Trustees are guardians you've granted a special power: the ability to START a recovery if you've lost your phone and can't start one yourself. You haven't designated any. Because no trustees are configured, the recovery process can currently be started by anyone with your recovery details — not only you. That alone can't take your vault: your guardians still have to approve, and you have a veto window to cancel a recovery you didn't request. But designating 1-2 trustees restricts who can start a recovery to just those trusted people, closing off recovery attempts by anyone else.",
       status: 'warn',
       cta: { label: 'Designate a trustee', href: '/vault/guardians' },
     });
@@ -185,7 +185,7 @@ export function VaultSafetyPanel({ vaultAddress, compact = false }: Props) {
   items.push({
     id: 'noncustodial',
     title: "VFIDE doesn't hold your money",
-    summary: 'The vault belongs to you alone — VFIDE, Anthropic, nobody can move your funds without your signature',
+    summary: 'The vault is yours alone — no VFIDE admin, no DAO, no third party can move your funds. The only way back into a lost vault is guardian-approved recovery.',
     explanation:
       "VFIDE is non-custodial. There is no admin key that can move your money, freeze your account, or reverse your transactions. Recovery is the only path back into a vault you've lost access to, and it requires your guardians to approve. The trade-off is real: if you lose your phone AND have no guardians, your vault is permanently inaccessible. The protection: no centralized party can ever take what you've earned.",
     status: 'ok',

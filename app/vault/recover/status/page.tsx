@@ -502,7 +502,7 @@ function RecoveryStatusBody({
             Claim expired
           </h3>
           <p className="text-sm text-gray-300">
-            This claim never reached enough guardian approvals before the 90-day expiry window
+            This claim never reached enough guardian approvals before the 30-day expiry window
             closed. The vault is free to accept a new claim. If you still need to recover this
             vault, start a fresh recovery claim and make sure your guardians know to vote.
           </p>

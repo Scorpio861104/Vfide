@@ -4,7 +4,7 @@
  * SanctumOverviewTab — charity & impact fund overview.
  *
  * The Sanctum is VFIDE's on-chain charity fund (SanctumVault.sol):
- *   - Receives 20% of FeeDistributor-routed fees (sanctumBps=2000, DAO-adjustable) plus a score/volume-scaled portion of ProofScoreBurnRouter burn fees (base: 0.05%)
+ *   - Receives 10% of every fee, routed by ProofScoreBurnRouter (the other 90%: 40% burn, 50% to FeeDistributor). FeeDistributor itself has no Sanctum channel.
  *   - Accepts voluntary donations from any address
  *   - Disburses ONLY to DAO-approved charitable organisations
  *   - NOT a token reward system; NOT a buyer-fraud reimbursement pool
@@ -42,7 +42,7 @@ export function OverviewTab() {
             {
               step: '1',
               title: 'Fee Collection',
-              desc: 'VFIDE transaction fees flow to The Sanctum via two channels: ProofScoreBurnRouter allocates 10% of each transaction’s burn fee to The Sanctum; FeeDistributor allocates 20% of its distributed balance (sanctumBps = 2000/10000). The DAO may adjust the FeeDistributor split within protocol bounds.',
+              desc: 'Every VFIDE transaction fee is split by ProofScoreBurnRouter, which routes 10% to The Sanctum (the rest: 40% burned, 50% to the FeeDistributor ecosystem pools). The DAO may adjust the split within protocol bounds.',
             },
             {
               step: '2',

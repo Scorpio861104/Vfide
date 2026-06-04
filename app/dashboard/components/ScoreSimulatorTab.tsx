@@ -75,14 +75,20 @@ const ACTIVITY_LABELS: Record<ActivityLevel, string> = {
 
 function project(currentScore: number, monthlyGain: number, months: number): number {
   let score = currentScore;
+  // Decay is INACTIVITY-triggered in the Seer contract: it only applies to users
+  // with no activity, and only after a 90-day (~3 month) grace (decayStartDays = 90).
+  // An active user (monthlyGain > 0) keeps resetting that clock, so they never decay.
+  const isInactive = monthlyGain === 0;
   for (let i = 0; i < months; i++) {
     // Apply gain
     score += monthlyGain;
-    // Apply decay toward NEUTRAL
-    if (score > NEUTRAL) {
-      score = Math.max(NEUTRAL, score - DECAY_PER_MONTH);
-    } else if (score < NEUTRAL) {
-      score = Math.min(NEUTRAL, score + DECAY_PER_MONTH);
+    // Apply decay toward NEUTRAL only for inactive users, after the grace window.
+    if (isInactive && i >= 3) {
+      if (score > NEUTRAL) {
+        score = Math.max(NEUTRAL, score - DECAY_PER_MONTH);
+      } else if (score < NEUTRAL) {
+        score = Math.min(NEUTRAL, score + DECAY_PER_MONTH);
+      }
     }
     score = Math.max(0, Math.min(MAX_SCORE, score));
   }

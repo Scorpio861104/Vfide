@@ -2037,8 +2037,12 @@ contract CardBoundVault is ReentrancyGuard {
     /// @param counterparty counterparty
     function _enforceSeerAction(address subject, uint8 action, uint256 amount, address counterparty) internal {
         if (address(seerAutonomous) == address(0)) return;
-        try seerAutonomous.beforeAction(subject, action, amount, counterparty) returns (uint8 r) {
-            if (r != 0) revert CBV_SeerBlocked();
+        try seerAutonomous.beforeAction(subject, action, amount, counterparty) returns (uint8) {
+            // NON-CUSTODIAL INVARIANT: the system can never freeze or seize a user's funds.
+            // Seer is advisory/monitoring only — its verdict is intentionally NOT enforced here,
+            // so a vault operation (payment, withdrawal, escrow funding) can never be blocked.
+            // The call is retained so Seer still observes/tracks the action; punishment, if any,
+            // occurs through the Seer score → fee curve, never by halting fund movement.
         } catch {
             // SEER-04 FIX (#179): Hook outages must not brick vault operations.
             emit ExternalCallFailed("seerAutonomous.beforeAction");
@@ -2127,6 +2131,36 @@ contract CardBoundVault is ReentrancyGuard {
         emit AdminTransferred(oldAdmin, newWallet);
         emit RecoveryAdminUnseparated(newWallet, uint64(block.timestamp));
         emit PauseSet(true, msg.sender);
+    }
+
+    // slither-disable-next-line reentrancy-events
+    /// @notice Hub-only staging of a recovery wallet rotation for a locked-out owner.
+    /// @dev Recovery-completeness fix: a fully locked-out owner cannot call proposeWalletRotation
+    ///      (onlyAdmin), so the guardian-approved, owner-challenge-survived VaultRecoveryClaim path
+    ///      previously had no way to stage the pendingRotation that executeRecoveryRotation requires
+    ///      (it reverted CBV_InvalidRecoveryRotation). VaultHub calls this immediately before
+    ///      executeRecoveryRotation, and ONLY after its own M-of-N recovery-approver consensus + 72h
+    ///      challenge + owner-abort window, on a claim whose guardian quorum (the vault's OWN guardians,
+    ///      2-of-N) and 7–14 day owner challenge were enforced by VaultRecoveryClaim. Guardian consensus
+    ///      and the owner veto are therefore enforced upstream; `approvals` is set to `guardianThreshold`
+    ///      to reflect that relayed quorum and satisfy executeRecoveryRotation's invariant. Any
+    ///      previously staged (proactive) rotation is overwritten — recovery takes precedence and the
+    ///      vault is paused for review immediately afterward by executeRecoveryRotation.
+    /// @param newWallet The recovered wallet that executeRecoveryRotation will make active + admin.
+    function stageRecoveryRotation(address newWallet) external {
+        if (msg.sender != hub) revert CBV_OnlyHub();
+        if (newWallet == address(0)) revert CBV_Zero();
+        if (!IVaultHubGuardianSetup(hub).guardianSetupComplete(address(this))) {
+            revert CBV_GuardianSetupRequired();
+        }
+        ++rotationNonce;
+        pendingRotation = WalletRotation({
+            newWallet: newWallet,
+            activateAt: uint64(block.timestamp),
+            approvals: guardianThreshold,
+            proposalNonce: rotationNonce
+        });
+        emit WalletRotationProposed(activeWallet, newWallet, pendingRotation.activateAt, rotationNonce);
     }
 
     // slither-disable-next-line missing-zero-check  // address(0) is a valid value to detach inheritance manager

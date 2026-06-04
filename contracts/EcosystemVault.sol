@@ -613,6 +613,22 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     /// @notice operationsSpentInEpoch
     uint256 public operationsSpentInEpoch;
 
+    // ── Claim reservation (prevents period/quarter snapshots from being re-absorbed by _allocateIncoming) ──
+    // Appended at the storage tail: the AdminFacet delegatecall mirror writes only the config prefix and
+    // never these slots, so appending here does not disturb its layout.
+    /// @notice reservedForClaims — total rewardToken value reserved for outstanding period/quarter claims.
+    uint256 public reservedForClaims;
+    /// @notice merchantPeriodReserved — per-period remaining reserved (snapshot minus claimed); swept after the window.
+    mapping(uint256 => uint256) public merchantPeriodReserved;
+    /// @notice quarterReserved — per (year => quarter) remaining reserved; swept after the window.
+    mapping(uint256 => mapping(uint256 => uint256)) public quarterReserved;
+    /// @notice merchantPeriodEndedAt — timestamp a merchant period ended (for the claim window / sweep).
+    mapping(uint256 => uint64) public merchantPeriodEndedAt;
+    /// @notice quarterEndedAt — timestamp a headhunter quarter ended (for the claim window / sweep).
+    mapping(uint256 => mapping(uint256 => uint64)) public quarterEndedAt;
+    /// @notice CLAIM_WINDOW — after this elapses past a period/quarter end, unclaimed residue may be swept back.
+    uint256 public constant CLAIM_WINDOW = 365 days;
+
     // ═══════════════════════════════════════════════════════════════════════
     //                              MODIFIERS
     // ═══════════════════════════════════════════════════════════════════════
@@ -790,7 +806,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     /// @notice _allocateIncoming
     function _allocateIncoming() internal {
         uint256 balance = rewardToken.balanceOf(address(this));
-        uint256 allocated = councilPool + merchantPool + headhunterPool + operationsPool;
+        uint256 allocated = councilPool + merchantPool + headhunterPool + operationsPool + reservedForClaims;
         uint256 unallocated = balance > allocated ? balance - allocated : 0;
         
         if (unallocated > 0) {
@@ -908,11 +924,12 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         uint256 spendable = _getSpendablePoolBalance(merchantPool, merchantPoolReserveBps);
         if (amount > spendable) revert ECO_InsufficientFunds();
 
-        // slither-disable-next-line events-maths  // _deliverWorkReward emits Payment* events with full context
+        // slither-disable-next-line events-maths -- WorkRewardPaid is emitted below with full context
         merchantPool -= amount;
         merchantPaidThisEpoch += amount;
         totalMerchantBonusPaid += amount;
         _deliverWorkReward(worker, amount, reason);
+        emit WorkRewardPaid(worker, amount, true, reason);
     }
 
     // _calculateMerchantRank moved to EcosystemVaultView.sol (off-chain indexing)
@@ -922,6 +939,17 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     /// @return _uint16 _uint16
     function _getMerchantBonusTier(uint16 score) internal pure returns (uint16) {
         return EcosystemVaultLib.getMerchantBonusTier(score);
+    }
+
+    /// @notice _tierWeight — period-bonus weight per qualifying tx for a merchant's tier (0 if ineligible).
+    /// @param tier merchant bonus tier (1-4 from _getMerchantBonusTier; 0 = below threshold)
+    /// @return _uint256 tier multiplier used as the claim weight basis
+    function _tierWeight(uint16 tier) internal pure returns (uint256) {
+        if (tier == 1) return TIER1_MULTIPLIER;
+        if (tier == 2) return TIER2_MULTIPLIER;
+        if (tier == 3) return TIER3_MULTIPLIER;
+        if (tier == 4) return TIER4_MULTIPLIER;
+        return 0;
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -1023,6 +1051,19 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         emit ReferralRecorded(referrer, referred, isMerchant, points);
     }
 
+    /// @notice WorkRewardPaid — emitted on every merchant/referral work-reward and auto-payout.
+    /// @param worker worker
+    /// @param amount amount
+    /// @param fromMerchantPool fromMerchantPool — true = merchant pool, false = headhunter pool
+    /// @param reason reason
+    event WorkRewardPaid(address indexed worker, uint256 amount, bool fromMerchantPool, string reason);
+
+    /// @notice ExpensePaid — emitted on every operations expense payout.
+    /// @param recipient recipient
+    /// @param amount amount
+    /// @param reason reason
+    event ExpensePaid(address indexed recipient, uint256 amount, string reason);
+
     /// @notice _tryAutoWorkPayout
     /// @param worker worker
     /// @param amount amount
@@ -1042,23 +1083,41 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         _allocateIncoming();
 
         if (useMerchantPool) {
+            // H-11: subject auto-payouts to the SAME cumulative per-epoch cap as the manual path.
+            if (block.timestamp >= merchantEpochStart + EPOCH_DURATION) {
+                merchantEpochStart = block.timestamp;
+                merchantPaidThisEpoch = 0;
+            }
             uint256 merchantSpendable = _getSpendablePoolBalance(merchantPool, merchantPoolReserveBps);
             uint256 merchantAutoCap = (merchantPool * maxAutoPayoutBps) / MAX_BPS;
+            uint256 merchantEpochCap = (merchantPool * merchantEpochCapBps) / 10000;
             if (amount > merchantSpendable || amount > merchantAutoCap) return false;
+            if (merchantPaidThisEpoch + amount > merchantEpochCap) return false; // best-effort skip, not revert
 
             merchantPool -= amount;
+            merchantPaidThisEpoch += amount;
             totalMerchantBonusPaid += amount;
             _deliverWorkReward(worker, amount, reason);
+            emit WorkRewardPaid(worker, amount, true, reason);
             return true;
         }
 
+        // H-11: subject auto-payouts to the SAME cumulative per-epoch cap as the manual path.
+        if (block.timestamp >= headhunterEpochStart + EPOCH_DURATION) {
+            headhunterEpochStart = block.timestamp;
+            headhunterPaidThisEpoch = 0;
+        }
         uint256 headhunterSpendable = _getSpendablePoolBalance(headhunterPool, headhunterPoolReserveBps);
         uint256 headhunterAutoCap = (headhunterPool * maxAutoPayoutBps) / MAX_BPS;
+        uint256 headhunterEpochCap = (headhunterPool * headhunterEpochCapBps) / 10000;
         if (amount > headhunterSpendable || amount > headhunterAutoCap) return false;
+        if (headhunterPaidThisEpoch + amount > headhunterEpochCap) return false; // best-effort skip, not revert
 
         headhunterPool -= amount;
+        headhunterPaidThisEpoch += amount;
         totalHeadhunterPaid += amount;
         _deliverWorkReward(worker, amount, reason);
+        emit WorkRewardPaid(worker, amount, false, reason);
         return true;
     }
 
@@ -1164,10 +1223,14 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
         uint256 share = (poolSnapshot * uint256(callerPoints)) / totalPoints;
         if (share == 0) revert ECO_InsufficientFunds();
+        // Guard: never exceed this quarter's remaining reservation (also blocks claims after a sweep).
+        if (share > quarterReserved[year][quarter]) revert ECO_InsufficientFunds();
 
-        // CEI: flip claimed flag BEFORE delivery to defend against any
+        // CEI: flip claimed flag + release reservation BEFORE delivery to defend against any
         // re-entry from token callbacks downstream.
         quarterClaimed[year][quarter][msg.sender] = true;
+        reservedForClaims -= share;
+        quarterReserved[year][quarter] -= share;
 
         // Deliver via the same stablecoin path used by _deliverWorkReward
         // so all referrer payouts go through one auditable channel.
@@ -1193,6 +1256,121 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     );
 
     /**
+     * @notice Claim the caller's tier-weighted share of an ended merchant period's pool snapshot.
+     *
+     * @dev Merchant side of F-SC-034: previously `_endMerchantPeriodIfDue` snapshotted the merchant
+     *      pool into `merchantPeriodPoolSnapshot` and zeroed `merchantPool`, and the View's
+     *      `previewMerchantReward` exposed `claimed`/`poolSnapshot` as if a claim path existed — but
+     *      there was NO writer to `merchantPeriodClaimed` and no delivery path, so the rank-competition
+     *      bonus was never paid. This mirrors `claimHeadhunterQuarterReward`:
+     *        1. requires the period has ended (`endMerchantPeriod`),
+     *        2. requires the caller earned weight in the period (txCount × tier multiplier > 0),
+     *        3. requires the caller has not already claimed this period,
+     *        4. computes share = poolSnapshot * callerWeight / totalWeight, where totalWeight sums every
+     *           listed merchant's (txCount × tier multiplier). The denominator is derived by iterating
+     *           `periodMerchants[period]` (bounded by MAX_MERCHANTS_PER_PERIOD = 500) — gas-bounded and
+     *           suited to the L2 (Base) target. A cached denominator would be cheaper but is deferred to
+     *           avoid mid-layout storage changes under the AdminFacet delegatecall mirror.
+     *        5. flips `merchantPeriodClaimed` BEFORE transferring (CEI), and
+     *        6. delivers via the same stablecoin path as `_deliverWorkReward`.
+     *
+     *      NOTE: like the headhunter claim, the snapshot is not reserved against `_allocateIncoming`
+     *      re-absorption — see the ledger finding on snapshot reservation (affects both claims).
+     * @param period merchant period to claim from
+     */
+    function claimMerchantPeriodReward(uint256 period) external nonReentrant {
+        if (!merchantPeriodEnded[period]) revert ECO_TooEarly();
+        if (merchantPeriodClaimed[period][msg.sender]) revert ECO_AlreadyExecuted();
+
+        uint256 callerWeight = periodMerchantTxCount[period][msg.sender]
+            * _tierWeight(periodMerchantTier[period][msg.sender]);
+        if (callerWeight == 0) revert ECO_NotEligible();
+
+        uint256 poolSnapshot = merchantPeriodPoolSnapshot[period];
+        if (poolSnapshot == 0) revert ECO_InsufficientFunds();
+
+        // O(periodMerchants) denominator, bounded by MAX_MERCHANTS_PER_PERIOD (500).
+        address[] memory periodList = periodMerchants[period];
+        uint256 totalWeight = 0;
+        uint256 len = periodList.length;
+        for (uint256 i = 0; i < len; ++i) {
+            address mAddr = periodList[i];
+            totalWeight += periodMerchantTxCount[period][mAddr]
+                * _tierWeight(periodMerchantTier[period][mAddr]);
+        }
+        if (totalWeight == 0) revert ECO_NotEligible();
+
+        uint256 share = (poolSnapshot * callerWeight) / totalWeight;
+        if (share == 0) revert ECO_InsufficientFunds();
+        // Guard: never exceed this period's remaining reservation (also blocks claims after a sweep).
+        if (share > merchantPeriodReserved[period]) revert ECO_InsufficientFunds();
+
+        // CEI: flip claimed + release reservation BEFORE delivery to defend against re-entry.
+        merchantPeriodClaimed[period][msg.sender] = true;
+        reservedForClaims -= share;
+        merchantPeriodReserved[period] -= share;
+
+        _deliverWorkReward(msg.sender, share, "merchant_period_claim");
+
+        emit MerchantPeriodClaimed(period, msg.sender, callerWeight, totalWeight, share);
+    }
+
+    /// @notice MerchantPeriodClaimed
+    /// @param period period
+    /// @param merchant merchant
+    /// @param merchantWeight merchantWeight
+    /// @param totalWeight totalWeight
+    /// @param amountClaimed amountClaimed
+    event MerchantPeriodClaimed(
+        uint256 indexed period,
+        address indexed merchant,
+        uint256 merchantWeight,
+        uint256 totalWeight,
+        uint256 amountClaimed
+    );
+
+    /// @notice ReservationSwept — unclaimed reservation residue released back into circulation after CLAIM_WINDOW.
+    /// @param key period (merchant) or (year*10 + quarter) (headhunter)
+    /// @param residue residue
+    /// @param isMerchant isMerchant
+    event ReservationSwept(uint256 indexed key, uint256 residue, bool isMerchant);
+
+    /**
+     * @notice Release a merchant period's unclaimed reserved residue after the claim window.
+     * @dev Permissionless. After CLAIM_WINDOW past the period end, the still-reserved remainder is
+     *      released from `reservedForClaims` so the next `_allocateIncoming` re-absorbs it. Zeroing
+     *      `merchantPeriodReserved` also blocks any further claim for the period (claim guard reverts).
+     * @param period merchant period to sweep
+     */
+    function sweepMerchantPeriodReserve(uint256 period) external {
+        if (!merchantPeriodEnded[period]) revert ECO_TooEarly();
+        uint64 endedAt = merchantPeriodEndedAt[period];
+        if (endedAt == 0 || block.timestamp < uint256(endedAt) + CLAIM_WINDOW) revert ECO_TooEarly();
+        uint256 residue = merchantPeriodReserved[period];
+        if (residue == 0) return;
+        merchantPeriodReserved[period] = 0;
+        reservedForClaims -= residue;
+        emit ReservationSwept(period, residue, true);
+    }
+
+    /**
+     * @notice Release a headhunter quarter's unclaimed reserved residue after the claim window.
+     * @dev Permissionless. Mirrors sweepMerchantPeriodReserve for the headhunter quarter snapshot.
+     * @param year year
+     * @param quarter quarter
+     */
+    function sweepHeadhunterQuarterReserve(uint256 year, uint256 quarter) external {
+        if (!quarterEnded[year][quarter]) revert ECO_TooEarly();
+        uint64 endedAt = quarterEndedAt[year][quarter];
+        if (endedAt == 0 || block.timestamp < uint256(endedAt) + CLAIM_WINDOW) revert ECO_TooEarly();
+        uint256 residue = quarterReserved[year][quarter];
+        if (residue == 0) return;
+        quarterReserved[year][quarter] = 0;
+        reservedForClaims -= residue;
+        emit ReservationSwept((year * 10) + quarter, residue, false);
+    }
+
+    /**
      * @notice Pay fixed compensation for verified referral/acquisition work
      * @dev Uses headhunter pool only; not a rank/percentage payout.
      *      HOWEY FIX: Work compensation is always paid in stablecoin.
@@ -1215,11 +1393,12 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         uint256 spendable = _getSpendablePoolBalance(headhunterPool, headhunterPoolReserveBps);
         if (amount > spendable) revert ECO_InsufficientFunds();
 
-        // slither-disable-next-line events-maths  // _deliverWorkReward emits Payment* events with full context
+        // slither-disable-next-line events-maths -- WorkRewardPaid is emitted below with full context
         headhunterPool -= amount;
         headhunterPaidThisEpoch += amount;
         totalHeadhunterPaid += amount;
         _deliverWorkReward(worker, amount, reason);
+        emit WorkRewardPaid(worker, amount, false, reason);
     }
 
     /// @notice _getSpendablePoolBalance
@@ -1253,7 +1432,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
         uint256 expenseCap = operationsExpenseEpochBase * EXPENSE_EPOCH_CAP_BPS / MAX_BPS;
         if (operationsSpentInEpoch + amount > expenseCap) revert ECO_ExpenseCapExceeded();
-        // slither-disable-next-line events-maths  // _payoutConfiguredReward emits OperationsWithdrawal with full context
+        // slither-disable-next-line events-maths -- ExpensePaid is emitted below with full context
         operationsSpentInEpoch += amount;
 
         operationsPool -= amount;
@@ -1261,7 +1440,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
         _payoutConfiguredReward(recipient, amount);
 
-        reason;
+        emit ExpensePaid(recipient, amount, reason);
     }
 
     // REMOVED — non-custodial (soul commitment):
@@ -1426,6 +1605,10 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         _allocateIncoming();
         merchantPeriodPoolSnapshot[currentMerchantPeriod] = merchantPool;
         merchantPeriodEnded[currentMerchantPeriod] = true;
+        // Reserve the snapshot so it is not re-absorbed by the next _allocateIncoming; release on claim/sweep.
+        merchantPeriodEndedAt[currentMerchantPeriod] = uint64(block.timestamp);
+        reservedForClaims += merchantPool;
+        merchantPeriodReserved[currentMerchantPeriod] = merchantPool;
         merchantPool = 0;
 
         emit MerchantPeriodEnded(currentMerchantPeriod, merchantPeriodPoolSnapshot[currentMerchantPeriod]);
@@ -1447,6 +1630,10 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         _allocateIncoming();
         quarterPoolSnapshot[currentYear][currentQuarter] = headhunterPool;
         quarterEnded[currentYear][currentQuarter] = true;
+        // Reserve the snapshot so it is not re-absorbed by the next _allocateIncoming; release on claim/sweep.
+        quarterEndedAt[currentYear][currentQuarter] = uint64(block.timestamp);
+        reservedForClaims += headhunterPool;
+        quarterReserved[currentYear][currentQuarter] = headhunterPool;
         headhunterPool = 0;
 
         emit HeadhunterQuarterEnded(currentYear, currentQuarter, quarterPoolSnapshot[currentYear][currentQuarter]);

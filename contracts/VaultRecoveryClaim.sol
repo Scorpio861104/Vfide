@@ -530,7 +530,13 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         if (address(vaultRegistry) != address(0)) {
             bytes32 storedRecoveryId = vaultRegistry.recoveryIdOfVault(vault);
             if (storedRecoveryId != bytes32(0)) {
-                bytes32 providedHash = keccak256(abi.encodePacked(recoveryId));
+                // FIX: VaultRegistry stores a SCOPED/salted hash via _deriveScopedHash:
+                //   keccak256(abi.encode(block.chainid, registryAddress, recoveryId)).
+                // The prior unsalted keccak256(abi.encodePacked(recoveryId)) could never match,
+                // so any vault that had set a recovery ID reverted here ("Invalid recovery ID"),
+                // breaking both initiateClaim and initiateClaimByRecoveryId. Replicate the
+                // registry's exact derivation (registry address as salt) so the check matches.
+                bytes32 providedHash = keccak256(abi.encode(block.chainid, address(vaultRegistry), recoveryId));
                 require(providedHash == storedRecoveryId, "Invalid recovery ID");
             }
         }

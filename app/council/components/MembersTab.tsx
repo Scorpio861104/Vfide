@@ -65,7 +65,7 @@ export function MembersTab() {
 
   return (
     <div className="space-y-8">
-      <SampleDataBanner label="Council members are listed here when CouncilElection ships in a future release. The entries below are illustrative placeholders — no council elections have occurred at V1." />
+      <SampleDataBanner label="Council members appear here once the community elects a council — CouncilElection ships in V1 and is awaiting an election, not a future release. No election has been held yet; the entries below are illustrative." />
       {/* Members List */}
       <m.div 
         initial={{ opacity: 0 }}

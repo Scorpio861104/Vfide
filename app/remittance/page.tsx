@@ -14,7 +14,7 @@ import { FutureReleaseBanner } from '@/components/feedback/FutureReleaseBanner';
 import { useLocale } from '@/lib/locale/LocaleProvider';
 
 const comparisonRows = [
-  { provider: 'VFIDE (wallet-to-wallet)', fee: '0.25%–1.00%', payout: 'Minutes', highlight: true },
+  { provider: 'VFIDE (wallet-to-wallet)', fee: '0.25%–5% (by trust score)', payout: 'Minutes', highlight: true },
   { provider: 'Western Union', fee: '≈ 7.5%', payout: 'Hours–days' },
   { provider: 'Bank wire', fee: '$25 flat', payout: '1–3 business days' },
 ];
@@ -29,7 +29,12 @@ export default function RemittancePage() {
   const [shareReceipt, setShareReceipt] = useState(false);
 
   const parsedAmount = Number.parseFloat(amount || '0');
-  const vfideFee = Number.isFinite(parsedAmount) ? parsedAmount * 0.0075 : 0;
+  // Fee is ProofScore-based on-chain (ProofScoreBurnRouter.computeFees): 0.25% at
+  // high trust up to 5% at low trust; ~3.81% at a neutral score. This preview uses
+  // the neutral rate as a default. TODO: wire to useProofScore(address) so a
+  // connected user sees their actual effective fee instead of the neutral estimate.
+  const NEUTRAL_FEE_RATE = 0.0381;
+  const vfideFee = Number.isFinite(parsedAmount) ? parsedAmount * NEUTRAL_FEE_RATE : 0;
   const netAmount = Math.max(parsedAmount - vfideFee, 0);
   const whatsappText = selectedBeneficiary
     ? encodeURIComponent(`VFIDE remittance ready for ${selectedBeneficiary.name}: send ${parsedAmount.toFixed(2)} and ${netAmount.toFixed(2)} lands after transparent fees.`)
@@ -127,7 +132,7 @@ export default function RemittancePage() {
 
                 <div className="space-y-2 rounded-xl border border-white/10 bg-black/20 p-4 text-sm text-zinc-300">
                   <div className="flex items-center justify-between"><span>Selected beneficiary</span><span>{selectedBeneficiary?.name ?? 'Choose one'}</span></div>
-                  <div className="flex items-center justify-between"><span>Estimated VFIDE fee</span><span>{vfideFee.toFixed(2)}</span></div>
+                  <div className="flex items-center justify-between"><span>Est. fee (neutral trust score)</span><span>{vfideFee.toFixed(2)}</span></div>
                   <div className="flex items-center justify-between"><span>Estimated recipient amount</span><span>{netAmount.toFixed(2)}</span></div>
                   <div className="flex items-center justify-between"><span>Rail</span><span>{selectedBeneficiary?.network ?? '—'}</span></div>
                 </div>

@@ -309,6 +309,10 @@ contract CardBoundVaultAdminManager {
     /// @notice clearOnRecovery
     function clearOnRecovery() external onlyVault {
         delete pendingGuardianChange;
+        // R-8: a pending trustee promotion is the most sensitive queued role change
+        // (a trustee can initiate recovery). It MUST be abandoned on recovery so a
+        // promotion proposed under a compromised key cannot survive the rotation.
+        delete pendingTrusteeChange;
         delete pendingSpendLimitChange;
         delete pendingLargeTransferThresholdChange;
         delete pendingNativeRescue;

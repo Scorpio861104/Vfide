@@ -37,8 +37,13 @@ function toLocalTier(t: { name: string; min: number; max: number; hex: string })
     Risky: '⚠️', 'Low Trust': '🔶', Neutral: '🟡',
     Governance: '🗳️', Trusted: '✅', Council: '⭐', Elite: '🏆',
   };
+  // Real fee at each tier's ENTRY score on the contract's linear curve
+  // (ProofScoreBurnRouter: 500bps - (score-4000)*475/4000, clamped [25,500]).
+  // Tier-entry = the highest fee in the band, so the displayed rate never
+  // promises a lower fee than a user actually pays. Previously these were
+  // understated (e.g. Neutral showed 2.5% when the real rate at 5000 is 3.81%).
   const bps: Record<string, number> = {
-    Risky: 500, 'Low Trust': 400, Neutral: 250, Governance: 200, Trusted: 150, Council: 75, Elite: 25,
+    Risky: 500, 'Low Trust': 500, Neutral: 381, Governance: 334, Trusted: 310, Council: 144, Elite: 25,
   };
   const bg: Record<string, string> = {
     Risky: 'from-red-500/20 to-red-600/20',

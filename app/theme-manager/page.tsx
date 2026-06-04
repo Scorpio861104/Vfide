@@ -212,19 +212,24 @@ export default function ThemeManagerPage() {
               <div>
                 <h3 className="text-lg font-semibold text-white mb-4">Button Variants</h3>
                 <div className="flex gap-2 flex-wrap">
-                  <button className="px-4 py-2 bg-[var(--color-primary-500)] text-white rounded-lg font-medium">
+                  {/* button-ok: decorative theme-preview swatch; intentionally inert */}
+                  <button type="button" className="px-4 py-2 bg-[var(--color-primary-500)] text-white rounded-lg font-medium">
                     Primary
                   </button>
-                  <button className="px-4 py-2 bg-[var(--color-secondary-500)] text-white rounded-lg font-medium">
+                  {/* button-ok: decorative theme-preview swatch; intentionally inert */}
+                  <button type="button" className="px-4 py-2 bg-[var(--color-secondary-500)] text-white rounded-lg font-medium">
                     Secondary
                   </button>
-                  <button className="px-4 py-2 bg-[var(--color-success-500)] text-white rounded-lg font-medium">
+                  {/* button-ok: decorative theme-preview swatch; intentionally inert */}
+                  <button type="button" className="px-4 py-2 bg-[var(--color-success-500)] text-white rounded-lg font-medium">
                     Success
                   </button>
-                  <button className="px-4 py-2 bg-[var(--color-warning-500)] text-white rounded-lg font-medium">
+                  {/* button-ok: decorative theme-preview swatch; intentionally inert */}
+                  <button type="button" className="px-4 py-2 bg-[var(--color-warning-500)] text-white rounded-lg font-medium">
                     Warning
                   </button>
-                  <button className="px-4 py-2 bg-[var(--color-error-500)] text-white rounded-lg font-medium">
+                  {/* button-ok: decorative theme-preview swatch; intentionally inert */}
+                  <button type="button" className="px-4 py-2 bg-[var(--color-error-500)] text-white rounded-lg font-medium">
                     Error
                   </button>
                 </div>

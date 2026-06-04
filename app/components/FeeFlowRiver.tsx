@@ -7,9 +7,10 @@
  * struck by the split point in the middle, and fan out into five
  * labeled pools on the right with running totals. The pools are the
  * five real contracts that inherit ServicePool in the on-chain
- * FeeDistributor default split (FeeDistributor.sol L279, DAO-adjustable within protocol bounds):
- *   burnBps=3500 (35%) | sanctumBps=2000 (20%) | daoPayrollBps=1500 (15%)
- *   merchantPoolBps=2000 (20%) | headhunterPoolBps=1000 (10%)
+ * Canonical end-to-end split of every fee (see FEE_MODEL_CANONICAL.md):
+ *   ProofScoreBurnRouter takes the whole fee -> 40% burn | 10% Sanctum | 50% ecosystem.
+ *   FeeDistributor then splits that 50% ecosystem share 50/30/20, i.e. of the total fee:
+ *   burn 40% | Sanctum 10% | DAO payroll 25% | merchant pool 15% | referral/headhunter 10%
  *
  * Why this matters on the landing page: most "fee distribution" charts
  * are a static pie hidden in a whitepaper. Showing the splits as a
@@ -50,11 +51,11 @@ interface Pool {
 }
 
 const POOLS: Pool[] = [
-  { id: 'burn',     label: 'Burn',          short: 'Burn',     pct: 35,   hex: '#f97316', y: 0.10 }, // FeeDistributor burnBps=3500
-  { id: 'sanctum',  label: 'Sanctum Fund',  short: 'Sanctum',  pct: 20,   hex: '#ec4899', y: 0.30 }, // FeeDistributor sanctumBps=2000
-  { id: 'merchant', label: 'Merchant pool', short: 'Merchants', pct: 20,   hex: '#10b981', y: 0.50 }, // FeeDistributor merchantPoolBps=2000
-  { id: 'payroll',  label: 'DAO payroll',   short: 'Payroll',  pct: 15,   hex: '#06b6d4', y: 0.70 }, // FeeDistributor daoPayrollBps=1500
-  { id: 'headhunt', label: 'Referral pool', short: 'Referrals', pct: 10,   hex: '#a855f7', y: 0.90 }, // FeeDistributor headhunterPoolBps=1000
+  { id: 'burn',     label: 'Burn',          short: 'Burn',     pct: 40,   hex: '#f97316', y: 0.10 }, // ProofScoreBurnRouter burns 40% of every fee
+  { id: 'sanctum',  label: 'Sanctum Fund',  short: 'Sanctum',  pct: 10,   hex: '#ec4899', y: 0.30 }, // ProofScoreBurnRouter routes 10% to Sanctum
+  { id: 'payroll',  label: 'DAO payroll',   short: 'Payroll',  pct: 25,   hex: '#06b6d4', y: 0.50 }, // FeeDistributor 50% of the 50% ecosystem share = 25% of total
+  { id: 'merchant', label: 'Merchant pool', short: 'Merchants', pct: 15,   hex: '#10b981', y: 0.70 }, // FeeDistributor 30% of ecosystem share = 15% of total
+  { id: 'headhunt', label: 'Referral pool', short: 'Referrals', pct: 10,   hex: '#a855f7', y: 0.90 }, // FeeDistributor 20% of ecosystem share = 10% of total
 ];
 
 interface Particle {
@@ -317,7 +318,7 @@ export function FeeFlowRiver() {
           {/* Pool nodes (right side).
               Non-burn pools render as a simple two-circle node.
               The burn pool gets its own forge/furnace visual to honor that
-              its 35% is *permanently destroyed*, not redistributed — a
+              its 40% is *permanently destroyed*, not redistributed — a
               meaningful visual difference from the other four pools. */}
           {POOLS.filter((p) => p.id !== 'burn').map((p) => (
             <g key={`pool-${p.id}`}>
@@ -449,7 +450,7 @@ function bezier(
 
 // ── Burn pool — forge/furnace visual ────────────────────────────────
 //
-// Visually distinguishes the 35% burn channel from the other four pools.
+// Visually distinguishes the 40% burn channel from the other four pools.
 // Burned VFIDE is permanently removed; the other pools redistribute. The
 // furnace metaphor makes that difference immediate.
 //

@@ -11,8 +11,12 @@ import { LoyaltyProgram, type LoyaltyConfig } from '@/components/loyalty/Loyalty
 import { useLocale } from '@/lib/locale/LocaleProvider';
 
 const DEFAULT_CONFIG: LoyaltyConfig = {
-  enabled: true,
-  programName: 'Coffee Club',
+  // Honest "not set up yet" default: a merchant who has never configured a
+  // loyalty program must see it disabled with no fabricated name, not a
+  // pre-filled active "Coffee Club" they didn't create. Real config from
+  // /api/merchant/loyalty overwrites this when a program exists.
+  enabled: false,
+  programName: '',
   tiers: [],
   pointsPerDollar: 1,
   redeemThreshold: 10,

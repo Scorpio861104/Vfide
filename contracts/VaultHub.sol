@@ -660,6 +660,12 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
             return;
         }
 
+        // Recovery-completeness fix: stage the rotation on the vault first. A fully locked-out owner
+        // cannot stage it via the onlyAdmin proposeWalletRotation path, so without this the vault's
+        // executeRecoveryRotation reverts CBV_InvalidRecoveryRotation. Staging happens only here, after
+        // M-of-N recovery-approver consensus + the 72h challenge (owner could abortRecoveryRotation up
+        // to this point) on a guardian-approved claim — see CardBoundVault.stageRecoveryRotation.
+        CardBoundVault(payable(vault)).stageRecoveryRotation(newWallet);
         CardBoundVault(payable(vault)).executeRecoveryRotation(newWallet);
 
         address oldOwner = ownerOfVault[vault];
