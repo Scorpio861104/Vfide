@@ -256,7 +256,7 @@
     "@nomicfoundation/hardhat-mocha": "^3.0.17",
     "@nomicfoundation/hardhat-network-helpers": "^3.0.8",
     "@openzeppelin/contracts": "^5.4.0",
-    "@playwright/test": "^1.59.1",
+    "@playwright/test": "^1.60.0",
     "@size-limit/preset-app": "^12.1.0",
     "@storybook/addon-a11y": "^10.3.6",
     "@storybook/addon-essentials": "^8.6.17",
