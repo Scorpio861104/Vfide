@@ -3,20 +3,18 @@
 export const dynamic = 'force-dynamic';
 
 import { AnimatePresence, m } from 'framer-motion';
-import { Flag, Search, ShieldAlert } from 'lucide-react';
+import { Flag, Search } from 'lucide-react';
 import { useState } from 'react';
 
 
 import { LookupTab } from '@/app/fraud/components/LookupTab';
-import { MyEscrowsTab } from '@/app/fraud/components/MyEscrowsTab';
 import { ReportTab } from '@/app/fraud/components/ReportTab';
 
-type TabId = 'lookup' | 'report' | 'escrows';
+type TabId = 'lookup' | 'report';
 
 const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
   { id: 'lookup',  label: 'Lookup',          icon: Search     },
   { id: 'report',  label: 'File Complaint',  icon: Flag       },
-  { id: 'escrows', label: 'My Escrows',       icon: ShieldAlert },
 ];
 
 export default function FraudTabContent() {
@@ -43,8 +41,8 @@ export default function FraudTabContent() {
               Fraud Reporting
             </span>
           </h1>
-          <p className="text-white/50 text-lg">Community-driven fraud reporting. Non-custodial — escrows delay transfers, never seize them.</p>
-          <p className="text-white/30 text-sm mt-1">DAO-arbitrated: 3 complaints trigger review, the DAO decides the outcome, escrows release after 30 days.</p>
+          <p className="text-white/50 text-lg">Community-driven fraud reporting. Non-custodial: flagging service-bans an address and marks a risk signal &mdash; funds are never held or seized.</p>
+          <p className="text-white/30 text-sm mt-1">DAO-arbitrated: 3 complaints trigger a 48h review window, then the DAO decides the outcome. No funds are ever escrowed or frozen.</p>
         </m.div>
         <div className="sticky top-7 md:top-[5.25rem] z-30 -mx-4 px-4 py-3 backdrop-blur-xl border-b border-white/5 mb-8"
           style={{ background: 'rgba(9,9,11,0.85)' }}>
@@ -63,7 +61,6 @@ export default function FraudTabContent() {
             transition={{ duration: 0.2 }}>
             {activeTab === 'lookup'  && <LookupTab />}
             {activeTab === 'report'  && <ReportTab />}
-            {activeTab === 'escrows' && <MyEscrowsTab />}
           </m.div>
         </AnimatePresence>
       </div>

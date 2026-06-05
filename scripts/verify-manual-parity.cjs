@@ -122,11 +122,6 @@ const checks = [
     pat: /ACTIVE_VAULT_CHALLENGE_PERIOD\s*=\s*([^;]+);/,
     expects: ["14 days", "1209600"] },
 
-  // --- FraudRegistry ---
-  { id: "ESCROW_DURATION", file: "FraudRegistry.sol",
-    pat: /ESCROW_DURATION\s*=\s*([^;]+);/,
-    expects: ["30 days", "2592000"] },
-
   // --- DAO ---
   { id: "DAO.votingPeriod", file: "DAO.sol",
     pat: /\bvotingPeriod\s*=\s*([^;]+);/,

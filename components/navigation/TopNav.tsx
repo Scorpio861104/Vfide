@@ -69,7 +69,6 @@ const MORE_MATCH = [
   // NAV-1: streaming & subscriptions belong to More, not Pay, on desktop
   '/streaming', '/subscriptions',
   // NAV-MATCH: finance/vault-adjacent routes not covered above
-  '/staking',
   // NAV-MATCH: governance routes not covered above
   '/fraud',
   // NAV-MATCH: pay-adjacent utilities in More

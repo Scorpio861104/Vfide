@@ -2,6 +2,18 @@
  * Cross-Chain Tests
  */
 
+// @lifi/sdk's source calls viem's parseAbi at module scope, which resolves to undefined
+// under jest's transform. This suite only validates crossChain's own constants/types and
+// never exercises LiFi, so mock the SDK to avoid loading its viem-dependent source.
+// crossChain.ts calls createConfig() at module scope, so it must be a callable stub.
+jest.mock('@lifi/sdk', () => ({
+  createConfig: jest.fn(),
+  EVM: jest.fn(),
+  getRoutes: jest.fn(),
+  executeRoute: jest.fn(),
+  getTokenBalancesByChain: jest.fn(),
+}));
+
 import {
   SUPPORTED_CHAINS,
   COMMON_TOKENS,

@@ -1,38 +1,67 @@
 /**
  * /api/social/content-access
- * GET  — check if the requesting wallet has paid for a piece of premium content.
- *        Query params: contentId, buyer (wallet address)
- * POST — grant access after payment confirmation.
+ * Access to premium content is DERIVED from a recorded purchase
+ * (content_purchases) by the authenticated caller. There is no separately
+ * grantable access flag, which removes the prior "anyone can grant anyone
+ * access" surface entirely.
+ *
+ * GET  ?contentId=   -> { hasAccess }   (caller = authenticated session)
+ * POST { contentId } -> confirms access from the caller's purchase record.
  */
 import { NextRequest, NextResponse } from 'next/server';
+import type { JWTPayload } from '@/lib/auth/jwt';
+import { withAuth } from '@/lib/auth/middleware';
+import { query } from '@/lib/db';
 
 export const runtime = 'nodejs';
 
-// In-memory grant store for testnet.
-const grants = new Set<string>(); // key = `${contentId}:${buyer}`
-
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const contentId = searchParams.get('contentId');
-  const buyer = searchParams.get('buyer')?.toLowerCase();
-
-  if (!contentId || !buyer) {
-    return NextResponse.json({ error: 'contentId and buyer are required' }, { status: 400 });
-  }
-
-  const key = `${contentId}:${buyer}`;
-  return NextResponse.json({ hasAccess: grants.has(key) });
+async function callerHasAccess(contentId: string, address: string): Promise<boolean> {
+  const row = (
+    await query<{ exists: boolean }>(
+      `SELECT EXISTS (
+         SELECT 1 FROM content_purchases
+         WHERE content_id = $1 AND LOWER(buyer_address) = LOWER($2)
+       ) AS exists`,
+      [contentId, address],
+    )
+  ).rows[0];
+  return Boolean(row?.exists);
 }
 
-export async function POST(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
+  const { searchParams } = new URL(request.url);
+  const contentId = searchParams.get('contentId');
+  if (!contentId) {
+    return NextResponse.json({ error: 'contentId is required' }, { status: 400 });
+  }
   try {
-    const { contentId, buyer } = await request.json();
-    if (!contentId || !buyer) {
-      return NextResponse.json({ error: 'contentId and buyer are required' }, { status: 400 });
-    }
-    grants.add(`${contentId}:${buyer.toLowerCase()}`);
-    return NextResponse.json({ success: true, accessGranted: true });
+    return NextResponse.json({ hasAccess: await callerHasAccess(contentId, user.address) });
+  } catch {
+    return NextResponse.json({ error: 'Failed to check access' }, { status: 500 });
+  }
+});
+
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
   } catch {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
-}
+  const contentId = typeof body.contentId === 'string' ? body.contentId : '';
+  if (!contentId) {
+    return NextResponse.json({ error: 'contentId is required' }, { status: 400 });
+  }
+  try {
+    const ok = await callerHasAccess(contentId, user.address);
+    if (!ok) {
+      return NextResponse.json(
+        { error: 'No purchase found for this content', accessGranted: false },
+        { status: 403 },
+      );
+    }
+    return NextResponse.json({ success: true, accessGranted: true });
+  } catch {
+    return NextResponse.json({ error: 'Failed to confirm access' }, { status: 500 });
+  }
+});

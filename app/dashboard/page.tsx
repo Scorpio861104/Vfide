@@ -11,6 +11,7 @@ import { ProofScoreRing, ProofScoreTierProgress } from '@/components/proofscore'
 import { FeeSavingsCard } from '@/components/fees';
 import { OnboardingProgressBar } from '@/components/onboarding';
 import { NonCustodialNotice } from '@/components/compliance';
+import { GetTestVfideBanner } from '@/components/testnet/GetTestVfideBanner';
 import { useProofScore } from '@/hooks/useProofScore';
 import { OverviewTab } from './components/OverviewTab';
 import { BadgesTab } from './components/BadgesTab';
@@ -171,6 +172,8 @@ export default function DashboardPage() {
 
         {/* ── Main content ── */}
         <div className="container mx-auto px-4 max-w-6xl py-8">
+
+          <GetTestVfideBanner className="mb-6" />
 
           {/* Score + Fee row */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">

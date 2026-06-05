@@ -128,10 +128,11 @@ describe('/api/crypto/transactions/[userId]', () => {
       const response = await GET(request, { params: Promise.resolve({ userId: '1' }) });
 
       expect(response.status).toBe(200);
-      expect(query).toHaveBeenNthCalledWith(
-        2,
+      // Fix #6 (caller-scope): one query, scoped to the authenticated address (the
+      // [userId] param is ignored), with the clamped limit/offset.
+      expect(query).toHaveBeenCalledWith(
         expect.stringContaining('LIMIT $2 OFFSET $3'),
-        [1, 100, 0]
+        ['0x1111111111111111111111111111111111111123', 100, 0]
       );
     });
 
@@ -145,10 +146,9 @@ describe('/api/crypto/transactions/[userId]', () => {
       const response = await GET(request, { params: Promise.resolve({ userId: '1' }) });
 
       expect(response.status).toBe(200);
-      expect(query).toHaveBeenNthCalledWith(
-        2,
+      expect(query).toHaveBeenCalledWith(
         expect.stringContaining('LIMIT $2 OFFSET $3'),
-        [1, 50, 10000]
+        ['0x1111111111111111111111111111111111111123', 50, 10000]
       );
     });
 
@@ -163,14 +163,24 @@ describe('/api/crypto/transactions/[userId]', () => {
       expect(response.status).toBe(400);
     });
 
-    it('should return 400 for non-numeric userId parameter', async () => {
+    it('ignores the [userId] path param and scopes to the authenticated caller', async () => {
+      // Fix #6: the [userId] segment is no longer used to select rows (it cannot be
+      // trusted), so a non-numeric or foreign id is simply ignored — results are always
+      // scoped to the authenticated wallet. This is the property that prevents reading
+      // another user's history by passing their id.
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
+      query.mockResolvedValueOnce({ rows: [] });
 
       const request = new NextRequest('http://localhost:3000/api/crypto/transactions/abc');
       const response = await GET(request, { params: Promise.resolve({ userId: 'abc' }) });
 
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(200);
+      // Scoped to the caller's address, NOT the 'abc' path param.
+      expect(query).toHaveBeenCalledWith(
+        expect.stringContaining('LIMIT $2 OFFSET $3'),
+        ['0x1111111111111111111111111111111111111123', expect.any(Number), expect.any(Number)]
+      );
     });
   });
 });
