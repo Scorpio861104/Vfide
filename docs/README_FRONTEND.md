@@ -86,7 +86,7 @@ This avoids loading wallet state globally on route groups that do not need Web3.
 
 - Mainnets: Base, Polygon, zkSync Era
 - Testnets: Base Sepolia, Polygon Amoy, zkSync Sepolia
-- Connectors: injected providers (EIP-6963), MetaMask, Coinbase Wallet, optional WalletConnect
+- Connectors: injected providers (EIP-6963), MetaMask, Coinbase Wallet, and WalletConnect when configured; production vault onboarding requires a real WalletConnect/RainbowKit project ID
 
 ### ABI Source of Truth
 
