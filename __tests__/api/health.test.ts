@@ -13,8 +13,10 @@ describe('/api/health', () => {
     process.env.npm_package_version = '1.2.0';
     process.env.NODE_ENV = 'test';
     process.env.NEXT_PUBLIC_CHAIN_ID = '84532';
-    process.env.NEXT_PUBLIC_CONTRACT_ADDRESS = '0x1234567890123456789012345678901234567890';
+    process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS = '0x1234567890123456789012345678901234567890';
+    process.env.NEXT_PUBLIC_VAULT_HUB_ADDRESS = '0x1234567890123456789012345678901234567890';
     process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID = 'test-project-id';
+    delete process.env.NEXT_PUBLIC_WAGMI_PROJECT_ID;
   });
 
   describe('GET', () => {
@@ -75,6 +77,35 @@ describe('/api/health', () => {
       expect(data.checks).toBeUndefined();
       expect(data.memory).toBeUndefined();
       expect(data.uptime).toBeUndefined();
+    });
+
+
+    it('should return 503 when WalletConnect project id is missing', async () => {
+      withRateLimit.mockResolvedValue(null);
+      delete process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
+      delete process.env.NEXT_PUBLIC_WAGMI_PROJECT_ID;
+
+      const request = new NextRequest('http://localhost:3000/api/health');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(503);
+      expect(data.ok).toBe(false);
+      expect(data.checks.env).toBe(false);
+    });
+
+    it('should accept NEXT_PUBLIC_WAGMI_PROJECT_ID as the WalletConnect fallback key', async () => {
+      withRateLimit.mockResolvedValue(null);
+      delete process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
+      process.env.NEXT_PUBLIC_WAGMI_PROJECT_ID = 'test-project-id';
+
+      const request = new NextRequest('http://localhost:3000/api/health');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.ok).toBe(true);
+      expect(data.checks.env).toBe(true);
     });
 
     it.skip('should return rate limit error when rate limit exceeded', async () => {

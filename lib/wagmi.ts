@@ -54,9 +54,11 @@ const safeStorage = {
   },
 };
 
-// WalletConnect Project ID (optional for local/dev/test runs).
-// When missing, we fully disable the WalletConnect connector to keep env-less
-// builds/tests deterministic and avoid remote registry/config fetches.
+// WalletConnect Project ID.
+// Production vault onboarding expects WalletConnect/RainbowKit to be configured
+// (validated in lib/validateProduction.ts). Local/dev/test builds may still omit
+// it; in that case we disable the WalletConnect connector to keep env-less tests
+// deterministic and avoid remote registry/config fetches.
 // Support both naming conventions for backwards compatibility
 const rawProjectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || process.env.NEXT_PUBLIC_WAGMI_PROJECT_ID
 const invalidProjectIds = new Set([
@@ -122,7 +124,7 @@ const wagmiStorage = createStorage({
 // WALLET CONNECTORS (MOBILE-FIRST)
 // ========================================
 // Wallet configuration tuned for build stability and broad compatibility:
-// - Keep essential connectors (MetaMask, Coinbase, Injected, optional WalletConnect)
+// - Keep essential connectors (MetaMask, Coinbase, Injected, WalletConnect when configured)
 // - Avoid extra wallet adapters that significantly increase bundle/build pressure
 
 // Detect if running on mobile device (lazy evaluation, memoized)

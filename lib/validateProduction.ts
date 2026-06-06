@@ -80,7 +80,8 @@ const REQUIRED_ENV_VARS: EnvironmentConfig[] = [
   { name: 'NEXT_PUBLIC_CARD_BOUND_VAULT_DEPLOYER_ADDRESS', required: false, category: 'blockchain', production: true },
 
 
-  // WalletConnect (optional but recommended)
+  // WalletConnect/RainbowKit project ID. Vault onboarding is wallet-first;
+  // production deployments must configure at least one supported project-id key.
   { name: 'NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID', required: false, category: 'blockchain' },
   { name: 'NEXT_PUBLIC_WAGMI_PROJECT_ID', required: false, category: 'blockchain' },
 
@@ -283,6 +284,20 @@ export function validateProductionEnvironment(): ValidationResult {
 
     if (vaultImplementation === 'cardbound' && !getEnvValue('NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS')) {
       result.errors.push('❌ NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS is required when NEXT_PUBLIC_VAULT_IMPLEMENTATION=cardbound in production');
+      result.valid = false;
+    }
+
+    const walletConnectProjectId =
+      getEnvValue('NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID') ||
+      getEnvValue('NEXT_PUBLIC_WAGMI_PROJECT_ID') ||
+      '';
+    const invalidWalletConnectProjectIds = new Set([
+      'local_walletconnect_project_id',
+      'your_walletconnect_project_id_here',
+      'your_walletconnect_project_id',
+    ]);
+    if (!walletConnectProjectId.trim() || invalidWalletConnectProjectIds.has(walletConnectProjectId.trim())) {
+      result.errors.push('❌ NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID or NEXT_PUBLIC_WAGMI_PROJECT_ID must be set to a real WalletConnect Cloud project ID for production vault onboarding');
       result.valid = false;
     }
 
