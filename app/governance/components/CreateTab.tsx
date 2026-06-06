@@ -103,7 +103,7 @@ const TEMPLATES: TemplateDescriptor[] = [
     key: 'confirmFraud',
     label: 'Confirm fraud against an address',
     description:
-      'DAO confirms an address committed fraud after community complaints. The address gets flagged: outgoing transfers held in 30-day escrow.',
+      'DAO confirms an address committed fraud after community complaints. The address gets flagged: service-banned and marked with a fraud risk signal. No funds are ever held or frozen.',
     ptype: ProposalType.SecurityAction,
     Icon: Flag,
     group: 'fraud',

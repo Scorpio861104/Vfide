@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { JetBrains_Mono, Noto_Sans, Noto_Sans_JP } from 'next/font/google';
+import localFont from 'next/font/local';
 
 // NOTE: Noto Sans SC (Simplified Chinese) and Noto Sans Thai are available
 // through the main Noto_Sans with lang:zh or lang:th subsets, not as separate exports.
@@ -8,32 +8,41 @@ import { JetBrains_Mono, Noto_Sans, Noto_Sans_JP } from 'next/font/google';
 
 // CJK & Thai fonts — loaded with display:swap so Latin text renders immediately.
 // Each font is subsetted to its script only, keeping bundle size minimal.
-const notoSansJP = Noto_Sans_JP({
-  subsets: ['latin'],
-  weight: ['400', '500', '700'],
+const notoSansJP = localFont({
+  src: [
+    { path: './fonts/noto-sans-jp-latin-400-normal.woff2', weight: '400', style: 'normal' },
+    { path: './fonts/noto-sans-jp-latin-500-normal.woff2', weight: '500', style: 'normal' },
+    { path: './fonts/noto-sans-jp-latin-700-normal.woff2', weight: '700', style: 'normal' },
+  ],
   display: 'swap',
   variable: '--font-ja',
   preload: false, // Only preload when locale is ja-JP
 });
 
 // Noto Sans for Simplified Chinese (SC) — uses Noto_Sans with lang:zh
-const notoSansSC = Noto_Sans({
-  subsets: ['latin'],
-  weight: ['400', '500', '700'],
+const notoSansSC = localFont({
+  src: [
+    { path: './fonts/noto-sans-latin-400-normal.woff2', weight: '400', style: 'normal' },
+    { path: './fonts/noto-sans-latin-500-normal.woff2', weight: '500', style: 'normal' },
+    { path: './fonts/noto-sans-latin-700-normal.woff2', weight: '700', style: 'normal' },
+  ],
   display: 'swap',
   variable: '--font-zh',
   preload: false,
-  // Note: Chinese glyphs are loaded via the base Noto Sans Han script
+  // Self-hosted latin subset; CJK glyphs fall back to system fonts (matches prior subsets:['latin'])
 });
 
 // Noto Sans for Thai — uses Noto_Sans with Thai script support
-const notoSansThai = Noto_Sans({
-  subsets: ['latin'],
-  weight: ['400', '500', '700'],
+const notoSansThai = localFont({
+  src: [
+    { path: './fonts/noto-sans-latin-400-normal.woff2', weight: '400', style: 'normal' },
+    { path: './fonts/noto-sans-latin-500-normal.woff2', weight: '500', style: 'normal' },
+    { path: './fonts/noto-sans-latin-700-normal.woff2', weight: '700', style: 'normal' },
+  ],
   display: 'swap',
   variable: '--font-th',
   preload: false,
-  // Note: Thai glyphs are included in the base Noto Sans package
+  // Self-hosted latin subset; Thai glyphs fall back to system fonts (matches prior subsets:['latin'])
 });
 import { headers } from 'next/headers';
 import { cookies } from 'next/headers';
@@ -51,9 +60,13 @@ import { getHtmlLang, normalizeLocale } from '@/lib/i18n';
 // <Numeric> component and the .font-numeric utility. Subsetted to latin
 // to keep the bundle small. We expose it as a CSS variable so it's
 // usable from Tailwind arbitrary values and from plain CSS.
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
+const jetbrainsMono = localFont({
+  src: [
+    { path: './fonts/jetbrains-mono-latin-400-normal.woff2', weight: '400', style: 'normal' },
+    { path: './fonts/jetbrains-mono-latin-500-normal.woff2', weight: '500', style: 'normal' },
+    { path: './fonts/jetbrains-mono-latin-600-normal.woff2', weight: '600', style: 'normal' },
+    { path: './fonts/jetbrains-mono-latin-700-normal.woff2', weight: '700', style: 'normal' },
+  ],
   variable: '--font-numeric',
   display: 'swap',
 });

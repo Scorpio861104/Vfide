@@ -24,12 +24,9 @@ import {
 } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 import { TabTrigger } from '@/components/ui/TabTrigger';
+import { GetTestVfideBanner } from '@/components/testnet/GetTestVfideBanner';
 import dynamic from 'next/dynamic';
 
-const StakingTab = dynamic(
-  () => import('./components/StakingTab').then(m => ({ default: m.StakingTab })),
-  { ssr: false, loading: () => <div className="py-8 text-center text-zinc-500 text-sm">Loading…</div> }
-);
 const RemittanceTab = dynamic(
   () => import('./components/RemittanceTab').then(m => ({ default: m.RemittanceTab })),
   { ssr: false, loading: () => <div className="py-8 text-center text-zinc-500 text-sm">Loading…</div> }
@@ -269,7 +266,7 @@ function OverviewTab() {
 }
 
 // ── Hub shell ─────────────────────────────────────────────────────────────────
-type TabId = 'overview' | 'activity' | 'private' | 'cross-chain' | 'staking' | 'remittance';
+type TabId = 'overview' | 'activity' | 'private' | 'cross-chain' | 'remittance';
 
 const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
   { id: 'overview',    label: 'Overview',     icon: Wallet },
@@ -307,6 +304,8 @@ function WalletHubInner() {
             <p className="text-zinc-400 text-sm">Manage, transact, and protect your VFIDE balance.</p>
           </div>
 
+          <GetTestVfideBanner className="mb-6" />
+
           {/* Tab bar */}
           <div className="sticky top-7 md:top-[5.25rem] z-30 backdrop-blur-xl bg-zinc-950/80 border-b border-white/5 -mx-4 px-4 mb-8 py-3"
             role="tablist" aria-label="Wallet sections">
@@ -338,7 +337,6 @@ function WalletHubInner() {
               {activeTab === 'activity'   && <ActivityContent />}
               {activeTab === 'private'    && <StealthTab />}
               {activeTab === 'cross-chain'&& <CrossChainTab />}
-              {activeTab === 'staking'     && <StakingTab />}
               {activeTab === 'remittance'  && <RemittanceTab />}
             </m.div>
           </AnimatePresence>

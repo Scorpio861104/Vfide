@@ -35,7 +35,7 @@ import { useLocale } from '@/lib/locale/LocaleProvider';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
-type TxAction = 'pay' | 'transfer' | 'deposit' | 'withdraw' | 'vote' | 'stake' | 'claim';
+type TxAction = 'pay' | 'transfer' | 'deposit' | 'withdraw' | 'vote' | 'claim';
 
 interface TransactionPreviewProps {
   action: TxAction;
@@ -91,7 +91,6 @@ const ACTION_LABELS: Record<TxAction, { verb: string; preposition: string }> = {
   deposit: { verb: 'Deposit', preposition: 'into' },
   withdraw: { verb: 'Withdraw', preposition: 'to' },
   vote: { verb: 'Vote', preposition: 'on' },
-  stake: { verb: 'Stake', preposition: 'in' },
   claim: { verb: 'Claim', preposition: 'from' },
 };
 

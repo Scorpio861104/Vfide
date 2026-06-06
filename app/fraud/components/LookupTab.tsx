@@ -6,10 +6,8 @@
  * Reads (no writes here):
  *   • getFraudStatus(target) — aggregate booleans + counters
  *   • getComplaints(target) — full complaint list (reporter, reason, timestamp)
- *   • clearFlagEscrowRefundPending(target) — boolean indicating pending refund work
  *
  * Optional admin actions for any visitor (permissionless):
- *   • processClearFlagEscrowRefunds — push the cursor after DAO cleared a flag
  *   • processDismissedComplaintPenalties — push the cursor after DAO dismissed complaints
  *
  * UI flow: address-input → submit → parallel-fetch reads → render.
@@ -53,7 +51,6 @@ export function LookupTab() {
   const [target, setTarget] = useState<Address | null>(null);
   const [status, setStatus] = useState<FraudStatus | null>(null);
   const [complaints, setComplaints] = useState<ComplaintRecord[]>([]);
-  const [clearFlagPending, setClearFlagPending] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cleanupError, setCleanupError] = useState<string | null>(null);
@@ -65,7 +62,6 @@ export function LookupTab() {
     setCleanupMessage(null);
     setStatus(null);
     setComplaints([]);
-    setClearFlagPending(false);
 
     const addr = input.trim();
     if (!isAddress(addr)) {
@@ -75,17 +71,15 @@ export function LookupTab() {
     setTarget(addr as Address);
     setLoading(true);
     try {
-      const [s, c, pending] = await Promise.all([
+      const [s, c] = await Promise.all([
         fr.fetchStatus(addr as Address),
         fr.fetchComplaints(addr as Address),
-        fr.fetchClearFlagPending(addr as Address),
       ]);
       if (!s) {
         setError('Unable to fetch fraud status. Is the registry deployed for this network?');
       } else {
         setStatus(s);
         setComplaints(c);
-        setClearFlagPending(pending);
       }
     } catch (e: any) {
       setError(e?.shortMessage || e?.message || 'Lookup failed.');
@@ -96,29 +90,12 @@ export function LookupTab() {
 
   const refreshTarget = async () => {
     if (!target) return;
-    const [s, c, pending] = await Promise.all([
+    const [s, c] = await Promise.all([
       fr.fetchStatus(target),
       fr.fetchComplaints(target),
-      fr.fetchClearFlagPending(target),
     ]);
     if (s) setStatus(s);
     setComplaints(c);
-    setClearFlagPending(pending);
-  };
-
-  const handleProcessClearFlagRefunds = async () => {
-    if (!target) return;
-    setCleanupError(null);
-    setCleanupMessage(null);
-    try {
-      await fr.processClearFlagEscrowRefunds(target, CLEANUP_BATCH_SIZE);
-      setCleanupMessage(
-        `Processed up to ${CLEANUP_BATCH_SIZE.toString()} clear-flag escrow refunds for this target.`
-      );
-      await refreshTarget();
-    } catch (e: any) {
-      setCleanupError(e?.shortMessage || e?.message || 'Failed to process refunds.');
-    }
   };
 
   const handleProcessDismissedPenalties = async () => {
@@ -151,7 +128,7 @@ export function LookupTab() {
     : 0;
 
   // Show the cleanup section when there's actionable cleanup OR historical complaint context
-  const showCleanupSection = status && (clearFlagPending || complaints.length > 0);
+  const showCleanupSection = status && complaints.length > 0;
 
   return (
     <div className="space-y-6">
@@ -241,11 +218,10 @@ export function LookupTab() {
               <div className="text-sm text-red-200">
                 <p className="font-semibold mb-0.5">Flagged by DAO</p>
                 <p className="text-xs text-red-300/80">
-                  Flagged on {formatTimestamp(status.flagTimestamp)}. Outgoing transfers are escrowed for{' '}
-                  {Math.floor(Number(fr.escrowDuration) / 86400)} days. Pending escrows: {status.pendingEscrowCount.toString()}.
+                  Flagged on {formatTimestamp(status.flagTimestamp)}. This address is service-banned and carries a fraud risk signal across the protocol.
                 </p>
                 <p className="text-xs text-red-300/60 mt-1">
-                  Non-custodial: funds remain the user&apos;s, just delayed. The user keeps full vault custody.
+                  Non-custodial: no funds are ever held, frozen, or seized. Flagging affects service access and trust score only &mdash; the user keeps full vault custody.
                 </p>
               </div>
             </div>
@@ -313,17 +289,6 @@ export function LookupTab() {
               )}
 
               <div className="flex flex-wrap gap-2">
-                {/* Clear-flag refunds — only shown when precisely pending */}
-                {clearFlagPending && (
-                  <button
-                    onClick={() => void handleProcessClearFlagRefunds()}
-                    disabled={fr.isWritePending}
-                    className="px-3 py-2 text-xs bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 rounded-lg font-semibold inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {fr.isWritePending ? <Loader2 size={11} className="animate-spin" /> : <RefreshCw size={11} />}
-                    Process clear-flag refunds ({CLEANUP_BATCH_SIZE.toString()})
-                  </button>
-                )}
                 {/* Dismissed-penalty processing — show when target has complaints (contract no-ops gracefully if cursor caught up) */}
                 {complaints.length > 0 && (
                   <button

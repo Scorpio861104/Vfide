@@ -1,8 +1,8 @@
 @import "tailwindcss";
-/* PERF-3: @fontsource/inter removed — next/font/google in app/layout.tsx
+/* PERF-3: @fontsource/inter removed — next/font/local (self-hosted) in app/layout.tsx
    already serves this font with preloading + font-display:swap.
    Loading both caused a duplicate network fetch on every page. */
-/* PERF-3: @fontsource/space-grotesk removed — next/font/google in app/layout.tsx
+/* PERF-3: @fontsource/space-grotesk removed — next/font/local (self-hosted) in app/layout.tsx
    already serves this font with preloading + font-display:swap.
    Loading both caused a duplicate network fetch on every page. */
 /* PERF-4a: enhanced-animations.css inlined — removes @import chain resolution.
@@ -2734,7 +2734,7 @@
 
 
 /* ─── CJK & Thai font stacks ─────────────────────────────────────────────────
- * Font variables are injected by layout.tsx via next/font/google.
+ * Font variables are injected by layout.tsx via next/font/local (self-hosted).
  * Each locale selector applies the correct Noto Sans variant as the primary
  * font, falling back to system CJK fonts for resilience.
  * display:swap on each font means Latin text always renders immediately —

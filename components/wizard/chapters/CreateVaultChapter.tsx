@@ -5,6 +5,7 @@ import { useAccount } from 'wagmi';
 import { CheckCircle2, ShieldAlert, Wallet, Loader2 } from 'lucide-react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
+import Link from 'next/link';
 
 import { useVaultHub } from '@/hooks/useVaultHub';
 import { ChapterShell } from '../ChapterShell';
@@ -186,13 +187,22 @@ export function CreateVaultChapter({ onComplete }: CreateVaultChapterProps) {
         </li>
         <li className="flex items-start gap-2">
           <ShieldAlert className="mt-0.5 flex-shrink-0 text-cyan-300" size={16} aria-hidden />
-          Vault creation uses <code className="rounded bg-black/30 px-1.5 py-0.5 text-xs">VaultHub.ensureVault()</code> and is idempotent, so retries stay safe.
+          Safe to retry. If the network hiccups you can tap again — you will never end up with two vaults.
         </li>
         <li className="flex items-start gap-2">
           <ShieldAlert className="mt-0.5 flex-shrink-0 text-cyan-300" size={16} aria-hidden />
-          One transaction, paid by you. Your wallet will prompt for the signature.
+          It is one transaction. Your wallet will pop up to confirm a small network (gas) fee.
         </li>
       </ul>
+
+      <div className="mt-4 rounded-xl border border-amber-500/25 bg-amber-500/[0.06] p-3 text-xs text-amber-100/90">
+        <span className="font-semibold text-amber-200">First time?</span> You need a little
+        test VFIDE and gas to use the app. Grab both free on the{' '}
+        <Link href="/testnet" className="underline decoration-amber-400/50 underline-offset-2 hover:text-white">
+          Testnet Faucet
+        </Link>{' '}
+        page, then come back and create your vault.
+      </div>
     </ChapterShell>
   );
 }

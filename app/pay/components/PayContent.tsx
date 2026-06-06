@@ -14,6 +14,7 @@ import { useVfidePrice } from '@/hooks/usePriceHooks';
 import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
 import { useEscrow } from '@/lib/escrow/useEscrow';
 import { buildQrSignatureMessage, parseExpiry } from '@/lib/payments/qrSignature';
+import { computeEffectiveSettlement, validatePayLinkAmount, verifyPayLinkRecipient } from '@/lib/payments/payGating';
 import { safeParseFloat } from '@/lib/validation';
 
 // Payer-protection default: pay a payee whose ProofScore is below neutral (5000) and the flow
@@ -60,6 +61,9 @@ export function PayContent() {
     return `CHK-${Math.floor(Date.now() / 1000)}`;
   });
   const paymentSource = searchParams.get("source") || "checkout";
+  // Stored payment links (source=paylink) carry the canonical link id; the recipient
+  // and amount are re-verified against the server record (see effect below).
+  const linkId = (searchParams.get("linkId") || "").trim();
   const signature = (searchParams.get('sig') || '').trim();
   const expiryFromQuery = parseExpiry(searchParams.get('exp'));
   const settlementParam = searchParams.get("settlement");
@@ -76,8 +80,16 @@ export function PayContent() {
   const [selectedMethod, setSelectedMethod] = useState<'vfide' | 'usdc' | 'usdt'>('vfide');
   const [isProcessing, setIsProcessing] = useState(false);
   const [signatureState, setSignatureState] = useState<'valid' | 'missing' | 'invalid' | 'expired' | 'verifying'>(
-    paymentSource === 'qr' ? 'missing' : 'valid'
+    // Everything except a stored payment link requires a verified signature before it
+    // may settle instantly; start them 'missing'. A stored paylink uses its own
+    // server cross-check (paylinkVerified) rather than a payer-supplied signature.
+    paymentSource === 'paylink' ? 'valid' : 'missing'
   );
+  // Stored payment link (source=paylink): verified true only once the URL recipient
+  // matches the canonical merchant on the server record and the amount fits the link's
+  // constraints. Until then the payment is blocked.
+  const [paylinkVerified, setPaylinkVerified] = useState(false);
+  const [paylinkError, setPaylinkError] = useState<string | null>(null);
   const telemetrySentRef = useRef<Set<string>>(new Set());
   const { showToast } = useToast();
   const { isConnected, address } = useAccount();
@@ -99,6 +111,50 @@ export function PayContent() {
     if (payeeScore === null || payeeScore === undefined) return;
     setSettlement(payeeScore < ESCROW_TRUST_THRESHOLD ? 'escrow' : 'instant');
   }, [payeeScore, explicitSettlement, userChoseSettlement]);
+
+  // Stored payment link integrity: re-fetch the canonical link by its id and verify
+  // that the URL recipient matches the server's merchant_address and the amount fits
+  // the link's fixed/min/max constraints. A crafted or tampered /pay?source=paylink
+  // link (recipient/amount swapped) fails this and is blocked. Reuses the existing
+  // public, active-only GET /api/pay/link/[id]; no payer-supplied signature involved.
+  useEffect(() => {
+    if (paymentSource !== 'paylink') return;
+    let cancelled = false;
+    setPaylinkVerified(false);
+    setPaylinkError(null);
+    if (!linkId) {
+      setPaylinkError('This payment link is missing its reference and cannot be verified.');
+      return;
+    }
+    (async () => {
+      try {
+        const res = await fetch(`/api/pay/link/${encodeURIComponent(linkId)}`);
+        if (!res.ok) {
+          if (!cancelled) setPaylinkError('This payment link was not found or is no longer active.');
+          return;
+        }
+        const link = await res.json();
+        const recipientOk = verifyPayLinkRecipient(merchant, link?.merchant_address ?? '');
+        const amountOk = validatePayLinkAmount(requestedAmount, {
+          amount: link?.amount,
+          min_amount: link?.min_amount,
+          max_amount: link?.max_amount,
+        });
+        if (cancelled) return;
+        setPaylinkVerified(recipientOk && amountOk);
+        setPaylinkError(
+          !recipientOk
+            ? "This link's recipient could not be verified against our records."
+            : !amountOk
+              ? "The amount is outside this link's allowed range."
+              : null,
+        );
+      } catch {
+        if (!cancelled) setPaylinkError('Could not verify this payment link. Please try again.');
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [paymentSource, linkId, merchant, requestedAmount]);
 
   const amountVfide = safeParseFloat(requestedAmount, 0);
   const hasValidAmount = amountVfide > 0;
@@ -131,7 +187,7 @@ export function PayContent() {
     let _cancelled = false;
 
     const verifyQrSignature = async () => {
-      if (paymentSource !== 'qr') {
+      if (paymentSource !== 'qr' && paymentSource !== 'link') {
         return;
       }
       if (!signature || !expiryFromQuery || !qrMessage) {
@@ -173,7 +229,7 @@ export function PayContent() {
 
   useEffect(() => {
     let _cancelled = false;
-    if (paymentSource !== 'qr') return;
+    if (paymentSource !== 'qr' && paymentSource !== 'link') return;
     if (!['missing', 'invalid', 'expired'].includes(signatureState)) return;
 
     const eventKey = [signatureState, merchant, requestedAmount, orderId, settlement, String(expiryFromQuery || 0)].join('|');
@@ -221,8 +277,22 @@ export function PayContent() {
     signature,
   ]);
 
-  const qrReadyForPayment = paymentSource !== 'qr' || signatureState === 'valid';
-  const settlementTone = settlementMessaging(settlement);
+  const canSettleInstantly =
+    signatureState === 'valid' || (paymentSource === 'paylink' && paylinkVerified);
+  // Instant settlement is irreversible, so it is only honored for a verified payment;
+  // any unverified payment is forced to escrow (which preserves dispute recourse).
+  const effectiveSettlement = computeEffectiveSettlement(settlement, canSettleInstantly);
+
+  // qr/link require a valid merchant signature; a stored paylink requires the server
+  // cross-check to pass; a direct checkout is allowed but (being unverified) can only
+  // settle via escrow per effectiveSettlement above.
+  const qrReadyForPayment =
+    paymentSource === 'qr' || paymentSource === 'link'
+      ? signatureState === 'valid'
+      : paymentSource === 'paylink'
+        ? paylinkVerified
+        : true;
+  const settlementTone = settlementMessaging(effectiveSettlement);
 
   const handlePayment = async () => {
     if (!isConnected || !address) {
@@ -256,10 +326,37 @@ export function PayContent() {
       showToast('QR signature validation failed. Request a newly signed QR code.', 'error');
       return;
     }
-    
+
+    // Defense-in-depth (payment-link integrity): only source=qr links are validated
+    // against the merchant's signature. For every other source the merchant/amount
+    // arrive from the URL unverified and tamper-able, so require the payer to
+    // explicitly confirm the exact recipient address and amount before signing —
+    // removing the blind-sign vector on crafted/altered /pay links.
+    if (signatureState !== 'valid') {
+      const trustNote =
+        payeeScore === null || payeeScore === undefined
+          ? 'This recipient has no ProofScore yet (new or unknown).'
+          : payeeScore < ESCROW_TRUST_THRESHOLD
+            ? `Warning: this recipient has a LOW ProofScore (${payeeScore.toLocaleString()}).`
+            : `Recipient ProofScore: ${payeeScore.toLocaleString()}.`;
+      const confirmed = confirm(
+        `Confirm payment\n\n` +
+          `Pay ${amountVfide} VFIDE to:\n${merchantAddress}\n\n` +
+          `${trustNote}\n\n` +
+          `This payment link is unverified — make sure the address above is who you intend to pay.` +
+          (effectiveSettlement === 'escrow'
+            ? ` For your protection it will be held in escrow until you confirm receipt.`
+            : ` This payment cannot be reversed.`)
+      );
+      if (!confirmed) {
+        showToast('Payment cancelled', 'info');
+        return;
+      }
+    }
+
     setIsProcessing(true);
     try {
-      if (settlement === 'escrow') {
+      if (effectiveSettlement === 'escrow') {
         showToast('Sign to open and fund the escrow — confirm in your wallet', 'info');
         await createEscrow(
           merchantAddress as `0x${string}`,
@@ -333,7 +430,7 @@ export function PayContent() {
             className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-8"
           >
             <div className={`mb-6 inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-semibold ${
-              settlement === "instant"
+              effectiveSettlement === "instant"
                 ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
                 : "bg-amber-500/10 border-amber-500/30 text-amber-300"
             }`}>
@@ -365,7 +462,7 @@ export function PayContent() {
                   </div>
                 ) : null}
                 <div className={`px-3 py-1 rounded-lg text-sm font-bold ${
-                  settlement === "instant"
+                  effectiveSettlement === "instant"
                     ? "bg-emerald-500/20 border border-emerald-500/30 text-emerald-300"
                     : "bg-amber-500/20 border border-amber-500/30 text-amber-300"
                 }`}>
@@ -378,14 +475,20 @@ export function PayContent() {
               {/* Trust-tiered settlement choice — the payer can always opt out (no forced hold). */}
               <div className="mt-4">
                 <div className="flex items-center gap-2">
-                  {(['escrow', 'instant'] as const).map((opt) => (
+                  {(['escrow', 'instant'] as const).map((opt) => {
+                    const optDisabled = opt === 'instant' && !canSettleInstantly;
+                    return (
                     <button
                       key={opt}
                       type="button"
-                      onClick={() => { setUserChoseSettlement(true); setSettlement(opt); }}
-                      aria-pressed={settlement === opt}
+                      disabled={optDisabled}
+                      onClick={() => { if (optDisabled) return; setUserChoseSettlement(true); setSettlement(opt); }}
+                      aria-pressed={effectiveSettlement === opt}
+                      title={optDisabled ? 'Instant settlement requires a signed link or QR' : undefined}
                       className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
-                        settlement === opt
+                        optDisabled
+                          ? 'bg-white/5 border-white/10 text-gray-600 cursor-not-allowed opacity-50'
+                          : effectiveSettlement === opt
                           ? opt === 'escrow'
                             ? 'bg-amber-500/20 border-amber-500/40 text-amber-200'
                             : 'bg-emerald-500/20 border-emerald-500/40 text-emerald-200'
@@ -394,9 +497,16 @@ export function PayContent() {
                     >
                       {opt === 'escrow' ? 'Protected (escrow)' : 'Instant'}
                     </button>
-                  ))}
+                    );
+                  })}
                 </div>
+                {!canSettleInstantly && (
+                  <div className="mt-2 text-[11px] text-amber-200/80" aria-live="polite">
+                    Instant settlement requires a signed link or QR. This payment is protected by escrow — funds are held until you confirm receipt.
+                  </div>
+                )}
                 {!userChoseSettlement && explicitSettlement === null && settlement === 'escrow'
+                  && canSettleInstantly
                   && payeeScore !== null && payeeScore !== undefined && payeeScore < ESCROW_TRUST_THRESHOLD && (
                   <div className="mt-2 text-[11px] text-amber-200/80" aria-live="polite">
                     This payee’s ProofScore ({payeeScore.toLocaleString()}) is below neutral — your payment is protected by escrow by default. Switch to Instant above to settle directly.
@@ -418,12 +528,17 @@ export function PayContent() {
                   Using legacy <span className="font-semibold">to</span> parameter. Update links to use <span className="font-semibold">merchant</span>.
                 </div>
               )}
-              {paymentSource === 'qr' && signatureState !== 'valid' && (
+              {(paymentSource === 'qr' || paymentSource === 'link') && signatureState !== 'valid' && (
                 <div className="mt-2 text-xs text-red-300" role="alert" aria-live="polite">
-                  {signatureState === 'missing' && 'Unsigned QR payload. Merchant must sign and lock this QR.'}
-                  {signatureState === 'expired' && 'QR signature expired. Request a newly generated QR.'}
-                  {signatureState === 'invalid' && 'QR signature invalid. Potential tampering detected.'}
-                  {signatureState === 'verifying' && 'Verifying signed QR payload...'}
+                  {signatureState === 'missing' && `Unsigned ${paymentSource === 'link' ? 'payment link' : 'QR payload'}. The merchant must sign it before it can be paid.`}
+                  {signatureState === 'expired' && `This signed ${paymentSource === 'link' ? 'link' : 'QR'} has expired. Request a newly generated one.`}
+                  {signatureState === 'invalid' && 'Signature invalid — potential tampering detected.'}
+                  {signatureState === 'verifying' && 'Verifying signature…'}
+                </div>
+              )}
+              {paymentSource === 'paylink' && !paylinkVerified && paylinkError && (
+                <div className="mt-2 text-xs text-red-300" role="alert" aria-live="polite">
+                  {paylinkError}
                 </div>
               )}
             </div>
@@ -530,22 +645,22 @@ export function PayContent() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
               className={`mt-6 p-4 rounded-xl border ${
-                settlement === "instant"
+                effectiveSettlement === "instant"
                   ? "bg-emerald-500/10 border-emerald-500/30"
                   : "bg-amber-500/10 border-amber-500/30"
               }`}
             >
               <div className="flex items-start gap-3">
                 <div className={`p-2 rounded-lg ${
-                  settlement === "instant" ? "bg-emerald-500/20" : "bg-amber-500/20"
+                  effectiveSettlement === "instant" ? "bg-emerald-500/20" : "bg-amber-500/20"
                 }`}>
                   <Shield className={`w-5 h-5 ${
-                    settlement === "instant" ? "text-emerald-400" : "text-amber-400"
+                    effectiveSettlement === "instant" ? "text-emerald-400" : "text-amber-400"
                   }`} />
                 </div>
                 <div>
                   <div className={`font-bold mb-1 ${
-                    settlement === "instant" ? "text-emerald-400" : "text-amber-300"
+                    effectiveSettlement === "instant" ? "text-emerald-400" : "text-amber-300"
                   }`}>
                     {settlementTone.noticeTitle}
                   </div>

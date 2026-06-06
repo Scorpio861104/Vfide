@@ -8,14 +8,12 @@
  *   • Users with ProofScore ≥ 5000 file complaints against an address
  *   • At 3 complaints, the address enters PENDING_REVIEW (48h appeal window)
  *   • DAO decides: confirmFraud (→ flagged) / dismissComplaints (→ penalize reporters) / clearFlag
- *   • Flagged addresses have outgoing transfers escrowed for 30 days (non-custodial — funds
- *     are still the user's, just delayed)
+ *   • Flagged addresses are service-banned and carry a fraud risk signal. No funds are
+ *     ever held, frozen, or escrowed (the former 30-day hold was removed for non-custody)
  *   • DAO can escalate to permanent ban via a 7-day timelock
  *
  * Exposed write paths (this hook):
  *   • fileComplaint(target, reason) — eligible user reports fraud
- *   • releaseEscrow(escrowIndex)    — anyone, after the 30-day window
- *   • processClearFlagEscrowRefunds — anyone, after DAO clears a flag, to unwind escrows
  *   • processDismissedComplaintPenalties — anyone, after DAO dismisses complaints
  *
  * INTENTIONALLY NOT IN THIS HOOK:
@@ -26,7 +24,7 @@
  *   • setPermanentBan / applyPermanentBan / cancelPermanentBan — timelocked admin flow,
  *     deferred to Tier 2.
  *   • setDAO / setVaultHub timelocked admin — Tier 2 operational concern.
- *   • rescueExcessTokens / rescueStuckEscrow — emergency admin recovery, Tier 2.
+ *   • rescueExcessTokens — emergency admin recovery, Tier 2.
  */
 
 import { useCallback } from 'react';
@@ -88,15 +86,6 @@ export interface ComplaintRecord {
   timestamp: bigint;
 }
 
-export interface EscrowedTransferRecord {
-  index: bigint;
-  recipient: Address;
-  amount: bigint;
-  releaseAt: bigint; // unix seconds
-  /** Derived: now >= releaseAt */
-  isReady: boolean;
-}
-
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
 
 export function useFraudRegistry() {
@@ -123,13 +112,6 @@ export function useFraudRegistry() {
     query: { enabled: fraudConfigured },
   });
 
-  const { data: escrowDurationRaw } = useReadContract({
-    address: fraudAddress,
-    abi: FraudRegistryABI,
-    functionName: 'ESCROW_DURATION',
-    query: { enabled: fraudConfigured },
-  });
-
   const { data: pendingReviewWindowRaw } = useReadContract({
     address: fraudAddress,
     abi: FraudRegistryABI,
@@ -145,52 +127,10 @@ export function useFraudRegistry() {
   });
 
   const complaintsToFlag = Number(complaintsToFlagRaw ?? 3);
-  const minReporterScore = Number(minReporterScoreRaw ?? 5000);
-  const escrowDuration = (escrowDurationRaw as bigint | undefined) ?? 0n; // seconds
+  const minReporterScore = Number(minReporterScoreRaw ?? 6000);
   const pendingReviewWindow = (pendingReviewWindowRaw as bigint | undefined) ?? 0n; // seconds
   const complaintReporterPenalty = Number(complaintReporterPenaltyRaw ?? 50);
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // CALLER-SPECIFIC: pending escrows for the connected wallet
-  // ─────────────────────────────────────────────────────────────────────────
-
-  const { data: myEscrowsRaw, refetch: refetchMyEscrows } = useReadContract({
-    address: fraudAddress,
-    abi: FraudRegistryABI,
-    functionName: 'getPendingEscrows',
-    args: connectedAddress ? [connectedAddress] : undefined,
-    query: { enabled: fraudConfigured && !!connectedAddress },
-  });
-
-  const { data: myActiveEscrowCountRaw, refetch: refetchMyActiveCount } = useReadContract({
-    address: fraudAddress,
-    abi: FraudRegistryABI,
-    functionName: 'userActiveEscrowCount',
-    args: connectedAddress ? [connectedAddress] : undefined,
-    query: { enabled: fraudConfigured && !!connectedAddress },
-  });
-
-  const myEscrows: EscrowedTransferRecord[] = (() => {
-    if (!myEscrowsRaw) return [];
-    // Returns (indices, recipients, amounts, releaseAts) as four parallel arrays
-    const r = myEscrowsRaw as readonly [
-      readonly bigint[],
-      readonly Address[],
-      readonly bigint[],
-      readonly bigint[],
-    ];
-    const [indices, recipients, amounts, releaseAts] = r;
-    const now = BigInt(Math.floor(Date.now() / 1000));
-    return indices.map((idx, i) => ({
-      index: idx,
-      recipient: recipients[i]!,
-      amount: amounts[i]!,
-      releaseAt: releaseAts[i]!,
-      isReady: now >= releaseAts[i]!,
-    }));
-  })();
-
-  const myActiveEscrowCount = (myActiveEscrowCountRaw as bigint | undefined) ?? 0n;
 
   // ─────────────────────────────────────────────────────────────────────────
   // ARBITRARY-ADDRESS READS — used by the lookup view
@@ -267,31 +207,6 @@ export function useFraudRegistry() {
     [publicClient, fraudAddress, fraudConfigured, connectedAddress]
   );
 
-  /**
-   * Check whether `target` has a pending clear-flag refund batch waiting to be processed.
-   *
-   * After the DAO clears a flag, escrowed transfers from the target are queued for
-   * refund to the sender. `processClearFlagEscrowRefunds` reverts unless this bool is
-   * true, so the UI must gate the cleanup button on this precise signal.
-   */
-  const fetchClearFlagPending = useCallback(
-    async (target: Address): Promise<boolean> => {
-      if (!publicClient || !fraudConfigured) return false;
-      try {
-        const result = await publicClient.readContract({
-          address: fraudAddress as Address,
-          abi: FraudRegistryABI,
-          functionName: 'clearFlagEscrowRefundPending',
-          args: [target],
-        });
-        return result as boolean;
-      } catch {
-        return false;
-      }
-    },
-    [publicClient, fraudAddress, fraudConfigured]
-  );
-
   // ─────────────────────────────────────────────────────────────────────────
   // WRITES
   // ─────────────────────────────────────────────────────────────────────────
@@ -328,41 +243,6 @@ export function useFraudRegistry() {
   );
 
   /**
-   * Release an escrowed transfer after its 30-day window has elapsed.
-   * Permissionless — anyone can call (the contract handles state validation).
-   */
-  const releaseEscrow = useCallback(
-    async (escrowIndex: bigint) => {
-      assertReady();
-      return writeContractAsync({
-        address: fraudAddress as Address,
-        abi: FraudRegistryABI,
-        functionName: 'releaseEscrow',
-        args: [escrowIndex],
-      });
-    },
-    [writeContractAsync, fraudAddress]
-  );
-
-  /**
-   * Process queued escrow refunds for a target whose flag was cleared by the DAO.
-   * Permissionless — uses a cursor, processes up to `maxCount` refunds per call.
-   * Useful when there are many escrows to unwind.
-   */
-  const processClearFlagEscrowRefunds = useCallback(
-    async (target: Address, maxCount: bigint) => {
-      assertReady();
-      return writeContractAsync({
-        address: fraudAddress as Address,
-        abi: FraudRegistryABI,
-        functionName: 'processClearFlagEscrowRefunds',
-        args: [target, maxCount],
-      });
-    },
-    [writeContractAsync, fraudAddress]
-  );
-
-  /**
    * Process penalty deductions on reporters whose complaints were dismissed.
    * Permissionless — uses a cursor, processes up to `maxCount` per call.
    */
@@ -379,14 +259,6 @@ export function useFraudRegistry() {
     [writeContractAsync, fraudAddress]
   );
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Refresh helper — for callers to refetch caller-specific data after a write
-  // ─────────────────────────────────────────────────────────────────────────
-
-  const refetchMy = useCallback(async () => {
-    await Promise.all([refetchMyEscrows(), refetchMyActiveCount()]);
-  }, [refetchMyEscrows, refetchMyActiveCount]);
-
   return {
     // Configuration
     fraudAddress,
@@ -395,25 +267,16 @@ export function useFraudRegistry() {
     // Constants
     complaintsToFlag,
     minReporterScore,
-    escrowDuration,
     pendingReviewWindow,
     complaintReporterPenalty,
-
-    // Caller-specific
-    myEscrows,
-    myActiveEscrowCount,
-    refetchMy,
 
     // Arbitrary-address read helpers
     fetchStatus,
     fetchComplaints,
     fetchHasComplained,
-    fetchClearFlagPending,
 
     // Writes
     fileComplaint,
-    releaseEscrow,
-    processClearFlagEscrowRefunds,
     processDismissedComplaintPenalties,
     isWritePending,
   };

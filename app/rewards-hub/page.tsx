@@ -184,7 +184,7 @@ function AboutRewardsContent() {
       <ul className="space-y-2 text-zinc-300 mb-8">
         {[
           'Governance voting rights — shape protocol rules, fees, and treasury allocations.',
-          'Protocol access — stake VFIDE to unlock merchant tiers and advanced vault features.',
+          'Protocol access — unlock merchant tiers and advanced vault features as your ProofScore grows.',
           'Governance duty points — earned by participating in Seer panels, not by holding.',
         ].map(item => (
           <li key={item} className="flex gap-2">

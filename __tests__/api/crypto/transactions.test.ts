@@ -159,7 +159,7 @@ describe('/api/crypto/transactions/[userId]', () => {
       expect(response.status).toBe(400);
     });
 
-    it('should ignore legacy userId path segment and scope by authenticated wallet', async () => {
+    it('ignores the [userId] path param and scopes to the authenticated caller', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
       query.mockResolvedValueOnce({ rows: [] });
@@ -169,7 +169,7 @@ describe('/api/crypto/transactions/[userId]', () => {
 
       expect(response.status).toBe(200);
       expect(query).toHaveBeenCalledWith(
-        expect.stringContaining('LOWER(COALESCE(user_address'),
+        expect.stringContaining('LIMIT $2 OFFSET $3'),
         ['0x1111111111111111111111111111111111111123', 50, 0]
       );
     });
