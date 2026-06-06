@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Home, CreditCard, Shield, Store, MoreHorizontal } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { MoreSheet } from './MoreSheet';
 
@@ -11,10 +11,10 @@ import { MoreSheet } from './MoreSheet';
 // Navigating to /more would produce a 404; the sheet is the correct
 // surface for the "everything else" destinations on mobile.
 const NAV_TABS = [
-  { label: 'Home',      href: '/dashboard',   icon: Home    },
-  { label: 'Pay',       href: '/pay',          icon: CreditCard },
-  { label: 'Trust',     href: '/proofscore',   icon: Shield  },
-  { label: 'Merchants', href: '/merchants',    icon: Store   },
+  { label: 'Home',        href: '/dashboard',   icon: Home    },
+  { label: 'Pay',         href: '/pay',          icon: CreditCard },
+  { label: 'Trust',       href: '/proofscore',   icon: Shield  },
+  { label: 'Marketplace', href: '/marketplace',  icon: Store   },
 ] as const;
 
 // Routes that belong to the "More" drawer group so the More tab
@@ -62,8 +62,10 @@ export function BottomTabBar() {
             return (
               <button
                 key={tab.href}
+                type="button"
                 onClick={() => { setMoreOpen(false); router.push(tab.href); }}
                 aria-label={tab.label}
+                aria-current={isActive ? 'page' : undefined}
                 className={cn(
                   'flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all min-w-0',
                   isActive
@@ -89,9 +91,12 @@ export function BottomTabBar() {
 
           {/* More — opens MoreSheet, does NOT navigate */}
           <button
+            type="button"
             onClick={() => setMoreOpen((v) => !v)}
             aria-label="More navigation options"
+            aria-haspopup="dialog"
             aria-expanded={moreOpen}
+            aria-current={onMoreRoute ? 'page' : undefined}
             className={cn(
               'flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all min-w-0',
               moreOpen || onMoreRoute

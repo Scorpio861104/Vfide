@@ -27,7 +27,7 @@ import { TabTrigger } from '@/components/ui/TabTrigger';
  */
 
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m as motion } from 'framer-motion';
 import {
   Hash,
   MessageCircle,

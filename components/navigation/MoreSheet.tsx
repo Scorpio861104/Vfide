@@ -95,7 +95,11 @@ export function MoreSheet({ open, onClose, variant = 'bottom' }: MoreSheetProps)
     const q = search.trim().toLowerCase();
     if (!q) return null;
     const flat = flattenNavItems(navigationItems);
-    return flat.filter((item) => item.label.toLowerCase().includes(q));
+    return flat.filter((item) =>
+      [item.label, item.id, item.badge]
+        .filter(Boolean)
+        .some((value) => value!.toLowerCase().includes(q))
+    );
   }, [search]);
 
   // Layout depends on variant.
@@ -147,7 +151,8 @@ export function MoreSheet({ open, onClose, variant = 'bottom' }: MoreSheetProps)
             className={`${positioning} flex flex-col overflow-hidden`}
             role="dialog"
             aria-modal="true"
-            aria-label="More destinations"
+            aria-labelledby="more-sheet-title"
+            aria-describedby="more-sheet-description"
           >
             {/* Drag indicator + header (mobile). On desktop the rounded
                 corners do the same job. */}
@@ -157,25 +162,47 @@ export function MoreSheet({ open, onClose, variant = 'bottom' }: MoreSheetProps)
               </div>
             )}
 
-            {/* Search row */}
-            <div className="flex items-center gap-2 border-b border-white/10 px-4 pb-3 pt-2">
-              <Search size={16} className="text-gray-500" />
+            <div className="border-b border-white/10 px-4 pb-3 pt-2">
+              <div className="mb-3 flex items-start justify-between gap-3">
+                <div>
+                  <h2 id="more-sheet-title" className="text-sm font-semibold text-white">
+                    Explore VFIDE
+                  </h2>
+                  <p id="more-sheet-description" className="mt-0.5 text-xs text-gray-500">
+                    Search every destination or browse by product area.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="rounded-md p-1 text-gray-400 hover:bg-white/5 hover:text-white"
+                  aria-label="Close destinations menu"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              {/* Search row */}
+              <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-1.5 focus-within:border-accent/40 focus-within:bg-white/[0.05]">
+                <Search size={16} className="text-gray-500" />
               <input
                 ref={searchRef}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Find anywhere…"
+                placeholder="Search vault, pay, rewards…"
                 className="flex-1 bg-transparent text-base text-white placeholder-gray-500 outline-none min-h-[36px]"
                 aria-label="Search destinations"
               />
-              <button
-                type="button"
-                onClick={onClose}
-                className="rounded-md p-1 text-gray-400 hover:bg-white/5 hover:text-white"
-                aria-label="Close"
-              >
-                <X size={16} />
-              </button>
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch('')}
+                  className="rounded-md px-2 py-1 text-xs text-gray-400 hover:bg-white/5 hover:text-white"
+                  aria-label="Clear destination search"
+                >
+                  Clear
+                </button>
+              )}
+              </div>
             </div>
 
             {/* Body */}
@@ -283,8 +310,11 @@ function FlatResults({
 }) {
   if (items.length === 0) {
     return (
-      <div className="px-6 py-12 text-center text-sm text-gray-500">
-        Nothing matches that.
+      <div className="px-6 py-12 text-center">
+        <div className="text-sm font-medium text-gray-300">No destinations found</div>
+        <p className="mt-1 text-xs text-gray-500">
+          Try a product area like vault, merchant, rewards, governance, or settings.
+        </p>
       </div>
     );
   }
@@ -314,8 +344,9 @@ function ItemRow({
   if (item.comingSoon) {
     return (
       <div
-        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm opacity-40 cursor-not-allowed select-none"
+        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm opacity-50 cursor-not-allowed select-none"
         aria-disabled="true"
+        title={`${item.label} is not available yet`}
       >
         <span
           className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md"
@@ -323,8 +354,11 @@ function ItemRow({
         >
           <Icon size={14} />
         </span>
-        <span className="flex-1 truncate text-gray-500">{item.label}</span>
-        <span className="flex-shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider bg-white/5 text-white/30">
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-gray-400">{item.label}</span>
+          <span className="block truncate text-[10px] text-gray-600">Planned for a later release</span>
+        </span>
+        <span className="flex-shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider bg-white/5 text-white/40">
           Soon
         </span>
       </div>
@@ -335,7 +369,9 @@ function ItemRow({
     <Link
       href={href}
       onClick={onPick}
-      className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition ${
+      aria-current={active ? 'page' : undefined}
+      title={`Open ${item.label}`}
+      className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 ${
         active
           ? 'bg-accent/10 text-accent'
           : 'text-gray-300 hover:bg-white/5 hover:text-white'

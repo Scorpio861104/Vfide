@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import React, { useState } from 'react';
 import { Footer } from '@/components/layout/Footer';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m as motion, AnimatePresence } from 'framer-motion';
 import { BiometricSetup } from '@/components/security/BiometricSetup';
 import { SecurityLogsDashboard } from '@/components/security/SecurityLogsDashboard';
 import { ThreatDetectionPanel } from '@/components/security/ThreatDetectionPanel';

@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import { lazy, Suspense, useState } from 'react';
 import { Footer } from "@/components/layout/Footer";
 import { useAccount } from "wagmi";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { Shield, Users, Key, FileText, Clock, Heart } from "lucide-react";
 
 import type { TabType } from './components/types';

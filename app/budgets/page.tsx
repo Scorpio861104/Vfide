@@ -6,7 +6,7 @@ import React, { useState, useCallback } from 'react';
 import { useFinancialIntelligence, Budget } from '@/lib/financialIntelligence';
 import { useAccount } from 'wagmi';
 import { toast } from '@/lib/toast';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m as motion, AnimatePresence } from 'framer-motion';
 import { PieChart, PlusCircle, Edit2, Trash2, BarChart3 } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 import { useLocale } from '@/lib/locale/LocaleProvider';

@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import { Footer } from '@/components/layout/Footer';
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m as motion, AnimatePresence } from 'framer-motion';
 import { Home, BarChart3, Award, Calculator, Activity, Wallet2, TrendingUp, Zap } from 'lucide-react';
 import { ProofScoreRing, ProofScoreTierProgress } from '@/components/proofscore';
 import { FeeSavingsCard } from '@/components/fees';
@@ -208,12 +208,19 @@ export default function DashboardPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.25 }}
             className="flex gap-2 mb-7 overflow-x-auto pb-1 scrollbar-hide"
+            role="tablist"
+            aria-label="Dashboard sections"
           >
             {tabs.map(tab => (
               <button
                 key={tab.id}
+                type="button"
+                role="tab"
+                id={`dashboard-tab-${tab.id}`}
+                aria-selected={activeTab === tab.id}
+                aria-controls={`dashboard-panel-${tab.id}`}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl font-semibold text-sm whitespace-nowrap transition-all duration-200 ${
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl font-semibold text-sm whitespace-nowrap transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 ${
                   activeTab === tab.id
                     ? 'tab-pill-active'
                     : 'tab-pill-inactive'
@@ -229,6 +236,9 @@ export default function DashboardPage() {
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
+              id={`dashboard-panel-${activeTab}`}
+              role="tabpanel"
+              aria-labelledby={`dashboard-tab-${activeTab}`}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}

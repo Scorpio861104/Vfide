@@ -13,7 +13,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { Clock, MapPin, Shield, RotateCcw, Check, Sparkles } from 'lucide-react';
 
 interface VibePost {

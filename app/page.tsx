@@ -1,7 +1,7 @@
 'use client';
 
 import { Footer } from '@/components/layout/Footer';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { m as motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight, ChevronRight, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { FeeSavingsCalculator } from '@/components/fees';

@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import { Footer } from '@/components/layout/Footer';
 import { useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { useAccount } from 'wagmi';
 import { safeLocalStorage } from '@/lib/utils';
 import { useLocale } from '@/lib/locale/LocaleProvider';

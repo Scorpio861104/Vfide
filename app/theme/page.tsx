@@ -1,6 +1,6 @@
 'use client';
 
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m as motion } from 'framer-motion';
 import { Eye, Palette, Sliders } from 'lucide-react';
 import { useState } from 'react';
 

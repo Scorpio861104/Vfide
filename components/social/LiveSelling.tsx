@@ -12,7 +12,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m as motion, AnimatePresence } from 'framer-motion';
 import { Video, Shield, Heart, Send, X, Package, Sparkles } from 'lucide-react';
 
 interface LiveProduct {
