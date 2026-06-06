@@ -13,7 +13,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { formatUnits, parseUnits } from 'viem';
 import { type Address } from 'viem';
-import { useLargePaymentThreshold, MAX_THRESHOLD_DELAY_SECONDS } from '@/hooks/useLargePaymentThreshold';
+import { useLargePaymentThreshold } from '@/hooks/useLargePaymentThreshold';
 import { AlertCircle, CheckCircle2, Clock, Sliders } from 'lucide-react';
 import Link from 'next/link';
 
@@ -44,7 +44,6 @@ export function LargePaymentThresholdPanel({ vaultAddress }: Props) {
   } = useLargePaymentThreshold(vaultAddress);
 
   const [thresholdInput, setThresholdInput] = useState('');
-  const [delayHours, setDelayHours] = useState('1');
   const [validationError, setValidationError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
 
@@ -66,23 +65,13 @@ export function LargePaymentThresholdPanel({ vaultAddress }: Props) {
       return;
     }
 
-    const hours = parseFloat(delayHours);
-    if (isNaN(hours) || hours < 1) {
-      setValidationError('Delay must be at least 1 hour.');
-      return;
-    }
-    if (hours > MAX_THRESHOLD_DELAY_SECONDS / 3600) {
-      setValidationError(`Delay cannot exceed ${MAX_THRESHOLD_DELAY_SECONDS / 3600 / 24} days.`);
-      return;
-    }
-
     try {
       const wei = parseUnits(trimmed, 18);
-      await propose(wei, Math.floor(hours * 3600));
+      await propose(wei);
     } catch {
       // Error is captured in proposeError from the hook
     }
-  }, [thresholdInput, delayHours, propose, resetWrite]);
+  }, [thresholdInput, propose, resetWrite]);
 
   // Esc key handler
   useEffect(() => {
@@ -170,26 +159,9 @@ export function LargePaymentThresholdPanel({ vaultAddress }: Props) {
               className="w-full rounded-xl bg-zinc-800 border border-zinc-600 px-4 py-3 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
           </div>
-          <div>
-            <label className="block text-xs text-zinc-400 uppercase tracking-wide mb-1.5">
-              Timelock Delay (hours)
-            </label>
-            <input
-              type="number"
-              inputMode="decimal"
-              value={delayHours}
-              onChange={(e) => {
-                setDelayHours(e.target.value);
-                setValidationError(null);
-              }}
-              min="1"
-              max={`${MAX_THRESHOLD_DELAY_SECONDS / 3600}`}
-              placeholder="1"
-              className="w-full rounded-xl bg-zinc-800 border border-zinc-600 px-4 py-3 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            />
-            <p className="text-xs text-zinc-500 mt-1">
-              Minimum 1 hour. The change becomes effective after this delay.
-            </p>
+          <div className="rounded-xl border border-zinc-700 bg-zinc-800/60 px-4 py-3 text-xs text-zinc-400">
+            The timelock delay is enforced by the vault contract. After proposing a new threshold,
+            review the effective time in Pending Changes before applying it.
           </div>
 
           {validationError && (
