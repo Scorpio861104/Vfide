@@ -1,0 +1,480 @@
+### workflows
+.github/workflows/codecov.yml
+.github/workflows/governance-safety.yml
+.github/workflows/mainnet-readiness.yml
+.github/workflows/release-gate.yml
+.github/workflows/security-replay-monitor.yml
+.github/workflows/security.yml
+.github/workflows/seer-watcher.yml
+.github/workflows/testing-pipeline.yml
+
+### continue-on-error / deploy / production refs
+.github/PULL_REQUEST_TEMPLATE.md:56:### If this PR touches deployment / infrastructure:
+.github/PULL_REQUEST_TEMPLATE.md:57:- [ ] `.deployments/<network>.json` updated with new contracts + `expectedAdmin`
+.github/PULL_REQUEST_TEMPLATE.md:58:- [ ] Run `npm run -s verify:admin-roles -- --network <name>` after deploy (v19.11 COMP-1)
+.github/PULL_REQUEST_TEMPLATE.md:61:- [ ] Rollback procedure tested (v19.3 OP-2 deploy checkpoints)
+.github/copilot-instructions.md:5:Before any deployment or live on-chain transaction, do as much validation as possible in-repo and off-chain first.
+.github/copilot-instructions.md:7:Required workflow for any deploy-related request:
+.github/copilot-instructions.md:12:4. Run focused tests for changed deploy or contract paths.
+.github/copilot-instructions.md:14:6. Provide a short pre-deploy readiness summary that includes:
+.github/copilot-instructions.md:18:7. Only then proceed to live deployment/transaction execution.
+.github/copilot-instructions.md:20:If critical inputs are missing, do not attempt deployment. Request the missing inputs and continue with all possible non-destructive validation in the meantime.
+.github/workflows/governance-safety.yml:40:        # deployment are expected and acceptable; only ocp-guardrails and feature9:governance
+.github/workflows/release-gate.yml:64:        run: npm run -s validate:env
+.github/workflows/release-gate.yml:84:        # the gate is therefore informational in CI — it must not block deployments.
+.github/workflows/release-gate.yml:86:        continue-on-error: true
+.github/workflows/release-gate.yml:126:      # in this job, causing Playwright's webServer health-check to time out.
+.github/workflows/security.yml:104:        continue-on-error: true
+.github/workflows/security.yml:191:        continue-on-error: true
+.github/workflows/security.yml:257:        continue-on-error: true
+.github/workflows/testing-pipeline.yml:111:          echo "Size check passed (compiler size warnings are informational for proxy-deployed contracts)"
+.github/workflows/testing-pipeline.yml:178:        continue-on-error: true
+.github/workflows/testing-pipeline.yml:225:    continue-on-error: true  # Next.js startup time varies; findings reported as warning
+.github/workflows/testing-pipeline.yml:236:          --health-cmd pg_isready
+.github/workflows/testing-pipeline.yml:237:          --health-interval 10s
+.github/workflows/testing-pipeline.yml:238:          --health-timeout 5s
+.github/workflows/testing-pipeline.yml:239:          --health-retries 5
+.github/workflows/testing-pipeline.yml:262:          # Required by /api/health to return 200 (missing vars → 503 → wait-on loops forever)
+.github/workflows/testing-pipeline.yml:269:        run: npx wait-on http://localhost:3000/api/health -t 120000
+.github/workflows/testing-pipeline.yml:342:          --health-cmd pg_isready
+.github/workflows/testing-pipeline.yml:343:          --health-interval 10s
+.github/workflows/testing-pipeline.yml:344:          --health-timeout 5s
+.github/workflows/testing-pipeline.yml:345:          --health-retries 5
+.github/workflows/testing-pipeline.yml:364:          npm run build
+.github/workflows/testing-pipeline.yml:369:            if curl -sf http://localhost:3002/api/health >/dev/null 2>&1; then
+README.md:52:These values are required for a safe production deployment and are validated by startup and production checks:
+README.md:90:   npm run validate:env
+README.md:91:   npm run validate:production
+README.md:95:   - CI/deployment now fails fast on validation errors (no warning-only bypass).
+README.md:99:   Production note: validation failures on Redis or `LOG_IP_HASH_SALT` must block deploy until fixed.
+README.md:103:   npm run build
+README.md:117:   Visit `/api/health` to verify all services are operational.
+README.md:121:See [PRODUCTION_DEPLOYMENT_CHECKLIST.md](./PRODUCTION_DEPLOYMENT_CHECKLIST.md) for complete pre-deployment checklist.
+README.md:159:npm run build            # Production build
+README.md:166:npm run test:onchain:generated # Run generated deploy-smoke stubs
+README.md:183:npm run validate:env         # Validate environment variables
+README.md:184:npm run validate:production  # Full production validation
+README.md:191:- `npm run test:onchain:generated` runs generated deploy-smoke coverage separately. This lane is non-blocking and is intended to catch simple artifact drift for contracts that support literal constructor-based smoke deployment.
+README.md:219:- [Deployment Checklist](./PRODUCTION_DEPLOYMENT_CHECKLIST.md) - Production deployment
+app/api/auth/challenge/route.ts:46:  // for any chainId (including chains VFIDE has never been deployed
+app/api/auth/challenge/route.ts:48:  // future deploy on that chain — a cross-chain replay attack
+app/api/auth/challenge/route.ts:54:  // routing). When the envvar is unset (single-chain legacy deploy),
+app/api/auth/challenge/route.ts:69:    // any challenge. Better than letting a misconfigured deploy
+app/api/auth/route.ts:158:    // Trust assumption: no deployed vault contract has a permissive isValidSignature.
+app/api/avatar/route.ts:28:import { put } from '@vercel/blob';
+app/api/crypto/price/route.ts:141:// Pool address from environment (deployed Uniswap V3 pool)
+app/api/crypto/price/route.ts:231:    // Try to fetch live price from Uniswap if pool is deployed
+app/api/faucet/claim/route.ts:84:  // Production deployments must use an external signer (KMS/HSM/relayer).
+app/api/health/ready/route.ts:4: * OP-4 FIX: The shallow `/api/health` endpoint only checks env vars are set.
+app/api/health/ready/route.ts:8: * Redis is down would not show as a health failure under the old probe.
+app/api/health/ready/route.ts:11: * load-balancer readiness check; keep `/api/health` as the cheap liveness
+app/api/health/ready/route.ts:14: * Returns 200 if every probed dependency is healthy.
+app/api/health/ready/route.ts:15: * Returns 503 if ANY critical dependency is unhealthy.
+app/api/health/ready/route.ts:17: * directly can see WHICH dependency is unhealthy.
+app/api/health/ready/route.ts:133: * who hits /api/health/ready. That's a low-severity info-disclosure issue —
+app/api/health/ready/route.ts:147:  return { ok: false, detail: 'unhealthy', ms: check.ms };
+app/api/health/ready/route.ts:155:    request.headers.get('x-health-token') ||
+app/api/health/route.ts:8: * - Docker health checks
+app/api/health/route.ts:35:  const healthData = {
+app/api/health/route.ts:53:  return NextResponse.json(healthData, { status: statusCode });
+app/api/leaderboard/headhunter/route.ts:106:        message: 'Leaderboard data will be available once the subgraph is deployed',
+docs/AUDIT_REPORT_EIP170_2026-05-27.md:48:| `ba295fb` | feat(eip170): thread adminFacet through CBV deployer chain; add storage mirrors |
+docs/AUDIT_REPORT_EIP170_2026-05-27.md:57:- `CardBoundVaultAdminFacet` — zero-arg pure logic contract deployed once globally.
+docs/AUDIT_REPORT_EIP170_2026-05-27.md:65:- `CardBoundVaultBytecodeProvider` — hosts CBV initcode for CREATE2 deployment;
+docs/AUDIT_REPORT_EIP170_2026-05-27.md:68:  every `predict()` and `deploy()` call. Constructor reduced from 2 → 3 args.
+docs/AUDIT_REPORT_EIP170_2026-05-27.md:69:- `CardBoundVaultSubManagerDeployer` — unchanged; deploys sub-managers independently.
+docs/AUDIT_REPORT_EIP170_2026-05-27.md:78:- Wired immediately post-deployment in `deploy-full.ts`
+docs/AUDIT_REPORT_EIP170_2026-05-27.md:157:on direct deployment use. Both measures are consistent with the Seer Constitution's
+docs/AUDIT_REPORT_EIP170_2026-05-27.md:162:## Deployment Pipeline (`deploy-full.ts`)
+docs/BADGE_ARTWORK_AND_METADATA_DEPLOYMENT.md:68:After deployment and base URI update:
+docs/CONTRACT_SIZE_REPORT.md:12:| CardBoundVaultAdminFacet | 11,467 | +13,109 | Delegatecall target — zero-arg deploy |
+docs/DEPLOYMENT.md:3:End-to-end reference for deploying the VFIDE contract suite to any network.
+docs/DEPLOYMENT.md:9:Before running any deploy script, ensure:
+docs/DEPLOYMENT.md:25:npx hardhat run scripts/deploy-full.ts --network baseSepolia
+docs/DEPLOYMENT.md:29:After this script completes, **save every deployed address** — addresses are persisted to `.deployments/<network>.json` automatically (resume-from-crash supported), and you will need them as env vars before running any subsequent script.
+docs/DEPLOYMENT.md:31:> **⚠️ 48-hour timelock:** All module setter calls made by `deploy-full.ts` are timelocked.
+docs/DEPLOYMENT.md:48:Run only the phases that are needed for the target deployment tier:
+docs/DEPLOYMENT.md:52:npx hardhat run scripts/future/deploy-phase2.ts --network baseSepolia
+docs/DEPLOYMENT.md:53:npx hardhat run scripts/future/deploy-phase3.ts --network baseSepolia
+docs/DEPLOYMENT.md:54:npx hardhat run scripts/future/deploy-phase4.ts --network baseSepolia
+docs/DEPLOYMENT.md:55:npx hardhat run scripts/future/deploy-phase5.ts --network baseSepolia
+docs/DEPLOYMENT.md:62:See [DEPLOYMENT_MANIFEST.md](./DEPLOYMENT_MANIFEST.md) for which contracts each phase deploys.
+docs/DEPLOYMENT.md:117:token.applySanctumSink()       # if SanctumVault deployed
+docs/DEPLOYMENT.md:134:npx hardhat run scripts/validate-deployment.ts --network baseSepolia
+docs/DEPLOYMENT.md:155:Run these locally before any live deployment to validate contract invariants:
+docs/DEPLOYMENT.md:186:| [DEPLOYMENT_MANIFEST.md](./DEPLOYMENT_MANIFEST.md) | Which script deploys which contract |
+docs/DEPLOYMENT.md:195:VFIDE supports deployment to Base mainnet, Polygon mainnet, and zkSync Era mainnet (plus their respective testnets). Each chain is a **separate deployment**: contracts must be deployed on every chain you want to support, and the frontend must be configured with chain-scoped envvars to route transactions correctly.
+docs/DEPLOYMENT.md:197:### Per-chain deploy procedure
+docs/DEPLOYMENT.md:202:# Set the deployer's RPC/keys for THIS chain
+docs/DEPLOYMENT.md:206:# 1. Run the standard deploy script
+docs/DEPLOYMENT.md:207:npx hardhat run scripts/deploy-full.ts --network <chain-name>
+docs/DEPLOYMENT.md:209:# 2. Capture the deployed addresses (deploy-full.ts checkpoints to .deployments/<chain>.json per OP-2)
+docs/DEPLOYMENT.md:210:cat .deployments/<chain-name>.json
+docs/DEPLOYMENT.md:219:# 5. Run post-deploy validation
+docs/DEPLOYMENT.md:220:npm run -s validate:deploy -- --network <chain-name>
+docs/DEPLOYMENT.md:225:After deploying to all target chains, populate the frontend env with chain-scoped addresses. See `ENV_CONTRACT_ADDRESS_MATRIX.md` for the full list and pattern.
+docs/DEPLOYMENT.md:238:Run `npm run -s validate:env -- --multi-chain` before deploying the frontend.
+docs/DEPLOYMENT.md:246:2. **Single-chain mode**: the original `lib/indexer/service.ts` continues to work for single-chain deploys. Set `NEXT_PUBLIC_CHAIN_ID` to the target chain.
+docs/DEPLOYMENT.md:261:4. Update the frontend deploy. Because envvars are validated at deploy-time, the deploy will fail-fast if any contract is missing for any chain.
+docs/DEPLOYMENT.md:263:6. Communicate the addition publicly. Document the new chain in `KEY_MANAGEMENT_PLAN.md` (each chain has its own deployer and admin role chain-of-custody).
+docs/DEPLOYMENT_MANIFEST.md:3:This document maps every production Solidity contract to its deployment mechanism.
+docs/DEPLOYMENT_MANIFEST.md:9:| **deploy-solo** | `scripts/deploy-solo.ts` | 9 core contracts + post-deploy wiring |
+docs/DEPLOYMENT_MANIFEST.md:10:| **phase-1** | `scripts/deploy-phase1.ts` | Access control, token, governance via factory deployers |
+docs/DEPLOYMENT_MANIFEST.md:11:| **phase-3** | `scripts/future/deploy-phase3.ts` | Bridge and peripherals via factory deployers |
+docs/DEPLOYMENT_MANIFEST.md:12:| **factory** | Deployed by Phase1/Phase3 factory contracts | Sub-deployed on-chain |
+docs/DEPLOYMENT_MANIFEST.md:13:| **deploy-wizard** | `scripts/deploy-wizard.sh` | Interactive wrapper around deploy-solo |
+docs/DEPLOYMENT_MANIFEST.md:14:| **manual** | Owner calls after core deploy | Wired by OwnerControlPanel or direct calls |
+docs/DEPLOYMENT_MANIFEST.md:15:| **deferred** | Not yet needed | Will be deployed when feature is activated |
+docs/DEPLOYMENT_MANIFEST.md:17:## Core Contracts (deploy-solo.ts)
+docs/DEPLOYMENT_MANIFEST.md:27:| ProofScoreBurnRouter | (vfide, proofLedger) | Conditional deploy |
+docs/DEPLOYMENT_MANIFEST.md:28:| OwnerControlPanel | (all deployed addresses) | Admin dashboard |
+docs/DEPLOYMENT_MANIFEST.md:29:| SystemHandover | (all deployed addresses) | Ownership transfer |
+docs/DEPLOYMENT_MANIFEST.md:31:## Phase 1 Factory Contracts (deploy-phase1.ts)
+docs/DEPLOYMENT_MANIFEST.md:33:| Deployer | Sub-deploys | Notes |
+docs/DEPLOYMENT_MANIFEST.md:39:## Phase 3 Factory Contracts (scripts/future/deploy-phase3.ts)
+docs/DEPLOYMENT_MANIFEST.md:41:| Deployer | Sub-deploys | Notes |
+docs/DEPLOYMENT_MANIFEST.md:46:## Post-Deploy Contracts (deployed by owner after core)
+docs/DEPLOYMENT_MANIFEST.md:48:These contracts are deployed separately after core infrastructure is live, then wired via `OwnerControlPanel` or direct `transferOwnership()` calls.
+docs/DEPLOYMENT_MANIFEST.md:87:These are not deployed until the feature is activated post-launch:
+docs/DEPLOYMENT_MANIFEST.md:97:| VFIDEReentrancyGuard | Base class, not deployed standalone |
+docs/DEPLOYMENT_MANIFEST.md:98:| GovernanceHooks | Abstract/base, not deployed standalone |
+docs/DEPLOYMENT_MANIFEST.md:110:After deployment, verify all contracts using:
+docs/DEPLOY_PHASE1_INSTRUCTIONS.md:3:**CURRENT METHOD:** Use TypeScript deployment scripts (recommended).  
+docs/DEPLOY_PHASE1_INSTRUCTIONS.md:4:**LEGACY METHOD:** Solidity deployer contracts (kept for reference; not recommended for production).
+docs/DEPLOY_PHASE1_INSTRUCTIONS.md:9:npx hardhat run contracts/scripts/deploy-phase1.ts --network <network>
+docs/DEPLOY_PHASE1_INSTRUCTIONS.md:12:This handles all Phase 1 deployments (Token + Security contracts) with proper error handling and gas optimization.
+docs/DEPLOY_PHASE1_INSTRUCTIONS.md:20:5. Configured `.env` file with network RPC, deployer private key, and addresses
+docs/DEPLOY_PHASE1_INSTRUCTIONS.md:26:The following Solidity deployer contracts exist for reference only and should not be used:
+docs/DEPLOY_PHASE1_INSTRUCTIONS.md:32:Reason: Solidity deployers cannot safely inject all required constructor parameters (e.g., real DevReserveVestingVault address). TypeScript scripts provide full dependency control and are maintainable.
+docs/DEPLOY_PHASE1_INSTRUCTIONS.md:34:## Post-deployment
+docs/DEPLOY_PHASE1_INSTRUCTIONS.md:37:2. Renounce deployer privileges
+docs/DOCUMENTATION-INDEX.md:287:npm run build
+docs/DOCUMENTATION-INDEX.md:296:npm run build:storybook
+docs/DOCUMENTATION-INDEX.md:312:│   └── (Phase 1 deployment details)
+docs/ENV_CONTRACT_ADDRESS_MATRIX.md:5:## Required By `validate:env` (blocking)
+docs/ENV_CONTRACT_ADDRESS_MATRIX.md:56:- For staging/production, every runtime key above should be set to deployed addresses to avoid runtime call failures.
+docs/ENV_CONTRACT_ADDRESS_MATRIX.md:57:- Keep `.env.local` synchronized with deployment manifests after each deployment batch.
+docs/ENV_CONTRACT_ADDRESS_MATRIX.md:61:When VFIDE is deployed to more than one chain (Base + Polygon + zkSync, for example), every contract address envvar **must** be set in chain-scoped form. Without this, the frontend silently falls back to the unscoped envvar — which holds the address from a different chain — and transactions fail or land in the wrong place.
+docs/ENV_CONTRACT_ADDRESS_MATRIX.md:74:# Single-chain deploy (Base mainnet only, default fallback works)
+docs/ENV_CONTRACT_ADDRESS_MATRIX.md:77:# Multi-chain deploy: set BOTH the unscoped (acts as default) AND each chain's scoped form
+docs/ENV_CONTRACT_ADDRESS_MATRIX.md:100:### Required envvar for multi-chain deploys
+docs/ENV_CONTRACT_ADDRESS_MATRIX.md:109:- Tells `lib/contracts.ts` that this is a multi-chain deploy.
+docs/ENV_CONTRACT_ADDRESS_MATRIX.md:119:Before launching a multi-chain deploy, run:
+docs/ENV_CONTRACT_ADDRESS_MATRIX.md:122:npm run -s validate:env -- --multi-chain
+docs/FEATURE_FUNCTION_AUDIT_TRACKER.md:243:  - `set -a && source ./.env.local && set +a && npm run -s validate:env` ✅ (passes locally with warnings-only)
+docs/FEATURE_FUNCTION_AUDIT_TRACKER.md:244:  - `set -a && source ./.env.local && set +a && npm run -s validate:production` ✅ (typecheck/contracts/lint/tests/env all pass with warnings-only)
+docs/FEATURE_FUNCTION_AUDIT_TRACKER.md:253:  - `npm run -s build` ✅ with expected local-env warnings for missing deploy secrets (`DATABASE_URL`, `JWT_SECRET`)
+docs/GOVERNANCE_HANDOVER.md:3:Reference for handing ownership and DAO roles from the deployer EOA to a Gnosis Safe and eventually fully on-chain governance.
+docs/GOVERNANCE_HANDOVER.md:11:If `CouncilElection` is deployed, queue `DAO.setCouncilElection(...)` and `DAO.syncQuorumToCouncil()` through the timelock before handing timelock admin to the DAO. This keeps quorum thresholds aligned with the live council size from the start.
+docs/GOVERNANCE_HANDOVER.md:68:Once executed, the `DAO` contract (or Safe acting as DAO proposer) becomes the sole timelock admin. The deployer EOA can no longer queue or cancel timelock transactions.
+docs/GOVERNANCE_HANDOVER.md:115:| [DEPLOYMENT.md](./DEPLOYMENT.md) | Full deployment step-by-step |
+docs/IMPROVEMENTS_SUMMARY.md:51:**Security Impact:** Eliminates risk of deploying to production with weak secrets
+docs/IMPROVEMENTS_SUMMARY.md:63:- Skips validation for authentication and health endpoints
+docs/IMPROVEMENTS_SUMMARY.md:124:- Low priority (not blocking deployment)
+docs/IMPROVEMENTS_SUMMARY.md:206:8. **Best Practices** - Developer and deployment guidelines
+docs/IMPROVEMENTS_SUMMARY.md:335:2. ✅ **Set JWT_SECRET** - Configure in deployment environment
+docs/IMPROVEMENTS_SUMMARY.md:393:**Next Review:** After deployment verification
+docs/MAINNET_READINESS_AUDIT_2026-05-27.md:4:**Scope:** Smart contracts, soul/constitution, security patterns, access control, oracle, governance, deployment pipeline, frontend alignment  
+docs/MAINNET_READINESS_AUDIT_2026-05-27.md:27:**Verdict: CONDITIONAL GO for testnet.** No security vulnerabilities found. Three deployment blockers fixed. Testnet deploy can proceed against the updated `deploy-full.ts`.
+docs/MAINNET_READINESS_AUDIT_2026-05-27.md:113:- `CREATE2` — deterministic vault deployment (CardBoundVaultDeployer)
+docs/MAINNET_READINESS_AUDIT_2026-05-27.md:156:**Note:** 11 contracts use `Ownable` rather than `Ownable2Step`. At VFIDE's deployment scale (multisig → DAO transition), accidental ownership transfer is mitigated by AdminMultiSig. Upgrade to `Ownable2Step` is recommended for audit cycle 2.
+docs/MAINNET_READINESS_AUDIT_2026-05-27.md:180:`deploy-full.ts` called `deploy("VaultHub", token, ledger, dao)` — only 3 arguments. The actual constructor signature is:
+docs/MAINNET_READINESS_AUDIT_2026-05-27.md:185:**Fix:** The CBV factory chain is now pre-deployed in LAYER 3 before VaultHub:
+docs/MAINNET_READINESS_AUDIT_2026-05-27.md:195:Without this fix, every testnet/mainnet deploy attempt would revert at VaultHub construction.
+docs/MAINNET_READINESS_AUDIT_2026-05-27.md:197:### Gap 3: Viewer satellites not in deploy-full.ts (**FIXED**)
+docs/MAINNET_READINESS_AUDIT_2026-05-27.md:199:`MerchantPortalViewer` and `VFIDETokenViewer` had no deploy entries. Both are now deployed and wired:
+docs/MAINNET_READINESS_AUDIT_2026-05-27.md:200:- `VFIDETokenViewer`: deployed after VFIDEToken, wired via `token.setViewer()` (owner-gated — deployer signs)
+docs/MAINNET_READINESS_AUDIT_2026-05-27.md:201:- `MerchantPortalViewer`: deployed after MerchantPortal, wired via `mp.setViewer()` using `bootstrap.dao` signer (`_checkDAO()`-gated)
+docs/MAINNET_READINESS_AUDIT_2026-05-27.md:225:| MerchantPortal.setViewer DAO-signer requirement | 🟡 Medium | Deploy docs updated; must use `bootstrap.dao` signer during deployment |
+docs/MAINNET_READINESS_AUDIT_2026-05-27.md:233:3. ✅ Deploy script: CBV chain pre-deploy + VaultHub 4th arg fixed
+docs/MAINNET_READINESS_AUDIT_2026-05-27.md:234:4. ⬜ Testnet deploy: run `deploy-full.ts` against testnet and verify all NEXT_PUBLIC_ addresses
+docs/MAINNET_READINESS_AUDIT_2026-05-27.md:237:7. ⬜ Verify `bootstrap.dao` signer is available during deployment (MerchantPortal.setViewer)
+docs/PERFORMANCE_TESTING.md:135:        run: npm run build
+docs/README.md:38:├── deployment/               # Deployment documentation
+docs/README_FRONTEND.md:34:npm run build
+docs/SECURITY.md:132:- `/api/health` (public health check)
+docs/SECURITY.md:223:| **Small** | 10 KB | Auth, balance, fees, health |
+docs/SECURITY.md:299:   - Use environment variables in deployment
+docs/SECURITY.md:340:   - Distributed rate limiting for multi-instance deployments
+docs/SEER_AUTONOMOUS_ACTIVATION_RUNBOOK.md:45:- `DAO.seerAutonomous()` equals deployed SeerAutonomous address.
+docs/SEER_AUTONOMOUS_ACTIVATION_RUNBOOK.md:46:- `EscrowManager.seerAutonomous()` equals deployed SeerAutonomous address.
+docs/SEER_AUTONOMOUS_ACTIVATION_RUNBOOK.md:47:- `SessionKeyManager.seerAutonomous()` equals deployed SeerAutonomous address.
+docs/SEER_AUTONOMOUS_ACTIVATION_RUNBOOK.md:48:- Optional: `Seer.seerAutonomous()` equals deployed SeerAutonomous address.
+docs/SEER_CONSTITUTION.md:142:1. Pre-deployment checks
+docs/SEER_CONTROL_MATRIX.md:21:| GOV-05 | Timelock mandatory for material Seer policy updates | Seer modules are `onlyDAO`; timelock dependency is external to Seer contracts | Partial | Enforce by requiring DAO = timelock-controlled governance at deployment and documenting invariant. |
+docs/SEER_CONTROL_MATRIX.md:94:- Timelock enforcement for Seer modules depends on deployment topology (DAO ownership and execution path).
+docs/SEER_VIEW_MIGRATION.md:3:This project moved non-critical Seer read helpers out of `Seer` to keep Seer deployable under contract size limits.
+docs/SEER_VIEW_MIGRATION.md:25:2. Store the deployed `SeerView` address in your environment/config.
+docs/SLICE_BY_SLICE_SYSTEM_VALIDATION.md:114:- Entry: Planned deploy/change request.
+docs/SLICE_BY_SLICE_SYSTEM_VALIDATION.md:115:- Exit: Signed-off pre-deploy readiness summary.
+docs/SLICE_BY_SLICE_SYSTEM_VALIDATION.md:121:- Current status: BLOCKED (missing deploy prerequisites)
+docs/SLICE_BY_SLICE_SYSTEM_VALIDATION.md:134:| 8 Deploy/Ops | Team | 2026-03-27 | BLOCKED | `npm run -s validate:env` FAIL (missing `NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS`, `NEXT_PUBLIC_STABLECOIN_REGISTRY_ADDRESS`, `NEXT_PUBLIC_VAULT_HUB_ADDRESS`, `NEXT_PUBLIC_DAO_ADDRESS`, `NEXT_PUBLIC_SEER_ADDRESS`, `NEXT_PUBLIC_VFIDE_COMMERCE_ADDRESS`, `NEXT_PUBLIC_PAYROLL_MANAGER_ADDRESS`, `NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS`, `NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS`, `NEXT_PUBLIC_DEV_VAULT_ADDRESS`), `npm run -s typecheck:contracts` PASS, `npm run -s contract:compile` PASS, `npx eslint lib/validateProduction.ts scripts/provision-testnet-vfide.ts contracts/scripts/deploy-solo.ts contracts/scripts/apply-wiring.ts contracts/scripts/arm-handover.ts` PASS, `npm run -s test:signoff:guard` PASS | Cannot complete deploy dry-runs/simulations for actual targets without network-specific contract addresses plus deploy inputs (`PRIVATE_KEY`, `OWNER_ADDRESS`, `TREASURY_ADDRESS`, optional sink triplet / deployment manifest inputs) |
+docs/SUSTAINABILITY-MODEL.md:650:**Result:** Perfect alignment between user behavior and ecosystem health
+docs/SYSTEM_FEATURE_LIST.md:137:- Operational health endpoint
+docs/SYSTEM_FEATURE_LIST.md:168:- health
+docs/SYSTEM_FEATURE_REVIEW_TRACKER.md:81:  - constructor now sets `initialized = true`, preventing post-deploy takeover via `initialize(...)` on constructor-deployed vaults.
+docs/SYSTEM_FEATURE_REVIEW_TRACKER.md:109:  - `contracts/VaultHub.sol` constructor now rejects zero `vfideToken` and zero `dao` addresses, preventing deployment-time bricking of core vault/DAO recovery wiring.
+docs/SYSTEM_FEATURE_REVIEW_TRACKER.md:132:  - constructor now rejects zero `dao` address (`PM: zero DAO`), preventing invalid governance wiring at deployment time.
+docs/SYSTEM_FEATURE_REVIEW_TRACKER.md:149:  - `contracts/VFIDEBridge.sol` constructor now rejects zero `endpoint` and zero `owner` addresses in addition to existing token guard, preventing invalid deployment wiring for omnichain messaging/ownership.
+docs/SYSTEM_FEATURE_REVIEW_TRACKER.md:168:- Canonical path alignment completed: `VaultHub` deploys `contracts/UserVault.sol`, and Chain-of-Return local verifier now targets `artifacts/contracts/UserVault.sol/UserVault.json`.
+docs/SYSTEM_FEATURE_REVIEW_TRACKER.md:230:- Updated vault health aggregate to include `operationsPool` and tracked legacy outflows in `totalIn`, keeping health totals internally coherent.
+docs/SYSTEM_FEATURE_REVIEW_TRACKER.md:301:  - Constructor now rejects zero bridge address (`Invalid bridge`) to align deployment-time invariants with runtime `onlyBridge` checks.
+docs/SYSTEM_FEATURE_REVIEW_TRACKER.md:319:- Full clean compile sweep (`hardhat clean` + compile) still reports deploy-size warnings on:
+docs/SYSTEM_FEATURE_REVIEW_TRACKER.md:327:- Final deploy-size stabilization:
+docs/TESTNET_DEPLOY_RUNBOOK.md:4:> **Purpose:** Step-by-step operator guide for running `deploy-full.ts` against a testnet.
+docs/TESTNET_DEPLOY_RUNBOOK.md:6:> constructor-arg wiring, deploy execution, and post-deploy verification.
+docs/TESTNET_DEPLOY_RUNBOOK.md:13:> - §9 post-deploy manual steps: CommerceEscrow.setSeer is now automated; Council Election GOV-D1 step retained
+docs/TESTNET_DEPLOY_RUNBOOK.md:25:| Funded deployer wallet | Needs testnet ETH. Base Sepolia faucet: https://www.coinbase.com/faucets/base-ethereum-goerli-faucet |
+docs/TESTNET_DEPLOY_RUNBOOK.md:47:cause the deploy to fail-fast if absent.
+docs/TESTNET_DEPLOY_RUNBOOK.md:52:# REQUIRED — deployer private key (no 0x prefix)
+docs/TESTNET_DEPLOY_RUNBOOK.md:58:On testnet these can all point to a single test wallet (the deployer itself is fine).
+docs/TESTNET_DEPLOY_RUNBOOK.md:63:BOOTSTRAP_ADMIN_ADDRESS=<deployer_or_multisig>
+docs/TESTNET_DEPLOY_RUNBOOK.md:64:BOOTSTRAP_DAO_ADDRESS=<deployer_or_dao_safe>
+docs/TESTNET_DEPLOY_RUNBOOK.md:75:> **Testnet shortcut:** You can set all 10 to the deployer address for a single-signer
+docs/TESTNET_DEPLOY_RUNBOOK.md:89:# OPTIONAL — deploy the VFIDETestnetFaucet contract (testnet chains only)
+docs/TESTNET_DEPLOY_RUNBOOK.md:96:# OPTIONAL — allows bootstrap addresses to equal the deployer
+docs/TESTNET_DEPLOY_RUNBOOK.md:110:# Optional — verifies all contracts on BaseScan after deploy
+docs/TESTNET_DEPLOY_RUNBOOK.md:149:npx hardhat run scripts/deploy-full.ts --network hardhat
+docs/TESTNET_DEPLOY_RUNBOOK.md:174:✅ All 50 contracts deployed. EIP-170 runtime gate: PASS
+docs/TESTNET_DEPLOY_RUNBOOK.md:183:npx hardhat run scripts/deploy-full.ts --network baseSepolia
+docs/TESTNET_DEPLOY_RUNBOOK.md:189:3. Execute all automated post-deploy wiring calls (see §7)
+docs/TESTNET_DEPLOY_RUNBOOK.md:190:4. Print the full `DeploymentBook` — the map of contract name → deployed address
+docs/TESTNET_DEPLOY_RUNBOOK.md:195:### Canonical deploy order (50 production contracts)
+docs/TESTNET_DEPLOY_RUNBOOK.md:218:The deploy script handles this automatically:
+docs/TESTNET_DEPLOY_RUNBOOK.md:221:Layer 9 deploy order:
+docs/TESTNET_DEPLOY_RUNBOOK.md:246:The deploy script auto-injects from `book` when no `ARGS_MERCHANTPORTAL` env var is set.
+docs/TESTNET_DEPLOY_RUNBOOK.md:250:`MerchantPortal.setViewer` is gated by `_checkDAO()`. During `deploy-full.ts` it calls:
+docs/TESTNET_DEPLOY_RUNBOOK.md:258:On testnet this works if `BOOTSTRAP_DAO_ADDRESS` == the deployer. On mainnet, if
+docs/TESTNET_DEPLOY_RUNBOOK.md:266:Args:      <MerchantPortalViewer address from deployment book>
+docs/TESTNET_DEPLOY_RUNBOOK.md:274:`deploy-full.ts` executes all of the following automatically after deploying contracts.
+docs/TESTNET_DEPLOY_RUNBOOK.md:280:| ProofLedger.setLogger × 24 | All loggers | All deployed contracts registered |
+docs/TESTNET_DEPLOY_RUNBOOK.md:311:# Verify all deployed addresses are non-zero
+docs/TESTNET_DEPLOY_RUNBOOK.md:312:npx hardhat run scripts/verify-deployment-book.ts --network baseSepolia
+docs/TESTNET_DEPLOY_RUNBOOK.md:368:After deploy, populate the frontend env from the `DeploymentBook` printed at the end of
+docs/TESTNET_DEPLOY_RUNBOOK.md:369:the deploy run. Key mappings:
+docs/TESTNET_DEPLOY_RUNBOOK.md:408:These **cannot** be automated in `deploy-full.ts` — they require multisig signers, queued
+docs/TESTNET_DEPLOY_RUNBOOK.md:413:| Wire VaultHub in VFIDEToken (apply) | `VFIDEToken` | `applyVaultHub()` | Owner (48h after deploy) | Queued automatically; apply after delay |
+docs/TESTNET_DEPLOY_RUNBOOK.md:415:| Set EcosystemVault reward token | `EcosystemVaultAdminFacet` (via EcosystemVault) | `setRewardToken(token)` | Owner | Not wired at deploy; set when rewards launch |
+docs/TESTNET_DEPLOY_RUNBOOK.md:422:## 11. GOV-D1 — Wire CouncilElection into DAO (post-deploy, timelocked)
+docs/TESTNET_DEPLOY_RUNBOOK.md:425:`deploy-full.ts`. After running `apply-full.ts` (48h delay), the bootstrap admin
+docs/TESTNET_DEPLOY_RUNBOOK.md:429:// Run once, 48h after initial deploy:
+docs/TESTNET_DEPLOY_RUNBOOK.md:449:| `ECO_Zero()` revert in EcosystemVault deploy | `_adminFacet` arg is zero | Upgrade to deploy script ≥ commit `4fb3fdd` — it auto-injects |
+docs/TESTNET_DEPLOY_RUNBOOK.md:452:| `getSigner is not a function` | DAO address != deployer | Set `BOOTSTRAP_DAO_ADDRESS` to deployer on testnet, or call `setViewer` manually |
+docs/TESTNET_DEPLOY_RUNBOOK.md:453:| `MERCH_InvalidConfig()` in MerchantPortal deploy | Stale 5-arg `ARGS_MERCHANTPORTAL` env var | Remove `feeSink` (5th arg) — constructor is now 4 args (PR #255) |
+docs/TESTNET_DEPLOY_RUNBOOK.md:454:| `COM_Zero()` in CommerceEscrow deploy | Zero address in constructor | Confirm `book.MerchantRegistry` is non-zero before Layer 11 |
+docs/TESTNET_DEPLOY_RUNBOOK.md:455:| `CommerceEscrow.seer()` returns 0x0 after deploy | `setSeer` wiring call skipped | Manually call `CommerceEscrow.setSeer(<Seer>)` as DAO — verify `book.Seer` was set before wiring ran |
+docs/TESTNET_DEPLOY_RUNBOOK.md:467:- [ ] **DAO signer** must be available to sign `MerchantPortal.setViewer` within the deploy session
+docs/TESTNET_DEPLOY_RUNBOOK.md:470:- [ ] **Schedule** the 180-day SystemHandover key-burn countdown from deploy block
+docs/TESTNET_DEPLOY_RUNBOOK.md:471:- [ ] **Transfer** `VFIDEEnterpriseGateway.merchantWallet` from deployer to ops multisig
+docs/TESTNET_DEPLOY_RUNBOOK.md:472:- [ ] **Queue** GOV-D1 (CouncilElection → DAO) within 48h of deploy (see §11)
+docs/TESTNET_DEPLOY_RUNBOOK.md:477:signatures, deploy-layer ordering, or post-deploy wiring changes.*
+docs/archive/root-legacy/AUDIT_CLOSURE_REPORT.md:11:- Environment validation gate: `npm run validate:env` executed.
+docs/archive/root-legacy/AUDIT_CLOSURE_REPORT.md:24:1. **Blocking config gap (deployment readiness):** `APP_ORIGIN` is missing in the current environment (`validate:env` hard error).
+docs/archive/root-legacy/AUDIT_CLOSURE_REPORT.md:30:- **Code health:** GO (typecheck and i18n guard are green).
+docs/archive/root-legacy/AUDIT_CLOSURE_REPORT.md:36:- Set `APP_ORIGIN` in deployment environment (aligned to canonical app origin).
+docs/archive/root-legacy/AUDIT_CLOSURE_REPORT.md:37:- Re-run `npm run validate:env` in deploy-like env and require zero errors.
+docs/archive/root-legacy/AUDIT_CLOSURE_REPORT.md:123:## Deferred (not in V1 mainnet deploy set)
+docs/archive/root-legacy/AUDIT_CLOSURE_REPORT.md:125:The following contracts live under `contracts/future/` and are excluded from the mainnet deploy plan:
+docs/archive/root-legacy/AUDIT_CLOSURE_REPORT.md:136:Audit findings against these files (P1-M-10, M-17, M-18, M-28, M-29, M-30, M-31, M-34, M-37, and several Lows) are tracked as "deferred — fix before deploying the relevant phase."
+docs/archive/root-legacy/AUDIT_CLOSURE_REPORT.md:142:- Non-custody is preserved: no freeze, no blacklist, no force-recovery, no SecurityHub locks remain in any contract on the mainnet deploy path.
+docs/archive/root-legacy/AUDIT_CLOSURE_REPORT.md:147:The audit phase is complete. Outstanding work is now deployment-readiness, not security-completeness — see `MAINNET_DEPLOY_READINESS.md` for the next checklist.
+docs/archive/root-legacy/AUDIT_SWEEP_FINAL.md:74:| `require-no-message` | 4 | 3 in vendored Uniswap V3 `FullMath.sol`; 1 in `VFIDETestnetFaucet.sol` (testnet-only, never deployed to mainnet) |
+docs/archive/root-legacy/CHANGELOG_v19.13_cleanup.md:19:Split `contracts/VFIDECommerce.sol` into `MerchantRegistry.sol` (276 LOC, CRUD + shared interfaces + active `COM_*` errors) and `CommerceEscrow.sol` (381 LOC, escrow state machine, imports MerchantRegistry). Deleted original `VFIDECommerce.sol`; frontend continues working via `sync-abis.ts MERGE_MAP`. Dropped 5 dead `COM_*` errors. Renamed `EscrowManagerVerifierMocks.sol` → `CommerceEscrowVerifierMocks.sol`. Deleted `scripts/deploy-all.ts` and `scripts/apply-all.ts`; ported EIP-170 bytecode preflight into `deploy-full.ts`. Cleaned up `verify-admin-roles.ts` stale entry and replaced contradictory `V1_SCOPE.md` with authoritative-doc pointer.
+docs/archive/root-legacy/CHANGELOG_v19.13_cleanup.md:89:**`scripts/future/deploy-phase3.ts`** — removed `'CouncilManager'` from the deploy list (script would have failed at `getContractFactory()` time).
+docs/archive/root-legacy/CHANGELOG_v19.13_cleanup.md:95:- `DeployPhase3Peripherals.json` + .sol — has 1 legitimate consumer (`contracts/scripts/deploy-phase3.ts` alternate deploy track) plus 2 test blocks. Removal forces a downstream refactor; cost > benefit at this stage. Mainnet deploy doesn't use it; the audit cost of its presence is low.
+docs/archive/root-legacy/CHANGELOG_v19.13_cleanup.md:203:npx jest __tests__/security/deploy-bytecode-guard.test.ts
+docs/archive/root-legacy/CHANGELOG_v19.13_cleanup.md:241:2. **`DeployPhase3Peripherals` retention**: kept because it has 1 legitimate consumer (`contracts/scripts/deploy-phase3.ts` alternate deploy track) plus tests. Mainnet deploy doesn't touch it. Removal would force a downstream refactor for cosmetic gain.
+docs/archive/root-legacy/CONTRACTS_AUDIT.md:10:- **assembly** — Uniswap V3 vendored libraries (FullMath, TickMath) are well-audited and must not be modified. `extcodesize` / `extcodehash` are idiomatic contract-existence checks. `create2` is the standard CREATE2 deployment pattern.
+docs/archive/root-legacy/CONTRACTS_AUDIT.md:12:- **require-no-message** — 3 in vendored Uniswap V3 `FullMath.sol` (do not modify vendored audited code). 1 in `VFIDETestnetFaucet.sol` (testnet-only contract, not deployed to mainnet).
+docs/archive/root-legacy/CONTRACTS_AUDIT.md:79:- **LOW** [require-no-message] contracts/testnet/VFIDETestnetFaucet.sol:321 — if (ethBal > 0) { (bool ok, ) = to.call{value: ethBal}(""); require(ok); } — _Reviewed: vendored audited code (Uniswap V3) or testnet-only contract; not deployed to mainnet_
+docs/archive/root-legacy/DEEP_FRONTEND_AUDIT.md:36:### "Coming soon" / "TBD" placeholders for not-yet-deployed features
+docs/archive/root-legacy/EIP170_SIZE_REFACTOR_PLAN.md:3:**Status:** ❌ BLOCKER for mainnet deployment. 7 contracts exceed Ethereum's
+docs/archive/root-legacy/EIP170_SIZE_REFACTOR_PLAN.md:4:EIP-170 (24,576 byte deployed) and/or EIP-3860 (49,152 byte initcode) limits.
+docs/archive/root-legacy/EIP170_SIZE_REFACTOR_PLAN.md:24:## Why the deployer is so big
+docs/archive/root-legacy/EIP170_SIZE_REFACTOR_PLAN.md:30:deployer's runtime code. This is a **derived** size violation: shrinking
+docs/archive/root-legacy/EIP170_SIZE_REFACTOR_PLAN.md:31:`CardBoundVault` automatically shrinks the deployer.
+docs/archive/root-legacy/EIP170_SIZE_REFACTOR_PLAN.md:42:   or `external` (`delegatecall`-ed, code lives in a separate deployed contract)
+docs/archive/root-legacy/EIP170_SIZE_REFACTOR_PLAN.md:80:### `MerchantPortal` (+1,515 bytes deployed)
+docs/archive/root-legacy/EIP170_SIZE_REFACTOR_PLAN.md:85:### `EcosystemVault` (+1,107 bytes deployed)
+docs/archive/root-legacy/EIP170_SIZE_REFACTOR_PLAN.md:91:### `VFIDEToken` (+816 bytes deployed)
+docs/archive/root-legacy/EIP170_SIZE_REFACTOR_PLAN.md:101:### `SeerAutonomous` (+69 bytes deployed)
+docs/archive/root-legacy/EIP170_SIZE_REFACTOR_PLAN.md:161:  gas impact — that's a deployment-cost tradeoff that needs user input.
+docs/archive/root-legacy/EIP170_SIZE_REFACTOR_PLAN.md:177:- EIP-170 (deployed code size limit, Spurious Dragon, 24,576 bytes):
+docs/archive/root-legacy/FRONTEND_AUDIT.md:199:| "before testnet deployment" copy on dev tool | `app/api-coverage/page.tsx:113` | low | Changed to "in any deployment environment" |
+docs/archive/root-legacy/FRONTEND_AUDIT.md:200:| "Test on testnet first" in operator deploy checklist | `app/control-panel/components/ProductionSetupPanel.tsx:266` | low | Rephrased to "Validate the full flow on a non-production network first" — same operator guidance, network-agnostic wording |
+docs/archive/root-legacy/MAINNET_FINAL_AUDIT.md:24:| 4 | Wired `mainnet-readiness.cjs` into `scripts/deploy-full.ts` `main()` | A developer who deploys from a stale branch on a mainnet chainId now hits the gate before the first transaction is sent |
+docs/archive/root-legacy/MAINNET_FINAL_AUDIT.md:25:| 5 | Moved `contracts/DeployPhase3Peripherals.sol` → `contracts/future/DeployPhase3Peripherals.sol` | The file lived in the production tree and `import "./future/BridgeSecurityModule.sol"` — i.e., the production tree was importing a deferred-feature contract. The build still pulled `BridgeSecurityModule` into the V1 compilation unit even though it would never deploy. Now the production tree is **strictly free of forbidden imports**. |
+docs/archive/root-legacy/MAINNET_FINAL_AUDIT.md:27:| 7 | Rewrote `scripts/validate-mainnet-env.ts` `ADDRESS_VARS` to mirror exactly the `production: true` set in `validateProduction.ts` | Kills the silent divergence between the two validators (one ran at deploy, the other at app boot — they had different sets of "required" addresses). |
+docs/archive/root-legacy/MAINNET_FINAL_AUDIT.md:28:| 8 | Filled `.env.mainnet.example` with the 10 missing keys the validators actually require | Without this, a fresh deploy following the example file would fail-closed at startup |
+docs/archive/root-legacy/MAINNET_FINAL_AUDIT.md:83:> will be re-added to the gate on the day each future contract enters the V1 deploy set.
+docs/archive/root-legacy/MAINNET_FINAL_AUDIT.md:108:### Gate 3: `scripts/deploy-full.ts` hygiene → ✅
+docs/archive/root-legacy/MAINNET_FINAL_AUDIT.md:117:(deploy time) now agree on which 27 NEXT_PUBLIC_*_ADDRESS keys are required
+docs/archive/root-legacy/MAINNET_FINAL_AUDIT.md:142:- `NEXT_PUBLIC_CARD_BOUND_VAULT_DEPLOYER_ADDRESS` — CREATE2 factory, captured post-deploy
+docs/archive/root-legacy/MAINNET_FINAL_AUDIT.md:170:1. **EIP-170 bytecode preflight** in `scripts/deploy-full.ts` aborts before
+docs/archive/root-legacy/MAINNET_FINAL_AUDIT.md:171:   any transaction if any deployable contract exceeds 24,576 bytes.
+docs/archive/root-legacy/MAINNET_FINAL_AUDIT.md:217:### At deploy time
+docs/archive/root-legacy/MAINNET_FINAL_AUDIT.md:219:`scripts/deploy-full.ts main()` now invokes `mainnet-readiness.cjs` whenever
+docs/archive/root-legacy/MAINNET_FINAL_AUDIT.md:220:`chainId ∈ {8453, 137, 324}`. A failing sweep aborts the deployment before
+docs/archive/root-legacy/MAINNET_FINAL_AUDIT.md:221:any transaction is sent. To deploy to a mainnet you must therefore pass the
+docs/archive/root-legacy/MAINNET_FINAL_AUDIT.md:226:## Phase 5 — Remaining day-of-deploy operational items
+docs/archive/root-legacy/MAINNET_FINAL_AUDIT.md:229:responsibility of the deploying team. They are unchanged from
+docs/archive/root-legacy/MAINNET_FINAL_AUDIT.md:233:- [ ] Run full CI pipeline against the deploy commit (all 11 jobs).
+docs/archive/root-legacy/MAINNET_FINAL_AUDIT.md:238:- [ ] **Base Sepolia full dry-run** of `deploy-full.ts` + ≥3 cycles of
+docs/archive/root-legacy/MAINNET_FINAL_AUDIT.md:240:- [ ] Bootstrap addresses (multisig vs deployer EOA) reviewed line-by-line.
+docs/archive/root-legacy/MAINNET_FINAL_AUDIT.md:250:- [ ] Backup plan for `.deployments/base.json` (canonical address book).
+docs/archive/root-legacy/MAINNET_FINAL_AUDIT.md:265:These are intentionally **not deployed** for the V1 mainnet bootstrap and
+docs/archive/root-legacy/MAINNET_FINAL_AUDIT.md:281:before deploying the relevant phase" in `AUDIT_CLOSURE_REPORT.md`.
+docs/archive/root-legacy/MAINNET_FINAL_AUDIT.md:292:| Validator consistency between deploy-time and app-boot | ✅ |
+docs/archive/root-legacy/MAINNET_FINAL_AUDIT.md:298:| Static readiness sweep wired into `deploy-full.ts` mainnet path | ✅ |
+docs/archive/root-legacy/MAINNET_READINESS_FINAL_SUMMARY.md:24:`npm run build` OOM-killed in this 4 GB-RAM sandbox by Next.js 16 Turbopack.
+docs/archive/root-legacy/MAINNET_READINESS_FINAL_SUMMARY.md:122:  `extcodesize` / `extcodehash` idioms + `create2` deployment.
+docs/archive/root-legacy/MAINNET_READINESS_FINAL_SUMMARY.md:194:…and 12 more chain-specific deployment addresses.
+
+### public api routes
+app/api/activities/[address]/route.ts
+app/api/activities/route.ts
+app/api/admin/metrics/dashboard/route.ts
+app/api/ai/product-listing/route.ts
+app/api/analytics/metrics/route.ts
+app/api/analytics/platform/route.ts
+app/api/analytics/portfolio/[address]/route.ts
+app/api/analytics/route.ts
+app/api/analytics/timeseries/route.ts
+app/api/attachments/[id]/route.ts
+app/api/attachments/upload/route.ts
+app/api/auth/challenge/route.ts
+app/api/auth/logout/route.ts
+app/api/auth/revoke/route.ts
+app/api/auth/route.ts
+app/api/avatar/route.ts
+app/api/badges/metadata/[badge]/[tokenId]/route.ts
+app/api/badges/route.ts
+app/api/community/posts/[id]/route.ts
+app/api/community/posts/route.ts
+app/api/community/stories/route.ts
+app/api/crypto/balance/[address]/route.ts
+app/api/crypto/ens/[address]/route.ts
+app/api/crypto/fees/route.ts
+app/api/crypto/payment-requests/[id]/route.ts
+app/api/crypto/payment-requests/route.ts
+app/api/crypto/payment-requests/step-up/route.ts
+app/api/crypto/price/route.ts
+app/api/crypto/rewards/[userId]/claim/route.ts
+app/api/crypto/rewards/[userId]/route.ts
+app/api/crypto/transactions/[userId]/route.ts
+app/api/crypto/transactions/route.ts
+app/api/crypto/transfer/route.ts
+app/api/csrf/route.ts
+app/api/endorsements/route.ts
+app/api/enterprise/orders/route.ts
+app/api/errors/route.ts
+app/api/faucet/claim/route.ts
+app/api/flashloans/lanes/[id]/actions/route.ts
+app/api/flashloans/lanes/[id]/route.ts
+app/api/flashloans/lanes/route.ts
+app/api/friends/route.ts
+app/api/gamification/route.ts
+app/api/groups/invites/route.ts
+app/api/groups/join/route.ts
+app/api/groups/members/route.ts
+app/api/groups/messages/route.ts
+app/api/groups/route.ts
+app/api/health/ready/route.ts
+app/api/health/route.ts
+app/api/indexer/poll/route.ts
+app/api/leaderboard/claim-prize/route.ts
+app/api/leaderboard/headhunter/route.ts
+app/api/leaderboard/monthly/route.ts
+app/api/loans/route.ts
+app/api/media/[...key]/route.ts
+app/api/media/upload/route.ts
+app/api/merchant/analytics/route.ts
+app/api/merchant/bookings/route.ts
+app/api/merchant/categories/route.ts
+app/api/merchant/checkout/[id]/route.ts
+app/api/merchant/coupons/route.ts
+app/api/merchant/coupons/validate/route.ts
+app/api/merchant/customers/route.ts
+app/api/merchant/digital/route.ts
+app/api/merchant/directory/route.ts
+app/api/merchant/expenses/route.ts
+app/api/merchant/gift-cards/route.ts
+app/api/merchant/installments/route.ts
+app/api/merchant/invoices/route.ts
+app/api/merchant/locations/route.ts
+app/api/merchant/loyalty/route.ts
+app/api/merchant/orders/route.ts
+app/api/merchant/payment-links/route.ts
+app/api/merchant/payments/confirm/route.ts
+app/api/merchant/products/bulk/route.ts
+app/api/merchant/products/route.ts
+app/api/merchant/profile/route.ts
+app/api/merchant/receipts/sms/route.ts
+app/api/merchant/returns/route.ts
+app/api/merchant/reviews/route.ts
+app/api/merchant/staff/route.ts
+app/api/merchant/subscriptions/route.ts
+app/api/merchant/suppliers/route.ts
+app/api/merchant/tax-rates/route.ts
+app/api/merchant/tips/route.ts
+app/api/merchant/training/route.ts
+app/api/merchant/webhooks/route.ts
+app/api/merchant/wholesale/route.ts
+app/api/merchant/withdraw/route.ts
+app/api/messages/delete/route.ts
+app/api/messages/edit/route.ts
+app/api/messages/reaction/route.ts
+app/api/messages/route.ts
+app/api/messages/tip/route.ts
+app/api/notifications/preferences/route.ts
+app/api/notifications/push/route.ts
+app/api/notifications/route.ts
+app/api/notifications/vapid/route.ts
+app/api/pay/link/[id]/route.ts
+app/api/performance/metrics/route.ts
+app/api/platform/categories/route.ts
+app/api/pos/charge/route.ts
+app/api/privacy/delete/route.ts
+app/api/profile/route.ts
+app/api/proposals/route.ts
+app/api/push/subscribe/route.ts
+app/api/quests/achievements/claim/route.ts
+app/api/quests/achievements/route.ts
+app/api/quests/claim/route.ts
+app/api/quests/daily/route.ts
+app/api/quests/notifications/route.ts
+app/api/quests/onboarding/route.ts
+app/api/quests/streak/route.ts
+app/api/quests/weekly/claim/route.ts
+app/api/quests/weekly/route.ts
+app/api/referral/route.ts
+app/api/remittance/beneficiaries/route.ts
+app/api/report/route.ts
+app/api/security/anomaly/route.ts
+app/api/security/csp-report/route.ts
+app/api/security/guardian-attestations/route.ts
+app/api/security/keys/route.ts
+app/api/security/logs/route.ts
+app/api/security/next-of-kin-fraud-events/route.ts
+app/api/security/qr-signature-events/route.ts
+app/api/security/recovery-fraud-events/route.ts
+app/api/security/violations/route.ts
+app/api/security/webhook-consumer-example/route.ts
+app/api/security/webhook-replay-metrics/route.ts
+app/api/seer/analytics/rollup/route.ts
+app/api/seer/analytics/route.ts
+app/api/social/content-access/route.ts
+app/api/social/content-purchases/route.ts
+app/api/social/payment-stats/[userAddress]/route.ts
+app/api/social/tips/route.ts
+app/api/stats/protocol/route.ts
+app/api/streams/route.ts
+app/api/subscriptions/route.ts
+app/api/support/tickets/route.ts
+app/api/sync/route.ts
+app/api/transactions/export/route.ts
+app/api/user/state/route.ts
+app/api/users/[address]/route.ts
+app/api/users/invite/route.ts
+app/api/users/route.ts
+app/api/ussd/route.ts

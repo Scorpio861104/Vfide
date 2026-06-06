@@ -13,7 +13,7 @@ describe('/api/health', () => {
     process.env.npm_package_version = '1.2.0';
     process.env.NODE_ENV = 'test';
     process.env.NEXT_PUBLIC_CHAIN_ID = '84532';
-    process.env.NEXT_PUBLIC_CONTRACT_ADDRESS = '0x1234567890123456789012345678901234567890';
+    process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS = '0x1234567890123456789012345678901234567890';
     process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID = 'test-project-id';
   });
 
@@ -40,6 +40,19 @@ describe('/api/health', () => {
       expect(data.memory).toHaveProperty('used');
       expect(data.memory).toHaveProperty('total');
       expect(data.memory).toHaveProperty('external');
+    });
+
+    it('should not require WalletConnect for health because the connector is optional', async () => {
+      withRateLimit.mockResolvedValue(null);
+      delete process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
+
+      const request = new NextRequest('http://localhost:3000/api/health');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.ok).toBe(true);
+      expect(data.checks.env).toBe(true);
     });
 
     it('should return 503 when environment variables are missing', async () => {

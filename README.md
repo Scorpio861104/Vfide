@@ -42,14 +42,15 @@ Copy `.env.local.example` to `.env.local` and configure:
 
 ```bash
 NEXT_PUBLIC_IS_TESTNET=true
-NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id
+NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS=0x0000000000000000000000000000000000000000
+# Optional: NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id
 ```
 
 For production, see `.env.production` for complete configuration.
 
 ### Production Security Prerequisites
 
-These values are required for a safe production deployment and are validated by startup and production checks:
+These values are required for a safe production deployment and are validated by startup and production checks. WalletConnect is optional; set it only when enabling WalletConnect/mobile wallet support:
 
 - `DATABASE_URL` must connect with the constrained `vfide_app` role (not superuser / BYPASSRLS role).
 - `JWT_SECRET` must be strong and unique per environment.

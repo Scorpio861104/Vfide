@@ -17,7 +17,7 @@ jobs:
       NEXT_PUBLIC_APP_URL: http://127.0.0.1:3000
       APP_ORIGIN: http://127.0.0.1:3000
       NEXT_PUBLIC_CHAIN_ID: "8453"
-      NEXT_PUBLIC_CONTRACT_ADDRESS: "0x0000000000000000000000000000000000000000"
+      NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS: "0x0000000000000000000000000000000000000000"
       DATABASE_URL: "postgresql://vfide_user:postgres@127.0.0.1:5432/vfide_db"
       JWT_SECRET: ${{ secrets.CI_JWT_SECRET }}
       # Run the app in frontend-only mode so the Lighthouse performance test does
@@ -118,7 +118,7 @@ jobs:
       NEXT_PUBLIC_APP_URL: http://127.0.0.1:3001
       APP_ORIGIN: http://127.0.0.1:3001
       NEXT_PUBLIC_CHAIN_ID: "8453"
-      NEXT_PUBLIC_CONTRACT_ADDRESS: "0x0000000000000000000000000000000000000000"
+      NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS: "0x0000000000000000000000000000000000000000"
       DATABASE_URL: "postgresql://vfide_user:postgres@127.0.0.1:5432/vfide_db"
       JWT_SECRET: ${{ secrets.CI_JWT_SECRET }}
       # Run in frontend-only mode: no postgres/Redis required. Without this flag the

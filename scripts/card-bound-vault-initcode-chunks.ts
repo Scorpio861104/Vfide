@@ -91,7 +91,7 @@ function main() {
     let actual = '';
     try {
       actual = readFileSync(path, 'utf8');
-    } catch (error) {
+    } catch (_error) {
       mismatches.push(`${path}: missing`);
       return;
     }
