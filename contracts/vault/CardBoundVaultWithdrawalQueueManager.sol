@@ -22,7 +22,7 @@ contract CardBoundVaultWithdrawalQueueManager {
     }
 
     /// @notice vault
-    address public immutable vault;
+    address public vault;
     /// @notice activeQueuedWithdrawals
     uint8 public activeQueuedWithdrawals;
     /// @notice _withdrawalQueue
@@ -52,7 +52,14 @@ contract CardBoundVaultWithdrawalQueueManager {
     /// @notice constructor
     /// @param vault_ vault_
     constructor(address vault_) {
+        vault = vault_;
+    }
+
+    /// @notice initialize — one-time initializer for EIP-1167 clones.
+    /// @param vault_ vault_
+    function initialize(address vault_) external {
         require(vault_ != address(0), "CBV-WQM: zero vault");
+        require(vault == address(0), "CBV-WQM: initialized");
         vault = vault_;
     }
 

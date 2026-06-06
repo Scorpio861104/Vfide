@@ -178,7 +178,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     uint256 public constant PAYMENT_VOLUME_PER_REWARD = 10_000 * 1e18;
     /// @notice MAX_PULL_PERMIT_DURATION
     uint64 public constant MAX_PULL_PERMIT_DURATION = 90 days;
-    
+
     /// Events
     /// @notice ModulesSet
     /// @param vaultHub vaultHub
@@ -369,11 +369,11 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     address public stablecoin; // Target stablecoin (e.g. USDC)
     /// @notice autoConvert
     mapping(address => bool) public autoConvert; // Merchant -> Enabled
-    
+
     /// Slippage protection for swaps (basis points, e.g., 9800 = 98% = 2% slippage)
     /// @notice minSwapOutputBps
     uint256 public minSwapOutputBps = 9500; // Default: 5% max slippage
-    
+
     /// Multi-hop swap paths (token -> path array)
     /// @notice tokenSwapPaths
     mapping(address => address[]) public tokenSwapPaths;
@@ -529,7 +529,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         stablecoin = _stable;
         _log("swap_cfg");
     }
-    
+
     /// @notice setMinSwapOutput
     /// @param _minBps _minBps
     function setMinSwapOutput(uint256 _minBps) external onlyDAO {
@@ -539,7 +539,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         emit MinSwapOutputUpdated(previousBps, _minBps);
         _log("swap_min");
     }
-    
+
     /// @notice setSwapPath
     /// @param token token
     /// @param path path
@@ -556,7 +556,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     }
 
     // ─────────────────────────── Internal Trust Validation
-    
+
     /**
      * Check if merchant meets minimum ProofScore requirement
      * Extracted to avoid code duplication
@@ -565,11 +565,11 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
      */
     function _checkMerchantScore(address merchant) internal view {
         if (address(seer) == address(0)) return;
-        
+
         uint16 score = seer.getCachedScore(merchant);
         uint16 minScore = seer.minForMerchant();
         minScore = minScore > 0 ? minScore : minMerchantScore;
-        
+
         if (score < minScore) revert MERCH_LowTrust();
     }
 
@@ -598,10 +598,10 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     ) external {
         _checkFraudStatus(msg.sender);
         if (merchants[msg.sender].registered) revert MERCH_AlreadyRegistered();
-        
+
         // Check ProofScore requirement
         _checkMerchantScore(msg.sender);
-        
+
         merchants[msg.sender] = MerchantInfo({
             registered: true,
             suspended: false,
@@ -612,18 +612,18 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
             txCount: 0,
             payoutAddress: address(0)
         });
-        
+
         if (merchantList.length >= 10000) revert MERCH_CapExceeded(); // I-11
         if (!merchantInList[msg.sender]) {
             merchantList.push(msg.sender);
             merchantInList[msg.sender] = true;
             merchantIndexPlusOne[msg.sender] = merchantList.length;
         }
-        
+
         emit MerchantRegistered(msg.sender, businessName, category);
         _logEv(msg.sender, "m_reg", 0, category);
     }
-    
+
     /**
      * @notice Update merchant business information
      * @param businessName New business name
@@ -633,11 +633,11 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         MerchantInfo storage m = merchants[msg.sender];
         m.businessName = businessName;
         m.category = category;
-        
+
         emit MerchantUpdated(msg.sender, businessName, category);
         _logEv(msg.sender, "m_upd", 0, category);
     }
-    
+
     /**
      * @notice Merchant voluntarily deregisters
      * @dev Cannot deregister if there are pending refunds or disputes
@@ -659,9 +659,9 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
             merchantInList[msg.sender] = false;
             merchantIndexPlusOne[msg.sender] = 0;
         }
-        
+
         m.registered = false;
-        
+
         emit MerchantDeregistered(msg.sender);
         _logEv(msg.sender, "m_dereg", 0, "");
     }
@@ -669,7 +669,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     //                              REFUND SYSTEM
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     // Backlog fix (R77): add refundId as first indexed parameter so frontend can
     // reconstruct refund state from events without storing it separately.
     /// @notice RefundInitiated
@@ -693,7 +693,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     /// @notice MerchantDeregistered
     /// @param merchant merchant
     event MerchantDeregistered(address indexed merchant);
-    
+
     struct RefundRequest {
         address customer;
         address merchant;
@@ -704,10 +704,10 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         bool approved;
         bool completed;
     }
-    
+
     /// @notice refundRequests
     mapping(bytes32 => RefundRequest) public refundRequests;
-    
+
     /**
      * @notice Initiate a refund (merchant approves)
      * @param customer Customer to refund
@@ -727,10 +727,10 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         // N-H11 FIX: Reserve headroom in the customer's refund history so one merchant
         // cannot saturate the full 500-slot history and block all future refunds.
         if (customerRefunds[customer].length >= 450) revert MERCH_CapExceeded();
-        
+
         // audit-ok(weak-randomness): Not a PRNG: keccak hash used as a unique identifier; collision-resistance from caller/nonce/length is sufficient
         refundId = keccak256(abi.encode(msg.sender, customer, orderId, block.timestamp, customerRefunds[customer].length));
-        
+
         refundRequests[refundId] = RefundRequest({
             customer: customer,
             merchant: msg.sender,
@@ -741,16 +741,16 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
             approved: true, // Merchant-initiated = auto-approved
             completed: false
         });
-        
+
         // Track refunds for both parties (I-11: capped)
         customerRefunds[customer].push(refundId);
         if (merchantRefunds[msg.sender].length >= 500) revert MERCH_CapExceeded();
         merchantRefunds[msg.sender].push(refundId);
-        
+
         emit RefundInitiated(refundId, customer, msg.sender, orderId, amount);
         _logEv(customer, "rf_init", amount, orderId);
     }
-    
+
     /**
      * @notice Complete a refund (transfer tokens back to customer)
      * @param refundId The refund ID from initiateRefund
@@ -762,17 +762,17 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         if (r.completed) revert MERCH_AlreadyCompleted();
         if (msg.sender != r.merchant) revert MERCH_Forbidden();
         if (block.timestamp > uint256(r.requestTime) + REFUND_COMPLETION_WINDOW) revert MERCH_ApprovalExpired();
-        
+
         r.completed = true;
-        
+
         // Get vaults
         address merchantVault = vaultHub.vaultOf(r.merchant);
         address customerVault = vaultHub.vaultOf(r.customer);
         if (merchantVault == address(0) || customerVault == address(0)) revert MERCH_NoVault();
-        
+
         // Pull refund from the merchant caller to avoid requiring approvals from vault contracts.
         IERC20(r.token).safeTransferFrom(msg.sender, customerVault, r.amount);
-        
+
         emit RefundCompleted(r.customer, r.merchant, r.orderId, r.amount);
         _logEv(r.customer, "rf_done", r.amount, r.orderId);
     }
@@ -784,11 +784,11 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     function completeRefundFromVault(bytes32) external pure {
         revert MERCH_Deprecated();
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════
     //                           MERCHANT STATS
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     /**
      * @notice Get merchant statistics
      * @param merchant Merchant address
@@ -1178,7 +1178,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
             channel != PaymentChannel.POS_TERMINAL &&
             channel != PaymentChannel.QR_CODE
         ) revert MERCH_InvalidChannel();
-        
+
         netAmount = _processPaymentWithChannel(msg.sender, merchant, token, amount, orderId, channel);
     }
 
@@ -1262,17 +1262,17 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
             ISessionKeyManager_MP skm = ISessionKeyManager_MP(skmAddress);
             if (!skm.canSpend(customer, merchant, token, amount)) revert MERCH_Forbidden();
         }
-        
+
         uint16 customerScore = address(seer) != address(0) ? seer.getCachedScore(customer) : 500;
 
         _recordMerchantStats(merchant, amount);
-        
+
         // Get customer vault
         address customerVault = vaultHub.vaultOf(customer);
         if (customerVault == address(0)) revert MERCH_NoVault();
-        
+
         // SecurityHub lock check removed — non-custodial
-        
+
         // Use scoped block to reduce stack depth
         {
             // Determine recipient
@@ -1288,7 +1288,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
             // Transfer net amount (with STABLE-PAY auto-convert if enabled)
             _transferWithAutoConvert(token, customerVault, recipient, netAmount, merchant);
         }
-        
+
         // Emit payment event with channel tracking. Fee is always zero by constitutional commitment.
         emit PaymentProcessed(
             customer,
@@ -1302,7 +1302,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         );
 
         _rewardPaymentParticipants(customer, merchant, amount);
-        
+
         _logEv(customer, "m_pay", amount, orderId);
     }
 
@@ -1366,13 +1366,13 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     //                        REFUND TRACKING VIEWS
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     // Track refunds per customer and merchant
     /// @notice customerRefunds
     mapping(address => bytes32[]) public customerRefunds;
     /// @notice merchantRefunds
     mapping(address => bytes32[]) public merchantRefunds;
-    
+
     /**
      * @notice Get refund status by ID
      * @param refundId refundId
@@ -1387,7 +1387,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
      */
     // getRefundStatus() MOVED → MerchantPortalViewer.getRefundStatus(refundId)
     // Extracted for EIP-170 size compliance. Use the deployed MerchantPortalViewer satellite.
-    
+
     /**
      * @notice Deprecated heavy on-chain aggregation view.
      * @dev Compute refund analytics off-chain from events and getRefundStatus().

@@ -25,6 +25,34 @@ describe('MerchantPortal.payWithIntent edge cases', () => {
     const vaultHub = await VaultHubStub.deploy();
     await vaultHub.waitForDeployment();
 
+    const IntentValidator = await ethers.getContractFactory('CardBoundVaultIntentValidator');
+    const intentValidator = await IntentValidator.deploy();
+    await intentValidator.waitForDeployment();
+
+    const PaymentQueueManager = await ethers.getContractFactory('CardBoundVaultPaymentQueueManager');
+    const paymentQueueManagerImplementation = await PaymentQueueManager.deploy(ethers.ZeroAddress, 0);
+    await paymentQueueManagerImplementation.waitForDeployment();
+
+    const WithdrawalQueueManager = await ethers.getContractFactory('CardBoundVaultWithdrawalQueueManager');
+    const withdrawalQueueManagerImplementation = await WithdrawalQueueManager.deploy(ethers.ZeroAddress);
+    await withdrawalQueueManagerImplementation.waitForDeployment();
+
+    const InheritanceManager = await ethers.getContractFactory('CardBoundVaultInheritanceManager');
+    const inheritanceManagerImplementation = await InheritanceManager.deploy(ethers.ZeroAddress);
+    await inheritanceManagerImplementation.waitForDeployment();
+
+    const AdminManager = await ethers.getContractFactory('CardBoundVaultAdminManager');
+    const adminManagerImplementation = await AdminManager.deploy(ethers.ZeroAddress);
+    await adminManagerImplementation.waitForDeployment();
+
+    await vaultHub.setVaultDependencies(
+      await intentValidator.getAddress(),
+      await paymentQueueManagerImplementation.getAddress(),
+      await withdrawalQueueManagerImplementation.getAddress(),
+      await inheritanceManagerImplementation.getAddress(),
+      await adminManagerImplementation.getAddress()
+    );
+
     const SeerStub = await ethers.getContractFactory(
       'test/contracts/helpers/Stubs.sol:SeerScoreStub'
     );

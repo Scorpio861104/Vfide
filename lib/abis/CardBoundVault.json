@@ -62,6 +62,11 @@
   },
   {
     "inputs": [],
+    "name": "CBV_CloneDeployFailed",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "CBV_DailyLimit",
     "type": "error"
   },
@@ -1325,6 +1330,10 @@
     "type": "event"
   },
   {
+    "stateMutability": "payable",
+    "type": "fallback"
+  },
+  {
     "inputs": [],
     "name": "GUARDIAN_MATURITY_PERIOD",
     "outputs": [
@@ -1645,20 +1654,6 @@
   },
   {
     "inputs": [],
-    "name": "cancelInheritanceConfigChange",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "cancelInheritanceConfigChangeByGuardians",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "cancelLargePaymentThreshold",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -1778,27 +1773,6 @@
   },
   {
     "inputs": [],
-    "name": "cleanupMemorialVault",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "clearAllHeirs",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "confirmInheritanceConfig",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "dailyTransferLimit",
     "outputs": [
       {
@@ -1886,7 +1860,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct CardBoundVault.EscrowFundIntent",
+        "internalType": "struct CardBoundVaultIntents.EscrowFundIntent",
         "name": "intent",
         "type": "tuple"
       },
@@ -1956,7 +1930,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct CardBoundVault.PayIntent",
+        "internalType": "struct CardBoundVaultIntents.PayIntent",
         "name": "intent",
         "type": "tuple"
       },
@@ -2050,7 +2024,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct CardBoundVault.TransferIntent",
+        "internalType": "struct CardBoundVaultIntents.TransferIntent",
         "name": "intent",
         "type": "tuple"
       },
@@ -2129,7 +2103,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct CardBoundVault.EscrowFundIntent",
+        "internalType": "struct CardBoundVaultIntents.EscrowFundIntent",
         "name": "intent",
         "type": "tuple"
       }
@@ -2228,19 +2202,6 @@
   },
   {
     "inputs": [],
-    "name": "inheritanceConfigVersion",
-    "outputs": [
-      {
-        "internalType": "uint64",
-        "name": "",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "inheritanceManager",
     "outputs": [
       {
@@ -2254,33 +2215,15 @@
   },
   {
     "inputs": [],
-    "name": "inheritanceState",
+    "name": "intentValidator",
     "outputs": [
       {
-        "internalType": "uint8",
-        "name": "state",
-        "type": "uint8"
-      },
-      {
-        "internalType": "uint64",
-        "name": "windowEnd",
-        "type": "uint64"
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "reasonHash",
-        "type": "bytes32"
-      }
-    ],
-    "name": "initiateInheritanceClaim",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -2422,13 +2365,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "ownerOverrideClaim",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -2575,7 +2511,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct CardBoundVault.PayIntent",
+        "internalType": "struct CardBoundVaultIntents.PayIntent",
         "name": "intent",
         "type": "tuple"
       }
@@ -2672,24 +2608,6 @@
       }
     ],
     "name": "proposeGuardianChange",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address[]",
-        "name": "heirGuardians",
-        "type": "address[]"
-      },
-      {
-        "internalType": "bytes32[]",
-        "name": "heirCommitments",
-        "type": "bytes32[]"
-      }
-    ],
-    "name": "proposeInheritanceConfig",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -2864,19 +2782,6 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "dao",
-        "type": "address"
-      }
-    ],
-    "name": "setDAOGuardian",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
         "name": "guardian",
         "type": "address"
       },
@@ -2939,19 +2844,6 @@
       }
     ],
     "name": "setLargeTransferThreshold",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "polWallet",
-        "type": "address"
-      }
-    ],
-    "name": "setProofOfLifeWallet",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -3084,7 +2976,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct CardBoundVault.TransferIntent",
+        "internalType": "struct CardBoundVaultIntents.TransferIntent",
         "name": "intent",
         "type": "tuple"
       }
@@ -3129,13 +3021,6 @@
   {
     "inputs": [],
     "name": "unpause",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "vetoInheritanceClaim",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

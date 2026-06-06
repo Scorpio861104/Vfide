@@ -342,7 +342,7 @@ async function main() {
     bootstrap.treasurySink,
   );
 
-  
+
   // VFIDETokenViewer — read-only satellite; view functions extracted for EIP-170.
   // Non-custodial: no state writes. setViewer wires the reference in the token contract.
   await deploy("VFIDETokenViewer", book.VFIDEToken);
@@ -457,7 +457,7 @@ async function main() {
     book.ProofLedger,
   );
 
-  
+
   // MerchantPortalViewer — read-only satellite; pure view functions extracted for EIP-170.
   // Non-custodial: no state writes. setViewer is _checkDAO()-gated — call with DAO signer.
   await deploy("MerchantPortalViewer", book.MerchantPortal);
