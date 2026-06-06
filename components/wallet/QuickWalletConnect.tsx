@@ -23,10 +23,14 @@
  *      - id === 'io.metamask' (EIP-6963 multi-injected discovery)
  *      - name (lowercased) contains 'metamask'
  *
- *   3. Fallback: a generic 'injected' connector (the user has *some* browser
+ *   3. Prefer Coinbase Wallet as the explicit secondary choice for both
+ *      desktop and mobile. Coinbase has first-party browser and mobile app
+ *      flows, so it should not be hidden behind a generic injected fallback.
+ *
+ *   4. Fallback: a generic 'injected' connector (the user has *some* browser
  *      wallet but it's not specifically recognised).
  *
- *   4. Final fallback: the first connector in the list, or null if empty.
+ *   5. Final fallback: the first connector in the list, or null if empty.
  */
 
 import { useMemo } from 'react';
@@ -73,11 +77,24 @@ export function selectPrimaryConnector<T extends ConnectorLike>(
     if (mm) return mm;
   }
 
-  // 3. Fallback to a generic injected connector.
+  // 3. Prefer Coinbase Wallet as the explicit secondary wallet option.
+  const coinbase = find((c) => {
+    const id = norm(c.id);
+    const name = norm(c.name);
+    return (
+      id === 'coinbasewallet' ||
+      id === 'coinbase' ||
+      id.includes('coinbase') ||
+      name.includes('coinbase')
+    );
+  });
+  if (coinbase) return coinbase;
+
+  // 4. Fallback to a generic injected connector.
   const injected = find((c) => norm(c.id) === 'injected');
   if (injected) return injected;
 
-  // 4. Last resort: first connector available.
+  // 5. Last resort: first connector available.
   return connectors[0] ?? null;
 }
 
@@ -139,7 +156,6 @@ export function QuickWalletConnect({
       disabled={!primary || isPending}
       onClick={() => {
         if (primary) {
-           
           (connect as unknown as (args: { connector: unknown }) => void)({
             connector: primary,
           });
