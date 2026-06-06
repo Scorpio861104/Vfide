@@ -137,7 +137,7 @@ export function MoreSheet({ open, onClose, variant = 'bottom' }: MoreSheetProps)
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: reduce ? 0 : 0.18 }}
-            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-40 bg-black/70 backdrop-blur-md"
             onClick={onClose}
             aria-hidden="true"
           />
@@ -148,7 +148,7 @@ export function MoreSheet({ open, onClose, variant = 'bottom' }: MoreSheetProps)
             animate={motionAnimate}
             exit={motionExit}
             transition={motionTransition}
-            className={`${positioning} flex flex-col overflow-hidden`}
+            className={`${positioning} ui-card-sheen flex flex-col overflow-hidden`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="more-sheet-title"
@@ -162,7 +162,7 @@ export function MoreSheet({ open, onClose, variant = 'bottom' }: MoreSheetProps)
               </div>
             )}
 
-            <div className="border-b border-white/10 px-4 pb-3 pt-2">
+            <div className="ui-hairline-top border-b border-white/10 bg-white/[0.02] px-4 pb-3 pt-3">
               <div className="mb-3 flex items-start justify-between gap-3">
                 <div>
                   <h2 id="more-sheet-title" className="text-sm font-semibold text-white">
@@ -175,38 +175,38 @@ export function MoreSheet({ open, onClose, variant = 'bottom' }: MoreSheetProps)
                 <button
                   type="button"
                   onClick={onClose}
-                  className="rounded-md p-1 text-gray-400 hover:bg-white/5 hover:text-white"
+                  className="rounded-lg border border-white/10 bg-white/[0.03] p-1.5 text-gray-400 transition hover:bg-white/8 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
                   aria-label="Close destinations menu"
                 >
                   <X size={16} />
                 </button>
               </div>
               {/* Search row */}
-              <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-1.5 focus-within:border-accent/40 focus-within:bg-white/[0.05]">
+              <div className="glass-surface flex items-center gap-2 rounded-xl px-3 py-1.5 focus-within:border-accent/45 focus-within:bg-white/[0.07]">
                 <Search size={16} className="text-gray-500" />
-              <input
-                ref={searchRef}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search vault, pay, rewards…"
-                className="flex-1 bg-transparent text-base text-white placeholder-gray-500 outline-none min-h-[36px]"
-                aria-label="Search destinations"
-              />
-              {search && (
-                <button
-                  type="button"
-                  onClick={() => setSearch('')}
-                  className="rounded-md px-2 py-1 text-xs text-gray-400 hover:bg-white/5 hover:text-white"
-                  aria-label="Clear destination search"
-                >
-                  Clear
-                </button>
-              )}
+                <input
+                  ref={searchRef}
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search vault, pay, rewards…"
+                  className="flex-1 bg-transparent text-base text-white placeholder-gray-500 outline-none min-h-[36px]"
+                  aria-label="Search destinations"
+                />
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() => setSearch('')}
+                    className="rounded-md px-2 py-1 text-xs text-gray-400 hover:bg-white/5 hover:text-white"
+                    aria-label="Clear destination search"
+                  >
+                    Clear
+                  </button>
+                )}
               </div>
             </div>
 
             {/* Body */}
-            <div className="flex-1 overflow-y-auto px-2 pb-4 pt-2">
+            <div className="flex-1 overflow-y-auto px-2 pb-4 pt-3">
               {filtered ? (
                 <FlatResults
                   items={filtered}
@@ -223,7 +223,7 @@ export function MoreSheet({ open, onClose, variant = 'bottom' }: MoreSheetProps)
             </div>
 
             {/* Footer with link to the full hub page */}
-            <div className="flex items-center justify-between border-t border-white/10 px-4 py-2">
+            <div className="flex items-center justify-between border-t border-white/10 bg-black/20 px-4 py-3">
               <LanguageSwitcher className="sm:hidden" />
               <span className="text-xs text-gray-500">
                 {filtered
