@@ -1,7 +1,7 @@
 'use client';
 
 import { Footer } from "@/components/layout/Footer";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { Shield, Users, Zap, Heart } from "lucide-react";
 import { useLocale } from '@/lib/locale/LocaleProvider';
 

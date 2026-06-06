@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { ArrowRight, Coins, Send, Shield, Wallet } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { Footer } from '@/components/layout/Footer';

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { Activity, ArrowDownLeft, ArrowUpRight, Award, ChevronRight, Vote } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { useEffect, useState } from 'react';

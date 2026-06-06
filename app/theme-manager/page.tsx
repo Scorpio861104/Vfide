@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { useThemeManager } from '@/hooks/useThemeManager';
 import { ThemeSelector } from '@/components/theme/ThemeSelector';
 import { ThemeCustomizer } from '@/components/theme/ThemeCustomizer';

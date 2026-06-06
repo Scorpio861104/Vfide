@@ -16,7 +16,7 @@ import { LiveActivityFeed } from '@/components/trust/LiveActivityFeed'
 import { FeeSavingsCalculator } from '@/components/commerce/FeeSavingsCalculator'
 import { LiveSystemStats } from '@/components/stats/LiveSystemStats'
 import { TransactionNotification, useTransactionNotifications } from '@/components/wallet/TransactionNotification'
-import { motion } from 'framer-motion'
+import { m as motion } from 'framer-motion'
 import { useAccount } from 'wagmi'
 import { useLocale } from '@/lib/locale/LocaleProvider';
 

@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m as motion } from 'framer-motion';
 import { Award, Gift } from 'lucide-react';
 import { useState } from 'react';
 

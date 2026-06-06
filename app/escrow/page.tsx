@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m as motion } from 'framer-motion';
 import { CheckCircle2, FileText, Lock, PlusCircle } from 'lucide-react';
 import { useState } from 'react';
 

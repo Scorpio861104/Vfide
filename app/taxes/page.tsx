@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import React, { useState } from 'react';
 import { useFinancialIntelligence } from '@/lib/financialIntelligence';
 import { useAccount } from 'wagmi';
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { FileText, AlertTriangle, Download, Calculator } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 import { useLocale } from '@/lib/locale/LocaleProvider';

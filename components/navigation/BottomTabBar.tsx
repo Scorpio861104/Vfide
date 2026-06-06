@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Home, CreditCard, Shield, Store, MoreHorizontal } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { MoreSheet } from './MoreSheet';
 
@@ -11,10 +11,10 @@ import { MoreSheet } from './MoreSheet';
 // Navigating to /more would produce a 404; the sheet is the correct
 // surface for the "everything else" destinations on mobile.
 const NAV_TABS = [
-  { label: 'Home',      href: '/dashboard',   icon: Home    },
-  { label: 'Pay',       href: '/pay',          icon: CreditCard },
-  { label: 'Trust',     href: '/proofscore',   icon: Shield  },
-  { label: 'Merchants', href: '/merchants',    icon: Store   },
+  { label: 'Home',        href: '/dashboard',   icon: Home    },
+  { label: 'Pay',         href: '/pay',          icon: CreditCard },
+  { label: 'Trust',       href: '/proofscore',   icon: Shield  },
+  { label: 'Marketplace', href: '/marketplace',  icon: Store   },
 ] as const;
 
 // Routes that belong to the "More" drawer group so the More tab
@@ -50,11 +50,11 @@ export function BottomTabBar() {
   return (
     <>
       <nav
-        className="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-md border-t border-slate-700/50 pb-safe md:hidden"
+        className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-slate-950/88 shadow-[0_-18px_50px_-28px_rgba(34,211,238,0.55)] backdrop-blur-2xl pb-safe md:hidden"
         role="navigation"
         aria-label="Mobile navigation"
       >
-        <div className="flex items-center justify-around px-2 py-2 max-w-lg mx-auto">
+        <div className="mx-auto flex max-w-lg items-center justify-around px-2 py-2">
           {NAV_TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.href;
@@ -62,13 +62,15 @@ export function BottomTabBar() {
             return (
               <button
                 key={tab.href}
+                type="button"
                 onClick={() => { setMoreOpen(false); router.push(tab.href); }}
                 aria-label={tab.label}
+                aria-current={isActive ? 'page' : undefined}
                 className={cn(
-                  'flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all min-w-0',
+                  'flex min-w-0 flex-col items-center gap-0.5 rounded-2xl px-3 py-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50',
                   isActive
-                    ? 'text-blue-400'
-                    : 'text-slate-500 hover:text-slate-300',
+                    ? 'bg-cyan-400/10 text-cyan-300 shadow-[0_0_22px_-14px_rgba(34,211,238,0.95)]'
+                    : 'text-slate-500 hover:bg-white/5 hover:text-slate-300',
                 )}
               >
                 <div className="relative">
@@ -76,7 +78,7 @@ export function BottomTabBar() {
                   {isActive && (
                     <motion.div
                       layoutId="tab-indicator"
-                      className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-blue-400"
+                      className="absolute -bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-cyan-300 shadow-[0_0_10px_rgba(103,232,249,0.9)]"
                     />
                   )}
                 </div>
@@ -89,14 +91,17 @@ export function BottomTabBar() {
 
           {/* More — opens MoreSheet, does NOT navigate */}
           <button
+            type="button"
             onClick={() => setMoreOpen((v) => !v)}
             aria-label="More navigation options"
+            aria-haspopup="dialog"
             aria-expanded={moreOpen}
+            aria-current={onMoreRoute ? 'page' : undefined}
             className={cn(
-              'flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all min-w-0',
+              'flex min-w-0 flex-col items-center gap-0.5 rounded-2xl px-3 py-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50',
               moreOpen || onMoreRoute
-                ? 'text-blue-400'
-                : 'text-slate-500 hover:text-slate-300',
+                ? 'bg-cyan-400/10 text-cyan-300 shadow-[0_0_22px_-14px_rgba(34,211,238,0.95)]'
+                : 'text-slate-500 hover:bg-white/5 hover:text-slate-300',
             )}
           >
             <div className="relative">
@@ -104,7 +109,7 @@ export function BottomTabBar() {
               {(moreOpen || onMoreRoute) && (
                 <motion.div
                   layoutId="tab-indicator"
-                  className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-blue-400"
+                  className="absolute -bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-cyan-300 shadow-[0_0_10px_rgba(103,232,249,0.9)]"
                 />
               )}
             </div>
