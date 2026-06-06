@@ -3,7 +3,7 @@
 import { Footer } from "@/components/layout/Footer";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { Scale, Lock, FileText } from "lucide-react";
 import { useLocale } from '@/lib/locale/LocaleProvider';
 import { TabTrigger } from '@/components/ui/TabTrigger';

@@ -14,7 +14,7 @@ import {
   Search,
   RefreshCw,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { Footer } from '@/components/layout/Footer';
 import RevenueSplitterABI from '@/lib/abis/RevenueSplitter.json';
 import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';

@@ -5,7 +5,7 @@
 
 import { useRef } from 'react';
 import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m as motion, AnimatePresence } from 'framer-motion';
 import { Search, X, Store, Package, Star, MapPin, ArrowRight, Clock } from 'lucide-react';
 import { useUnifiedSearch } from './useUnifiedSearch';
 

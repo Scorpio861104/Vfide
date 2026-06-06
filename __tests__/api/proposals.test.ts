@@ -162,9 +162,28 @@ describe('/api/proposals', () => {
       expect(data).toMatchObject({
         proposals: [],
         total: 0,
-        limit: 50,
+        limit: 5,
         offset: 0,
         degraded: true,
+      });
+    });
+
+    it('should return degraded response when DATABASE_URL is missing locally', async () => {
+      withRateLimit.mockResolvedValue(null);
+      query.mockRejectedValue(new Error('DATABASE_URL is required. Set ALLOW_DEV_DB=true in development to use the local fallback.'));
+
+      const request = new NextRequest('http://localhost:3000/api/proposals?limit=25&offset=3');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data).toMatchObject({
+        proposals: [],
+        total: 0,
+        limit: 25,
+        offset: 3,
+        degraded: true,
+        reason: 'database_unavailable',
       });
     });
   });

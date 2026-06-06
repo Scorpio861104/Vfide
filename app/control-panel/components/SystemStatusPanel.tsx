@@ -77,7 +77,7 @@ export function SystemStatusPanel() {
               icon="🔄"
               title="Configure Auto-Swap"
               description="Set up stablecoin payments"
-              disabledReason="Auto-swap configuration UI isn't built yet. The SwapRouter contract address is configured in lib/contracts.ts."
+              disabledReason="Use the Auto-Swap tab to configure the router, stablecoin, enablement, and slippage controls before activating production swaps."
             />
             <QuickActionButton
               icon="⚡"
@@ -123,19 +123,6 @@ export function SystemStatusPanel() {
           Standalone utility pages used by trusted operators. These are not part of the public navigation.
         </p>
         <div className="grid gap-3 md:grid-cols-2">
-          <Link
-            href="/verifier"
-            className="flex items-start gap-3 p-4 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/50 transition-colors"
-          >
-            <span className="text-2xl" aria-hidden="true">🛡️</span>
-            <div className="flex-1 min-w-0">
-              <div className="text-white font-semibold mb-0.5">Trusted Verifier Console</div>
-              <div className="text-xs text-slate-400">
-                Fallback quorum for vault recovery claims when guardians are unavailable.
-              </div>
-              <div className="text-xs text-purple-300 mt-1 font-mono">/verifier</div>
-            </div>
-          </Link>
           <Link
             href="/splitter"
             className="flex items-start gap-3 p-4 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/50 transition-colors"

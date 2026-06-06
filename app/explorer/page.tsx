@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Search, TrendingUp, Users, Activity, ArrowRight } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { m as motion } from 'framer-motion'
 import { Footer } from '@/components/layout/Footer'
 import { useLocale } from '@/lib/locale/LocaleProvider';
 

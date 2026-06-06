@@ -1,7 +1,12 @@
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { render, screen } from '@testing-library/react';
 
-/* ── Mocks ── */
+/* ── Mocks ───────────────────────────────────────────────────────────────
+ * The page reads `useLocale` from @/lib/locale/LocaleProvider (NOT @/hooks/useLocale),
+ * and `locale` is unused (`void locale`), so a trivial stub suffices. The three heavy
+ * security sub-components only render on their own tabs (not the default Overview tab);
+ * they pull in transitive deps that are undefined under jsdom, so stub them — this suite
+ * exercises the page's own structure (header, tabs, Overview content), not their internals.
+ */
 const mockPush = jest.fn();
 
 jest.mock('next/navigation', () => ({
@@ -13,47 +18,31 @@ jest.mock('wagmi', () => ({
   useAccount: () => ({ address: undefined, isConnected: false }),
 }));
 
-jest.mock('@/hooks/useLocale', () => ({
-  useLocale: () => ['en-US', jest.fn()],
-}));
-
-jest.mock('@/lib/i18n', () => ({
-  useT: () => ({ developer_heading: 'Developer Hub', support_heading: 'Help & Support Center', support_tab_faq: 'FAQ', support_tab_tickets: 'My Tickets', support_tab_new: 'New Ticket', common_loading: 'Loading…', common_back: 'Back', security_heading: 'Account Security', security_subtitle: 'Monitor sessions.', common_settings: 'Settings' }),
-  pickLocaleCopy: () => ({}),
-  SECURITY_CENTER_TRANSLATIONS: {},
+jest.mock('@/lib/locale/LocaleProvider', () => ({
+  useLocale: () => ({ locale: 'en-US' }),
 }));
 
 jest.mock('framer-motion', () => {
   const React = require('react');
   const SKIP = new Set([
-    'initial','animate','exit','transition','whileHover','whileTap','whileInView',
-    'viewport','layout','layoutId','custom','onAnimationStart','onAnimationComplete',
-    'onViewportEnter','onViewportLeave','drag','dragConstraints',
+    'initial', 'animate', 'exit', 'transition', 'whileHover', 'whileTap', 'whileInView',
+    'viewport', 'layout', 'layoutId', 'custom', 'onAnimationStart', 'onAnimationComplete',
+    'onViewportEnter', 'onViewportLeave', 'drag', 'dragConstraints', 'mode',
   ]);
   const make = (tag: string) =>
-    React.forwardRef((props: Record<string,unknown>, ref: unknown) => {
-      const s: Record<string,unknown> = { ref };
+    React.forwardRef((props: Record<string, unknown>, ref: unknown) => {
+      const s: Record<string, unknown> = { ref };
       for (const k of Object.keys(props)) { if (!SKIP.has(k)) s[k] = props[k]; }
       return React.createElement(tag, s);
     });
-  const motion = new Proxy({} as Record<string,unknown>, {
-    get: (t,p) => { if (typeof p !== 'string') return undefined; if (!t[p]) t[p] = make(p === 'custom' ? 'div' : p); return t[p]; }
+  const motion = new Proxy({} as Record<string, unknown>, {
+    get: (t, p) => { if (typeof p !== 'string') return undefined; if (!t[p]) t[p] = make(p); return t[p]; },
   });
-  return { motion,
-    m: motion,
-    AnimatePresence: ({ children }: { children: unknown }) => children };
+  return { motion, m: motion, AnimatePresence: ({ children }: { children: unknown }) => children };
 });
 
-jest.mock('@/components/crypto/VfideConnectButton', () => ({
-  VfideConnectButton: () => null,
-}));
-
-jest.mock('@/components/layout/Footer', () => ({
-  Footer: () => null,
-}));
-
 jest.mock('lucide-react', () =>
-  new Proxy({} as Record<string,unknown>, {
+  new Proxy({} as Record<string, unknown>, {
     get: (_t, name) => {
       const React = require('react');
       return ({ className }: { className?: string }) =>
@@ -62,31 +51,36 @@ jest.mock('lucide-react', () =>
   })
 );
 
+jest.mock('@/components/layout/Footer', () => ({ Footer: () => null }));
+jest.mock('@/components/security/BiometricSetup', () => ({ BiometricSetup: () => null }));
+jest.mock('@/components/security/SecurityLogsDashboard', () => ({ SecurityLogsDashboard: () => null }));
+jest.mock('@/components/security/ThreatDetectionPanel', () => ({ ThreatDetectionPanel: () => null }));
+
 import SecurityCenterPage from '@/app/security-center/page';
 
 describe('Security Center Page', () => {
   beforeEach(() => { mockPush.mockClear(); });
 
-  it('renders the security center dashboard with score and checklist', () => {
+  it('renders the Security Center header and intro', () => {
     render(<SecurityCenterPage />);
-    // Page h1 is "Account Security"
-    expect(screen.getByRole('heading', { name: /Account Security/i })).toBeTruthy();
-    // Security checklist section
-    expect(screen.getByText(/Security checklist/i)).toBeTruthy();
-    // Checklist items: Guardians configured, Session signing active
-    expect(screen.getByText(/Guardians configured/i)).toBeTruthy();
-    expect(screen.getByText(/Session signing active/i)).toBeTruthy();
+    // h1 (distinct from the "badge-live" pill, which also reads "Security Center")
+    expect(screen.getByRole('heading', { name: /Security Center/i })).toBeTruthy();
+    expect(screen.getByText(/Manage authentication methods/i)).toBeTruthy();
   });
 
-  it('displays active sessions tab', () => {
+  it('shows the security tabs', () => {
     render(<SecurityCenterPage />);
-    // "Sessions" tab is visible in the nav
-    expect(screen.getByText(/Sessions/i)).toBeTruthy();
+    expect(screen.getByRole('tablist')).toBeTruthy();
+    // Tab labels are hardcoded; assert the unambiguous ones.
+    expect(screen.getByText('Overview')).toBeTruthy();
+    expect(screen.getByText('Biometric')).toBeTruthy();
+    expect(screen.getByText('Threat Detection')).toBeTruthy();
   });
 
-  it('provides security recommendations', () => {
+  it('renders the Overview tab content by default', () => {
     render(<SecurityCenterPage />);
-    const pageText = document.body.textContent ?? '';
-    expect(pageText).toMatch(/security|guardian|session/i);
+    expect(screen.getByText('Two-Factor Auth')).toBeTruthy();
+    expect(screen.getByText('Quick Actions')).toBeTruthy();
+    expect(screen.getByText('Recent Activity')).toBeTruthy();
   });
 });

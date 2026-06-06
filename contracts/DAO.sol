@@ -422,6 +422,9 @@ contract DAO is ReentrancyGuard {
     /// @param _admin _admin
     function setAdmin(address _admin) external onlyTimelock { 
         require(_admin!=address(0),"zero");
+        // Symmetric liveness guard (see setEmergencyApprover): the deliberate admin-set path
+        // must not make admin == emergencyApprover. The break-glass path is intentionally exempt.
+        require(_admin != emergencyApprover, "DAO: admin==approver");
         pendingAdmin = _admin;
         emit AdminTransferProposed(_admin);
     }
@@ -444,6 +447,11 @@ contract DAO is ReentrancyGuard {
     /// @param _approver _approver
     function setEmergencyApprover(address _approver) external onlyTimelock {
         require(_approver != address(0), "zero");
+        // Liveness guard: emergencyApprover must differ from admin, otherwise the 2-of-2
+        // emergency paths (quorum rescue, timelock replacement) can never obtain their
+        // non-self secondary approval and would be permanently bricked. The break-glass
+        // admin rotation path is deliberately NOT guarded so last-resort recovery is never blocked.
+        require(_approver != admin, "DAO: approver==admin");
         emergencyApprover = _approver;
     }
 

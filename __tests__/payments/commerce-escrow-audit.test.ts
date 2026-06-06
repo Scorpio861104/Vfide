@@ -134,10 +134,11 @@ describe('R-059 – Auto-convert policy misconfiguration', () => {
   // re-enabled, restore both the approval-revocation invariant and the
   // fallback-reason emits, and add tests then.
 
-  it('merchant-side auto-convert enabling requires swap router and stablecoin configuration', () => {
+  it('merchant-side auto-convert enabling is fail-closed while swap execution is disabled', () => {
     expect(merchantSrc).toMatch(/function\s+setAutoConvert\(bool enabled\) external onlyMerchant/);
     expect(merchantSrc).toMatch(/if \(enabled\) \{/);
-    expect(merchantSrc).toMatch(/if \(address\(swapRouter\) == address\(0\) \|\| stablecoin == address\(0\)\) revert MERCH_NotConfigured\(\)/);
+    expect(merchantSrc).toMatch(/revert MERCH_Deprecated\(\);/);
+    expect(merchantSrc).toMatch(/autoConvert\[msg\.sender\] = enabled/);
   });
 
   describe('TypeScript model: slippage bounds', () => {

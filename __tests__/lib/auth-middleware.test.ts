@@ -16,7 +16,8 @@ function loadMiddleware() {
     getAuthCookie: mockGetAuthCookie,
   }));
 
-  return require('@/lib/auth/middleware') as typeof import('@/lib/auth/middleware');
+  // requireAdmin et al. live in apiGuards (next/jest mangles files named middleware.ts).
+  return require('@/lib/auth/apiGuards') as typeof import('@/lib/auth/apiGuards');
 }
 
 describe('auth middleware admin checks', () => {

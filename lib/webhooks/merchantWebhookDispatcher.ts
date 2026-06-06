@@ -85,7 +85,17 @@ function isBlockedIpAddress(ip: string): boolean {
     if (normalized === '::1' || normalized === '::') return true;
     if (normalized.startsWith('fe80:')) return true;
     if (normalized.startsWith('fc') || normalized.startsWith('fd')) return true;
-    if (normalized.startsWith('::ffff:127.') || normalized.startsWith('::ffff:10.')) return true;
+    // IPv4-mapped IPv6 (::ffff:a.b.c.d): evaluate the embedded IPv4 against the IPv4 rules
+    // so ALL mapped private/loopback/link-local (incl. 169.254.169.254 metadata)/CGNAT ranges
+    // are blocked, not only the previously-listed ::ffff:127./::ffff:10. prefixes. Hex-form
+    // mapped (::ffff:HHHH:HHHH) is blocked conservatively (resolvers return dotted form).
+    if (normalized.startsWith('::ffff:')) {
+      const embedded = normalized.slice(7);
+      if (embedded.includes('.') && isIP(embedded) === 4) {
+        return isBlockedIpAddress(embedded);
+      }
+      return true;
+    }
     return false;
   }
 

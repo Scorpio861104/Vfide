@@ -36,6 +36,9 @@ const MANUAL_ABI_EXCEPTIONS = new Set<string>(getPlaceholderExceptions());
 const PARITY_EXEMPTIONS = new Set<string>([
   // Intentional synthetic/helper ABIs not expected to byte-for-byte match one compiled artifact.
   'ERC20.json',
+  // DeployPhase3Peripherals is a script/deploy helper kept for alternate deploy/test paths,
+  // not part of the V1 production contract set under contracts/.
+  'DeployPhase3Peripherals.json',
   'MainstreamPayments.json',
   'VFIDECommerce.json',
   // VaultInfrastructure: the legacy contract uses /* comment */ parameter naming

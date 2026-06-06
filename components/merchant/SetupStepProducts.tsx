@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import Image from 'next/image';
 import { Package, Camera, Plus, X, ArrowLeft, Rocket, Loader2 } from 'lucide-react';
 import { type QuickProduct } from './merchant-setup-types';

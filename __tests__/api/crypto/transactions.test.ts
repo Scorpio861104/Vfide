@@ -121,34 +121,30 @@ describe('/api/crypto/transactions/[userId]', () => {
     it('should clamp oversized limit to 100', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
-      query.mockResolvedValueOnce({ rows: [{ id: 1 }] });
       query.mockResolvedValueOnce({ rows: [] });
 
       const request = new NextRequest('http://localhost:3000/api/crypto/transactions/1?limit=9999&offset=0');
       const response = await GET(request, { params: Promise.resolve({ userId: '1' }) });
 
       expect(response.status).toBe(200);
-      expect(query).toHaveBeenNthCalledWith(
-        2,
+      expect(query).toHaveBeenCalledWith(
         expect.stringContaining('LIMIT $2 OFFSET $3'),
-        [1, 100, 0]
+        ['0x1111111111111111111111111111111111111123', 100, 0]
       );
     });
 
     it('should clamp oversized offset to 10000', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
-      query.mockResolvedValueOnce({ rows: [{ id: 1 }] });
       query.mockResolvedValueOnce({ rows: [] });
 
       const request = new NextRequest('http://localhost:3000/api/crypto/transactions/1?limit=50&offset=999999');
       const response = await GET(request, { params: Promise.resolve({ userId: '1' }) });
 
       expect(response.status).toBe(200);
-      expect(query).toHaveBeenNthCalledWith(
-        2,
+      expect(query).toHaveBeenCalledWith(
         expect.stringContaining('LIMIT $2 OFFSET $3'),
-        [1, 50, 10000]
+        ['0x1111111111111111111111111111111111111123', 50, 10000]
       );
     });
 
@@ -163,14 +159,19 @@ describe('/api/crypto/transactions/[userId]', () => {
       expect(response.status).toBe(400);
     });
 
-    it('should return 400 for non-numeric userId parameter', async () => {
+    it('ignores the [userId] path param and scopes to the authenticated caller', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
+      query.mockResolvedValueOnce({ rows: [] });
 
       const request = new NextRequest('http://localhost:3000/api/crypto/transactions/abc');
       const response = await GET(request, { params: Promise.resolve({ userId: 'abc' }) });
 
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(200);
+      expect(query).toHaveBeenCalledWith(
+        expect.stringContaining('LIMIT $2 OFFSET $3'),
+        ['0x1111111111111111111111111111111111111123', 50, 0]
+      );
     });
   });
 });

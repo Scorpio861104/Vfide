@@ -9,6 +9,7 @@ import { parseEther, formatEther } from 'viem';
 // Crypto validation types - ValidationError used in type definitions
 import type { ValidationError as _ValidationError } from './cryptoValidation';
 import { getEthereumProvider, assertCorrectChain, assertNonZeroAddress, waitForTransactionReceiptSuccess } from './cryptoApprovals';
+import { csrfHeaders } from './csrfClient';
 import { logger } from '@/lib/logger';
 
 function asString(value: unknown, name: string): string {
@@ -375,8 +376,8 @@ export async function tipMessage(
   // Update message with tip
   await fetch('/api/messages/tip', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ messageId, transaction }),
+    headers: await csrfHeaders(),
+    body: JSON.stringify({ messageId, recipientAddress, transaction }),
   });
 
   return transaction;

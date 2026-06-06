@@ -24,7 +24,7 @@ import { TabTrigger } from '@/components/ui/TabTrigger';
  * The old routes redirect here.
  */
 
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m as motion } from 'framer-motion';
 import {
   Vote, PlusCircle, Users, BarChart2, Clock,
   Crown, ScrollText, Gavel, Landmark, LayoutDashboard,

@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic';
 
 import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { Sparkles, ArrowRight, Power } from 'lucide-react';
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { useAccount } from 'wagmi';

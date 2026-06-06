@@ -66,9 +66,14 @@ export function VfideConnectButton({
   // button from flashing "Connect" and then snapping to the connected state.
   const { isConnecting, isReconnecting } = useAccount();
   const isRestoring = isConnecting || isReconnecting;
+  const CustomConnectButton = ConnectButton?.Custom;
+
+  if (!CustomConnectButton) {
+    return <ConnectButtonFallback size={size} isRestoring={isRestoring} />;
+  }
 
   return (
-    <ConnectButton.Custom>
+    <CustomConnectButton>
       {({ account, chain, openAccountModal, openChainModal, openConnectModal, mounted }) => {
         const ready = mounted;
         const connected = ready && account && chain;
@@ -149,6 +154,62 @@ export function VfideConnectButton({
           </div>
         );
       }}
-    </ConnectButton.Custom>
+    </CustomConnectButton>
+  );
+}
+
+function ConnectButtonFallback({
+  size,
+  isRestoring,
+}: {
+  size: VfideConnectButtonSize;
+  isRestoring: boolean;
+}) {
+  const s = SIZE[size];
+  const { address, isConnected } = useAccount();
+
+  if (isRestoring) {
+    return (
+      <div
+        aria-live="polite"
+        className={`inline-flex items-center gap-2 ${s.container} rounded-lg bg-white/5 border border-white/8 animate-pulse`}
+      >
+        <Loader2 size={s.iconSize} className="text-zinc-500 animate-spin" />
+        <span className="text-zinc-500 text-xs">Connecting…</span>
+      </div>
+    );
+  }
+
+  if (isConnected && address) {
+    const displayAddress = `${address.slice(0, 6)}…${address.slice(-4)}`;
+
+    return (
+      <button
+        type="button"
+        aria-label="Wallet connected"
+        className={`inline-flex items-center gap-2 ${s.container} rounded-lg font-medium text-white bg-white/5 border border-white/10 cursor-default`}
+      >
+        <Identicon
+          address={address}
+          size={s.identicon}
+          className="rounded-full overflow-hidden flex-shrink-0"
+          ariaLabel=""
+        />
+        <span className="font-mono text-xs sm:text-sm">{displayAddress}</span>
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      aria-label="Connect wallet"
+      disabled
+      title="Wallet connection UI is unavailable. Refresh the page or check wallet provider setup."
+      className={`inline-flex items-center gap-2 ${s.container} rounded-lg font-semibold text-zinc-950 bg-gradient-to-r from-accent to-accent-dark opacity-70 cursor-not-allowed shadow-lg shadow-accent/20`}
+    >
+      {size !== 'sm' && <Wallet size={s.iconSize} />}
+      Connect{size === 'lg' ? ' Wallet' : ''}
+    </button>
   );
 }

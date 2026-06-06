@@ -68,10 +68,6 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     mapping(address => uint256) public recoveryNonce;
     /// @notice RECOVERY_DELAY
     uint64 public constant RECOVERY_DELAY = 7 days; // H-5: Increased from 3 to 7 days
-        /// @notice DAO_RECOVERY_DELAY
-        uint64 public constant DAO_RECOVERY_DELAY = 14 days; // F-23 FIX: DAO-triggered recovery uses extended delay
-    /// @notice RECOVERY_APPROVALS_REQUIRED
-    uint8 public constant RECOVERY_APPROVALS_REQUIRED = 3; // H-5: Multi-sig requirement
     /// @notice RECOVERY_CHALLENGE_DELAY
     uint64 public constant RECOVERY_CHALLENGE_DELAY = 72 hours;
     /// @notice ROTATION_APPROVALS_REQUIRED

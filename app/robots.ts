@@ -50,7 +50,6 @@ export default function robots(): MetadataRoute.Robots {
           '/testnet/',       // Testnet-only faucet hub (auto-redirects on mainnet)
           '/theme-showcase/',// Legacy designer showcase (now redirects to /theme)
           '/theme-manager/', // Legacy theme manager (now redirects to /theme)
-          '/verifier/',      // Operator-only trusted-verifier console
           '/splitter/',      // Operator-only revenue splitter inspector
           '/agent/',         // Coming-soon placeholder (cash-agent operator workflow)
         ],

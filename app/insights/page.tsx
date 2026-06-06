@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { BarChart3, TrendingUp } from 'lucide-react';
 import FinancialDashboard from '@/components/FinancialDashboard';
 import { Footer } from '@/components/layout/Footer';

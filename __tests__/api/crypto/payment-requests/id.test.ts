@@ -9,6 +9,17 @@ jest.mock('@/lib/auth/rateLimit', () => ({
   withRateLimit: jest.fn(),
 }));
 
+// verifyTxHashOnChain() builds a viem public client and reads the receipt. Stub viem so
+// the completed-path test can drive a 'success' receipt. Tests that leave RPC_URL unset
+// never reach the client (verifyTxHashOnChain returns 'unverifiable' first), so this mock
+// is inert for them.
+jest.mock('viem', () => ({
+  createPublicClient: jest.fn(() => ({
+    getTransactionReceipt: jest.fn(async () => ({ status: 'success' })),
+  })),
+  http: jest.fn(),
+}));
+
 jest.mock('@/lib/auth/middleware', () => ({
   withAuth: (handler: (request: NextRequest, user: { address: string }, context?: { params: Promise<Record<string, string>> | Record<string, string> }) => Promise<NextResponse>) => {
     return async (
@@ -261,15 +272,9 @@ describe('/api/crypto/payment-requests/[id]', () => {
       expect(data.error).toContain('Invalid request body');
     });
 
-    it('should update status and txHash when user is a party', async () => {
+  it('rejects non-completed transitions via PATCH (completion-only; accept/reject/cancel use PUT)', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockResolvedValue({ user: mockUser });
-      // First query: fetch existing payment request
-      query.mockResolvedValueOnce({ rows: [mockPaymentRequest] });
-      // Second query: user lookup (user is to_user_id=99)
-      query.mockResolvedValueOnce({ rows: [{ id: 99 }] });
-      // Third query: update
-      query.mockResolvedValueOnce({ rows: [{ ...mockPaymentRequest, status: 'accepted', tx_hash: '0x' + 'a'.repeat(64) }] });
 
       const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests/1', {
         method: 'PATCH',
@@ -279,8 +284,42 @@ describe('/api/crypto/payment-requests/[id]', () => {
       const response = await PATCH(request, { params: Promise.resolve({ id: '1' }) });
       const data = await response.json();
 
-      expect(response.status).toBe(200);
-      expect(data.success).toBe(true);
+      expect(response.status).toBe(400);
+      expect(data.error).toContain("PATCH only supports the 'completed' transition");
+      expect(query).not.toHaveBeenCalled();
+    });
+
+    it('completes a request when the sender supplies an on-chain-verified tx_hash', async () => {
+      // Happy path: status='completed' + a tx_hash that verifies on-chain (mocked
+      // 'success'), submitted by the SENDER (from_user_id=42). RPC_URL must be set so
+      // verifyTxHashOnChain reaches the (mocked) client; restored afterward so the
+      // fail-closed test (which relies on RPC_URL being unset) is unaffected.
+      const prevRpc = process.env.RPC_URL;
+      process.env.RPC_URL = 'http://localhost:8545';
+      try {
+        withRateLimit.mockResolvedValue(null);
+        requireAuth.mockResolvedValue({ user: mockUser });
+        // 1) fetch existing request (pending → completable)
+        query.mockResolvedValueOnce({ rows: [mockPaymentRequest] });
+        // 2) ownership lookup → the SENDER (from_user_id=42)
+        query.mockResolvedValueOnce({ rows: [{ id: 42 }] });
+        // 3) update
+        query.mockResolvedValueOnce({ rows: [{ ...mockPaymentRequest, status: 'completed', tx_hash: '0x' + 'a'.repeat(64) }] });
+
+        const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests/1', {
+          method: 'PATCH',
+          body: JSON.stringify({ status: 'completed', txHash: '0x' + 'a'.repeat(64) }),
+        });
+
+        const response = await PATCH(request, { params: Promise.resolve({ id: '1' }) });
+        const data = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(data.success).toBe(true);
+      } finally {
+        if (prevRpc === undefined) delete process.env.RPC_URL;
+        else process.env.RPC_URL = prevRpc;
+      }
     });
 
     it('should fail closed for completed status when txHash cannot be verified on-chain', async () => {
