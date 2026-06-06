@@ -5,7 +5,9 @@ import { withRateLimit } from '@/lib/auth/rateLimit';
 import { CONTRACT_ADDRESSES, ZERO_ADDRESS, isConfiguredContractAddress } from '@/lib/contracts';
 import { logger } from '@/lib/logger';
 
-const VFIDE_TOKEN_ADDRESS = CONTRACT_ADDRESSES.VFIDEToken;
+function getVfideTokenAddress() {
+  return CONTRACT_ADDRESSES.VFIDEToken;
+}
 
 function getConfiguredChain() {
   const chainId = Number.parseInt(process.env.NEXT_PUBLIC_CHAIN_ID || '', 10);
@@ -68,6 +70,33 @@ const POOL_ABI = [
 
 const DEFAULT_ETH_PRICE_USD = 2000;
 
+
+function buildFallbackPriceResponse(reason: string) {
+  logger.warn(`[Price API] Using fallback price: ${reason}`);
+  return NextResponse.json({
+    success: true,
+    prices: {
+      vfide: {
+        usd: 0.10,
+        eth: 0.00005,
+      },
+      eth: {
+        usd: DEFAULT_ETH_PRICE_USD,
+      },
+    },
+    market: {
+      marketCap: 20_000_000,
+      circulatingMarketCap: 3_500_000,
+      totalSupply: 200_000_000,
+      circulatingSupply: 35_000_000,
+    },
+    timestamp: Date.now(),
+    source: 'fallback',
+    degraded: true,
+    reason,
+  });
+}
+
 function parseRefreshParam(refreshParam: string | null): boolean | null {
   if (refreshParam === null) return false;
   const normalized = refreshParam.trim().toLowerCase();
@@ -80,7 +109,8 @@ function parseRefreshParam(refreshParam: string | null): boolean | null {
  * Calculate price from Uniswap V3 sqrtPriceX96
  */
 function calculatePrice(sqrtPriceX96: bigint, token0: string, decimals0: number, decimals1: number): number {
-  if (!isConfiguredContractAddress(VFIDE_TOKEN_ADDRESS)) {
+  const vfideTokenAddress = getVfideTokenAddress();
+  if (!isConfiguredContractAddress(vfideTokenAddress)) {
     throw new Error('VFIDE token address not configured');
   }
 
@@ -97,7 +127,7 @@ function calculatePrice(sqrtPriceX96: bigint, token0: string, decimals0: number,
   let adjustedPrice = price * decimalAdjustment;
   
   // If VFIDE is token0, we get VFIDE per WETH, need to invert
-  if (token0.toLowerCase() === VFIDE_TOKEN_ADDRESS.toLowerCase()) {
+  if (token0.toLowerCase() === vfideTokenAddress.toLowerCase()) {
     adjustedPrice = 1 / adjustedPrice;
   }
 
@@ -120,10 +150,10 @@ export async function GET(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'read');
   if (rateLimitResponse) return rateLimitResponse;
 
-  if (!isConfiguredContractAddress(VFIDE_TOKEN_ADDRESS)) {
-    return NextResponse.json({ error: 'VFIDEToken contract not configured' }, { status: 500 });
+  if (!isConfiguredContractAddress(getVfideTokenAddress())) {
+    return buildFallbackPriceResponse('VFIDEToken contract not configured');
   }
-  
+
   try {
     const { searchParams } = new URL(request.url);
     const parsedRefresh = parseRefreshParam(searchParams.get('refresh'));
@@ -262,26 +292,6 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     logger.error('[Price API] Error:', error);
     
-    // Fallback to base prices
-    return NextResponse.json({
-      success: true,
-      prices: {
-        vfide: {
-          usd: 0.10,
-          eth: 0.00005,
-        },
-        eth: {
-          usd: 2000,
-        },
-      },
-      market: {
-        marketCap: 20_000_000,
-        circulatingMarketCap: 3_500_000,
-        totalSupply: 200_000_000,
-        circulatingSupply: 35_000_000,
-      },
-      timestamp: Date.now(),
-      source: 'fallback',
-    });
+    return buildFallbackPriceResponse('price provider unavailable');
   }
 }

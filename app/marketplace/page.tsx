@@ -21,15 +21,41 @@ export default function MarketplacePage() {
   const [showFilters, setShowFilters] = useState(false);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [degraded, setDegraded] = useState(false);
   const [filters, setFilters] = useState({ category: '', minPrice: '', maxPrice: '', sort: 'relevance' });
   const [wishlist, setWishlist] = useState<Set<string>>(new Set());
 
   useEffect(() => {
+    const controller = new AbortController();
     setLoading(true);
-    fetch(`/api/merchant/products?q=${query}&status=active`)
-      .then(r => r.ok ? r.json() : { products: [] })
-      .then(d => { setProducts(d.products || []); setLoading(false); })
-      .catch(() => setLoading(false));
+    setLoadError(null);
+    setDegraded(false);
+
+    const params = new URLSearchParams();
+    if (query.trim()) params.set('q', query.trim());
+    params.set('status', 'active');
+
+    fetch(`/api/merchant/products?${params.toString()}`, { signal: controller.signal })
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) {
+          throw new Error(typeof data?.error === 'string' ? data.error : `Products request failed (${r.status})`);
+        }
+        return data;
+      })
+      .then((d) => {
+        setProducts(Array.isArray(d.products) ? d.products : []);
+        setDegraded(Boolean(d.degraded));
+      })
+      .catch((error) => {
+        if (error?.name === 'AbortError') return;
+        setProducts([]);
+        setLoadError(error instanceof Error ? error.message : 'Unable to load products');
+      })
+      .finally(() => setLoading(false));
+
+    return () => controller.abort();
   }, [query]);
 
   const toggleWishlist = (id: string) => {
@@ -99,6 +125,18 @@ export default function MarketplacePage() {
           {/* Results */}
           {loading ? (
             <div className="text-center py-16"><Loader2 size={32} className="text-cyan-400 animate-spin mx-auto" /></div>
+          ) : loadError ? (
+            <div className="text-center py-16">
+              <Package size={48} className="mx-auto mb-4 text-gray-600" />
+              <p className="text-gray-300 font-semibold">Marketplace temporarily unavailable</p>
+              <p className="text-gray-500 text-sm mt-2">{loadError}</p>
+            </div>
+          ) : degraded ? (
+            <div className="text-center py-16">
+              <Package size={48} className="mx-auto mb-4 text-gray-600" />
+              <p className="text-gray-300 font-semibold">Marketplace catalog unavailable in this environment</p>
+              <p className="text-gray-500 text-sm mt-2">Connect the database to browse live products.</p>
+            </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-16"><Package size={48} className="mx-auto mb-4 text-gray-600" /><p className="text-gray-400">No products found</p></div>
           ) : (

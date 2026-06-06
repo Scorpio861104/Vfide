@@ -1,6 +1,5 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
 
 // TYPE-2: Explicit React type import for React.ElementType usage in MAIN_TABS definition
 import type React from 'react';
@@ -36,7 +35,7 @@ import {
   Sparkles,
   Users,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAccount } from 'wagmi';
 import { Footer } from '@/components/layout/Footer';
@@ -99,19 +98,17 @@ const ANALYTICS_TABS: { id: AnalyticsTab; label: string }[] = [
 // UX-1: Valid tab IDs for type-safe URL parsing
 const VALID_MAIN_TABS = new Set<MainTab>(['feed', 'messages', 'pay', 'analytics']);
 
-export default function SocialHubPage() {
+function useInitialMainTab(tabParam: MainTab | null): MainTab {
+  return tabParam && VALID_MAIN_TABS.has(tabParam) ? tabParam : 'feed';
+}
+
+function SocialHubContent({ initialTab }: { initialTab: MainTab }) {
   const { locale } = useLocale();
   void locale;
 
   const { isConnected, address } = useAccount();
-  // UX-1: Read initial tab from URL search params so ?tab= links work correctly
-  // and browser Back/Forward preserves the active tab context
-  const searchParams = useSearchParams();
-  const tabParam = searchParams.get('tab') as MainTab | null;
 
-  const [mainTab, setMainTab]           = useState<MainTab>(
-    tabParam && VALID_MAIN_TABS.has(tabParam) ? tabParam : 'feed'
-  );
+  const [mainTab, setMainTab]           = useState<MainTab>(initialTab);
   const [feedFilter, setFeedFilter]     = useState<FeedFilter>('all');
   const [msgTab, setMsgTab]             = useState<MsgTab>('messages');
   const [analyticsTab, setAnalyticsTab] = useState<AnalyticsTab>('overview');
@@ -348,5 +345,20 @@ export default function SocialHubPage() {
       </div>
       <Footer />
     </div>
+  );
+}
+
+
+function SocialHubSearchParamsBoundary() {
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab') as MainTab | null;
+  return <SocialHubContent initialTab={useInitialMainTab(tabParam)} />;
+}
+
+export default function SocialHubPage() {
+  return (
+    <Suspense fallback={<SocialHubContent initialTab="feed" />}>
+      <SocialHubSearchParamsBoundary />
+    </Suspense>
   );
 }
