@@ -85,20 +85,25 @@ export function ClientLayout({ children }: ClientLayoutProps) {
   useRouteAnnouncement(pathname);
 
   return (
-    <LazyMotion features={domAnimation} strict>
-    <RealtimeProvider wsUrl={process.env.NEXT_PUBLIC_WEBSOCKET_URL}>
-      <UserProvider address={address}>
-        <LiveProofScoreProvider>
-          <WizardStateProvider>
-            <MonumentOverrideProvider>
-              <GlobalMonument pathname={pathname} />
-              <AppShell>{children}</AppShell>
-              <Suspense fallback={null}><WizardMount /></Suspense>
-            </MonumentOverrideProvider>
-          </WizardStateProvider>
-        </LiveProofScoreProvider>
-      </UserProvider>
-    </RealtimeProvider>
+    // Do not enable LazyMotion strict mode here. Several app-shell and route
+    // components still import `motion` directly, and strict mode turns those
+    // legacy imports into runtime exceptions that push pages into the global
+    // error boundary before interactive controls (including wallet connect)
+    // can respond.
+    <LazyMotion features={domAnimation}>
+      <RealtimeProvider wsUrl={process.env.NEXT_PUBLIC_WEBSOCKET_URL}>
+        <UserProvider address={address}>
+          <LiveProofScoreProvider>
+            <WizardStateProvider>
+              <MonumentOverrideProvider>
+                <GlobalMonument pathname={pathname} />
+                <AppShell>{children}</AppShell>
+                <Suspense fallback={null}><WizardMount /></Suspense>
+              </MonumentOverrideProvider>
+            </WizardStateProvider>
+          </LiveProofScoreProvider>
+        </UserProvider>
+      </RealtimeProvider>
     </LazyMotion>
   );
 }

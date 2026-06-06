@@ -41,6 +41,26 @@ describe('proxy connect-src restrictions', () => {
     expect(connectSrc).toContain('wss://*.walletconnect.org');
   });
 
+  it('includes configured public RPC origins required by wallet transports', () => {
+    const request = new NextRequest('http://localhost:3000/dashboard', {
+      method: 'GET',
+    });
+
+    const response = proxy(request);
+    const csp = response.headers.get('Content-Security-Policy');
+
+    expect(csp).toBeTruthy();
+
+    const connectSrc = getDirective(csp as string, 'connect-src');
+
+    expect(connectSrc).toContain('https://sepolia.base.org');
+    expect(connectSrc).toContain('https://rpc-amoy.polygon.technology');
+    expect(connectSrc).toContain('https://sepolia.era.zksync.dev');
+    expect(connectSrc).toContain('wss://sepolia.era.zksync.dev');
+    expect(connectSrc).toContain('https://mainnet.base.org');
+    expect(connectSrc).not.toContain('blockpi.network');
+  });
+
   it('includes configured runtime origins in connect-src allowlist', () => {
     process.env.NEXT_PUBLIC_RPC_URL = 'https://sepolia.base.org';
     process.env.NEXT_PUBLIC_WEBSOCKET_URL = 'wss://ws.vfide.io/socket';
