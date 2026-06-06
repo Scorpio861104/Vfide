@@ -84,7 +84,7 @@ export default function Home() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 relative overflow-hidden">
+      <div className="ui-page-shell min-h-screen relative overflow-hidden">
 
         {/* ════════════════════════════════════════
             HERO SECTION — Cinematic
@@ -104,7 +104,7 @@ export default function Home() {
 
           <motion.div
             style={{ y: heroY, opacity: heroOpacity }}
-            className="container mx-auto px-4 max-w-6xl relative"
+            className="ui-container-breathing relative"
           >
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
               {/* Text column */}
@@ -136,7 +136,7 @@ export default function Home() {
                 </p>
 
                 {/* CTA buttons */}
-                <div className="flex flex-wrap gap-3 mb-8">
+                <div className="flex flex-col gap-3 mb-8 sm:flex-row sm:flex-wrap">
                   <Link
                     href="/merchant/setup"
                     className="btn-premium btn-premium-primary text-sm"
@@ -175,7 +175,7 @@ export default function Home() {
                 transition={{ duration: 0.8, delay: 0.25 }}
                 className="lg:col-span-7"
               >
-                <div className="glass-card-premium p-1">
+                <div className="glass-card-premium ui-card-sheen p-1">
                   <LiveProofScoreHero />
                 </div>
                 <p className="mt-3 text-center text-xs text-zinc-500">
@@ -192,7 +192,7 @@ export default function Home() {
         {/* ════════════════════════════════════════
             PROTOCOL METRICS MARQUEE
         ════════════════════════════════════════ */}
-        <section className="py-5 border-y border-white/5 bg-zinc-950/80 backdrop-blur-sm overflow-hidden">
+        <section className="ui-hairline-top py-5 border-y border-white/5 bg-zinc-950/80 backdrop-blur-sm overflow-hidden">
           <div className="marquee-wrapper">
             <div className="marquee-track">
               {[...protocolMetrics, ...protocolMetrics].map((m, i) => (
@@ -220,7 +220,7 @@ export default function Home() {
         ════════════════════════════════════════ */}
         <section className="relative isolate py-20 sm:py-28 overflow-hidden">
           <MonumentBackdrop variant="full" />
-          <div className="container mx-auto px-4 max-w-6xl relative">
+          <div className="ui-container-breathing relative">
             <FeeFlowRiver />
           </div>
         </section>
@@ -279,7 +279,7 @@ export default function Home() {
             <div className="mesh-orb-cyan" style={{ width: '50%', height: '50%', top: '10%', right: '-10%' }} />
           </div>
 
-          <div className="container mx-auto px-4 max-w-6xl relative">
+          <div className="ui-container-breathing relative">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
