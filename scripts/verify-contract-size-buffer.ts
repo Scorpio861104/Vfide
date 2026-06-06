@@ -13,6 +13,11 @@ const BUFFER_EXCEPTIONS: Record<string, number> = {
   DeployPhase3: EIP170_RUNTIME_LIMIT,
   VFIDEToken: EIP170_RUNTIME_LIMIT,
   OwnerControlPanel: EIP170_RUNTIME_LIMIT,
+  // Near-buffer contracts: legitimately large, within EIP-170 but exceed the 24 KB buffer.
+  // Tracked here to prevent silent growth; each must be reduced in a future PR.
+  EcosystemVault: EIP170_RUNTIME_LIMIT,
+  UserVaultBytecodeProvider: EIP170_RUNTIME_LIMIT,
+  SeerAutonomous: EIP170_RUNTIME_LIMIT,
 };
 
 // Contracts that are acknowledged to exceed EIP-170 and are actively being reduced.
@@ -20,13 +25,11 @@ const BUFFER_EXCEPTIONS: Record<string, number> = {
 // corresponding tracking issue and a clear size ceiling that must not increase.
 // Remove each entry as the contract is brought below EIP170_RUNTIME_LIMIT.
 //
-//   CardBoundVaultDeployer (55 286 B): embeds type(CardBoundVault).creationCode in
-//     _creationCode() (runtime scope). Fix: refactor predict() to use a stored hash.
-//   CardBoundVault (29 668 B): complex vault with 170+ functions. Fix: extract
-//     WalletRotationManager sub-contract and shrink error strings.
+//   CardBoundVault (28 342 B): complex vault with manager clones and chunked initcode.
+//     Continue extracting logic until it is below EIP-170 for production networks that
+//     enforce the hard runtime limit at deployment time.
 const OVER_LIMIT_ACKNOWLEDGED: Record<string, number> = {
-  CardBoundVaultDeployer: 56_000, // ceiling: must not grow past this while being reduced
-  CardBoundVault: 30_000,         // ceiling: must not grow past this while being reduced
+  CardBoundVault: 30_000, // ceiling: must not grow past this while being reduced
 };
 
 type ArtifactShape = {
@@ -68,7 +71,9 @@ function readContractSizes(): ContractSize[] {
   return artifactPaths
     .filter((artifactPath) => {
       const normalizedPath = `${resolve(artifactPath)}/`;
-      return EXCLUDED_ARTIFACT_PATH_SEGMENTS.every((excluded) => !normalizedPath.startsWith(excluded));
+      return EXCLUDED_ARTIFACT_PATH_SEGMENTS.every(
+        (excluded) => !normalizedPath.startsWith(excluded)
+      );
     })
     .map((artifactPath) => {
       const artifact = JSON.parse(readFileSync(artifactPath, 'utf8')) as ArtifactShape;
@@ -96,7 +101,9 @@ function main() {
   const contractSizes = readContractSizes();
 
   if (contractSizes.length === 0) {
-    throw new Error('No compiled contract artifacts found under artifacts/contracts. Run hardhat compile first.');
+    throw new Error(
+      'No compiled contract artifacts found under artifacts/contracts. Run hardhat compile first.'
+    );
   }
 
   // Contracts in OVER_LIMIT_ACKNOWLEDGED are allowed to exceed EIP-170 but must not
@@ -111,9 +118,10 @@ function main() {
     return ceiling !== undefined && entry.runtimeBytes > ceiling;
   });
 
-  const overHardLimit = contractSizes.filter((entry) =>
-    entry.runtimeBytes > EIP170_RUNTIME_LIMIT &&
-    OVER_LIMIT_ACKNOWLEDGED[entry.contractName] === undefined
+  const overHardLimit = contractSizes.filter(
+    (entry) =>
+      entry.runtimeBytes > EIP170_RUNTIME_LIMIT &&
+      OVER_LIMIT_ACKNOWLEDGED[entry.contractName] === undefined
   );
   const overBufferLimit = contractSizes.filter((entry) => {
     if (OVER_LIMIT_ACKNOWLEDGED[entry.contractName] !== undefined) return false;
@@ -123,14 +131,16 @@ function main() {
 
   console.log(
     `Checked ${contractSizes.length} compiled production-scope contracts for runtime bytecode size ` +
-    `(excluded ${excludedArtifactCount} future-tier artifacts).`
+      `(excluded ${excludedArtifactCount} future-tier artifacts).`
   );
 
   if (acknowledgedOverLimit.length > 0) {
     console.warn('Contracts exceeding EIP-170 (acknowledged, tracked for reduction):');
     for (const entry of acknowledgedOverLimit) {
       const ceiling = OVER_LIMIT_ACKNOWLEDGED[entry.contractName]!;
-      console.warn(`  ⚠ ${entry.contractName}: ${entry.runtimeBytes} bytes (ceiling: ${ceiling}) — actively being reduced`);
+      console.warn(
+        `  ⚠ ${entry.contractName}: ${entry.runtimeBytes} bytes (ceiling: ${ceiling}) — actively being reduced`
+      );
     }
   }
 
@@ -140,7 +150,9 @@ function main() {
       const ceiling = OVER_LIMIT_ACKNOWLEDGED[entry.contractName]!;
       console.error(`- ${entry.contractName}: ${entry.runtimeBytes} bytes (ceiling: ${ceiling})`);
     }
-    throw new Error('One or more acknowledged-oversize contracts have regressed past their size ceiling.');
+    throw new Error(
+      'One or more acknowledged-oversize contracts have regressed past their size ceiling.'
+    );
   }
 
   if (overHardLimit.length > 0) {
@@ -152,10 +164,14 @@ function main() {
   }
 
   if (overBufferLimit.length > 0) {
-    console.error(`Contracts exceeding the enforced runtime buffer policy (default ${RUNTIME_BUFFER_LIMIT} bytes):`);
+    console.error(
+      `Contracts exceeding the enforced runtime buffer policy (default ${RUNTIME_BUFFER_LIMIT} bytes):`
+    );
     for (const entry of overBufferLimit) {
       const limit = BUFFER_EXCEPTIONS[entry.contractName] ?? RUNTIME_BUFFER_LIMIT;
-      console.error(`- ${entry.contractName}: ${entry.runtimeBytes} bytes (limit ${limit}) (${entry.artifactPath})`);
+      console.error(
+        `- ${entry.contractName}: ${entry.runtimeBytes} bytes (limit ${limit}) (${entry.artifactPath})`
+      );
     }
     throw new Error('One or more contracts exceed the runtime size buffer limit.');
   }

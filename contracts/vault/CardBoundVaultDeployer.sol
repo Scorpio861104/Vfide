@@ -1,21 +1,57 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import {CardBoundVault} from "./CardBoundVault.sol";
+import {CardBoundVaultInitCodeStore} from "./CardBoundVaultInitCodeStore.sol";
 
 /// @notice CardBoundVaultDeployer
 /// @title CardBoundVaultDeployer
 /// @author Vfide
 contract CardBoundVaultDeployer {
     /// @notice vaultHub
-    address public immutable vaultHub;
+    address public vaultHub;
+
+    /// @notice deployerAdmin — one-time authority that binds this helper to its VaultHub.
+    address public immutable deployerAdmin;
+
+    /// @notice initCodeStore — holds the CardBoundVault creation bytecode externally
+    ///         so it is NOT inlined into this contract's runtime bytecode.
+    ///         Without this indirection + low-level CREATE2 the Deployer was 55 KB
+    ///         (over EIP-170's 24 KB) because Solidity embeds
+    ///         `type(CardBoundVault).creationCode` at every reference site.
+    address public immutable initCodeStore;
 
     /// @notice CBD_OnlyHub
     error CBD_OnlyHub();
+    /// @notice CBD_OnlyAdmin
+    error CBD_OnlyAdmin();
+    /// @notice CBD_AlreadyBound
+    error CBD_AlreadyBound();
+    /// @notice CBD_Zero
+    error CBD_Zero();
+    /// @notice CBD_DeployFailed
+    error CBD_DeployFailed();
+
+    /// @notice VaultHubBound
+    /// @param hub hub
+    event VaultHubBound(address indexed hub);
 
     /// @notice constructor
-    constructor() {
-        vaultHub = msg.sender;
+    /// @param _initCodeStore The CardBoundVaultInitCodeStore contract that holds the
+    ///        full CardBoundVault creation bytecode.
+    constructor(address _initCodeStore) {
+        if (_initCodeStore == address(0)) revert CBD_Zero();
+        deployerAdmin = msg.sender;
+        initCodeStore = _initCodeStore;
+    }
+
+    /// @notice bindVaultHub — one-time binding to the VaultHub that may call deploy().
+    /// @param hub The deployed VaultHub address.
+    function bindVaultHub(address hub) external {
+        if (msg.sender != deployerAdmin) revert CBD_OnlyAdmin();
+        if (hub == address(0)) revert CBD_Zero();
+        if (vaultHub != address(0)) revert CBD_AlreadyBound();
+        vaultHub = hub;
+        emit VaultHubBound(hub);
     }
 
     /// @notice predict
@@ -67,7 +103,10 @@ contract CardBoundVaultDeployer {
         predicted = address(uint160(uint256(keccak256(abi.encodePacked(bytes1(0xff), address(this), salt, codeHash)))));
     }
 
-    /// @notice deploy
+    /// @notice deploy — creates a new CardBoundVault via low-level CREATE2.
+    ///         Uses assembly CREATE2 instead of `new CardBoundVault{salt:...}(...)`
+    ///         to avoid embedding ~54KB of CardBoundVault creation code in this
+    ///         contract's runtime bytecode (which was the cause of the EIP-170 violation).
     /// @param hub hub
     /// @param vfideToken vfideToken
     /// @param owner_ owner_
@@ -79,25 +118,20 @@ contract CardBoundVaultDeployer {
     function deploy(address hub, address vfideToken, address owner_, uint8 guardianThreshold, uint256 maxPerTransfer, uint256 dailyLimit, address ledger) external returns (address vault) {
         if (msg.sender != vaultHub) revert CBD_OnlyHub();
 
-        address[] memory guardians = new address[](1);
-        guardians[0] = owner_;
+        bytes memory initCode = _creationCode(hub, vfideToken, owner_, guardianThreshold, maxPerTransfer, dailyLimit, ledger);
+        bytes32 salt = _salt(owner_, hub, vfideToken, maxPerTransfer, dailyLimit, ledger);
 
-        vault = address(
-            new CardBoundVault{salt: _salt(owner_, hub, vfideToken, maxPerTransfer, dailyLimit, ledger)}(
-                hub,
-                vfideToken,
-                owner_,
-                owner_,
-                guardians,
-                guardianThreshold,
-                maxPerTransfer,
-                dailyLimit,
-                ledger
-            )
-        );
+        assembly {
+            vault := create2(0, add(initCode, 0x20), mload(initCode), salt)
+        }
+
+        if (vault == address(0)) revert CBD_DeployFailed();
     }
 
-    /// @notice _creationCode
+    /// @notice _creationCode — returns the full initcode (creation code + constructor args)
+    ///         by fetching the creation bytecode from the InitCodeStore contract.
+    ///         This avoids embedding ~54 KB of CardBoundVault creation code in this
+    ///         contract's own runtime bytecode, which was the cause of the EIP-170 violation.
     /// @param hub hub
     /// @param vfideToken vfideToken
     /// @param owner_ owner_
@@ -106,11 +140,11 @@ contract CardBoundVaultDeployer {
     /// @param dailyLimit dailyLimit
     /// @param ledger ledger
     /// @return _bytes _bytes
-    function _creationCode(address hub, address vfideToken, address owner_, uint8 guardianThreshold, uint256 maxPerTransfer, uint256 dailyLimit, address ledger) internal pure returns (bytes memory) {
+    function _creationCode(address hub, address vfideToken, address owner_, uint8 guardianThreshold, uint256 maxPerTransfer, uint256 dailyLimit, address ledger) internal view returns (bytes memory) {
         address[] memory guardians = new address[](1);
         guardians[0] = owner_;
 
-        return abi.encodePacked(type(CardBoundVault).creationCode, abi.encode(hub, vfideToken, owner_, owner_, guardians, guardianThreshold, maxPerTransfer, dailyLimit, ledger));
+        return abi.encodePacked(CardBoundVaultInitCodeStore(initCodeStore).getCreationCode(), abi.encode(hub, vfideToken, owner_, owner_, guardians, guardianThreshold, maxPerTransfer, dailyLimit, ledger));
     }
 
     /// @notice _salt

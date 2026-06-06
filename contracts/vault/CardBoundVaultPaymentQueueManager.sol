@@ -29,7 +29,7 @@ contract CardBoundVaultPaymentQueueManager {
     }
 
     /// @notice vault
-    address public immutable vault;
+    address public vault;
     /// @notice largePaymentThreshold
     uint256 public largePaymentThreshold;
     /// @notice activeQueuedPayments
@@ -68,7 +68,16 @@ contract CardBoundVaultPaymentQueueManager {
     /// @param vault_ vault_
     /// @param initialThreshold initialThreshold
     constructor(address vault_, uint256 initialThreshold) {
+        vault = vault_;
+        largePaymentThreshold = initialThreshold;
+    }
+
+    /// @notice initialize — one-time initializer for EIP-1167 clones.
+    /// @param vault_ vault_
+    /// @param initialThreshold initialThreshold
+    function initialize(address vault_, uint256 initialThreshold) external {
         require(vault_ != address(0), "CBV-PQM: zero vault");
+        require(vault == address(0), "CBV-PQM: initialized");
         vault = vault_;
         largePaymentThreshold = initialThreshold;
     }

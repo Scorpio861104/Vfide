@@ -59,7 +59,7 @@ contract CardBoundVaultInheritanceManager {
     uint8 public constant STATE_CLOSED = 4;
 
     /// @notice vault
-    address public immutable vault;
+    address public vault;
 
     /// @notice heirGuardianByIndex
     mapping(uint256 => address) public heirGuardianByIndex;
@@ -272,7 +272,17 @@ contract CardBoundVaultInheritanceManager {
     /// @notice constructor
     /// @param vault_ vault_
     constructor(address vault_) {
+        vault = vault_;
+        if (vault_ != address(0)) {
+            inheritanceStateValue = STATE_NORMAL;
+        }
+    }
+
+    /// @notice initialize — one-time initializer for EIP-1167 clones.
+    /// @param vault_ vault_
+    function initialize(address vault_) external {
         require(vault_ != address(0), "CBV-IM: zero vault");
+        require(vault == address(0), "CBV-IM: initialized");
         vault = vault_;
         inheritanceStateValue = STATE_NORMAL;
     }

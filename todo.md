@@ -1,34 +1,28 @@
-# CI Fix Todo - All Pre-existing Failures
+# Vfide Production Readiness Push
 
-## Completed
-- [x] ESLint / TypeScript
-- [x] Prettier
+## 1. Baseline & Branch Hygiene
+- [x] Confirm repository branch, working tree, remotes, and GitHub auth state
+- [x] Create/confirm a dedicated readiness branch for changes
+- [x] Inventory current uncommitted changes and generated artifacts
 
-## Remaining Failures - Action Plan
+## 2. Deployment Safety Fixes
+- [x] Add a stale-chunk guard for CardBoundVault initcode chunks
+- [x] Wire the stale-chunk guard into package scripts or deployment verification
+- [x] Review deployment scripts/docs for consistency with chunked initcode and clone managers
 
-### H. Trivy container scan (QUICK FIX)
-- [ ] Add `output: 'standalone'` to next.config.ts so Docker build succeeds
+## 3. Contract Verification Gates
+- [x] Compile contracts and check initcode chunks
+- [x] Run runtime/initcode size gates
+- [x] Run targeted CardBoundVault, VaultHub, and merchant-pay tests/verifiers
+- [x] Run feasible contract security/static checks and document blockers
 
-### B. Duplicate artifacts HHE1001 (QUICK FIX)
-- [ ] Rename BadgeQualificationRules in contracts/future/ to avoid duplicate artifact names
-- [ ] VFIDEBridge is identical in contracts/ and contracts/future/ - remove one
+## 4. Frontend Verification Gates
+- [x] Run frontend TypeScript and route/ABI alignment checks
+- [x] Run frontend lint/format checks where feasible
+- [x] Run production env/build validation or document missing-secret blockers
+- [x] Run high-signal frontend tests for critical routes/components
 
-### A. Contract Size (CardBoundVaultDeployer + CardBoundVault + MerchantPortal)
-- [ ] The deployer embeds full CardBoundVault creation bytecode - refactor to bytecode provider pattern
-- [ ] Create ICardBoundVaultBytecodeProvider interface + separate CardBoundVaultBytecodeProvider contract
-- [ ] Update CardBoundVaultDeployer to use external bytecode provider
-- [ ] Update VaultHub to deploy bytecode provider separately
-- [ ] Verify MerchantPortal is under 24576 bytes (needs size check)
-
-### D. Slither zero-findings (testing-pipeline.yml)
-- [ ] slither.config.json missing `output` key — causes KeyError: 'output'
-- [ ] Fix slither args to work correctly
-
-### E. Governance Safety verifiers
-- [ ] VaultHub CardBound integration - gas cap exceeded → fixed by reducing deployer size (A)
-- [ ] Seer watcher - REQUIRE_SEER_RUNTIME_REASON_CODES=true causes failure when Seer too large
-  - [ ] Fix: update script to not require runtime checks or ensure contract fits
-
-### C. Contracts Unit + Integration (depends on A+B)
-- [ ] HHE1001 fixes (same as B)
-- [ ] Contract size fixes (same as A)
+## 5. Delivery
+- [ ] Produce deployment readiness report with pass/fail evidence and remaining risks
+- [ ] Commit changes to a dedicated branch
+- [ ] Push branch and open a PR if GitHub auth permits

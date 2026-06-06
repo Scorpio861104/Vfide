@@ -151,11 +151,6 @@
     "type": "error"
   },
   {
-    "inputs": [],
-    "name": "MERCH_Zero",
-    "type": "error"
-  },
-  {
     "anonymous": false,
     "inputs": [
       {
@@ -1182,6 +1177,19 @@
     "name": "completeRefundFromVault",
     "outputs": [],
     "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "configManager",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -2318,7 +2326,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "merchant",
+        "name": "",
         "type": "address"
       }
     ],
@@ -2351,12 +2359,12 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "token",
+        "name": "",
         "type": "address"
       },
       {
         "internalType": "bool",
-        "name": "accepted",
+        "name": "",
         "type": "bool"
       }
     ],
@@ -2382,7 +2390,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_dao",
+        "name": "",
         "type": "address"
       }
     ],
@@ -2408,7 +2416,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_sink",
+        "name": "",
         "type": "address"
       }
     ],
@@ -2421,7 +2429,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_fr",
+        "name": "",
         "type": "address"
       }
     ],
@@ -2503,7 +2511,7 @@
     "inputs": [
       {
         "internalType": "uint16",
-        "name": "_minScore",
+        "name": "",
         "type": "uint16"
       }
     ],
@@ -2516,7 +2524,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_minBps",
+        "name": "",
         "type": "uint256"
       }
     ],
@@ -2529,17 +2537,17 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_vaultHub",
+        "name": "",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "_seer",
+        "name": "",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "_ledger",
+        "name": "",
         "type": "address"
       }
     ],
@@ -2565,7 +2573,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_feeBps",
+        "name": "",
         "type": "uint256"
       }
     ],
@@ -2578,7 +2586,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_skm",
+        "name": "",
         "type": "address"
       }
     ],
@@ -2591,12 +2599,12 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_router",
+        "name": "",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "_stable",
+        "name": "",
         "type": "address"
       }
     ],
@@ -2609,12 +2617,12 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "token",
+        "name": "",
         "type": "address"
       },
       {
         "internalType": "address[]",
-        "name": "path",
+        "name": "",
         "type": "address[]"
       }
     ],
@@ -2640,12 +2648,12 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "merchant",
+        "name": "",
         "type": "address"
       },
       {
         "internalType": "string",
-        "name": "reason",
+        "name": "",
         "type": "string"
       }
     ],

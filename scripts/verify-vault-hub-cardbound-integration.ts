@@ -35,22 +35,139 @@ async function main() {
     'artifacts/contracts/mocks/CardBoundVaultVerifierMocks.sol/MockVFIDEForCardBound.json'
   );
   const hubArtifact = loadArtifact('artifacts/contracts/VaultHub.sol/VaultHub.json');
-  const vaultArtifact = loadArtifact('artifacts/contracts/vault/CardBoundVault.sol/CardBoundVault.json');
+  const vaultArtifact = loadArtifact(
+    'artifacts/contracts/vault/CardBoundVault.sol/CardBoundVault.json'
+  );
+  const initCodeChunkArtifacts = [0, 1, 2, 3].map((idx) =>
+    loadArtifact(
+      `artifacts/contracts/vault/CardBoundVaultInitCodeChunk${idx}.sol/CardBoundVaultInitCodeChunk${idx}.json`
+    )
+  );
+  const initCodeStoreArtifact = loadArtifact(
+    'artifacts/contracts/vault/CardBoundVaultInitCodeStore.sol/CardBoundVaultInitCodeStore.json'
+  );
+  const vaultDeployerArtifact = loadArtifact(
+    'artifacts/contracts/vault/CardBoundVaultDeployer.sol/CardBoundVaultDeployer.json'
+  );
+  const intentValidatorArtifact = loadArtifact(
+    'artifacts/contracts/vault/CardBoundVaultIntentValidator.sol/CardBoundVaultIntentValidator.json'
+  );
+  const paymentQueueManagerArtifact = loadArtifact(
+    'artifacts/contracts/vault/CardBoundVaultPaymentQueueManager.sol/CardBoundVaultPaymentQueueManager.json'
+  );
+  const withdrawalQueueManagerArtifact = loadArtifact(
+    'artifacts/contracts/vault/CardBoundVaultWithdrawalQueueManager.sol/CardBoundVaultWithdrawalQueueManager.json'
+  );
+  const inheritanceManagerArtifact = loadArtifact(
+    'artifacts/contracts/vault/CardBoundVaultInheritanceManager.sol/CardBoundVaultInheritanceManager.json'
+  );
+  const adminManagerArtifact = loadArtifact(
+    'artifacts/contracts/vault/CardBoundVaultAdminManager.sol/CardBoundVaultAdminManager.json'
+  );
 
-  const tokenFactory = new ContractFactory(tokenArtifact.abi as any, tokenArtifact.bytecode, deployer);
+  const tokenFactory = new ContractFactory(
+    tokenArtifact.abi as any,
+    tokenArtifact.bytecode,
+    deployer
+  );
   const hubFactory = new ContractFactory(hubArtifact.abi as any, hubArtifact.bytecode, deployer);
+  const initCodeChunkFactories = initCodeChunkArtifacts.map(
+    (artifact) => new ContractFactory(artifact.abi as any, artifact.bytecode, deployer)
+  );
+  const initCodeStoreFactory = new ContractFactory(
+    initCodeStoreArtifact.abi as any,
+    initCodeStoreArtifact.bytecode,
+    deployer
+  );
+  const vaultDeployerFactory = new ContractFactory(
+    vaultDeployerArtifact.abi as any,
+    vaultDeployerArtifact.bytecode,
+    deployer
+  );
+  const intentValidatorFactory = new ContractFactory(
+    intentValidatorArtifact.abi as any,
+    intentValidatorArtifact.bytecode,
+    deployer
+  );
+  const paymentQueueManagerFactory = new ContractFactory(
+    paymentQueueManagerArtifact.abi as any,
+    paymentQueueManagerArtifact.bytecode,
+    deployer
+  );
+  const withdrawalQueueManagerFactory = new ContractFactory(
+    withdrawalQueueManagerArtifact.abi as any,
+    withdrawalQueueManagerArtifact.bytecode,
+    deployer
+  );
+  const inheritanceManagerFactory = new ContractFactory(
+    inheritanceManagerArtifact.abi as any,
+    inheritanceManagerArtifact.bytecode,
+    deployer
+  );
+  const adminManagerFactory = new ContractFactory(
+    adminManagerArtifact.abi as any,
+    adminManagerArtifact.bytecode,
+    deployer
+  );
 
   currentStep = 'deploy-token';
   const token = (await tokenFactory.deploy()) as any;
   await token.waitForDeployment();
 
+  currentStep = 'deploy-vault-dependency-graph';
+  const initCodeChunks = [];
+  for (const factory of initCodeChunkFactories) {
+    const chunk = (await factory.deploy()) as any;
+    await chunk.waitForDeployment();
+    initCodeChunks.push(chunk);
+  }
+  const initCodeStore = (await initCodeStoreFactory.deploy(
+    await initCodeChunks[0].getAddress(),
+    await initCodeChunks[1].getAddress(),
+    await initCodeChunks[2].getAddress(),
+    await initCodeChunks[3].getAddress()
+  )) as any;
+  await initCodeStore.waitForDeployment();
+  const vaultDeployer = (await vaultDeployerFactory.deploy(
+    await initCodeStore.getAddress()
+  )) as any;
+  await vaultDeployer.waitForDeployment();
+  const intentValidator = (await intentValidatorFactory.deploy()) as any;
+  await intentValidator.waitForDeployment();
+  const paymentQueueManagerImplementation = (await paymentQueueManagerFactory.deploy(
+    '0x0000000000000000000000000000000000000000',
+    0
+  )) as any;
+  await paymentQueueManagerImplementation.waitForDeployment();
+  const withdrawalQueueManagerImplementation = (await withdrawalQueueManagerFactory.deploy(
+    '0x0000000000000000000000000000000000000000'
+  )) as any;
+  await withdrawalQueueManagerImplementation.waitForDeployment();
+  const inheritanceManagerImplementation = (await inheritanceManagerFactory.deploy(
+    '0x0000000000000000000000000000000000000000'
+  )) as any;
+  await inheritanceManagerImplementation.waitForDeployment();
+  const adminManagerImplementation = (await adminManagerFactory.deploy(
+    '0x0000000000000000000000000000000000000000'
+  )) as any;
+  await adminManagerImplementation.waitForDeployment();
+
   currentStep = 'deploy-hub';
   const hub = (await hubFactory.deploy(
     await token.getAddress(),
     '0x0000000000000000000000000000000000000000',
-    await dao.getAddress()
+    await dao.getAddress(),
+    await vaultDeployer.getAddress(),
+    await intentValidator.getAddress(),
+    await paymentQueueManagerImplementation.getAddress(),
+    await withdrawalQueueManagerImplementation.getAddress(),
+    await inheritanceManagerImplementation.getAddress(),
+    await adminManagerImplementation.getAddress()
   )) as any;
   await hub.waitForDeployment();
+
+  currentStep = 'bind-vault-deployer';
+  await (await vaultDeployer.bindVaultHub(await hub.getAddress())).wait();
 
   currentStep = 'predict-and-create-vault-a';
   const ownerAAddr = await ownerA.getAddress();
@@ -79,9 +196,13 @@ async function main() {
   currentStep = 'validate-cardbound-vault';
   const vaultA = new Contract(vaultAAddr, vaultArtifact.abi as any, provider) as any;
   const vaultAAsOwner = vaultA.connect(ownerA) as any;
-  const name = await vaultA.NAME();
-  if (name !== 'CardBoundVault') {
-    throw new Error(`Expected CardBoundVault, got ${name}`);
+  const vaultHubAddress = await vaultA.hub();
+  if (vaultHubAddress !== (await hub.getAddress())) {
+    throw new Error(`Expected vault hub ${await hub.getAddress()}, got ${vaultHubAddress}`);
+  }
+  const activeWallet = await vaultA.activeWallet();
+  if (activeWallet !== ownerAAddr) {
+    throw new Error(`Expected active wallet ${ownerAAddr}, got ${activeWallet}`);
   }
 
   currentStep = 'mint-and-transfer';
@@ -161,14 +282,14 @@ async function main() {
   ];
   for (const name of forbiddenSelectors) {
     const present = hubArtifact.abi.some(
-      (entry: any) => entry?.type === 'function' && entry?.name === name,
+      (entry: any) => entry?.type === 'function' && entry?.name === name
     );
     if (present) {
       throw new Error(
         `Non-custody violation: VaultHub ABI exposes ${name}. ` +
-        'These selectors must remain absent — recovery is exclusively through ' +
-        'VaultRecoveryClaim (guardian flow). See PRODUCTION_SET.md and ' +
-        'AUDIT_CLOSURE_REPORT.md.',
+          'These selectors must remain absent — recovery is exclusively through ' +
+          'VaultRecoveryClaim (guardian flow). See PRODUCTION_SET.md and ' +
+          'AUDIT_CLOSURE_REPORT.md.'
       );
     }
   }

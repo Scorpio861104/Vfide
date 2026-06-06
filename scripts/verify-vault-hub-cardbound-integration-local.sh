@@ -21,20 +21,29 @@ cleanup() {
 }
 trap cleanup EXIT
 
-for _ in $(seq 1 30); do
+READY=0
+for _ in $(seq 1 60); do
   if ! kill -0 "${NODE_PID}" >/dev/null 2>&1; then
     cat "${LOG_FILE}" >&2 || true
     echo "Failed to start hardhat node on port ${PORT}" >&2
     exit 1
   fi
 
-  if curl -s -X POST "${RPC_URL_VALUE}" \
+  RESPONSE="$(curl -fsS -X POST "${RPC_URL_VALUE}" \
     -H "content-type: application/json" \
     --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' \
-    >/dev/null; then
+    2>/dev/null || true)"
+  if [[ "${RESPONSE}" == *'"result"'* ]]; then
+    READY=1
     break
   fi
   sleep 1
 done
+
+if [[ "${READY}" != "1" ]]; then
+  cat "${LOG_FILE}" >&2 || true
+  echo "Hardhat node on port ${PORT} did not become JSON-RPC ready" >&2
+  exit 1
+fi
 
 RPC_URL="${RPC_URL_VALUE}" npx tsx scripts/verify-vault-hub-cardbound-integration.ts

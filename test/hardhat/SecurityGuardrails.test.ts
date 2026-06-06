@@ -1,6 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { network } from 'hardhat';
+import { deployVaultHubStack } from './utils/deployVaultHubStack';
 
 let connectionPromise: Promise<any> | null = null;
 
@@ -233,13 +234,12 @@ describe('VaultHub (F-20: SecurityHub timelock)', () => {
     await oldDao.waitForDeployment();
     await newDao.waitForDeployment();
 
-    const VaultHub = await ethers.getContractFactory('VaultHub');
-    const hub = await VaultHub.deploy(
+    const { vaultHub: hub } = await deployVaultHubStack(
+      ethers,
       await token.getAddress(),
       await oldLedger.getAddress(),
       await oldDao.getAddress()
     );
-    await hub.waitForDeployment();
 
     return { ethers, owner, token, newToken, oldLedger, newLedger, oldDao, newDao, hub };
   }

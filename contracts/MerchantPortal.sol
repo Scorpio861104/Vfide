@@ -17,6 +17,7 @@ pragma solidity 0.8.30;
 
 import {LedgerLogFailed, IVaultHub, IProofLedger, IERC20, ISeer, ISwapRouter, Ownable, ReentrancyGuard, SafeERC20} from "./SharedInterfaces.sol";
 import {ScoringConstants} from "./lib/ScoringConstants.sol";
+import {MerchantPortalConfigManager} from "./MerchantPortalConfigManager.sol";
 
 /// @notice IVFIDETokenBurnRouterView
 /// @title IVFIDETokenBurnRouterView
@@ -378,6 +379,9 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     /// @notice tokenSwapPaths
     mapping(address => address[]) public tokenSwapPaths;
 
+    /// @notice configManager — handles DAO admin functions via delegatecall
+    address public immutable configManager;
+
     /// @notice onlyDAO
     modifier onlyDAO() {
         _checkDAO();
@@ -411,174 +415,82 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         seer = ISeer(_seer);
         ledger = IProofLedger(_ledger);
         feeSink = _feeSink;
+        configManager = address(new MerchantPortalConfigManager());
 
         emit ModulesSet(_vaultHub, _seer, _ledger);
         emit FeeSinkSet(_feeSink);
     }
 
-    // ─────────────────────────── Admin: DAO controls
+    // ─────────────────────────── Admin: DAO controls (bodies in MerchantPortalConfigManager)
+    //
+    // Each function below delegates its implementation to MerchantPortalConfigManager
+    // via delegatecall, so all state writes operate on this contract's storage.
+    // The ABI is preserved for off-chain callers; only the implementation moved.
+
+    /// @notice _delegateToConfigManager — delegatecall current calldata to configManager
+    function _delegateToConfigManager() internal {
+        address mgr = configManager;
+        assembly {
+            calldatacopy(0, 0, calldatasize())
+            let ok := delegatecall(gas(), mgr, 0, calldatasize(), 0, 0)
+            returndatacopy(0, 0, returndatasize())
+            switch ok
+            case 0 { revert(0, returndatasize()) }
+            default { return(0, returndatasize()) }
+        }
+    }
 
     /// @notice setModules
-    /// @param _vaultHub _vaultHub
-    /// @param _seer _seer
-    /// @param _ledger _ledger
-    function setModules(address _vaultHub, address _seer, address _ledger) external onlyDAO {
-        if (_vaultHub == address(0) || _seer == address(0)) revert MERCH_Zero();
-        vaultHub = IVaultHub(_vaultHub);
-        seer = ISeer(_seer);
-        ledger = IProofLedger(_ledger);
-        emit ModulesSet(_vaultHub, _seer, _ledger);
-        _log("m_mod_set");
-    }
+    function setModules(address, address, address) external onlyDAO { _delegateToConfigManager(); }
 
-    /// @notice Propose DAO control transfer to a new address.
-    /// @dev Enforced with a timelock to reduce instant key-compromise blast radius.
-    /// @param _dao _dao
-    function setDAO(address _dao) external onlyDAO {
-        if (_dao == address(0)) revert MERCH_Zero();
-        pendingDAO = _dao;
-        pendingDAOAt = uint64(block.timestamp) + DAO_CHANGE_DELAY;
-        emit DAORotationProposed(_dao, pendingDAOAt);
-        _log("m_dao_pend");
-    }
+    /// @notice setDAO
+    function setDAO(address) external onlyDAO { _delegateToConfigManager(); }
 
-    /// @notice Apply a pending DAO transfer after timelock.
-    function applyDAO() external onlyDAO {
-        if (pendingDAOAt == 0) revert MERCH_NotConfigured();
-        if (block.timestamp < pendingDAOAt) revert MERCH_NotConfigured();
-        address oldDAO = dao;
-        dao = pendingDAO;
-        delete pendingDAO;
-        delete pendingDAOAt;
-        emit DAOSet(oldDAO, dao);
-        _log("m_dao_set");
-    }
+    /// @notice applyDAO
+    function applyDAO() external onlyDAO { _delegateToConfigManager(); }
 
-    /// @notice Cancel a pending DAO transfer.
-    function cancelDAO() external onlyDAO {
-        if (pendingDAOAt == 0) revert MERCH_NotConfigured();
-        delete pendingDAO;
-        delete pendingDAOAt;
-        emit DAORotationCancelled();
-        _log("m_dao_cancel");
-    }
+    /// @notice cancelDAO
+    function cancelDAO() external onlyDAO { _delegateToConfigManager(); }
 
-    // slither-disable-next-line missing-zero-check  // intentional: address(0) disables the gate
-    /// @notice N-L15 FIX: Set the optional SessionKeyManager for per-session spend limits.
-    ///         Pass address(0) to disable the gate (backward-compatible).
-    /// @param _skm _skm
-    function setSessionKeyManager(address _skm) external onlyDAO {
-        sessionKeyManager = _skm;
-    }
+    // slither-disable-next-line missing-zero-check
+    /// @notice setSessionKeyManager
+    function setSessionKeyManager(address) external onlyDAO { _delegateToConfigManager(); }
 
-    /// @notice Propose a protocol fee change. Takes effect after 24h timelock.
-    /// @dev H3 FIX: 24-hour delay gives merchants / community time to react.
-    /// @param _feeBps _feeBps
-    function setProtocolFee(uint256 _feeBps) external onlyDAO {
-        if (_feeBps > 500) revert MERCH_InvalidConfig(); // Max 5%
-        pendingProtocolFeeBps = _feeBps;
-        pendingProtocolFeeAt = uint64(block.timestamp) + PROTOCOL_FEE_CHANGE_DELAY;
-        emit ProtocolFeeProposed(_feeBps, pendingProtocolFeeAt);
-        _log("fee_pend");
-    }
+    /// @notice setProtocolFee
+    function setProtocolFee(uint256) external onlyDAO { _delegateToConfigManager(); }
 
-    /// @notice Apply a pending protocol fee change after the timelock.
-    function applyProtocolFee() external onlyDAO {
-        if (pendingProtocolFeeAt == 0) revert MERCH_NotConfigured();
-        if (block.timestamp < pendingProtocolFeeAt) revert MERCH_NotConfigured();
-        protocolFeeBps = pendingProtocolFeeBps;
-        delete pendingProtocolFeeBps;
-        delete pendingProtocolFeeAt;
-        emit FeeUpdated(protocolFeeBps);
-        _log("fee_upd");
-    }
+    /// @notice applyProtocolFee
+    function applyProtocolFee() external onlyDAO { _delegateToConfigManager(); }
 
-    /// @notice Cancel a pending protocol fee change.
-    function cancelProtocolFee() external onlyDAO {
-        if (pendingProtocolFeeAt == 0) revert MERCH_NotConfigured();
-        delete pendingProtocolFeeBps;
-        delete pendingProtocolFeeAt;
-        emit ProtocolFeeCancelled();
-        _log("fee_cancel");
-    }
+    /// @notice cancelProtocolFee
+    function cancelProtocolFee() external onlyDAO { _delegateToConfigManager(); }
 
     /// @notice setFeeSink
-    /// @param _sink _sink
-    function setFeeSink(address _sink) external onlyDAO {
-        if (_sink == address(0)) revert MERCH_Zero();
-        feeSink = _sink;
-        emit FeeSinkSet(_sink);
-        _log("fee_sink");
-    }
+    function setFeeSink(address) external onlyDAO { _delegateToConfigManager(); }
 
     /// @notice setMinMerchantScore
-    /// @param _minScore _minScore
-    function setMinMerchantScore(uint16 _minScore) external onlyDAO {
-        if (_minScore > 10000) revert MERCH_InvalidConfig(); // 0-10000 scale
-        minMerchantScore = _minScore;
-        emit MinScoreUpdated(_minScore);
-        _log("min_score");
-    }
+    function setMinMerchantScore(uint16) external onlyDAO { _delegateToConfigManager(); }
 
     /// @notice setFraudRegistry
-    /// @param _fr _fr
-    function setFraudRegistry(address _fr) external onlyDAO {
-        if (_fr == address(0)) revert MERCH_Zero();
-        fraudRegistry = _fr;
-    }
+    function setFraudRegistry(address) external onlyDAO { _delegateToConfigManager(); }
+
     /// @notice setAcceptedToken
-    /// @param token token
-    /// @param accepted accepted
-    function setAcceptedToken(address token, bool accepted) external onlyDAO {
-        if (token == address(0)) revert MERCH_Zero();
-        acceptedTokens[token] = accepted;
-        if (accepted) {
-            (uint8 decimals, bool ok) = _readTokenDecimals(token);
-            if (!ok) revert MERCH_InvalidConfig();
-            acceptedTokenDecimals[token] = decimals;
-        } else {
-            delete acceptedTokenDecimals[token];
-        }
-        _log(accepted ? "tok_on" : "tok_off");
-    }
+    function setAcceptedToken(address, bool) external onlyDAO { _delegateToConfigManager(); }
 
     /// @notice setSwapConfig
-    /// @param _router _router
-    /// @param _stable _stable
-    function setSwapConfig(address _router, address _stable) external onlyDAO {
-        if (_router != address(0)) {
-            if (_stable == address(0)) revert MERCH_InvalidConfig();
-            if (!(acceptedTokens[_stable] || _stable == stablecoin)) revert MERCH_TokenNotAccepted();
-        }
-        swapRouter = ISwapRouter(_router);
-        stablecoin = _stable;
-        _log("swap_cfg");
-    }
+    function setSwapConfig(address, address) external onlyDAO { _delegateToConfigManager(); }
 
     /// @notice setMinSwapOutput
-    /// @param _minBps _minBps
-    function setMinSwapOutput(uint256 _minBps) external onlyDAO {
-        if (_minBps < MIN_SWAP_OUTPUT_BPS || _minBps > MAX_SWAP_OUTPUT_BPS) revert MERCH_InvalidConfig(); // 0-10% slippage
-        uint256 previousBps = minSwapOutputBps;
-        minSwapOutputBps = _minBps;
-        emit MinSwapOutputUpdated(previousBps, _minBps);
-        _log("swap_min");
-    }
+    function setMinSwapOutput(uint256) external onlyDAO { _delegateToConfigManager(); }
 
     /// @notice setSwapPath
-    /// @param token token
-    /// @param path path
-    function setSwapPath(address token, address[] calldata path) external onlyDAO {
-        if (token == address(0)) revert MERCH_Zero();
-        if (path.length < 2 || path.length > MAX_SWAP_PATH_LENGTH) revert MERCH_InvalidConfig();
-        if (path[0] != token) revert MERCH_InvalidConfig();
-        if (path[path.length - 1] != stablecoin) revert MERCH_InvalidConfig();
-        for (uint256 i = 0; i < path.length; ++i) {
-            if (path[i] == address(0)) revert MERCH_Zero();
-        }
-        tokenSwapPaths[token] = path;
-        _log("swap_path");
-    }
+    function setSwapPath(address, address[] calldata) external onlyDAO { _delegateToConfigManager(); }
+
+    /// @notice suspendMerchant
+    function suspendMerchant(address, string calldata) external onlyDAO { _delegateToConfigManager(); }
+
+    /// @notice reinstateMerchant
+    function reinstateMerchant(address) external onlyDAO { _delegateToConfigManager(); }
 
     // ─────────────────────────── Internal Trust Validation
 
@@ -825,30 +737,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         trustScore = address(seer) != address(0) ? seer.getCachedScore(merchant) : 5000;
     }
 
-    /**
-     * DAO can suspend merchants for violations
-     * @notice suspendMerchant
-     * @param merchant merchant
-     * @param reason reason
-     */
-    function suspendMerchant(address merchant, string calldata reason) external onlyDAO {
-        if (!merchants[merchant].registered) revert MERCH_NotRegistered();
-        merchants[merchant].suspended = true;
-        emit MerchantSuspended(merchant, reason);
-        _logEv(merchant, "m_susp", 0, reason);
-    }
-
-    /**
-     * DAO can reinstate suspended merchants
-     * @notice reinstateMerchant
-     * @param merchant merchant
-     */
-    function reinstateMerchant(address merchant) external onlyDAO {
-        if (!merchants[merchant].registered) revert MERCH_NotRegistered();
-        merchants[merchant].suspended = false;
-        emit MerchantReinstated(merchant);
-        _logEv(merchant, "m_rein", 0, "");
-    }
+    // suspendMerchant and reinstateMerchant are handled by fallback() → configManager delegatecall
 
     // ─────────────────────────── Payment Processing
 
@@ -1213,28 +1102,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         address customerVault = vaultHub.vaultOf(customer);
         if (customerVault == address(0)) revert MERCH_NoVault();
 
-        // SecurityHub lock check removed — non-custodial
-
-        // Use scoped block to reduce stack depth
-        {
-            // Determine recipient
-            address recipient = merchants[merchant].payoutAddress;
-            if (recipient == address(0)) {
-                recipient = vaultHub.ensureVault(merchant);
-            }
-
-            // Calculate fee
-            uint256 fee = (amount * protocolFeeBps) / 10000;
-            netAmount = amount - fee;
-
-            // Fee transfer FIRST
-            if (fee > 0 && feeSink != address(0)) {
-                IERC20(token).safeTransferFrom(customerVault, feeSink, fee);
-            }
-
-            // Transfer net amount (with STABLE-PAY auto-convert if enabled)
-            _transferWithAutoConvert(token, customerVault, recipient, netAmount, merchant);
-        }
+        netAmount = _settlePayment(token, customerVault, merchant, amount);
 
         // Emit payment event with channel tracking
         emit PaymentProcessed(
@@ -1254,6 +1122,28 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     }
 
     // ─────────────────────────── View Functions
+
+    /// @notice _settlePayment — determines recipient, computes fee, transfers fee and net amount
+    /// @dev Extracted to reduce stack depth in _processPaymentWithChannel.
+    function _settlePayment(address token, address customerVault, address merchant, uint256 amount) internal returns (uint256 netAmount) {
+        // Determine recipient
+        address recipient = merchants[merchant].payoutAddress;
+        if (recipient == address(0)) {
+            recipient = vaultHub.ensureVault(merchant);
+        }
+
+        // Calculate fee
+        uint256 fee = (amount * protocolFeeBps) / 10000;
+        netAmount = amount - fee;
+
+        // Fee transfer FIRST
+        if (fee > 0 && feeSink != address(0)) {
+            IERC20(token).safeTransferFrom(customerVault, feeSink, fee);
+        }
+
+        // Transfer net amount (with STABLE-PAY auto-convert if enabled)
+        _transferWithAutoConvert(token, customerVault, recipient, netAmount, merchant);
+    }
 
     /**
      * @notice Shared transfer helper with STABLE-PAY auto-convert

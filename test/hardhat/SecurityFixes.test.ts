@@ -12,6 +12,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { network } from 'hardhat';
+import { deployVaultHubStack } from './utils/deployVaultHubStack';
 
 let connectionPromise: Promise<any> | null = null;
 
@@ -36,9 +37,12 @@ describe('VaultHub (M-11: non-custodial recovery guard)', { concurrency: 1 }, ()
     const token = await TokenStub.deploy();
     await token.waitForDeployment();
 
-    const VaultHub = await ethers.getContractFactory('VaultHub');
-    const hub = await VaultHub.deploy(await token.getAddress(), ethers.ZeroAddress, dao.address);
-    await hub.waitForDeployment();
+    const { vaultHub: hub } = await deployVaultHubStack(
+      ethers,
+      await token.getAddress(),
+      ethers.ZeroAddress,
+      dao.address
+    );
 
     await (await hub.connect(vaultOwner).ensureVault(vaultOwner.address)).wait();
     const vaultAddr = await hub.vaultOf(vaultOwner.address);
@@ -96,9 +100,12 @@ describe('VaultHub (M-11: non-custodial recovery guard)', { concurrency: 1 }, ()
     const token = await TokenStub.deploy();
     await token.waitForDeployment();
 
-    const VaultHub = await ethers.getContractFactory('VaultHub');
-    const hub = await VaultHub.deploy(await token.getAddress(), ethers.ZeroAddress, dao.address);
-    await hub.waitForDeployment();
+    const { vaultHub: hub } = await deployVaultHubStack(
+      ethers,
+      await token.getAddress(),
+      ethers.ZeroAddress,
+      dao.address
+    );
 
     await (await hub.connect(vaultOwner).ensureVault(vaultOwner.address)).wait();
     const vaultAddr = await hub.vaultOf(vaultOwner.address);

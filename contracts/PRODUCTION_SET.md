@@ -59,12 +59,6 @@ from the spawning contract's deploy. They MUST still be compiled and shipped
 with the deploy artifacts so the spawning `new <Module>(address(this), …)`
 calls succeed.
 
-- **`vault/CardBoundVaultDeployer.sol`**
-  Spawned by `VaultHub`'s constructor (see `VaultHub.sol:135`,
-  `vaultDeployer = new CardBoundVaultDeployer()`). The deployer becomes
-  `vaultHub = msg.sender` (immutable). One instance exists per `VaultHub`
-  deployment.
-
 - **Per-vault auxiliary modules** — each new `CardBoundVault` instance spawns
   these in its constructor (in `vault/CardBoundVault.sol`). They live at
   deterministic addresses derived from the parent vault and require
@@ -83,7 +77,7 @@ all of them. The gap, with the status of each as of this writing:
 | Contract | In deploy-full.ts? | Notes |
 |---|---|---|
 | `VFIDEPriceOracle` | **YES (added 2026-05-14)** | Layer 6, inline. `ARGS_VFIDEPRICEORACLE` env supplies remaining 4 ctor args. Replaces the BSM-tangled `DeployPhase3Peripherals.deployPeripherals()` helper. |
-| `CardBoundVaultDeployer` | **YES (implicit)** | Constructor-spawned by `VaultHub` (`VaultHub.sol:135`, `vaultDeployer = new CardBoundVaultDeployer()`). One instance per VaultHub deployment. Always deployed alongside VaultHub. Original flag as "missing" was a false positive in the 2026-05-14 audit. |
+| `CardBoundVaultDeployer` | **YES (explicit)** | Deployed directly by `deploy-full.ts` before `VaultHub`, then one-time bound with `bindVaultHub(VaultHub)`. This keeps `VaultHub` constructor initcode below EIP-3860 and makes the helper address explicit in the deployment book. |
 | `EscrowManager` | **REMOVED 2026-05-15** | Superseded by `CommerceEscrow` (deployed at Layer 11). createEscrow was a revert stub (ESC_Deprecated); the contract was effectively unreachable since no function populated the `escrows` mapping. Deleted in Phase 3e turn 1. Restorable from git if a high-value/arbiter-based escrow product is needed later. |
 | `CircuitBreaker` | **MOVED TO `contracts/legacy/` 2026-05-16** | V1's actual circuit breaker is the token-level boolean flag `VFIDEToken.setCircuitBreaker(bool, uint256)` — that's what the UI (AdminDashboardClient, EmergencyPanel) calls. This standalone monitoring contract had no production callers in V1 (`recordVolume` / `recordSuspiciousActivity` were only invoked from test files). Retained in legacy for reference and potential reactivation if metric-driven auto-pause is added later. |
 | `DutyDistributor` | **DEFERRED TO FUTURE 2026-05-16** | Howey-compliant participation tracker, alternative `IGovernanceHooks` implementation. DAO can only wire one hooks contract; V1 keeps the already-deployed GovernanceHooks. Deploying DutyDistributor without wiring it as the DAO's hooks would be inert. Swapping out hooks is its own architectural change with design review, not a Tier-1-mainnet-prep decision. Frontend marketing copy in `HoweySafeModePanel` + `ProductionSetupPanel` trimmed to reflect V1 state. Re-enable in a future phase if/when Howey-safe participation tracking goes live. |

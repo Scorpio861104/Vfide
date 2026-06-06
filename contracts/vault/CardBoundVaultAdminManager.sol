@@ -62,7 +62,7 @@ contract CardBoundVaultAdminManager {
     }
 
     /// @notice vault
-    address public immutable vault;
+    address public vault;
 
     /// @notice pendingGuardianChange
     PendingGuardianChange public pendingGuardianChange;
@@ -97,7 +97,14 @@ contract CardBoundVaultAdminManager {
     /// @notice constructor
     /// @param vault_ vault_
     constructor(address vault_) {
+        vault = vault_;
+    }
+
+    /// @notice initialize — one-time initializer for EIP-1167 clones.
+    /// @param vault_ vault_
+    function initialize(address vault_) external {
         require(vault_ != address(0), "CBV-AM: zero vault");
+        require(vault == address(0), "CBV-AM: initialized");
         vault = vault_;
     }
 

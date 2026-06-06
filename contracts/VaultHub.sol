@@ -4,6 +4,10 @@ pragma solidity 0.8.30;
 import {LedgerLogFailed, IProofLedger, Ownable, ReentrancyGuard, Pausable} from "./SharedInterfaces.sol";
 import {CardBoundVault} from "./vault/CardBoundVault.sol";
 import {CardBoundVaultDeployer} from "./vault/CardBoundVaultDeployer.sol";
+import {CardBoundVaultPaymentQueueManager} from "./vault/CardBoundVaultPaymentQueueManager.sol";
+import {CardBoundVaultWithdrawalQueueManager} from "./vault/CardBoundVaultWithdrawalQueueManager.sol";
+import {CardBoundVaultInheritanceManager} from "./vault/CardBoundVaultInheritanceManager.sol";
+import {CardBoundVaultAdminManager} from "./vault/CardBoundVaultAdminManager.sol";
 
 /**
  * @title VaultHub
@@ -90,6 +94,20 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     address public council;
     /// @notice vaultDeployer
     CardBoundVaultDeployer private immutable vaultDeployer;
+
+    /// @notice intentValidator — stateless external validator used by every vault to keep
+    ///         CardBoundVault under the EIP-170 24,576-byte runtime-bytecode limit.
+    ///         Deployed once by the hub and shared by all vaults.
+    address public immutable intentValidator;
+
+    /// @notice paymentQueueManagerImplementation — clone target used by every vault.
+    address public immutable paymentQueueManagerImplementation;
+    /// @notice withdrawalQueueManagerImplementation — clone target used by every vault.
+    address public immutable withdrawalQueueManagerImplementation;
+    /// @notice inheritanceManagerImplementation — clone target used by every vault.
+    address public immutable inheritanceManagerImplementation;
+    /// @notice adminManagerImplementation — clone target used by every vault.
+    address public immutable adminManagerImplementation;
 
     // 48-hour timelock for module changes
     /// @notice MODULE_CHANGE_DELAY
@@ -244,12 +262,39 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     /// @param _vfideToken _vfideToken
     /// @param _ledger _ledger
     /// @param _dao _dao
-    constructor(address _vfideToken, address _ledger, address _dao) {
-        if (_vfideToken == address(0) || _dao == address(0)) revert VH_Zero();
+    /// @param _vaultDeployer Predeployed CREATE2 helper used for CardBoundVault deployments.
+    /// @param _intentValidator Predeployed stateless validator shared by all CardBoundVault instances.
+    /// @param _paymentQueueManagerImplementation Predeployed payment queue manager implementation for EIP-1167 vault clones.
+    /// @param _withdrawalQueueManagerImplementation Predeployed withdrawal queue manager implementation for EIP-1167 vault clones.
+    /// @param _inheritanceManagerImplementation Predeployed inheritance manager implementation for EIP-1167 vault clones.
+    /// @param _adminManagerImplementation Predeployed admin manager implementation for EIP-1167 vault clones.
+    constructor(
+        address _vfideToken,
+        address _ledger,
+        address _dao,
+        address _vaultDeployer,
+        address _intentValidator,
+        address _paymentQueueManagerImplementation,
+        address _withdrawalQueueManagerImplementation,
+        address _inheritanceManagerImplementation,
+        address _adminManagerImplementation
+    ) {
+        if (
+            _vfideToken == address(0) || _dao == address(0) || _vaultDeployer == address(0) || _intentValidator == address(0)
+                || _paymentQueueManagerImplementation == address(0) || _withdrawalQueueManagerImplementation == address(0)
+                || _inheritanceManagerImplementation == address(0) || _adminManagerImplementation == address(0)
+        ) {
+            revert VH_Zero();
+        }
         vfideToken = _vfideToken;
         ledger = IProofLedger(_ledger);
         dao = _dao;
-        vaultDeployer = new CardBoundVaultDeployer();
+        vaultDeployer = CardBoundVaultDeployer(_vaultDeployer);
+        intentValidator = _intentValidator;
+        paymentQueueManagerImplementation = _paymentQueueManagerImplementation;
+        withdrawalQueueManagerImplementation = _withdrawalQueueManagerImplementation;
+        inheritanceManagerImplementation = _inheritanceManagerImplementation;
+        adminManagerImplementation = _adminManagerImplementation;
     }
 
     // ——— Module wiring

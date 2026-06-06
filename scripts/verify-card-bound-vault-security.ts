@@ -96,11 +96,57 @@ async function main() {
   const tokenArtifact = loadArtifact(
     'artifacts/contracts/mocks/CardBoundVaultVerifierMocks.sol/MockVFIDEForCardBound.json'
   );
-  const vaultArtifact = loadArtifact('artifacts/contracts/vault/CardBoundVault.sol/CardBoundVault.json');
+  const vaultArtifact = loadArtifact(
+    'artifacts/contracts/vault/CardBoundVault.sol/CardBoundVault.json'
+  );
+  const intentValidatorArtifact = loadArtifact(
+    'artifacts/contracts/vault/CardBoundVaultIntentValidator.sol/CardBoundVaultIntentValidator.json'
+  );
+  const paymentQueueManagerArtifact = loadArtifact(
+    'artifacts/contracts/vault/CardBoundVaultPaymentQueueManager.sol/CardBoundVaultPaymentQueueManager.json'
+  );
+  const withdrawalQueueManagerArtifact = loadArtifact(
+    'artifacts/contracts/vault/CardBoundVaultWithdrawalQueueManager.sol/CardBoundVaultWithdrawalQueueManager.json'
+  );
+  const inheritanceManagerArtifact = loadArtifact(
+    'artifacts/contracts/vault/CardBoundVaultInheritanceManager.sol/CardBoundVaultInheritanceManager.json'
+  );
+  const adminManagerArtifact = loadArtifact(
+    'artifacts/contracts/vault/CardBoundVaultAdminManager.sol/CardBoundVaultAdminManager.json'
+  );
 
-  const registryFactory = new ContractFactory(registryArtifact.abi as any, registryArtifact.bytecode, admin);
+  const registryFactory = new ContractFactory(
+    registryArtifact.abi as any,
+    registryArtifact.bytecode,
+    admin
+  );
   const tokenFactory = new ContractFactory(tokenArtifact.abi as any, tokenArtifact.bytecode, admin);
   const vaultFactory = new ContractFactory(vaultArtifact.abi as any, vaultArtifact.bytecode, admin);
+  const intentValidatorFactory = new ContractFactory(
+    intentValidatorArtifact.abi as any,
+    intentValidatorArtifact.bytecode,
+    admin
+  );
+  const paymentQueueManagerFactory = new ContractFactory(
+    paymentQueueManagerArtifact.abi as any,
+    paymentQueueManagerArtifact.bytecode,
+    admin
+  );
+  const withdrawalQueueManagerFactory = new ContractFactory(
+    withdrawalQueueManagerArtifact.abi as any,
+    withdrawalQueueManagerArtifact.bytecode,
+    admin
+  );
+  const inheritanceManagerFactory = new ContractFactory(
+    inheritanceManagerArtifact.abi as any,
+    inheritanceManagerArtifact.bytecode,
+    admin
+  );
+  const adminManagerFactory = new ContractFactory(
+    adminManagerArtifact.abi as any,
+    adminManagerArtifact.bytecode,
+    admin
+  );
 
   currentStep = 'deploy-registry';
   const registry = (await registryFactory.deploy()) as any;
@@ -109,6 +155,38 @@ async function main() {
   currentStep = 'deploy-token';
   const token = (await tokenFactory.deploy()) as any;
   await token.waitForDeployment();
+
+  currentStep = 'deploy-vault-dependencies';
+  const intentValidator = (await intentValidatorFactory.deploy()) as any;
+  await intentValidator.waitForDeployment();
+  const paymentQueueManagerImplementation = (await paymentQueueManagerFactory.deploy(
+    '0x0000000000000000000000000000000000000000',
+    0
+  )) as any;
+  await paymentQueueManagerImplementation.waitForDeployment();
+  const withdrawalQueueManagerImplementation = (await withdrawalQueueManagerFactory.deploy(
+    '0x0000000000000000000000000000000000000000'
+  )) as any;
+  await withdrawalQueueManagerImplementation.waitForDeployment();
+  const inheritanceManagerImplementation = (await inheritanceManagerFactory.deploy(
+    '0x0000000000000000000000000000000000000000'
+  )) as any;
+  await inheritanceManagerImplementation.waitForDeployment();
+  const adminManagerImplementation = (await adminManagerFactory.deploy(
+    '0x0000000000000000000000000000000000000000'
+  )) as any;
+  await adminManagerImplementation.waitForDeployment();
+
+  currentStep = 'set-vault-dependencies';
+  await (
+    await registry.setVaultDependencies(
+      await intentValidator.getAddress(),
+      await paymentQueueManagerImplementation.getAddress(),
+      await withdrawalQueueManagerImplementation.getAddress(),
+      await inheritanceManagerImplementation.getAddress(),
+      await adminManagerImplementation.getAddress()
+    )
+  ).wait();
 
   const guardians = [await guardian1.getAddress(), await guardian2.getAddress()];
   const maxPerTransfer = parseUnits('100', 18);
@@ -124,7 +202,7 @@ async function main() {
     2,
     maxPerTransfer,
     dailyLimit,
-    '0x0000000000000000000000000000000000000000',
+    '0x0000000000000000000000000000000000000000'
   )) as any;
   await vaultAContract.waitForDeployment();
 
@@ -138,7 +216,7 @@ async function main() {
     2,
     maxPerTransfer,
     dailyLimit,
-    '0x0000000000000000000000000000000000000000',
+    '0x0000000000000000000000000000000000000000'
   )) as any;
   await vaultBContract.waitForDeployment();
 
@@ -196,23 +274,20 @@ async function main() {
 
   // 2) Replay must fail.
   currentStep = 'transfer-replay';
-  await expectRevert(
-    async () => {
-      await vaultAContract.executeVaultToVaultTransfer(
-        {
-          vault: vaultAAddress,
-          toVault: vaultBAddress,
-          amount: amount50,
-          nonce: nonce0,
-          walletEpoch: epoch0,
-          deadline: deadline0,
-          chainId,
-        },
-        sig0
-      );
-    },
-    'Replay transfer unexpectedly succeeded'
-  );
+  await expectRevert(async () => {
+    await vaultAContract.executeVaultToVaultTransfer(
+      {
+        vault: vaultAAddress,
+        toVault: vaultBAddress,
+        amount: amount50,
+        nonce: nonce0,
+        walletEpoch: epoch0,
+        deadline: deadline0,
+        chainId,
+      },
+      sig0
+    );
+  }, 'Replay transfer unexpectedly succeeded');
 
   // 3) Destination must be a registered vault.
   currentStep = 'transfer-non-vault';
@@ -229,23 +304,20 @@ async function main() {
     chainId
   );
 
-  await expectRevert(
-    async () => {
-      await vaultAContract.executeVaultToVaultTransfer(
-        {
-          vault: vaultAAddress,
-          toVault: await admin.getAddress(),
-          amount: parseUnits('10', 18),
-          nonce: nonce1,
-          walletEpoch: epoch0,
-          deadline: deadline1,
-          chainId,
-        },
-        sigNonVault
-      );
-    },
-    'Transfer to non-vault unexpectedly succeeded'
-  );
+  await expectRevert(async () => {
+    await vaultAContract.executeVaultToVaultTransfer(
+      {
+        vault: vaultAAddress,
+        toVault: await admin.getAddress(),
+        amount: parseUnits('10', 18),
+        nonce: nonce1,
+        walletEpoch: epoch0,
+        deadline: deadline1,
+        chainId,
+      },
+      sigNonVault
+    );
+  }, 'Transfer to non-vault unexpectedly succeeded');
 
   // 4) Max per transfer enforcement.
   currentStep = 'transfer-over-limit';
@@ -263,23 +335,20 @@ async function main() {
     chainId
   );
 
-  await expectRevert(
-    async () => {
-      await vaultAContract.executeVaultToVaultTransfer(
-        {
-          vault: vaultAAddress,
-          toVault: vaultBAddress,
-          amount: overMax,
-          nonce: nonce2,
-          walletEpoch: epoch0,
-          deadline: deadline2,
-          chainId,
-        },
-        sigOverMax
-      );
-    },
-    'Over-limit transfer unexpectedly succeeded'
-  );
+  await expectRevert(async () => {
+    await vaultAContract.executeVaultToVaultTransfer(
+      {
+        vault: vaultAAddress,
+        toVault: vaultBAddress,
+        amount: overMax,
+        nonce: nonce2,
+        walletEpoch: epoch0,
+        deadline: deadline2,
+        chainId,
+      },
+      sigOverMax
+    );
+  }, 'Over-limit transfer unexpectedly succeeded');
 
   // 5) Pause blocks transfers.
   currentStep = 'pause-flow';
@@ -299,23 +368,20 @@ async function main() {
     chainId
   );
 
-  await expectRevert(
-    async () => {
-      await vaultAContract.executeVaultToVaultTransfer(
-        {
-          vault: vaultAAddress,
-          toVault: vaultBAddress,
-          amount: parseUnits('10', 18),
-          nonce: nonce3,
-          walletEpoch: epoch0,
-          deadline: deadline3,
-          chainId,
-        },
-        sigPaused
-      );
-    },
-    'Paused transfer unexpectedly succeeded'
-  );
+  await expectRevert(async () => {
+    await vaultAContract.executeVaultToVaultTransfer(
+      {
+        vault: vaultAAddress,
+        toVault: vaultBAddress,
+        amount: parseUnits('10', 18),
+        nonce: nonce3,
+        walletEpoch: epoch0,
+        deadline: deadline3,
+        chainId,
+      },
+      sigPaused
+    );
+  }, 'Paused transfer unexpectedly succeeded');
 
   await (await vaultAContract.unpause()).wait();
 
@@ -326,12 +392,9 @@ async function main() {
   await (await vaultAContract.connect(guardian2).approveWalletRotation()).wait();
 
   currentStep = 'rotation-early-finalize-revert';
-  await expectRevert(
-    async () => {
-      await (await vaultAContract.finalizeWalletRotation({ gasLimit: 5_000_000 })).wait();
-    },
-    'Early wallet rotation finalize unexpectedly succeeded'
-  );
+  await expectRevert(async () => {
+    await (await vaultAContract.finalizeWalletRotation({ gasLimit: 5_000_000 })).wait();
+  }, 'Early wallet rotation finalize unexpectedly succeeded');
 
   currentStep = 'rotation-finalize';
   await provider.send('evm_increaseTime', [601]);
@@ -360,23 +423,20 @@ async function main() {
     chainId
   );
 
-  await expectRevert(
-    async () => {
-      await vaultAContract.executeVaultToVaultTransfer(
-        {
-          vault: vaultAAddress,
-          toVault: vaultBAddress,
-          amount: parseUnits('20', 18),
-          nonce: nonceAfterRotate,
-          walletEpoch: epoch1,
-          deadline: deadline4,
-          chainId,
-        },
-        oldSig
-      );
-    },
-    'Old wallet signature unexpectedly succeeded after rotation'
-  );
+  await expectRevert(async () => {
+    await vaultAContract.executeVaultToVaultTransfer(
+      {
+        vault: vaultAAddress,
+        toVault: vaultBAddress,
+        amount: parseUnits('20', 18),
+        nonce: nonceAfterRotate,
+        walletEpoch: epoch1,
+        deadline: deadline4,
+        chainId,
+      },
+      oldSig
+    );
+  }, 'Old wallet signature unexpectedly succeeded after rotation');
 
   const newSig = await signIntent(
     walletANext,

@@ -15,6 +15,36 @@
         "internalType": "address",
         "name": "_dao",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_vaultDeployer",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_intentValidator",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_paymentQueueManagerImplementation",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_withdrawalQueueManagerImplementation",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_inheritanceManagerImplementation",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_adminManagerImplementation",
+        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
@@ -820,6 +850,19 @@
   },
   {
     "inputs": [],
+    "name": "adminManagerImplementation",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "applyCardDefaultLimits",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -1150,6 +1193,32 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "inheritanceManagerImplementation",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "intentValidator",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -1330,6 +1399,19 @@
         "internalType": "bool",
         "name": "",
         "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "paymentQueueManagerImplementation",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -1974,6 +2056,19 @@
   {
     "inputs": [],
     "name": "vfideToken",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "withdrawalQueueManagerImplementation",
     "outputs": [
       {
         "internalType": "address",

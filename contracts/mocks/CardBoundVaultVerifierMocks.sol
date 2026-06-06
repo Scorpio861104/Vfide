@@ -9,6 +9,36 @@ contract MockVaultRegistryForCardBound {
     mapping(address => bool) public isVaultMap;
     /// @notice guardianSetupCompleteMap
     mapping(address => bool) public guardianSetupCompleteMap;
+    /// @notice shared intent validator used by directly deployed CardBoundVault instances
+    address public intentValidator;
+    /// @notice payment queue manager implementation for CardBoundVault EIP-1167 clones
+    address public paymentQueueManagerImplementation;
+    /// @notice withdrawal queue manager implementation for CardBoundVault EIP-1167 clones
+    address public withdrawalQueueManagerImplementation;
+    /// @notice inheritance manager implementation for CardBoundVault EIP-1167 clones
+    address public inheritanceManagerImplementation;
+    /// @notice admin manager implementation for CardBoundVault EIP-1167 clones
+    address public adminManagerImplementation;
+
+    /// @notice setVaultDependencies
+    /// @param _intentValidator _intentValidator
+    /// @param _paymentQueueManagerImplementation _paymentQueueManagerImplementation
+    /// @param _withdrawalQueueManagerImplementation _withdrawalQueueManagerImplementation
+    /// @param _inheritanceManagerImplementation _inheritanceManagerImplementation
+    /// @param _adminManagerImplementation _adminManagerImplementation
+    function setVaultDependencies(
+        address _intentValidator,
+        address _paymentQueueManagerImplementation,
+        address _withdrawalQueueManagerImplementation,
+        address _inheritanceManagerImplementation,
+        address _adminManagerImplementation
+    ) external {
+        intentValidator = _intentValidator;
+        paymentQueueManagerImplementation = _paymentQueueManagerImplementation;
+        withdrawalQueueManagerImplementation = _withdrawalQueueManagerImplementation;
+        inheritanceManagerImplementation = _inheritanceManagerImplementation;
+        adminManagerImplementation = _adminManagerImplementation;
+    }
 
     /// @notice setVault
     /// @param vault vault

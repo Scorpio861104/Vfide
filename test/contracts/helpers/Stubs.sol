@@ -162,9 +162,28 @@ contract VaultHubStub {
     mapping(address => address) public vaultOwners;
     mapping(address => bool) public isVault;
     mapping(address => bool) public guardianSetupComplete;
+    address public intentValidator;
+    address public paymentQueueManagerImplementation;
+    address public withdrawalQueueManagerImplementation;
+    address public inheritanceManagerImplementation;
+    address public adminManagerImplementation;
     // R-4 test support — settable per-vault flag so tests can simulate
     // MEMORIAL state without spinning up the inheritance manager itself.
     mapping(address => bool) public inMemorialState;
+
+    function setVaultDependencies(
+        address _intentValidator,
+        address _paymentQueueManagerImplementation,
+        address _withdrawalQueueManagerImplementation,
+        address _inheritanceManagerImplementation,
+        address _adminManagerImplementation
+    ) external {
+        intentValidator = _intentValidator;
+        paymentQueueManagerImplementation = _paymentQueueManagerImplementation;
+        withdrawalQueueManagerImplementation = _withdrawalQueueManagerImplementation;
+        inheritanceManagerImplementation = _inheritanceManagerImplementation;
+        adminManagerImplementation = _adminManagerImplementation;
+    }
 
     function setVault(address owner, address vault) external {
         address existingVault = vaults[owner];

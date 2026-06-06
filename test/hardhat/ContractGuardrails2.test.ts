@@ -1,6 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { network } from 'hardhat';
+import { deployVaultHubStack } from './utils/deployVaultHubStack';
 import { expectHardhatRevert } from './utils/expectHardhatRevert';
 
 let defaultConnectionPromise: Promise<any> | null = null;
@@ -733,9 +734,12 @@ describe('VaultHub (guardian bootstrap hardening)', () => {
     const token = await Token.deploy();
     await token.waitForDeployment();
 
-    const VaultHub = await ethers.getContractFactory('VaultHub');
-    const hub = await VaultHub.deploy(await token.getAddress(), ethers.ZeroAddress, dao.address);
-    await hub.waitForDeployment();
+    const { vaultHub: hub } = await deployVaultHubStack(
+      ethers,
+      await token.getAddress(),
+      ethers.ZeroAddress,
+      dao.address
+    );
 
     return { ethers, dao, owner, recipient, hub };
   }
