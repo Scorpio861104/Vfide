@@ -78,6 +78,23 @@ describe('/api/crypto/price', () => {
   });
 
   describe('GET', () => {
+
+    it('returns fallback pricing instead of 500 when VFIDE token address is not configured', async () => {
+      delete process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS;
+      delete process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS_84532;
+      withRateLimit.mockResolvedValue(null);
+
+      const request = new NextRequest('http://localhost:3000/api/crypto/price');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.success).toBe(true);
+      expect(data.source).toBe('fallback');
+      expect(data.degraded).toBe(true);
+      expect(data.reason).toContain('VFIDEToken contract not configured');
+    });
+
     it('should return price data with tokenomics pricing', async () => {
       withRateLimit.mockResolvedValue(null);
       (global.fetch as jest.Mock).mockResolvedValue({

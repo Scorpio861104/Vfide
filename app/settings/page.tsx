@@ -21,7 +21,7 @@ import type React from 'react';
  * /setup redirects here. /notifications redirects here.
  */
 
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m as motion } from 'framer-motion';
 import { Bell, Lock, Settings, Shield, User } from 'lucide-react';
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';

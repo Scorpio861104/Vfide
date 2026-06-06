@@ -127,7 +127,8 @@ export function TopNav() {
                 key={s.id}
                 href={s.href}
                 onClick={() => setMoreOpen(false)}
-                className={`topnav-active-pill relative flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-sm font-medium transition-all duration-200 ${
+                aria-current={isActive ? 'page' : undefined}
+                className={`topnav-active-pill relative flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 ${
                   isActive
                     ? 'bg-accent/10 text-accent'
                     : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-100'
@@ -155,7 +156,8 @@ export function TopNav() {
             onClick={() => setMoreOpen((v) => !v)}
             aria-haspopup="dialog"
             aria-expanded={moreOpen}
-            className={`relative flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-sm font-medium transition-all duration-200 ${
+            aria-label="Open all VFIDE destinations"
+            className={`relative flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 ${
               activeSection === 'more'
                 ? 'bg-accent/10 text-accent'
                 : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-100'
@@ -170,11 +172,13 @@ export function TopNav() {
         <div className="ml-auto flex items-center gap-2">
           {/* Search */}
           <button
+            type="button"
             onClick={() => {
               const event = new KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true });
               document.dispatchEvent(event);
             }}
-            className="hidden lg:flex items-center gap-2 rounded-lg border border-white/8 bg-white/4 px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-100 hover:bg-white/8 transition-all"
+            className="hidden lg:flex items-center gap-2 rounded-lg border border-white/8 bg-white/4 px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-100 hover:bg-white/8 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+            aria-label="Open global search"
           >
             <Search size={13} />
             <span>Search</span>

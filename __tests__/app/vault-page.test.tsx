@@ -117,6 +117,7 @@ jest.mock('wagmi', () => ({
   useAccount: () => ({ address: mockAddress }),
   useWriteContract: () => ({ writeContractAsync: mockWriteContractAsync }),
   useChainId: () => 1,
+  useSwitchChain: () => ({ switchChainAsync: jest.fn(async () => undefined) }),
   usePublicClient: () => ({}),
   useWatchContractEvent: () => undefined,
   useSignTypedData: () => ({ signTypedDataAsync: jest.fn() }),
@@ -180,6 +181,7 @@ jest.mock('framer-motion', () => {
 
   return {
     motion,
+    m: motion,
     AnimatePresence: ({ children }: any) => <>{children}</>,
   };
 });
@@ -331,8 +333,8 @@ describe('Vault page logic pathways', () => {
 
     renderVaultPage();
 
-    expect(screen.getByText(/Wrong Network/i)).toBeTruthy();
-    expect(screen.getByText(/Base Sepolia/i)).toBeTruthy();
+    expect(screen.getAllByText(/Switch to Base Sepolia/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Your vault lives on Base Sepolia/i)).toBeTruthy();
     expect(screen.getByRole('button', { name: /Switch to Base Sepolia/i })).toBeTruthy();
   });
 

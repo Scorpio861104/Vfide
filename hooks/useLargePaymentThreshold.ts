@@ -13,8 +13,8 @@
  * means more payments flow instantly; lowering it adds friction for larger amounts.
  *
  * Contract flow:
- *   1. Vault owner calls vault.setLargePaymentThreshold(threshold, delay)
- *      → vault delegates to paymentQueueManager.setLargePaymentThreshold(...)
+ *   1. Vault owner calls vault.setLargePaymentThreshold(threshold)
+ *      → vault delegates to paymentQueueManager.setLargePaymentThreshold(...) with the contract-defined sensitive-admin delay
  *   2. After `delay` seconds, anyone calls vault.applyLargePaymentThreshold()
  *      → vault delegates to paymentQueueManager.applyLargePaymentThreshold()
  *   3. Optionally cancel before delay expires via vault.cancelLargePaymentThreshold()
@@ -29,11 +29,6 @@ import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 
 import { type Address } from 'viem';
 import { ACTIVE_VAULT_ABI, ZERO_ADDRESS } from '@/lib/contracts';
 import { CardBoundVaultPaymentQueueManagerABI } from '@/lib/abis';
-
-/** Minimum timelock delay in seconds (1 hour). The vault enforces this. */
-export const MIN_THRESHOLD_DELAY_SECONDS = 3600;
-/** Maximum timelock delay in seconds (7 days). Sane UI cap. */
-export const MAX_THRESHOLD_DELAY_SECONDS = 7 * 24 * 3600;
 
 export function useLargePaymentThreshold(vaultAddress: Address | undefined) {
   const enabled = !!vaultAddress && vaultAddress !== ZERO_ADDRESS;
@@ -87,26 +82,22 @@ export function useLargePaymentThreshold(vaultAddress: Address | undefined) {
   const [proposeError, setProposeError] = useState<string | null>(null);
 
   /**
-   * propose — call vault.setLargePaymentThreshold(threshold, delay)
+   * propose — call vault.setLargePaymentThreshold(threshold)
    *
    * @param thresholdWei  New threshold in wei (bigint)
-   * @param delaySeconds  Timelock delay in seconds (number)
+   * The active vault ABI accepts only the new threshold. The timelock delay is
+   * enforced by the vault/admin facet via its SENSITIVE_ADMIN_DELAY constant.
    */
   const propose = useCallback(
-    async (thresholdWei: bigint, delaySeconds: number) => {
+    async (thresholdWei: bigint) => {
       if (!vaultAddress) throw new Error('No vault address');
-      if (delaySeconds < MIN_THRESHOLD_DELAY_SECONDS) {
-        throw new Error(
-          `Delay must be at least ${MIN_THRESHOLD_DELAY_SECONDS / 3600}h`
-        );
-      }
       setProposeError(null);
       try {
         await writeContractAsync({
           address: vaultAddress,
           abi: ACTIVE_VAULT_ABI as any,
           functionName: 'setLargePaymentThreshold',
-          args: [thresholdWei, BigInt(delaySeconds)],
+          args: [thresholdWei],
         });
         setTimeout(() => {
           refetchThreshold();

@@ -21,6 +21,28 @@ export function asOrigin(value: string | undefined): string | null {
   }
 }
 
+const DEFAULT_RPC_ORIGINS = [
+  // Base / Base Sepolia
+  'https://mainnet.base.org',
+  'https://sepolia.base.org',
+  'https://base.blockpi.network',
+  'https://base-sepolia.blockpi.network',
+  'https://base.llamarpc.com',
+  // Polygon / Polygon Amoy
+  'https://polygon-rpc.com',
+  'https://polygon.llamarpc.com',
+  'https://polygon.blockpi.network',
+  'https://rpc-amoy.polygon.technology',
+  'https://polygon-amoy.blockpi.network',
+  // zkSync / zkSync Sepolia
+  'https://mainnet.era.zksync.io',
+  'https://sepolia.era.zksync.dev',
+  'wss://sepolia.era.zksync.dev',
+  'https://zksync.blockpi.network',
+  'https://zksync-sepolia.blockpi.network',
+  'https://zksync.meowrpc.com',
+] as const;
+
 export function getConnectSrcAllowlist(env: NodeJS.ProcessEnv = process.env): string {
   const allowlist = new Set<string>([
     "'self'",
@@ -28,6 +50,7 @@ export function getConnectSrcAllowlist(env: NodeJS.ProcessEnv = process.env): st
     'https://*.walletconnect.org',
     'wss://*.walletconnect.com',
     'wss://*.walletconnect.org',
+    ...DEFAULT_RPC_ORIGINS,
   ]);
 
   const configuredOrigins = [
@@ -80,6 +103,26 @@ export function buildCsp(
   env: NodeJS.ProcessEnv = process.env,
 ): string {
   const connectSrc = getConnectSrcAllowlist(env);
+  const isProduction = env.NODE_ENV === 'production';
+
+  // Development needs React/Next inline bootstrapping and eval-backed source-map
+  // helpers. In production, keep strict nonce-based script execution.
+  const scriptSrc = isProduction
+    ? [
+        "'self'",
+        `'nonce-${nonce}'`,
+        'https://vercel.live',
+        'https://*.walletconnect.com',
+        'https://*.walletconnect.org',
+      ]
+    : [
+        "'self'",
+        "'unsafe-inline'",
+        "'unsafe-eval'",
+        'https://vercel.live',
+        'https://*.walletconnect.com',
+        'https://*.walletconnect.org',
+      ];
 
   // F-FE-004 FIX: path-aware frame-ancestors. Embeddable routes get a
   // permissive (but HTTPS-only) ancestor allowlist; everything else stays
@@ -94,18 +137,18 @@ export function buildCsp(
 
   return [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' https://vercel.live https://*.walletconnect.com https://*.walletconnect.org`,
+    `script-src ${scriptSrc.join(' ')}`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: https: blob:",
     "font-src 'self' data: https://fonts.gstatic.com",
     `connect-src ${connectSrc}`,
-    "frame-src 'self' https://*.walletconnect.com",
+    "frame-src 'self' https://*.walletconnect.com https://*.walletconnect.org",
     "media-src 'self' blob:",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
     frameAncestors,
-    ...(env.NODE_ENV === 'production' ? ['upgrade-insecure-requests'] : []),
+    ...(isProduction ? ['upgrade-insecure-requests'] : []),
   ].join('; ');
 }
 

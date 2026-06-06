@@ -272,11 +272,7 @@ describe('/api/crypto/payment-requests/[id]', () => {
       expect(data.error).toContain('Invalid request body');
     });
 
-    it('rejects non-completed transitions via PATCH (completion-only; accept/reject/cancel use PUT)', async () => {
-      // F-BE-023 follow-up: PATCH is the completion endpoint ONLY. accept/reject/cancel
-      // must go through PUT, which enforces the role + state-machine rules. A party must
-      // not be able to use PATCH to bypass them (e.g. a recipient setting 'cancelled', or
-      // reopening a closed request to 'pending' and NULLing the recorded tx_hash).
+  it('rejects non-completed transitions via PATCH (completion-only; accept/reject/cancel use PUT)', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockResolvedValue({ user: mockUser });
 
@@ -289,7 +285,8 @@ describe('/api/crypto/payment-requests/[id]', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('PATCH only supports');
+      expect(data.error).toContain("PATCH only supports the 'completed' transition");
+      expect(query).not.toHaveBeenCalled();
     });
 
     it('completes a request when the sender supplies an on-chain-verified tx_hash', async () => {

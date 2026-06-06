@@ -77,6 +77,61 @@ function getAuthAddress(user: JWTPayload): string | null {
   return address;
 }
 
+
+function isDatabaseUnavailableError(error: unknown): boolean {
+  const stack: unknown[] = [error];
+
+  while (stack.length > 0) {
+    const current = stack.pop();
+    if (!current) continue;
+
+    const asRecord = typeof current === 'object' ? current as Record<string, unknown> : null;
+    const message = current instanceof Error
+      ? current.message.toLowerCase()
+      : String(current).toLowerCase();
+    const code = typeof asRecord?.code === 'string' ? asRecord.code.toLowerCase() : '';
+
+    if (
+      code === 'econnrefused' ||
+      code === '57p01' ||
+      code === '28p01' ||
+      code === '42p01' ||
+      code === '42703' ||
+      message.includes('econnrefused') ||
+      message.includes('database query failed') ||
+      message.includes('database_url is required') ||
+      message.includes('allow_dev_db=true') ||
+      message.includes('password authentication failed') ||
+      message.includes('connect') ||
+      message.includes('connection terminated') ||
+      message.includes('timeout expired') ||
+      message.includes('does not exist')
+    ) {
+      return true;
+    }
+
+    const cause = asRecord?.cause;
+    if (cause) stack.push(cause);
+
+    const errors = asRecord?.errors;
+    if (Array.isArray(errors)) {
+      for (const nested of errors) stack.push(nested);
+    }
+  }
+
+  return false;
+}
+
+function emptyProductsResponse(page: number, limit: number) {
+  return NextResponse.json({
+    products: [],
+    pagination: { page, limit, total: 0, pages: 0 },
+    facets: null,
+    degraded: true,
+    reason: 'database_unavailable',
+  });
+}
+
 // ─────────────────────────── GET: List/search products
 async function getHandler(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'read');
@@ -147,6 +202,9 @@ async function getHandler(request: NextRequest) {
       return NextResponse.json({ product, related: relatedResult.rows });
     } catch (error) {
       logger.error('[Products GET detail] Error:', error);
+      if (isDatabaseUnavailableError(error)) {
+        return NextResponse.json({ error: 'Product not found', degraded: true, reason: 'database_unavailable' }, { status: 404 });
+      }
       return NextResponse.json({ error: 'Failed to fetch product' }, { status: 500 });
     }
   }
@@ -330,6 +388,9 @@ async function getHandler(request: NextRequest) {
     });
   } catch (error) {
     logger.error('[Products GET] Error:', error);
+    if (isDatabaseUnavailableError(error)) {
+      return emptyProductsResponse(page, limit);
+    }
     return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 });
   }
 }
@@ -558,7 +619,7 @@ async function deleteHandler(request: NextRequest, user: JWTPayload) {
   }
 }
 
-export const GET = withAuth(getHandler);
+export const GET = getHandler;
 export const POST = withAuth(postHandler);
 export const PATCH = withAuth(patchHandler);
 export const DELETE = withAuth(deleteHandler);

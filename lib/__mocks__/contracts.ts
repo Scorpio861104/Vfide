@@ -15,6 +15,7 @@ export const CONTRACT_ADDRESSES = {
   MerchantPortalViewer: addr(43),
   VFIDEAccessControl: addr(44),
   VaultHub: addr(5),
+  AdminMultiSig: addr(45),
   Seer: addr(6),
   SeerView: addr(9),
   DAO: addr(10),

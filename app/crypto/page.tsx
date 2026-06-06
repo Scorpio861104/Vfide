@@ -2,7 +2,7 @@
 
 import React from 'react';
 import dynamic from 'next/dynamic';
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { Wallet, TrendingUp, History, LayoutDashboard } from 'lucide-react';
 import { WalletButton as _WalletButton } from '@/components/crypto/WalletButton';
 import { useAccount, useBalance } from 'wagmi';

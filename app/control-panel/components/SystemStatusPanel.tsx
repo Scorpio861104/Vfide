@@ -77,7 +77,7 @@ export function SystemStatusPanel() {
               icon="🔄"
               title="Configure Auto-Swap"
               description="Set up stablecoin payments"
-              disabledReason="Auto-swap configuration UI isn't built yet. The SwapRouter contract address is configured in lib/contracts.ts."
+              disabledReason="Use the Auto-Swap tab to configure the router, stablecoin, enablement, and slippage controls before activating production swaps."
             />
             <QuickActionButton
               icon="⚡"

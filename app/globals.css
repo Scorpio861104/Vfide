@@ -2845,3 +2845,143 @@ html::before {
     radial-gradient(ellipse 80% 60% at 20% -10%, rgba(0, 240, 255, 0.07) 0%, transparent 60%),
     radial-gradient(ellipse 60% 50% at 80% 110%, rgba(139, 92, 246, 0.05) 0%, transparent 55%);
 }
+
+/* ============================================================
+ * UI VISUAL POLISH PASS — shared finish layer
+ * ============================================================ */
+
+.ui-page-shell {
+  background:
+    radial-gradient(circle at 18% 8%, rgba(34, 211, 238, 0.075), transparent 30rem),
+    radial-gradient(circle at 88% 18%, rgba(129, 140, 248, 0.065), transparent 28rem),
+    linear-gradient(180deg, rgba(9, 9, 15, 0.98) 0%, rgba(3, 7, 18, 1) 58%, rgba(9, 9, 15, 1) 100%);
+}
+
+.ui-container-breathing {
+  width: min(100% - 2rem, 72rem);
+  margin-inline: auto;
+}
+
+.ui-card-sheen {
+  position: relative;
+  isolation: isolate;
+}
+
+.ui-card-sheen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.10), transparent 32%),
+    radial-gradient(circle at top right, rgba(34, 211, 238, 0.10), transparent 45%);
+  opacity: 0.55;
+}
+
+.ui-hairline-top {
+  position: relative;
+}
+
+.ui-hairline-top::before {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.38), rgba(167, 139, 250, 0.28), transparent);
+  opacity: 0.85;
+}
+
+.ui-section-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(34, 211, 238, 0.22);
+  background: rgba(34, 211, 238, 0.07);
+  padding: 0.35rem 0.8rem;
+  color: rgba(103, 232, 249, 0.95);
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 0 24px -14px rgba(34, 211, 238, 0.75);
+}
+
+.btn-premium,
+.glass-button,
+.glass-button-ghost,
+.tab-pill-active,
+.tab-pill-inactive,
+.metric-chip {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-premium:focus-visible,
+.glass-button:focus-visible,
+.glass-button-ghost:focus-visible,
+.metric-chip:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px rgba(3, 7, 18, 0.95),
+    0 0 0 4px rgba(34, 211, 238, 0.62),
+    0 14px 44px -16px rgba(34, 211, 238, 0.75);
+}
+
+.metric-chip {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.032));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10), 0 12px 36px -24px rgba(0, 0, 0, 0.9);
+}
+
+.metric-chip:hover {
+  transform: translateY(-1px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 16px 42px -24px rgba(34, 211, 238, 0.55);
+}
+
+.dashboard-hero-bg {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(34, 211, 238, 0.14), transparent 24rem),
+    radial-gradient(circle at 78% 12%, rgba(167, 139, 250, 0.12), transparent 22rem),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.58), rgba(9, 9, 15, 0.88));
+}
+
+.tab-pill-active,
+.tab-pill-inactive {
+  min-height: 2.5rem;
+  padding-inline: 1rem;
+  border-radius: 9999px;
+}
+
+.tab-pill-active {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 12px 34px -18px rgba(34, 211, 238, 0.85);
+}
+
+.tab-pill-inactive {
+  background: rgba(255, 255, 255, 0.035);
+}
+
+@media (max-width: 767px) {
+  .ui-container-breathing {
+    width: min(100% - 1.25rem, 72rem);
+  }
+
+  .btn-premium {
+    width: 100%;
+    min-height: 3rem;
+  }
+
+  .metric-chip {
+    padding: 0.45rem 0.85rem;
+  }
+
+  .dashboard-hero-bg {
+    background:
+      radial-gradient(circle at 30% 0%, rgba(34, 211, 238, 0.12), transparent 18rem),
+      linear-gradient(180deg, rgba(15, 23, 42, 0.58), rgba(9, 9, 15, 0.92));
+  }
+}

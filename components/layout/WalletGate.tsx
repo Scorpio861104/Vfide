@@ -9,7 +9,7 @@
 
 import { ReactNode } from 'react';
 import { useAccount } from 'wagmi';
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { Wallet } from 'lucide-react';
 // FIX UX-GATE-1: Use VfideConnectButton instead of raw RainbowKit ConnectButton.
 // The raw button renders in RainbowKit's default palette which clashes with

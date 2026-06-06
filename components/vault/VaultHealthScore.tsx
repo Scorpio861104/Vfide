@@ -54,23 +54,30 @@ export function VaultHealthScore({
     query: { enabled: !!vaultAddress },
   });
 
-  const { data: spendLimit } = useReadContract({
+  const { data: maxPerTransfer } = useReadContract({
     address: vaultAddress,
     abi: CARD_BOUND_VAULT_ABI,
-    functionName: 'spendLimit',
+    functionName: 'maxPerTransfer',
     query: { enabled: !!vaultAddress },
   });
 
-  const { data: isLocked } = useReadContract({
+  const { data: dailyTransferLimit } = useReadContract({
     address: vaultAddress,
     abi: CARD_BOUND_VAULT_ABI,
-    functionName: 'isLocked',
+    functionName: 'dailyTransferLimit',
+    query: { enabled: !!vaultAddress },
+  });
+
+  const { data: paused } = useReadContract({
+    address: vaultAddress,
+    abi: CARD_BOUND_VAULT_ABI,
+    functionName: 'paused',
     query: { enabled: !!vaultAddress },
   });
 
   const gc = Number(guardianCount ?? 0n);
-  const sl = Number(spendLimit ?? 0n);
-  const locked = Boolean(isLocked);
+  const transferLimit = Number(maxPerTransfer ?? dailyTransferLimit ?? 0n);
+  const isOperational = !Boolean(paused);
   const hasVault = !!vaultAddress;
 
   // Security dimension (0-25)
@@ -79,8 +86,8 @@ export function VaultHealthScore({
   if (gc >= 3) securityScore += 15;
   else if (gc >= 1) { securityScore += 8; securityRecs.push('Add more guardians (3+ recommended)'); }
   else securityRecs.push('Add guardians to protect your vault');
-  if (sl > 0) securityScore += 10;
-  else securityRecs.push('Set a spend limit to prevent large unauthorized transactions');
+  if (transferLimit > 0) securityScore += 10;
+  else securityRecs.push('Set transfer limits to reduce large unauthorized transaction risk');
 
   // Recovery dimension (0-25)
   const recoveryRecs: string[] = [];
@@ -103,8 +110,8 @@ export function VaultHealthScore({
   let setupScore = 0;
   if (hasVault) setupScore += 15;
   else setupRecs.push('Create a vault to get started');
-  if (sl > 0) setupScore += 5;
-  if (!locked) setupScore += 5;
+  if (transferLimit > 0) setupScore += 5;
+  if (isOperational) setupScore += 5;
 
   const dimensions: Dimension[] = [
     { label: 'Security', score: securityScore, maxScore: 25, recommendations: securityRecs },
