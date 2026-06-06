@@ -685,10 +685,22 @@ jest.mock('wagmi/chains', () => ({
 }))
 
 // Mock RainbowKit
-jest.mock('@rainbow-me/rainbowkit', () => ({
-  ConnectButton: () => null,
-  RainbowKitProvider: ({ children }) => children,
-}))
+jest.mock('@rainbow-me/rainbowkit', () => {
+  const ConnectButton = () => null;
+  ConnectButton.Custom = ({ children }) => children({
+    account: null,
+    chain: null,
+    mounted: true,
+    openAccountModal: jest.fn(),
+    openChainModal: jest.fn(),
+    openConnectModal: jest.fn(),
+  });
+
+  return {
+    ConnectButton,
+    RainbowKitProvider: ({ children }) => children,
+  };
+})
 
 // Mock framer-motion
 jest.mock('framer-motion', () => {
