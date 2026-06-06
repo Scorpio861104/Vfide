@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { JWTPayload } from '@/lib/auth/jwt';
 import { withAuth } from '@/lib/auth/middleware';
+import { withRateLimit } from '@/lib/auth/rateLimit';
 import { query } from '@/lib/db';
 import { verifyOnChainPayment, decidePaymentRecord } from '@/lib/payments/verifyOnChainPayment';
 
@@ -46,7 +47,10 @@ function serialize(r: PurchaseRow) {
   };
 }
 
-export const GET = withAuth(async () => {
+export const GET = withAuth(async (request: NextRequest) => {
+  const rateLimit = await withRateLimit(request, 'api');
+  if (rateLimit) return rateLimit;
+
   try {
     // RLS scopes content_purchases to rows where the caller is buyer or seller.
     const rows = (
@@ -61,6 +65,9 @@ export const GET = withAuth(async () => {
 });
 
 export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
+  const rateLimit = await withRateLimit(request, 'write');
+  if (rateLimit) return rateLimit;
+
   let body: Record<string, unknown>;
   try {
     body = await request.json();

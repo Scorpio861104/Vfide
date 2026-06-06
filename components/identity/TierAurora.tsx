@@ -11,12 +11,13 @@
  * Reduced motion: no intensify animation; gradient transitions are CSS
  * `transition: opacity` only, which the user agent already respects.
  *
- * Cost: one read of useProofScore (already cached across the app).
+ * Cost: one read of the lightweight global score context. App routes provide
+ * a live wallet score; marketing routes fall back to the neutral default.
  */
 
 import { getTier } from '@/lib/proofScore/tiers';
 import { useEffect, useState } from 'react';
-import { useProofScore } from '@/hooks/useProofScore';
+import { usePieMenuScore } from '@/components/navigation/PieMenuContext';
 import { usePrefersReducedMotion } from '@/app/components/usePrefersReducedMotion';
 
 /** Tier color map mirrors hooks/useProofScore getTierColor — kept private here so
@@ -31,15 +32,14 @@ function tierBucket(score: number): number {
 }
 
 export function TierAurora() {
-  const { score, isLoading } = useProofScore();
+  const score = usePieMenuScore();
   const reducedMotion = usePrefersReducedMotion();
-  const numericScore = typeof score === 'number' ? score : 0;
+  const numericScore = typeof score === 'number' ? score : 5000;
 
   const [intensify, setIntensify] = useState(false);
   const [lastBucket, setLastBucket] = useState<number | null>(null);
 
   useEffect(() => {
-    if (isLoading) return;
     const bucket = tierBucket(numericScore);
     if (lastBucket === null) {
       setLastBucket(bucket);
@@ -53,12 +53,10 @@ export function TierAurora() {
       return () => window.clearTimeout(id);
     }
     return undefined;
-  }, [numericScore, isLoading, lastBucket, reducedMotion]);
+  }, [numericScore, lastBucket, reducedMotion]);
 
-  // When loading we still render a faint neutral strip so the layout
-  // doesn't shift on initial paint.
-  const color = isLoading ? '#666' : tierColor(numericScore);
-  const opacity = isLoading ? 0.25 : intensify ? 0.95 : 0.55;
+  const color = tierColor(numericScore);
+  const opacity = intensify ? 0.95 : 0.55;
 
   return (
     <div

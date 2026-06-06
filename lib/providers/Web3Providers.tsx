@@ -16,6 +16,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { wagmiConfig } from '@/lib/wagmi';
 import { CURRENT_CHAIN_ID } from '@/lib/testnet';
 import { SecurityProvider } from '@/providers/SecurityProvider';
+import { RainbowKitStyles } from './RainbowKitStyles';
 import { useWalletPersistence } from '@/hooks/useWalletPersistence';
 import { useAuth } from '@/hooks/useAPI';
 
@@ -146,10 +147,13 @@ const queryClient = new QueryClient({
 // ── Root export ──────────────────────────────────────────────────────────────
 // Marketing routes that render without any Web3/wallet context.
 // These pages don't connect wallets — loading wagmi/RainbowKit adds ~65KB gz for nothing.
-const MARKETING_PREFIXES = ['/about', '/seer-academy', '/merchants'];
+const MARKETING_PREFIXES = ['/', '/about', '/docs', '/onboarding', '/seer-academy', '/merchants'];
 
 function isMarketingRoute(path: string): boolean {
-  return MARKETING_PREFIXES.some((prefix) => path === prefix || path.startsWith(prefix + '/'));
+  return MARKETING_PREFIXES.some((prefix) => {
+    if (prefix === '/') return path === '/';
+    return path === prefix || path.startsWith(prefix + '/');
+  });
 }
 
 export function Web3Providers({ children }: { children: ReactNode }) {
@@ -165,6 +169,7 @@ export function Web3Providers({ children }: { children: ReactNode }) {
     // FIX PERF-1: reconnectOnMount=false — useWalletPersistence handles
     // reconnection; having both active caused duplicate RPC calls.
     <WagmiProvider config={wagmiConfig} reconnectOnMount={false}>
+      <RainbowKitStyles />
       <QueryClientProvider client={queryClient}>
         {/*
           FIX UX-2: ThemedRainbowKitProvider reads --accent dynamically via

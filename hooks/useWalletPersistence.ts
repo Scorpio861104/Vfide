@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useCallback, useRef, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { useAccount, useReconnect, useDisconnect } from 'wagmi';
 import { safeLocalStorage } from '@/lib/utils';
 import { linkWallet } from '@/lib/biometricAuth';
@@ -22,6 +23,16 @@ const RECONNECTION_TIMEOUT_MS = 10000; // 10 seconds
 
 // Activity tracking debounce in milliseconds
 const ACTIVITY_DEBOUNCE_MS = 30000; // 30 seconds
+
+// Pages that should not initiate background wallet reconnect/RPC work before
+// the user explicitly asks to connect. Keep these public marketing routes quiet
+// for anonymous visitors while preserving reconnect behavior in app/wallet flows.
+const PASSIVE_RECONNECT_DISABLED_ROUTES = new Set(['/', '/about', '/docs']);
+
+function shouldSkipPassiveReconnect(pathname: string | null): boolean {
+  if (!pathname) return false;
+  return PASSIVE_RECONNECT_DISABLED_ROUTES.has(pathname);
+}
 
 interface SessionData {
   address: string;
@@ -47,6 +58,7 @@ interface SessionData {
  * - Auto-disconnect countdown with visual warning
  */
 export function useWalletPersistence() {
+  const pathname = usePathname();
   const { address, isConnected, connector, chain } = useAccount();
   const { reconnectAsync, connectors } = useReconnect();
   const { disconnect } = useDisconnect();
@@ -196,6 +208,10 @@ export function useWalletPersistence() {
   useEffect(() => {
     if (hasAttemptedReconnect.current) return;
     if (isConnected) return;
+    if (shouldSkipPassiveReconnect(pathname)) {
+      hasAttemptedReconnect.current = true;
+      return;
+    }
 
     const session = getSession();
     if (!session || !isSessionValid(session)) {
@@ -249,7 +265,7 @@ export function useWalletPersistence() {
       };
     }
     return undefined;
-  }, [isConnected, getSession, isSessionValid, connectors, reconnectAsync]);
+  }, [isConnected, pathname, getSession, isSessionValid, connectors, reconnectAsync]);
 
   // Save session when connection state changes
   useEffect(() => {

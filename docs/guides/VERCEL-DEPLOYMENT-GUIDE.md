@@ -14,10 +14,12 @@ Go to your Vercel project → **Settings** → **Environment Variables**
 **REQUIRED VARIABLES:**
 
 ```bash
+# WalletConnect (OPTIONAL — enables QR/mobile pairing)
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=<your_walletconnect_project_id>
+
 # Network Configuration (REQUIRED)
 NEXT_PUBLIC_CHAIN_ID=84532
 NEXT_PUBLIC_RPC_URL=https://sepolia.base.org
-NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS=0x0000000000000000000000000000000000000000
 ```
 
 ### Step 2: Deploy
@@ -64,13 +66,13 @@ export default getEnv;  // ✅ Function reference only
 
 ## 🎯 Environment Variable Setup
 
-### Optional: Get WalletConnect Project ID
+### Get WalletConnect Project ID
 
 1. Go to: https://cloud.walletconnect.com/
 2. Create account / Sign in
 3. Create new project
 4. Copy Project ID
-5. Add to Vercel: `NEXT_PUBLIC_WAGMI_PROJECT_ID` (optional; enables WalletConnect/mobile wallet support)
+5. Add to Vercel: `NEXT_PUBLIC_WAGMI_PROJECT_ID`
 
 ### Network Configuration
 
@@ -86,9 +88,9 @@ NEXT_PUBLIC_CHAIN_ID=8453
 NEXT_PUBLIC_RPC_URL=https://mainnet.base.org
 ```
 
-### Contract Addresses
+### Contract Addresses (Optional)
 
-Set `NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS` from the deployment manifest; local and preview environments may use the zero-address stub from `.env.local.example`. See `.env.local.example` for the full contract matrix.
+See `.env.local.example` for full list. These have fallback values, so deployment works without them.
 
 ---
 
@@ -97,10 +99,9 @@ Set `NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS` from the deployment manifest; local and pr
 Before pushing to Vercel:
 
 - [x] Fixed `lib/env.ts` export (removed function call)
-- [ ] Optional: set `NEXT_PUBLIC_WAGMI_PROJECT_ID` in Vercel when WalletConnect support is expected
+- [ ] Set `NEXT_PUBLIC_WAGMI_PROJECT_ID` in Vercel
 - [ ] Set `NEXT_PUBLIC_CHAIN_ID` in Vercel
 - [ ] Set `NEXT_PUBLIC_RPC_URL` in Vercel
-- [ ] Set `NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS` in Vercel from the deployment manifest (zero-address stub only for local/preview)
 - [ ] Committed and pushed changes
 - [ ] Monitor Vercel build logs
 - [ ] Verify deployment succeeds
@@ -190,7 +191,7 @@ Route (app)                              Size     First Load JS
 ✅ Chain ID  
 ✅ RPC URL  
 ✅ Contract addresses  
-✅ WalletConnect Project ID  
+✅ WalletConnect Project ID (optional QR/mobile pairing)  
 ✅ Feature flags
 
 ### NEVER Expose
@@ -248,7 +249,7 @@ Route (app)                              Size     First Load JS
 - ✅ Vercel deployments now succeed
 
 **Next Steps:**
-1. Set required env vars in Vercel dashboard
+1. Set required env vars in Vercel dashboard; add `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` only if QR/mobile WalletConnect pairing is needed
 2. Push code changes
 3. Verify successful deployment
 4. Test app in production

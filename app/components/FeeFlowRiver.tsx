@@ -95,15 +95,23 @@ function splitPath(y1: number): string {
   return `M ${SPLIT_X} ${my} C ${(SPLIT_X + POOL_X) / 2} ${my}, ${(SPLIT_X + POOL_X) / 2} ${ey}, ${POOL_X} ${ey}`;
 }
 
-/** Pick a pool by weighted lottery proportional to its split percentage. */
-function pickPool(): Pool {
-  const total = POOLS.reduce((acc, p) => acc + p.pct, 0);
-  let n = Math.random() * total;
-  for (const p of POOLS) {
-    if (n < p.pct) return p;
-    n -= p.pct;
+export function calculateFeeFlowSplit(totalFee: number): Record<PoolId, number> {
+  const totalPct = POOLS.reduce((acc, p) => acc + p.pct, 0);
+  const split = POOLS.reduce((acc, p) => {
+    acc[p.id] = +(totalFee * (p.pct / totalPct)).toFixed(2);
+    return acc;
+  }, {} as Record<PoolId, number>);
+
+  // Keep cents conserved after rounding by assigning any residual to the
+  // largest pool. This makes each displayed fee event add back to the
+  // original fee amount instead of drifting by a cent over time.
+  const roundedTotal = Object.values(split).reduce((acc, v) => acc + v, 0);
+  const residual = +(totalFee - roundedTotal).toFixed(2);
+  if (residual !== 0) {
+    split.burn = +(split.burn + residual).toFixed(2);
   }
-  return POOLS[0]!;
+
+  return split;
 }
 
 export function FeeFlowRiver() {
@@ -159,22 +167,27 @@ export function FeeFlowRiver() {
       if (cancelled) return;
       const elapsed = now - startedAt;
 
-      // Spawn
+      // Spawn one fee event and fan it into all five canonical pools.
+      // This mirrors the actual accounting model: every fee is split across
+      // all destinations, not assigned wholesale to one weighted-random pool.
       if (elapsed - lastSpawn > SPAWN_INTERVAL_MS) {
         lastSpawn = elapsed;
-        const pool = pickPool();
-        const value = +(0.5 + Math.random() * 8).toFixed(2); // $0.50..$8.50 per particle
-        particlesRef.current.push({
-          id: nextId++,
-          pool: pool.id,
-          hex: pool.hex,
-          t0: elapsed,
-          duration: PARTICLE_DURATION_MS,
-          y0: Math.random() * 0.8 + 0.1,
-          y1: pool.y,
-          r: 2 + Math.random() * 3,
-          value,
-        });
+        const feeValue = +(0.5 + Math.random() * 8).toFixed(2); // $0.50..$8.50 per fee event
+        const split = calculateFeeFlowSplit(feeValue);
+        const y0 = Math.random() * 0.8 + 0.1;
+        for (const pool of POOLS) {
+          particlesRef.current.push({
+            id: nextId++,
+            pool: pool.id,
+            hex: pool.hex,
+            t0: elapsed,
+            duration: PARTICLE_DURATION_MS,
+            y0,
+            y1: pool.y,
+            r: 2 + Math.random() * 2,
+            value: split[pool.id],
+          });
+        }
       }
 
       // Prune + credit any particles that have landed
@@ -360,12 +373,13 @@ export function FeeFlowRiver() {
             const isEntry = localT < 0.5;
             const u = isEntry ? localT * 2 : (localT - 0.5) * 2;
             const path = isEntry ? entryPathPoint(p.y0, u) : splitPathPoint(p.y1, u);
+            const radius = Number.isFinite(p.r) && p.r > 0 ? p.r : 2;
             return (
               <circle
                 key={p.id}
                 cx={path.x}
                 cy={path.y}
-                r={p.r}
+                r={radius}
                 fill={p.hex}
                 opacity={isEntry ? 0.6 : 0.95}
               />

@@ -17,8 +17,8 @@
  */
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
-import { useAccount } from 'wagmi';
 import Link from 'next/link';
 import {
   Home,
@@ -34,8 +34,12 @@ import { NotificationBell } from '@/lib/notifications';
 // clashes with VFIDE's dark zinc + cyan design system.
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { MoreSheet } from './MoreSheet';
-import { ProofScoreCrystal } from '@/components/identity/ProofScoreCrystal';
 import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
+
+const ProofScoreCrystal = dynamic(
+  () => import('@/components/identity/ProofScoreCrystal').then((mod) => mod.ProofScoreCrystal),
+  { ssr: false, loading: () => null }
+);
 
 // T2-2: "Shop" renamed → "Marketplace" and points to /marketplace (buyer view).
 // Merchant sellers reach their portal via More → Merchant group.
@@ -79,9 +83,13 @@ const MORE_MATCH = [
   '/seer-service', '/seer-academy',
 ];
 
-export function TopNav() {
+interface TopNavProps {
+  walletEnabled?: boolean;
+  isConnected?: boolean;
+}
+
+export function TopNav({ walletEnabled = true, isConnected = false }: TopNavProps) {
   const pathname = usePathname();
-  const { isConnected } = useAccount();
   const [moreOpen, setMoreOpen] = useState(false);
 
   const activeMainSection = Object.entries(SECTION_MATCH).find(([, paths]) =>
@@ -173,12 +181,9 @@ export function TopNav() {
           {/* Search */}
           <button
             type="button"
-            onClick={() => {
-              const event = new KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true });
-              document.dispatchEvent(event);
-            }}
+            onClick={() => setMoreOpen(true)}
             className="hidden lg:flex items-center gap-2 rounded-lg border border-white/8 bg-white/4 px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-100 hover:bg-white/8 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
-            aria-label="Open global search"
+            aria-label="Open destination search"
           >
             <Search size={13} />
             <span>Search</span>
@@ -198,7 +203,7 @@ export function TopNav() {
           )}
 
           <LanguageSwitcher className="hidden sm:inline-flex" />
-              <VfideConnectButton size="sm" />
+          {walletEnabled && <VfideConnectButton size="sm" />}
         </div>
       </nav>
 
