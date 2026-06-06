@@ -60,7 +60,9 @@ function checkEnvironmentVariables(): boolean {
   const required = [
     'NEXT_PUBLIC_CHAIN_ID',
     'NEXT_PUBLIC_CONTRACT_ADDRESS', // Added to .env.local.example - use 0x0 for dev
-    'NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID'
+    // WalletConnect is optional: when no valid project id is configured the
+    // wallet picker disables that connector while keeping MetaMask/Coinbase
+    // and injected wallets available.
   ];
 
   const missing = required.filter(key => {
