@@ -4,7 +4,7 @@ import { ReactNode } from 'react';
 import { ThemeProvider } from 'next-themes';
 import { LocaleProvider } from '@/lib/locale/LocaleProvider';
 import { AdaptiveProvider } from '@/lib/adaptive';
-import { OnboardingProvider } from '@/components/onboarding';
+import { OnboardingProvider } from '@/components/onboarding/OnboardingContext';
 import { ToastProvider } from '@/components/ui/toast';
 // PERF-2: Defer Web3Providers (wagmi + RainbowKit + @walletconnect ≈ 65KB gz)
 // so marketing/static pages receive zero Web3 JS on first paint.

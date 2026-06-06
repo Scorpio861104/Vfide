@@ -1,56 +1,51 @@
 'use client';
 
 import { ReactNode, Suspense, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { LazyMotion, domAnimation } from 'framer-motion';
 import { registerServiceWorker } from '@/lib/sw-register';
 import { usePathname } from 'next/navigation';
 import { useAccount } from 'wagmi';
-import { AppShell } from '@/components/navigation';
+import { AppShell } from '@/components/navigation/AppShell';
 import { LiveProofScoreProvider } from '@/components/navigation/LiveProofScoreProvider';
 import { RealtimeProvider, UserProvider } from '@/lib/data';
-import { WizardMount } from '@/components/wizard/WizardMount';
 import { WizardStateProvider } from '@/components/wizard/useWizardState';
-import { MonumentBackdrop } from '@/app/components/MonumentBackdrop';
-import { TIER_HEX as TIER_HEX_SHARED, scoreToTierName as scoreToTierNameShared } from '@/lib/proofScore/tiers';
-import { useProofScore } from '@/hooks/useProofScore';
 import { MonumentOverrideProvider, useMonumentOverride } from './MonumentOverrideContext';
+
+const WizardMount = dynamic(() => import('@/components/wizard/WizardMount').then((mod) => mod.WizardMount), { ssr: false });
+const MonumentBackdrop = dynamic(() => import('@/app/components/MonumentBackdrop').then((mod) => mod.MonumentBackdrop), { ssr: false });
 
 // Routes where the fixed monument should be hidden — they manage their own variants.
 const MONUMENT_BLACKLIST = new Set(['/']);
 
-const TIER_HEX = TIER_HEX_SHARED;
-const scoreToTierName = scoreToTierNameShared;
+function scoreToMonumentVertexHex(score: number): string {
+  if (score >= 8000) return '#00FF88';
+  if (score >= 6500) return '#00F0FF';
+  if (score >= 5000) return '#FFD700';
+  if (score >= 3500) return '#FFA500';
+  return '#FF4444';
+}
 
 /**
- * GlobalMonument — viewport-fixed MonumentBackdrop wired to:
- *   1. Any active MonumentOverride (e.g. the ProofScore simulator slider)
- *   2. The connected wallet's live on-chain ProofScore
- *   3. Autonomous sine pulse when neither is available
+ * GlobalMonument — viewport-fixed MonumentBackdrop wired to any active
+ * MonumentOverride (for simulator-driven pages) and otherwise allowed to use
+ * its own autonomous pulse. Keep this lightweight: do not import contract
+ * hooks here, because ClientLayout is in every route's first compile path.
  */
 function GlobalMonument({ pathname }: { pathname: string }) {
-  const { score: chainScore } = useProofScore();
   const { override } = useMonumentOverride();
 
   if (MONUMENT_BLACKLIST.has(pathname)) return null;
 
-  // Override wins — simulator slider drives it directly
-  const effectiveScore = override !== null ? override.score : chainScore;
-
-  const intensity =
-    effectiveScore === null
-      ? undefined  // triggers autonomous pulse in MonumentBackdrop
-      : Math.max(0.1, Math.min(0.9, effectiveScore / 10000));
-
-  const vertexHex =
-    effectiveScore === null
-      ? '#17E8F0'
-      : TIER_HEX[scoreToTierName(effectiveScore)] ?? '#17E8F0';
+  const intensity = override !== null
+    ? Math.max(0.1, Math.min(0.9, override.score / 10000))
+    : undefined;
 
   return (
     <MonumentBackdrop
       variant="fixed"
       intensity={intensity}
-      vertexHex={vertexHex}
+      vertexHex={override ? scoreToMonumentVertexHex(override.score) : '#17E8F0'}
       scrollFade
     />
   );

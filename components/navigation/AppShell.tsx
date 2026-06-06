@@ -1,16 +1,18 @@
 'use client';
 
 import { ReactNode } from 'react';
+import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
 import { ProtocolTicker } from './ProtocolTicker';
-import { MonumentCorner } from './MonumentCorner';
 import { TopNav } from './TopNav';
 import { BottomTabBar } from './BottomTabBar';
-import { RecoveryBeacon } from '@/components/security/RecoveryBeacon';
-import { OwnerChallengeBanner } from '@/components/security/OwnerChallengeBanner';
-import { TierAurora } from '@/components/identity/TierAurora';
-import { TimeLattice } from '@/components/identity/TimeLattice';
-import { TransactionTrailLayer } from '@/components/payments/TransactionTrailLayer';
+
+const MonumentCorner = dynamic(() => import('./MonumentCorner').then((mod) => mod.MonumentCorner), { ssr: false });
+const RecoveryBeacon = dynamic(() => import('@/components/security/RecoveryBeacon').then((mod) => mod.RecoveryBeacon), { ssr: false });
+const OwnerChallengeBanner = dynamic(() => import('@/components/security/OwnerChallengeBanner').then((mod) => mod.OwnerChallengeBanner), { ssr: false });
+const TierAurora = dynamic(() => import('@/components/identity/TierAurora').then((mod) => mod.TierAurora), { ssr: false });
+const TimeLattice = dynamic(() => import('@/components/identity/TimeLattice').then((mod) => mod.TimeLattice), { ssr: false });
+const TransactionTrailLayer = dynamic(() => import('@/components/payments/TransactionTrailLayer').then((mod) => mod.TransactionTrailLayer), { ssr: false });
 
 // The shared chrome (top nav, bottom tab bar on mobile, ticker, monument
 // corner) shows on every page except truly chrome-free surfaces —

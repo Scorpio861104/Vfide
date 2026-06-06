@@ -17,6 +17,7 @@
  */
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
 import { useAccount } from 'wagmi';
 import Link from 'next/link';
@@ -34,8 +35,12 @@ import { NotificationBell } from '@/lib/notifications';
 // clashes with VFIDE's dark zinc + cyan design system.
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { MoreSheet } from './MoreSheet';
-import { ProofScoreCrystal } from '@/components/identity/ProofScoreCrystal';
 import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
+
+const ProofScoreCrystal = dynamic(
+  () => import('@/components/identity/ProofScoreCrystal').then((mod) => mod.ProofScoreCrystal),
+  { ssr: false, loading: () => null }
+);
 
 // T2-2: "Shop" renamed → "Marketplace" and points to /marketplace (buyer view).
 // Merchant sellers reach their portal via More → Merchant group.
