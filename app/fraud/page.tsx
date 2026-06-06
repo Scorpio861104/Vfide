@@ -2,25 +2,27 @@
 
 export const dynamic = 'force-dynamic';
 
-import { AnimatePresence, motion } from 'framer-motion';
-import { Flag, Search, ShieldAlert } from 'lucide-react';
+import { AnimatePresence, m as motion } from 'framer-motion';
+import { Flag, Search } from 'lucide-react';
 import { useState } from 'react';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 import { Footer } from '@/components/layout/Footer';
 
 import { LookupTab } from './components/LookupTab';
-import { MyEscrowsTab } from './components/MyEscrowsTab';
 import { ReportTab } from './components/ReportTab';
 
-type TabId = 'lookup' | 'report' | 'escrows';
+type TabId = 'lookup' | 'report';
 
 const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
   { id: 'lookup',  label: 'Lookup',          icon: Search     },
   { id: 'report',  label: 'File Complaint',  icon: Flag       },
-  { id: 'escrows', label: 'My Escrows',       icon: ShieldAlert },
 ];
 
 export default function FraudPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [activeTab, setActiveTab] = useState<TabId>('lookup');
 
   return (
@@ -64,7 +66,6 @@ export default function FraudPage() {
             transition={{ duration: 0.2 }}>
             {activeTab === 'lookup'  && <LookupTab />}
             {activeTab === 'report'  && <ReportTab />}
-            {activeTab === 'escrows' && <MyEscrowsTab />}
           </motion.div>
         </AnimatePresence>
       </div>

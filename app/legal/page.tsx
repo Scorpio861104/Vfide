@@ -3,22 +3,57 @@
 import { Footer } from "@/components/layout/Footer";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { Scale, Lock, FileText } from "lucide-react";
+import { useLocale } from '@/lib/locale/LocaleProvider';
+import { TabTrigger } from '@/components/ui/TabTrigger';
 
 type TabType = 'legal' | 'privacy' | 'terms';
 
-const TABS = [
-  { id: 'legal' as TabType, label: 'Disclaimers', icon: Scale },
-  { id: 'privacy' as TabType, label: 'Privacy', icon: Lock },
-  { id: 'terms' as TabType, label: 'Terms', icon: FileText },
-];
+const LEGAL_COPY = {
+  'en-US': {
+    badge: 'Legal',
+    title: 'Legal & Policies',
+    subtitle: 'Important legal information, privacy policy, and terms of service.',
+    tabs: { legal: 'Disclaimers', privacy: 'Privacy', terms: 'Terms' },
+    tablistLabel: 'Legal document sections',
+  },
+  'es-ES': {
+    badge: 'Legal',
+    title: 'Legal y políticas',
+    subtitle: 'Información legal importante, política de privacidad y términos del servicio.',
+    tabs: { legal: 'Descargos', privacy: 'Privacidad', terms: 'Términos' },
+    tablistLabel: 'Secciones de documentos legales',
+  },
+  'fr-FR': {
+    badge: 'Légal',
+    title: 'Mentions légales et politiques',
+    subtitle: 'Informations juridiques importantes, politique de confidentialité et conditions d’utilisation.',
+    tabs: { legal: 'Avertissements', privacy: 'Confidentialité', terms: 'Conditions' },
+    tablistLabel: 'Sections des documents juridiques',
+  },
+  'de-DE': {
+    badge: 'Rechtliches',
+    title: 'Rechtliches und Richtlinien',
+    subtitle: 'Wichtige rechtliche Informationen, Datenschutzrichtlinie und Nutzungsbedingungen.',
+    tabs: { legal: 'Hinweise', privacy: 'Datenschutz', terms: 'Bedingungen' },
+    tablistLabel: 'Rechtsdokument-Bereiche',
+  },
+};
 
 const VALID_TABS: TabType[] = ['legal', 'privacy', 'terms'];
 
 export default function LegalPage() {
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<TabType>('legal');
+  const { locale } = useLocale();
+  const copy = (LEGAL_COPY as Record<string, typeof LEGAL_COPY['en-US']>)[locale] ?? LEGAL_COPY['en-US'];
+
+  const tabs = [
+    { id: 'legal' as const, label: copy.tabs.legal, icon: Scale },
+    { id: 'privacy' as const, label: copy.tabs.privacy, icon: Lock },
+    { id: 'terms' as const, label: copy.tabs.terms, icon: FileText },
+  ];
 
   // Honor ?tab=privacy / ?tab=terms deeplinks (e.g. from /vault/safety).
   useEffect(() => {
@@ -46,12 +81,12 @@ export default function LegalPage() {
         <section className="py-10 relative z-10">
           <div className="container mx-auto px-4 max-w-4xl">
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
-              <div className="badge-live mb-3 w-fit"><Scale size={11} /> Legal</div>
+              <div className="badge-live mb-3 w-fit"><Scale size={11} /> {copy.badge}</div>
               <h1 className="text-4xl font-black text-white tracking-tight mb-2">
-                Legal & Policies
+                {copy.title}
               </h1>
               <p className="text-zinc-400">
-                Important legal information, privacy policy, and terms of service.
+                {copy.subtitle}
               </p>
             </motion.div>
           </div>
@@ -61,12 +96,11 @@ export default function LegalPage() {
         <section className="border-b border-white/8 sticky top-7 md:top-[5.25rem] z-40"
           style={{ background: 'rgba(8,8,14,0.85)', backdropFilter: 'blur(24px)' }}>
           <div className="container mx-auto px-4 max-w-4xl">
-            <div className="flex gap-2 overflow-x-auto py-3 scrollbar-hide" role="tablist" aria-label="Legal document sections">
-              {TABS.map(tab => (
-                <button
+            <div className="flex gap-2 overflow-x-auto py-3 scrollbar-hide" role="tablist" aria-label={copy.tablistLabel}>
+              {tabs.map(tab => (
+                <TabTrigger
                   key={tab.id}
-                  role="tab"
-                  aria-selected={activeTab === tab.id}
+                  active={activeTab === tab.id}
                   aria-controls={`tabpanel-${tab.id}`}
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-1.5 px-4 py-2 rounded-xl font-semibold text-sm whitespace-nowrap transition-all duration-200 ${
@@ -75,7 +109,7 @@ export default function LegalPage() {
                 >
                   <tab.icon size={15} />
                   <span>{tab.label}</span>
-                </button>
+                </TabTrigger>
               ))}
             </div>
           </div>

@@ -4,39 +4,46 @@ import { Footer } from '@/components/layout/Footer';
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { m , LazyMotion, domAnimation } from 'framer-motion';
 import { Gift, Shield, ArrowRight, Loader2 } from 'lucide-react';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function InvitePage() {
+  const { locale } = useLocale();
+  void locale;
+
   const params = useParams();
   const code = params?.code as string;
   const [status, setStatus] = useState<'loading' | 'valid' | 'invalid' | 'claimed'>('loading');
 
   useEffect(() => {
+    let cancelled = false;
     if (!code) { setStatus('invalid'); return; }
     fetch(`/api/users/invite?code=${code}`)
       .then(r => r.ok ? r.json() : null)
-      .then(d => setStatus(d?.valid ? 'valid' : 'invalid'))
+      .then(d => { if (cancelled) return; setStatus(d?.valid ? 'valid' : 'invalid'); })
       .catch(() => setStatus('invalid'));
-  }, [code]);
+    return () => { cancelled = true; };
+    }, [code]);
 
   return (
-    <>
+    <LazyMotion features={domAnimation}>
+      <>
       <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] flex items-center justify-center px-4">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-md w-full bg-white/5 border border-white/10 rounded-2xl p-8 backdrop-blur-sm" aria-live="polite" aria-busy={status === 'loading'}>
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-md w-full bg-white/5 border border-white/10 rounded-2xl p-8 backdrop-blur-sm" aria-live="polite" aria-busy={status === 'loading'}>
           {status === 'loading' && (
             <>
-              <Loader2 size={48} className="text-cyan-400 animate-spin mx-auto mb-6" />
+              <Loader2 size={48} className="text-accent animate-spin mx-auto mb-6" />
               <p className="text-gray-300">Validating your invite link...</p>
             </>
           )}
           {status === 'valid' && (
             <>
-              <Gift size={48} className="text-cyan-400 mx-auto mb-6" />
+              <Gift size={48} className="text-accent mx-auto mb-6" />
               <h1 className="text-3xl font-bold text-white mb-4">You&apos;re invited to VFIDE</h1>
               <p className="text-gray-400 mb-8">Join the trust-scored payment network. Zero merchant fees.</p>
               {/* NAV-9: /setup redirects to /settings?tab=account — use /onboarding for new users */}
-              <Link href="/onboarding" className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold">
+              <Link href="/onboarding" className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-accent to-blue-600 text-white rounded-xl font-bold">
                 Accept Invite <ArrowRight size={20} />
               </Link>
             </>
@@ -52,9 +59,10 @@ export default function InvitePage() {
               </div>
             </>
           )}
-        </motion.div>
+        </m.div>
       </div>
       <Footer />
     </>
+    </LazyMotion>
   );
 }

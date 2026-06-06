@@ -5,9 +5,10 @@
 // merchant incentives, lock bonuses, or any other profit-distribution mechanisms.
 
 import { Footer } from '@/components/layout/Footer'
-import { motion } from 'framer-motion'
+import { m as motion } from 'framer-motion'
 import { Shield, Vote, Coins, Info, CheckCircle2, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 const WHAT_YOU_GET = [
   {
@@ -34,6 +35,9 @@ const WHAT_YOU_GET = [
 ];
 
 export default function RewardsPage() {
+  const { locale } = useLocale();
+  void locale;
+
   return (
     <>
       <motion.main

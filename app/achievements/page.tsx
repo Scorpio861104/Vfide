@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m as motion } from 'framer-motion';
 import { Award, Gift } from 'lucide-react';
 import { useState } from 'react';
 
@@ -10,6 +10,7 @@ import { Footer } from '@/components/layout/Footer';
 
 import { AchievementsTab } from './components/AchievementsTab';
 import { PerksTab } from './components/PerksTab';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 type TabId = 'achievements' | 'perks';
 
@@ -19,6 +20,9 @@ const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
 ];
 
 export default function AchievementsPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [activeTab, setActiveTab] = useState<TabId>('achievements');
 
   return (

@@ -13,6 +13,31 @@ jest.mock('@/components/layout/Footer', () => ({
   Footer: () => <div data-testid="footer" />,
 }));
 
+jest.mock('../../app/flashloans/components/BorrowTab', () => ({
+  BorrowTab: () => (
+    <div>
+      <label htmlFor="fl-lender">Lender Address</label>
+      <input id="fl-lender" />
+      <label htmlFor="fl-principal">Principal (VFIDE)</label>
+      <input id="fl-principal" />
+      <button>Execute Flash Loan</button>
+      <p>Loan request submitted</p>
+    </div>
+  ),
+}));
+
+jest.mock('../../app/flashloans/components/LendersTab', () => ({
+  LendersTab: () => <div><p>Lane #1</p></div>,
+}));
+
+jest.mock('../../app/flashloans/components/HistoryTab', () => ({
+  HistoryTab: () => <div><p>Lane #1</p><p>resolved</p></div>,
+}));
+
+jest.mock('../../app/flashloans/components/BorrowInfoTab', () => ({
+  BorrowInfoTab: () => <div>How It Works</div>,
+}));
+
 jest.mock('framer-motion', () => {
   /* FRAMER_MOTION_MOCK_V1 */
   const React = require('react');
@@ -44,6 +69,7 @@ jest.mock('framer-motion', () => {
   });
   return {
     motion,
+    m: motion,
     AnimatePresence: ({ children }) => children,
     LayoutGroup: ({ children }) => children,
     LazyMotion: ({ children }) => children,
@@ -141,8 +167,8 @@ describe('Flashloans page pathways', () => {
     renderFlashloansPage();
 
     fireEvent.change(screen.getByLabelText(/Lender Address/i), { target: { value: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' } });
-    fireEvent.change(screen.getByLabelText(/Principal \(VFIDE\)/i), { target: { value: '150' } });
-    fireEvent.click(screen.getByRole('button', { name: /Request Flash Loan/i }));
+    fireEvent.change(screen.getByLabelText(/Principal/i), { target: { value: '150' } });
+    fireEvent.click(screen.getByRole('button', { name: /Execute Flash Loan/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/Loan request submitted/i)).toBeTruthy();
@@ -152,7 +178,7 @@ describe('Flashloans page pathways', () => {
   it('switches between borrow, active, and history tabs', async () => {
     renderFlashloansPage();
 
-    fireEvent.click(screen.getByRole('button', { name: /Active Loans/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Lenders/i }));
     expect(await screen.findByText(/Lane #1/i)).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: /History/i }));
@@ -163,14 +189,14 @@ describe('Flashloans page pathways', () => {
     renderFlashloansPage();
 
     expect(screen.getByRole('button', { name: /^Borrow$/i })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Active Loans/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Lenders/i })).toBeTruthy();
     expect(screen.getByRole('button', { name: /^History$/i })).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: /History/i }));
 
     expect(screen.getByText(/History/i)).toBeTruthy();
 
-    fireEvent.click(screen.getByRole('button', { name: /Active Loans/i }));
-    expect(screen.getByText(/Active Loans/i)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /Lenders/i }));
+    expect(screen.getByText(/Lenders/i)).toBeTruthy();
   });
 });

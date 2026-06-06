@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Premium Content Gate
  * 
@@ -10,7 +12,7 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
 import { usePremiumContent } from '@/lib/socialPayments';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Check, Loader, Lock, Unlock } from 'lucide-react';
 import React from 'react';
 import { toast } from '@/lib/toast';
@@ -92,7 +94,7 @@ export function PremiumContentGate({
   if (hasAccess) {
     return (
       <div className={`relative ${className}`}>
-        <motion.div
+        <m.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="absolute top-4 right-4 z-10"
@@ -101,7 +103,7 @@ export function PremiumContentGate({
             <Unlock className="w-4 h-4 text-green-400" />
             <span className="text-xs font-medium text-green-400">Unlocked</span>
           </div>
-        </motion.div>
+        </m.div>
         {children}
       </div>
     );
@@ -112,20 +114,20 @@ export function PremiumContentGate({
     <div className={`relative ${className}`}>
       {/* Locked Overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-zinc-900/60 via-[#1A1A1F]/80 to-zinc-900/95 backdrop-blur-md rounded-xl border-2 border-purple-500/20 flex items-center justify-center z-10">
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center p-8 max-w-md"
         >
           {/* Lock Icon */}
-          <motion.div
+          <m.div
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 200 }}
             className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-purple-500 to-blue-500 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/20"
           >
             <Lock className="w-10 h-10 text-white" />
-          </motion.div>
+          </m.div>
 
           {/* Title */}
           <h3 className="text-2xl font-bold text-zinc-100 mb-2">
@@ -142,7 +144,7 @@ export function PremiumContentGate({
               'Support the creator directly',
               'Instant access after payment',
             ].map((feature, idx) => (
-              <motion.div
+              <m.div
                 key={idx}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -153,7 +155,7 @@ export function PremiumContentGate({
                   <Check className="w-3 h-3 text-purple-400" />
                 </div>
                 <span>{feature}</span>
-              </motion.div>
+              </m.div>
             ))}
           </div>
 
@@ -200,7 +202,7 @@ export function PremiumContentGate({
               </div>
             </>
           )}
-        </motion.div>
+        </m.div>
       </div>
 
       {/* Preview Content (blurred) */}

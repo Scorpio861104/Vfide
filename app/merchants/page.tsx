@@ -7,10 +7,11 @@ export const dynamic = 'force-dynamic';
  */
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { m , LazyMotion, domAnimation } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Search, Star, MapPin, ShoppingBag, Package, Briefcase, Download } from 'lucide-react';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 interface MerchantCard {
   merchant_address: string;
@@ -39,6 +40,9 @@ interface Pagination {
 }
 
 export default function MerchantDirectoryPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [merchants, setMerchants] = useState<MerchantCard[]>([]);
   const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: 20, total: 0, pages: 0 });
   const [search, setSearch] = useState('');
@@ -70,7 +74,8 @@ export default function MerchantDirectoryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white relative">
+    <LazyMotion features={domAnimation}>
+      <div className="min-h-screen bg-zinc-950 text-white relative">
       {/* Ambient orbs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
@@ -81,13 +86,13 @@ export default function MerchantDirectoryPage() {
       <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
 
       {/* Header */}
-      <div className="relative bg-gradient-to-r from-cyan-600/20 to-violet-600/20 border-b border-white/10 py-12 px-4">
+      <div className="relative bg-gradient-to-r from-accent/20 to-violet-600/20 border-b border-white/10 py-12 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="badge-live mb-4">
             <ShoppingBag size={12} /> Merchant Directory
           </div>
           <h1 className="text-3xl md:text-4xl font-black mb-2 tracking-tight">
-            <span className="bg-gradient-to-r from-white to-cyan-300 bg-clip-text text-transparent">Merchant Directory</span>
+            <span className="bg-gradient-to-r from-white to-accent-light bg-clip-text text-transparent">Merchant Directory</span>
           </h1>
           <p className="text-white/60 text-lg mb-6">Discover merchants accepting VFIDE payments</p>
 
@@ -98,7 +103,7 @@ export default function MerchantDirectoryPage() {
                 type="text"
                 value={search}
                 onChange={(e) =>  setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-lg text-white bg-white/5 border border-white/10 focus:ring-2 focus:ring-cyan-500/30 outline-none"
+                className="w-full pl-10 pr-4 py-3 rounded-lg text-white bg-white/5 border border-white/10 focus:ring-2 focus:ring-accent/30 outline-none"
                 maxLength={100}
               />
             </div>
@@ -140,79 +145,79 @@ export default function MerchantDirectoryPage() {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {merchants.map((m) => (
-            <Link key={m.merchant_address} href={`/store/${m.slug}`}>
-              <motion.div
+          {merchants.map((merchant) => (
+            <Link key={merchant.merchant_address} href={`/store/${merchant.slug}`}>
+              <m.div
                 className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
                 whileHover={{ y: -2 }}
               >
                 {/* Color bar */}
-                <div className="h-2" style={{ backgroundColor: m.theme_color || '#3B82F6' }} />
+                <div className="h-2" style={{ backgroundColor: merchant.theme_color || '#3B82F6' }} />
 
                 <div className="p-5">
                   <div className="flex items-start gap-3">
-                    {m.logo_url ? (
-                      <Image src={m.logo_url} alt={`${m.display_name} logo`} width={48} height={48} className="rounded-lg object-cover flex-shrink-0" />
+                    {merchant.logo_url ? (
+                      <Image src={merchant.logo_url} alt={`${merchant.display_name} logo`} width={48} height={48} className="rounded-lg object-cover flex-shrink-0" />
                     ) : (
                       <div
                         className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-lg flex-shrink-0"
-                        style={{ backgroundColor: m.theme_color || '#3B82F6' }}
+                        style={{ backgroundColor: merchant.theme_color || '#3B82F6' }}
                       >
-                        {m.display_name[0]?.toUpperCase()}
+                        {merchant.display_name[0]?.toUpperCase()}
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-gray-900 dark:text-white truncate">{m.display_name}</h3>
-                        {m.featured && (
+                        <h3 className="font-bold text-gray-900 dark:text-white truncate">{merchant.display_name}</h3>
+                        {merchant.featured && (
                           <span className="px-1.5 py-0.5 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 text-xs rounded font-medium">
                             Featured
                           </span>
                         )}
                       </div>
-                      {m.tagline && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400 truncate mt-0.5">{m.tagline}</p>
+                      {merchant.tagline && (
+                        <p className="text-sm text-gray-600 dark:text-gray-400 truncate mt-0.5">{merchant.tagline}</p>
                       )}
                     </div>
                   </div>
 
                   <div className="flex items-center gap-4 mt-4 text-sm text-gray-500 dark:text-gray-400">
-                    {m.avg_rating !== null && (
+                    {merchant.avg_rating !== null && (
                       <span className="flex items-center gap-1">
                         <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                        {m.avg_rating} ({m.review_count})
+                        {merchant.avg_rating} ({merchant.review_count})
                       </span>
                     )}
-                    {(m.city || m.country) && (
+                    {(merchant.city || merchant.country) && (
                       <span className="flex items-center gap-1">
                         <MapPin className="w-3.5 h-3.5" />
-                        {[m.city, m.country].filter(Boolean).join(', ')}
+                        {[merchant.city, merchant.country].filter(Boolean).join(', ')}
                       </span>
                     )}
                   </div>
 
                   <div className="flex items-center gap-2 mt-3 flex-wrap">
                     <span className="flex items-center gap-1 text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
-                      <Package className="w-3 h-3" /> {m.product_count} products
+                      <Package className="w-3 h-3" /> {merchant.product_count} products
                     </span>
-                    {m.shipping_enabled && (
+                    {merchant.shipping_enabled && (
                       <span className="text-xs bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-2 py-1 rounded">
                         Ships
                       </span>
                     )}
-                    {m.services_enabled && (
+                    {merchant.services_enabled && (
                       <span className="text-xs bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 px-2 py-1 rounded flex items-center gap-1">
                         <Briefcase className="w-3 h-3" /> Services
                       </span>
                     )}
-                    {m.digital_goods_enabled && (
+                    {merchant.digital_goods_enabled && (
                       <span className="text-xs bg-purple-100 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 px-2 py-1 rounded flex items-center gap-1">
                         <Download className="w-3 h-3" /> Digital
                       </span>
                     )}
                   </div>
                 </div>
-              </motion.div>
+              </m.div>
             </Link>
           ))}
         </div>
@@ -237,5 +242,6 @@ export default function MerchantDirectoryPage() {
         )}
       </div>
     </div>
+    </LazyMotion>
   );
 }

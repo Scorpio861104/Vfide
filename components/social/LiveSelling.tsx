@@ -12,7 +12,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m as motion, AnimatePresence } from 'framer-motion';
 import { Video, Shield, Heart, Send, X, Package, Sparkles } from 'lucide-react';
 
 interface LiveProduct {
@@ -68,7 +68,6 @@ export function LiveViewer({
 }: LiveViewerProps) {
   const [commentText, setCommentText] = useState('');
   const [showProducts, setShowProducts] = useState(false);
-  const [_likeCount, setLikeCount] = useState(0);
   const [floatingHearts, setFloatingHearts] = useState<number[]>([]);
   const commentsEndRef = useRef<HTMLDivElement>(null);
 
@@ -78,7 +77,6 @@ export function LiveViewer({
   }, [comments.length]);
 
   const handleLike = () => {
-    setLikeCount(prev => prev + 1);
     const id = Date.now();
     setFloatingHearts(prev => [...prev, id]);
     setTimeout(() => setFloatingHearts(prev => prev.filter(h => h !== id)), 2000);
@@ -115,7 +113,7 @@ export function LiveViewer({
               </div>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 bg-black/40 backdrop-blur rounded-full text-white" aria-label="Close"><X size={18} /></button>
+          <button onClick={onClose} className="p-2 bg-black/40 backdrop-blur rounded-full text-white"><X size={18} /></button>
         </div>
 
         {/* Floating hearts */}
@@ -201,8 +199,8 @@ export function LiveViewer({
            
             className="flex-1 px-3 py-2 bg-white/5 rounded-full text-white text-xs  focus:outline-none"
           />
-          <button onClick={handleSend} className="p-2 text-cyan-400" aria-label="Send"><Send size={18} /></button>
-          <button onClick={handleLike} className="p-2 text-pink-400" aria-label="Like"><Heart size={18} /></button>
+          <button onClick={handleSend} className="p-2 text-cyan-400"><Send size={18} /></button>
+          <button onClick={handleLike} className="p-2 text-pink-400"><Heart size={18} /></button>
         </div>
       </div>
     </div>

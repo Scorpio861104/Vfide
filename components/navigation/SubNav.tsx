@@ -44,7 +44,7 @@ const SUB_NAVS: Record<string, { title: string; items: SubNavItem[] }> = {
     title: 'Pay',
     items: [
       { href: '/pay', label: 'Send' },
-      { href: '/remittance', label: 'Remittance' },
+      { href: '/wallet?tab=remittance', label: 'Remittance' },
       { href: '/lending', label: 'Lending' },
       { href: '/escrow', label: 'Escrow' },
       { href: '/crypto', label: 'Wallet' },
@@ -153,7 +153,7 @@ export function SubNav() {
               <Link key={item.href} href={item.href} data-active={isActive || isExactActive}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
                   isActive || isExactActive
-                    ? 'bg-cyan-500/15 text-cyan-400'
+                    ? 'bg-accent/15 text-accent'
                     : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
                 }`}>
                 {item.label}

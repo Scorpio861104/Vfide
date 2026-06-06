@@ -52,7 +52,6 @@
 import { useCallback, useMemo } from 'react';
 import {
   useAccount,
-  usePublicClient,
   useReadContract,
   useReadContracts,
   useWriteContract,
@@ -69,15 +68,20 @@ const ZERO_HASH = '0x00000000000000000000000000000000000000000000000000000000000
  *
  * Source: VaultRecoveryClaim.sol line 73-82.
  */
+// IMPORTANT: These values MUST match the ClaimStatus enum in VaultRecoveryClaim.sol
+// exactly by ordinal position. The on-chain value is decoded by viem as a uint8
+// and compared directly to these TypeScript enum members.
+// Contract order: None=0, Pending=1, GuardianApproved=2, Challenged=3,
+//                 Approved=4, Executed=5, Rejected=6, Expired=7
 export enum RecoveryClaimStatus {
   None = 0,
   Pending = 1,
   GuardianApproved = 2,
   Challenged = 3,
   Approved = 4,
-  Rejected = 5,
-  Expired = 6,
-  Executed = 7,
+  Executed = 5,   // Ownership transferred — matches contract ordinal 5
+  Rejected = 6,   // Claim was rejected by guardians — matches contract ordinal 6
+  Expired = 7,    // Claim expired without resolution — matches contract ordinal 7
 }
 
 /**
@@ -118,7 +122,6 @@ interface UseRecoveryClaimArgs {
 
 export function useRecoveryClaim({ targetVault, claimId: explicitClaimId }: UseRecoveryClaimArgs) {
   const { address: newWalletAddress } = useAccount();
-  const _publicClient = usePublicClient();
   const { writeContractAsync, isPending: isWritePending, error: writeError } = useWriteContract();
   const recoveryAddress = CONTRACT_ADDRESSES.VaultRecoveryClaim as Address;
 
@@ -134,7 +137,17 @@ export function useRecoveryClaim({ targetVault, claimId: explicitClaimId }: UseR
     args: targetVault ? [targetVault] : undefined,
     query: { enabled: !!targetVault && !explicitClaimId },
   });
-  const activeClaimId = (activeClaimIdRaw as bigint | undefined) ?? 0n;
+  // getActiveClaimForVault returns (uint256 claimId, RecoveryClaim memory claim).
+  // viem decodes named multi-output as a plain object { claimId, claim }.
+  // Unnamed multi-output would decode as an array; we handle both defensively.
+  const activeClaimId: bigint = (() => {
+    if (!activeClaimIdRaw) return 0n;
+    if (Array.isArray(activeClaimIdRaw)) return ((activeClaimIdRaw as any[])[0] as bigint) ?? 0n;
+    if (typeof activeClaimIdRaw === 'object' && 'claimId' in (activeClaimIdRaw as object)) {
+      return ((activeClaimIdRaw as { claimId: bigint }).claimId) ?? 0n;
+    }
+    return (activeClaimIdRaw as bigint) ?? 0n;
+  })();
   const claimId = explicitClaimId ?? activeClaimId;
   const hasClaim = claimId > 0n;
 
@@ -197,7 +210,18 @@ export function useRecoveryClaim({ targetVault, claimId: explicitClaimId }: UseR
     };
   }, [viewData]);
 
-  const canFinalize = (viewData?.[1]?.result as boolean | undefined) ?? false;
+  // canFinalize returns (bool, string memory reason) — first output unnamed, second named "reason".
+  // viem typically returns as array for unnamed outputs; we handle both forms defensively.
+  const canFinalizeRaw = viewData?.[1]?.result;
+  const canFinalize: boolean = (() => {
+    if (!canFinalizeRaw) return false;
+    if (Array.isArray(canFinalizeRaw)) return !!((canFinalizeRaw as any[])[0]);
+    if (typeof canFinalizeRaw === 'boolean') return canFinalizeRaw;
+    if (typeof canFinalizeRaw === 'object' && '0' in (canFinalizeRaw as object)) {
+      return !!(canFinalizeRaw as any)['0'];
+    }
+    return false;
+  })();
   const challengeTimeRemaining = (viewData?.[2]?.result as bigint | undefined) ?? 0n;
 
   // ─────────────────────────────────────────────────────────────────

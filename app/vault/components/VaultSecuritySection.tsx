@@ -15,13 +15,17 @@
  */
 
 import { useEffect, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import { AlertTriangle, Clock, Lock, Shield } from 'lucide-react';
 
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useQuarantineStatus, useSelfPanic } from '@/lib/vfide-hooks';
+import { useLocale } from '@/lib/locale/LocaleProvider';
+import { pickLocaleCopy, VAULT_SECURITY_TRANSLATIONS } from '@/lib/i18n';
 
 export function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${string}` | null | undefined }) {
+  const { locale } = useLocale();
+  const copy = pickLocaleCopy(VAULT_SECURITY_TRANSLATIONS, locale);
   const quarantineData = useQuarantineStatus(vaultAddress || undefined);
   const { selfPanic, isPanicking, isAvailable: isPanicAvailable } = useSelfPanic();
 
@@ -65,27 +69,27 @@ export function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${stri
         >
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div className="flex items-center gap-4 min-w-0">
-              <motion.div
+              <m.div
                 animate={isQuarantined ? { scale: [1, 1.1, 1] } : {}}
                 transition={{ duration: 2, repeat: Infinity }}
-                className={`p-4 rounded-2xl flex-shrink-0 ${isQuarantined ? 'bg-red-500/20' : 'bg-cyan-500/20'}`}
+                className={`p-4 rounded-2xl flex-shrink-0 ${isQuarantined ? 'bg-red-500/20' : 'bg-accent/20'}`}
               >
                 {isQuarantined ? (
                   <Lock className="w-8 h-8 text-red-400" />
                 ) : (
-                  <Shield className="w-8 h-8 text-cyan-400" />
+                  <Shield className="w-8 h-8 text-accent" />
                 )}
-              </motion.div>
+              </m.div>
               <div className="min-w-0">
                 <h3 className="text-xl font-bold text-white">
-                  {isQuarantined ? 'Vault Quarantined' : 'Emergency Security'}
+                  {isQuarantined ? copy.quarantinedTitle : copy.emergencyTitle}
                 </h3>
                 <p className="text-white/60 text-sm">
                   {isQuarantined
                     ? hasTimer
                       ? `Locked for ${remainingHours}h ${remainingMinutes}m`
-                      : 'Paused until you explicitly unpause the vault'
-                    : 'Suspect compromise? Lock immediately.'}
+                      : copy.quarantinedDesc
+                    : copy.promptDesc}
                 </p>
                 {!isQuarantined && (
                   <p className="text-white/40 text-xs mt-2">
@@ -97,7 +101,7 @@ export function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${stri
 
             <AnimatePresence mode="wait">
               {!showPanicConfirm ? (
-                <motion.button
+                <m.button
                   key="panic-btn"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -115,10 +119,10 @@ export function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${stri
                   }`}
                 >
                   {isQuarantined ? <Lock size={18} /> : <AlertTriangle size={18} />}
-                  {isQuarantined ? 'Already Locked' : 'Panic Button'}
-                </motion.button>
+                  {isQuarantined ? copy.alreadyLocked : copy.panicButton}
+                </m.button>
               ) : (
-                <motion.div
+                <m.div
                   key="panic-confirm"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -133,7 +137,7 @@ export function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${stri
                     disabled={isPanicking}
                     className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold disabled:opacity-50"
                   >
-                    {isPanicking ? 'Locking...' : 'Confirm Lock'}
+                    {isPanicking ? copy.locking : copy.confirmLock}
                   </button>
                   <button
                     onClick={() => setShowPanicConfirm(false)}
@@ -141,13 +145,13 @@ export function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${stri
                   >
                     Cancel
                   </button>
-                </motion.div>
+                </m.div>
               )}
             </AnimatePresence>
           </div>
 
           {isQuarantined && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               className="mt-4 pt-4 border-t border-white/10"
@@ -162,10 +166,10 @@ export function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${stri
               ) : (
                 <div className="flex items-center gap-2 text-red-400">
                   <Lock size={16} />
-                  <span className="text-sm">Manual unpause required to resume withdrawals and transfers.</span>
+                  <span className="text-sm">{copy.manualUnpause}</span>
                 </div>
               )}
-            </motion.div>
+            </m.div>
           )}
         </GlassCard>
       </div>

@@ -76,14 +76,14 @@ export interface ChapterMeta {
 }
 
 export const CHAPTERS: ChapterMeta[] = [
-  { id: 'welcome', title: 'Welcome', shortLabel: 'Welcome', required: false },
-  { id: 'createVault', title: 'Create your vault', shortLabel: 'Vault', required: true },
-  { id: 'spendLimits', title: 'Set spend limits', shortLabel: 'Limits', required: false },
-  { id: 'guardians', title: 'Add guardians', shortLabel: 'Guardians', required: false },
-  { id: 'finalizeGuardians', title: 'Finalize guardian setup', shortLabel: 'Finalize', required: false },
-  { id: 'merchantApproval', title: 'Approve merchant payments', shortLabel: 'Merchant', required: false },
-  { id: 'proofScore', title: 'ProofScore & first payment', shortLabel: 'ProofScore', required: false },
-  { id: 'done', title: 'All set', shortLabel: 'Done', required: false },
+  { id: 'welcome', title: 'Welcome to VFIDE', shortLabel: 'Welcome', required: false },
+  { id: 'createVault', title: 'Connect wallet and create your vault', shortLabel: 'Vault', required: true },
+  { id: 'spendLimits', title: 'Enable core protections', shortLabel: 'Protection', required: false },
+  { id: 'guardians', title: 'Choose trusted guardians', shortLabel: 'Guardians', required: false },
+  { id: 'finalizeGuardians', title: 'Activate recovery protection', shortLabel: 'Recovery', required: false },
+  { id: 'merchantApproval', title: 'Payments and commerce readiness', shortLabel: 'Payments', required: false },
+  { id: 'proofScore', title: 'Trust and ProofScore', shortLabel: 'ProofScore', required: false },
+  { id: 'done', title: 'You are protected', shortLabel: 'Complete', required: false },
 ];
 
 interface WizardState {

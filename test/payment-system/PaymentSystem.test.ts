@@ -5,12 +5,10 @@ import { time, loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 
 const THIRTY_DAYS = 30 * 24 * 60 * 60;
 
-describe('FeeDistributor (5-channel)', function () {
+describe('FeeDistributor (3-channel ecosystem router)', function () {
   let distributor: any;
   let token: any;
   let admin: SignerWithAddress;
-  let burn: SignerWithAddress;
-  let sanctum: SignerWithAddress;
   let dao: SignerWithAddress;
   let merchants: SignerWithAddress;
   let headhunters: SignerWithAddress;
@@ -18,14 +16,13 @@ describe('FeeDistributor (5-channel)', function () {
   const FEE = ethers.utils.parseEther('10000');
 
   async function deployFixture() {
-    [admin, burn, sanctum, dao, merchants, headhunters] = await ethers.getSigners();
+    [admin, dao, merchants, headhunters] = await ethers.getSigners();
     const MockERC20 = await ethers.getContractFactory('MockERC20');
     token = await MockERC20.deploy('VFIDE', 'VFD', ethers.utils.parseEther('200000000'));
     const F = await ethers.getContractFactory('FeeDistributor');
+    // 5-arg constructor: token, dao, merchants, headhunters, admin
     distributor = await F.deploy(
       token.address,
-      burn.address,
-      sanctum.address,
       dao.address,
       merchants.address,
       headhunters.address,
@@ -33,44 +30,39 @@ describe('FeeDistributor (5-channel)', function () {
     );
     await distributor.deployed();
     await token.transfer(distributor.address, FEE);
-    await distributor.receiveFee(FEE);
-    return { distributor, token, admin, burn, sanctum, dao, merchants, headhunters };
+    return { distributor, token, admin, dao, merchants, headhunters };
   }
 
   beforeEach(async function () {
-    ({ distributor, token, admin, burn, sanctum, dao, merchants, headhunters } =
+    ({ distributor, token, admin, dao, merchants, headhunters } =
       await loadFixture(deployFixture));
   });
 
-  it('should split 35/20/15/20/10 by default', async function () {
+  it('splits 50/30/20 by default — no burn, no sanctum', async function () {
     const totalSupplyBefore = await token.totalSupply();
     await distributor.distribute();
-    const bBal = await token.balanceOf(burn.address);
-    const sBal = await token.balanceOf(sanctum.address);
-    const dBal = await token.balanceOf(dao.address);
-    const mBal = await token.balanceOf(merchants.address);
-    const hBal = await token.balanceOf(headhunters.address);
-    expect(bBal).to.equal(0);
-    expect(sBal).to.equal(FEE.mul(2000).div(10000));
-    expect(dBal).to.equal(FEE.mul(1500).div(10000));
-    expect(mBal).to.equal(FEE.mul(2000).div(10000));
-    // Headhunters get remainder (handles rounding)
-    expect(hBal).to.equal(FEE.sub(FEE.mul(3500).div(10000)).sub(sBal).sub(dBal).sub(mBal));
-    expect(await distributor.totalBurned()).to.equal(FEE.mul(3500).div(10000));
-    expect(await token.totalSupply()).to.equal(totalSupplyBefore.sub(FEE.mul(3500).div(10000)));
+
+    const toDAO       = FEE.mul(5000).div(10000);
+    const toMerchants = FEE.mul(3000).div(10000);
+    const toHeadhunters = FEE.sub(toDAO).sub(toMerchants); // rounding remainder
+
+    expect(await token.balanceOf(dao.address)).to.equal(toDAO);
+    expect(await token.balanceOf(merchants.address)).to.equal(toMerchants);
+    expect(await token.balanceOf(headhunters.address)).to.equal(toHeadhunters);
+
+    // Supply must be unchanged — FeeDistributor never burns
+    expect(await token.totalSupply()).to.equal(totalSupplyBefore);
   });
 
-  it('should leave zero balance after distribution', async function () {
+  it('leaves zero balance in distributor after distribution', async function () {
     await distributor.distribute();
     expect(await token.balanceOf(distributor.address)).to.equal(0);
   });
 
-  it('should revert below minimum', async function () {
+  it('reverts below minimum distribution amount', async function () {
     const F = await ethers.getContractFactory('FeeDistributor');
     const empty = await F.deploy(
       token.address,
-      burn.address,
-      sanctum.address,
       dao.address,
       merchants.address,
       headhunters.address,
@@ -80,52 +72,47 @@ describe('FeeDistributor (5-channel)', function () {
     await expect(empty.distribute()).to.be.revertedWithCustomError(empty, 'BelowMinimum');
   });
 
-  it('should enforce 72hr timelock on split changes', async function () {
-    await distributor.connect(admin).proposeSplitChange(3000, 2000, 2000, 2000, 1000);
+  it('enforces 72h timelock on split changes', async function () {
+    await distributor.connect(admin).proposeSplitChange(6000, 2500, 1500);
     await expect(distributor.connect(admin).executeSplitChange()).to.be.revertedWithCustomError(
-      distributor,
-      'SplitChangeNotReady'
+      distributor, 'SplitChangeNotReady'
     );
     await time.increase(72 * 3600 + 1);
     await distributor.connect(admin).executeSplitChange();
-    const split = await distributor.getCurrentSplit();
-    expect(split[0]).to.equal(3000);
+    const split = await distributor.getSplit();
+    expect(split[0]).to.equal(6000); // dao
+    expect(split[1]).to.equal(2500); // merchants
+    expect(split[2]).to.equal(1500); // headhunters
   });
 
-  it('should reject burn below 20%', async function () {
+  it('rejects split not summing to 10000', async function () {
     await expect(
-      distributor.connect(admin).proposeSplitChange(1999, 2000, 2000, 2001, 2000)
-    ).to.be.revertedWithCustomError(distributor, 'BurnTooLow');
-  });
-
-  it('should reject split not summing to 10000', async function () {
-    await expect(
-      distributor.connect(admin).proposeSplitChange(3000, 2000, 2000, 2000, 999)
+      distributor.connect(admin).proposeSplitChange(5000, 3000, 1999) // 9999
     ).to.be.revertedWithCustomError(distributor, 'InvalidSplit');
   });
 
-  it('should timelock destination updates before applying them', async function () {
-    const replacement = (await ethers.getSigners())[6];
+  it('rejects a single channel exceeding 60%', async function () {
+    await expect(
+      distributor.connect(admin).proposeSplitChange(7000, 2000, 1000) // 70% dao
+    ).to.be.revertedWithCustomError(distributor, 'SingleSinkTooHigh');
+  });
 
+  it('timelocks destination updates', async function () {
+    const replacement = (await ethers.getSigners())[4];
     await distributor.connect(admin).setDestination('dao', replacement.address);
     expect(await distributor.daoPayrollPool()).to.equal(dao.address);
-
     await expect(
       distributor.connect(admin).executeDestinationChange()
     ).to.be.revertedWithCustomError(distributor, 'SplitChangeNotReady');
-
-    await time.increase(48 * 3600 + 1);
+    await time.increase(72 * 3600 + 1);
     await distributor.connect(admin).executeDestinationChange();
-
     expect(await distributor.daoPayrollPool()).to.equal(replacement.address);
   });
 
-  it('should allow cancelling a pending destination update', async function () {
-    const replacement = (await ethers.getSigners())[6];
-
+  it('allows cancelling a pending destination update', async function () {
+    const replacement = (await ethers.getSigners())[4];
     await distributor.connect(admin).setDestination('dao', replacement.address);
     await distributor.connect(admin).cancelDestinationChange();
-
     await expect(
       distributor.connect(admin).executeDestinationChange()
     ).to.be.revertedWithCustomError(distributor, 'NoSplitChangePending');

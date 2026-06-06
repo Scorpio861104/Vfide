@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Gift, Plus, Copy, Check, MessageCircle, Clock, ArrowLeft } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence , LazyMotion, domAnimation } from 'framer-motion';
 import { useAccount } from 'wagmi';
 import { Footer } from '@/components/layout/Footer';
 import { useLocale } from '@/lib/locale/LocaleProvider';
@@ -115,7 +115,8 @@ export default function MerchantGiftCardsPage() {
   }, [formatCurrency]);
 
   return (
-    <>
+    <LazyMotion features={domAnimation}>
+      <>
       <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] text-white relative">
         {/* Ambient orbs */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -127,7 +128,7 @@ export default function MerchantGiftCardsPage() {
         <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         <section className="py-16">
           <div className="container mx-auto max-w-5xl px-4">
-            <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200">
+            <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-accent hover:text-accent">
               <ArrowLeft size={16} /> Back to Merchant Hub
             </Link>
 
@@ -154,7 +155,7 @@ export default function MerchantGiftCardsPage() {
 
             <AnimatePresence>
               {showCreate && (
-                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mb-6 overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-5">
+                <m.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mb-6 overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-5">
                   <div className="grid gap-4 md:grid-cols-2">
                     <label className="text-sm text-gray-300">
                       Amount
@@ -197,7 +198,7 @@ export default function MerchantGiftCardsPage() {
                   >
                     Save gift card
                   </button>
-                </motion.div>
+                </m.div>
               )}
             </AnimatePresence>
 
@@ -251,5 +252,6 @@ export default function MerchantGiftCardsPage() {
       </div>
       <Footer />
     </>
+    </LazyMotion>
   );
 }

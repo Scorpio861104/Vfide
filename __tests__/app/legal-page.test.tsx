@@ -27,7 +27,9 @@ jest.mock('framer-motion', () => {
       return ({ children, ...rest }: any) => React.createElement(String(tag), rest, children);
     },
   });
-  return { motion, AnimatePresence: ({ children }: any) => children };
+  return { motion,
+    m: motion,
+    AnimatePresence: ({ children }: any) => children };
 });
 
 jest.mock('lucide-react', () => (() => {

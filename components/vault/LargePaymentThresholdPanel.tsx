@@ -13,7 +13,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { formatUnits, parseUnits } from 'viem';
 import { type Address } from 'viem';
-import { useLargePaymentThreshold, FIXED_THRESHOLD_DELAY_SECONDS } from '@/hooks/useLargePaymentThreshold';
+import { useLargePaymentThreshold } from '@/hooks/useLargePaymentThreshold';
 import { AlertCircle, CheckCircle2, Clock, Sliders } from 'lucide-react';
 import Link from 'next/link';
 
@@ -67,8 +67,6 @@ export function LargePaymentThresholdPanel({ vaultAddress }: Props) {
 
     try {
       const wei = parseUnits(trimmed, 18);
-      // Delay is fixed in the contract (SENSITIVE_ADMIN_DELAY = 7 days) — no
-      // user-supplied delay is sent on-chain.
       await propose(wei);
     } catch {
       // Error is captured in proposeError from the hook
@@ -161,17 +159,9 @@ export function LargePaymentThresholdPanel({ vaultAddress }: Props) {
               className="w-full rounded-xl bg-zinc-800 border border-zinc-600 px-4 py-3 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
           </div>
-          <div>
-            <label className="block text-xs text-zinc-400 uppercase tracking-wide mb-1.5">
-              Timelock Delay
-            </label>
-            <div className="w-full rounded-xl bg-zinc-800/60 border border-zinc-700 px-4 py-3 text-sm text-zinc-300">
-              {FIXED_THRESHOLD_DELAY_SECONDS / 86400} days (enforced by the vault contract)
-            </div>
-            <p className="text-xs text-zinc-500 mt-1">
-              The delay is hard-coded in the vault as <code className="text-zinc-400">SENSITIVE_ADMIN_DELAY</code> and
-              cannot be changed by the caller. After this period, anyone can apply the pending change.
-            </p>
+          <div className="rounded-xl border border-zinc-700 bg-zinc-800/60 px-4 py-3 text-xs text-zinc-400">
+            The timelock delay is enforced by the vault contract. After proposing a new threshold,
+            review the effective time in Pending Changes before applying it.
           </div>
 
           {validationError && (

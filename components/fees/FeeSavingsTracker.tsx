@@ -11,7 +11,7 @@
  * - Etsy:   6.5% 
  * - Shopify: 2.9% + $0.30
  * 
- * VFIDE buyer fee: 0.25% - 1% (based on ProofScore)
+ * VFIDE buyer fee: 0.25% - 5% (ProofScoreBurnRouter: minTotalBps=25, maxTotalBps=500)
  * VFIDE merchant fee: 0%
  * 
  * Usage:
@@ -22,7 +22,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { TrendingDown, Shield } from 'lucide-react';
 import { useLocale } from '@/lib/locale/LocaleProvider';
 
@@ -77,10 +77,10 @@ export function FeeSavingsCard({ totalVolume, transactionCount, buyerFeeBps, cla
   const avgSaved = savings.reduce((s, c) => s + c.saved, 0) / savings.length;
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`bg-gradient-to-br from-emerald-500/10 to-cyan-500/10 border border-emerald-500/20 rounded-2xl p-6 ${className}`}
+      className={`bg-gradient-to-br from-emerald-500/10 to-accent/10 border border-emerald-500/20 rounded-2xl p-6 ${className}`}
     >
       <div className="flex items-center gap-3 mb-4">
         <div className="p-2 rounded-xl bg-emerald-500/20">
@@ -113,7 +113,7 @@ export function FeeSavingsCard({ totalVolume, transactionCount, buyerFeeBps, cla
                 <span className="text-emerald-400 font-bold font-mono">{formatCurrency(competitor.saved)}</span>
               </div>
               <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
-                <motion.div
+                <m.div
                   initial={{ width: 0 }}
                   animate={{ width: `${barWidth}%` }}
                   transition={{ duration: 0.8, delay: 0.2 }}
@@ -129,7 +129,7 @@ export function FeeSavingsCard({ totalVolume, transactionCount, buyerFeeBps, cla
       <div className="mt-4 text-xs text-gray-500 text-center">
         Your VFIDE fee: {(buyerFeeBps / 100).toFixed(2)}% • Merchant fee: 0%
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -179,7 +179,7 @@ export function FeeSavingsCalculator() {
     [volume, txCount]
   );
 
-  const vfideFeeMonthly = calculateVFIDEFee(volume, 50); // Assume 0.5% for calculator
+  const vfideFeeMonthly = calculateVFIDEFee(volume, 50); // Mid-range illustrative rate (0.5% = 50 bps). Actual: 0.25%–5% depending on ProofScore.
   const vfideFeeYearly = vfideFeeMonthly * 12;
 
   return (
@@ -201,7 +201,7 @@ export function FeeSavingsCalculator() {
               type="number"
               value={monthlyVolume}
               onChange={e =>  setMonthlyVolume(e.target.value)}
-              className="w-full pl-8 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-lg font-mono focus:border-cyan-500/50 focus:outline-none"
+              className="w-full pl-8 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-lg font-mono focus:border-accent/50 focus:outline-none"
             />
           </div>
         </div>
@@ -213,7 +213,7 @@ export function FeeSavingsCalculator() {
               type="number"
               value={avgTransaction}
               onChange={e =>  setAvgTransaction(e.target.value)}
-              className="w-full pl-8 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-lg font-mono focus:border-cyan-500/50 focus:outline-none"
+              className="w-full pl-8 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-lg font-mono focus:border-accent/50 focus:outline-none"
             />
           </div>
         </div>
@@ -221,14 +221,14 @@ export function FeeSavingsCalculator() {
 
       {/* Results */}
       {volume > 0 && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
           {/* VFIDE row */}
           <div className="bg-emerald-500/10 border-2 border-emerald-500/30 rounded-xl p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Shield size={20} className="text-emerald-400" />
               <div>
                 <div className="text-white font-bold">VFIDE</div>
-                <div className="text-emerald-400 text-xs">0% merchant fee • 0.5% buyer fee</div>
+                <div className="text-emerald-400 text-xs">0% merchant fee • 0.25%–5% buyer fee</div>
               </div>
             </div>
             <div className="text-right">
@@ -257,14 +257,14 @@ export function FeeSavingsCalculator() {
           })}
 
           {/* Annual savings callout */}
-          <div className="bg-gradient-to-r from-cyan-500/10 to-emerald-500/10 border border-cyan-500/20 rounded-xl p-6 text-center mt-6">
+          <div className="bg-gradient-to-r from-accent/10 to-emerald-500/10 border border-accent/20 rounded-xl p-6 text-center mt-6">
             <div className="text-gray-400 text-sm mb-1">Estimated annual savings vs Square</div>
             <div className="text-4xl font-bold text-emerald-400 font-mono">
               {formatCurrency((results.find(r => r.name === 'Square')?.yearlyFee || 0) - vfideFeeYearly)}
             </div>
             <div className="text-gray-500 text-xs mt-2">That&apos;s money back in your pocket, not theirs.</div>
           </div>
-        </motion.div>
+        </m.div>
       )}
     </div>
   );

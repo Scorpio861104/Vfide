@@ -38,6 +38,7 @@ export function SecurityTab() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let _cancelled = false;
     if (!address) return;
     setLoading(true);
     fetch('/api/security/logs?limit=30')
@@ -45,7 +46,8 @@ export function SecurityTab() {
       .then((data) => setLogs(data.logs ?? []))
       .catch(() => setError('Failed to load security events'))
       .finally(() => setLoading(false));
-  }, [address]);
+    return () => { _cancelled = true; };
+    }, [address]);
 
   if (!address) {
     return (
@@ -76,13 +78,13 @@ export function SecurityTab() {
 
       <div className="bg-white/3 border border-white/10 rounded-2xl p-5">
         <div className="flex items-center gap-2 mb-4">
-          <Shield size={16} className="text-cyan-400" />
+          <Shield size={16} className="text-accent" />
           <h3 className="text-white font-semibold text-sm">Security Event Log</h3>
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 size={20} className="text-cyan-400 animate-spin" />
+            <Loader2 size={20} className="text-accent animate-spin" />
           </div>
         ) : error ? (
           <p className="text-red-400 text-sm text-center py-6">{error}</p>

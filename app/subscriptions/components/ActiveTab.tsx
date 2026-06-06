@@ -23,6 +23,7 @@ export function ActiveTab() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let _cancelled = false;
     if (!address) return;
     setLoading(true);
     setError(null);
@@ -31,7 +32,8 @@ export function ActiveTab() {
       .then((data) => setSubs((data.subscriptions ?? []).filter((s: Subscription) => s.status === 'active')))
       .catch(() => setError('Failed to load subscriptions'))
       .finally(() => setLoading(false));
-  }, [address]);
+    return () => { _cancelled = true; };
+    }, [address]);
 
   if (!address) {
     return (
@@ -48,7 +50,7 @@ export function ActiveTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 size={24} className="text-cyan-400 animate-spin" />
+        <Loader2 size={24} className="text-accent animate-spin" />
       </div>
     );
   }
@@ -75,8 +77,8 @@ export function ActiveTab() {
     <div className="space-y-3">
       {subs.map((sub) => (
         <div key={sub.id} className="bg-white/3 border border-white/10 rounded-xl p-4 flex items-center gap-4">
-          <div className="w-10 h-10 bg-cyan-500/10 rounded-xl flex items-center justify-center flex-shrink-0">
-            <RefreshCw size={18} className="text-cyan-400" />
+          <div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center flex-shrink-0">
+            <RefreshCw size={18} className="text-accent" />
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-white font-semibold text-sm">{sub.label}</p>

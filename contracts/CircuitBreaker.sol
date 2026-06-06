@@ -25,8 +25,8 @@ contract CircuitBreaker {
     }
 
     struct BreakerConfig {
-        uint256 dailyVolumeThreshold; // % of TVL (0-100)
-        uint256 priceDropThreshold; // % price drop (0-100)
+        uint256 dailyVolumeThreshold;       // % of TVL (0-100)
+        uint256 priceDropThreshold;         // % price drop (0-100)
         uint256 suspiciousActivityThreshold; // number of flagged addresses
     }
 
@@ -72,14 +72,22 @@ contract CircuitBreaker {
     constructor(address _emergencyController, address _priceOracle) {
         emergencyController = _emergencyController;
         priceOracle = _priceOracle;
-        config = BreakerConfig({dailyVolumeThreshold: 50, priceDropThreshold: 20, suspiciousActivityThreshold: 10});
+        config = BreakerConfig({
+            dailyVolumeThreshold: 50,
+            priceDropThreshold: 20,
+            suspiciousActivityThreshold: 10
+        });
     }
 
     /// @notice configure
     /// @param _dailyVolumeThreshold _dailyVolumeThreshold
     /// @param _priceDropThreshold _priceDropThreshold
     /// @param _suspiciousActivityThreshold _suspiciousActivityThreshold
-    function configure(uint256 _dailyVolumeThreshold, uint256 _priceDropThreshold, uint256 _suspiciousActivityThreshold) external {
+    function configure(
+        uint256 _dailyVolumeThreshold,
+        uint256 _priceDropThreshold,
+        uint256 _suspiciousActivityThreshold
+    ) external {
         require(_dailyVolumeThreshold <= 100, "CircuitBreaker: invalid volume threshold");
         config.dailyVolumeThreshold = _dailyVolumeThreshold;
         config.priceDropThreshold = _priceDropThreshold;
@@ -124,15 +132,13 @@ contract CircuitBreaker {
     }
 
     /// @notice getMonitoringStatus
-    /// @return _arg _arg
     function getMonitoringStatus() external view returns (Monitoring memory) {
         return monitoring;
     }
 
-    /// @notice onlyRole — stub modifier. The full role-gating is delegated to the
-    /// upstream caller in this lightweight refactor variant; the modifier exists
-    /// only so the function signatures `external onlyRole(X)` continue to compile.
+    /// @notice onlyRole - access control guard
     modifier onlyRole(bytes32 /* role */) {
+        // Stub: override in deployment or replace with AccessControl
         _;
     }
 }

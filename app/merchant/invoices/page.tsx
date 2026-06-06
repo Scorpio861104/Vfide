@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useAccount } from 'wagmi';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 import {
   ArrowLeft,
   FileText,
@@ -19,6 +20,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
+import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -60,7 +62,7 @@ interface InvoiceSummary {
 const STATUS_META: Record<InvoiceStatus, { label: string; icon: typeof CheckCircle2; color: string; bg: string }> = {
   draft:     { label: 'Draft',     icon: FileText,      color: 'text-zinc-300',    bg: 'bg-zinc-700/30 border-zinc-600/30' },
   sent:      { label: 'Sent',      icon: Mail,          color: 'text-blue-300',    bg: 'bg-blue-500/10 border-blue-500/30' },
-  viewed:    { label: 'Viewed',    icon: Clock,         color: 'text-cyan-300',    bg: 'bg-cyan-500/10 border-cyan-500/30' },
+  viewed:    { label: 'Viewed',    icon: Clock,         color: 'text-accent',    bg: 'bg-accent/10 border-accent/30' },
   paid:      { label: 'Paid',      icon: CheckCircle2,  color: 'text-emerald-300', bg: 'bg-emerald-500/10 border-emerald-500/30' },
   overdue:   { label: 'Overdue',   icon: AlertTriangle, color: 'text-amber-300',   bg: 'bg-amber-500/10 border-amber-500/30' },
   cancelled: { label: 'Cancelled', icon: XCircle,       color: 'text-zinc-400',    bg: 'bg-zinc-800/40 border-zinc-700/40' },
@@ -72,6 +74,9 @@ const ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
 // ── Page ────────────────────────────────────────────────────────────────────
 
 export default function MerchantInvoicesPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address } = useAccount();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [summary, setSummary] = useState<InvoiceSummary[]>([]);
@@ -135,7 +140,7 @@ export default function MerchantInvoicesPage() {
         </div>
         <section className="py-12 relative">
           <div className="container mx-auto max-w-6xl px-4">
-            <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200 text-sm">
+            <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-accent hover:text-accent text-sm">
               <ArrowLeft size={16} /> Back to Merchant Hub
             </Link>
 
@@ -145,8 +150,8 @@ export default function MerchantInvoicesPage() {
                   <span className="badge-live"><span className="badge-live-dot" />Invoicing</span>
                 </div>
                 <h1 className="text-4xl font-bold mb-2">
-                  <span className="bg-gradient-to-r from-cyan-400 via-emerald-400 to-blue-400 bg-clip-text text-transparent flex items-center gap-3">
-                    <FileText size={32} className="text-cyan-400" />Send invoices, get paid in VFIDE
+                  <span className="bg-gradient-to-r from-accent via-emerald-400 to-blue-400 bg-clip-text text-transparent flex items-center gap-3">
+                    <FileText size={32} className="text-accent" />Send invoices, get paid in VFIDE
                   </span>
                 </h1>
                 <p className="mt-2 max-w-3xl text-white/50">
@@ -156,7 +161,7 @@ export default function MerchantInvoicesPage() {
               <button
                 onClick={() => setShowCreate(true)}
                 disabled={!address}
-                className="px-5 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90"
+                className="px-5 py-3 bg-gradient-to-r from-accent to-blue-500 rounded-xl font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90"
               >
                 <Plus size={18} /> New invoice
               </button>
@@ -201,7 +206,7 @@ export default function MerchantInvoicesPage() {
                     <div className="p-12 text-center text-zinc-400">Loading invoices…</div>
                   ) : invoices.length === 0 ? (
                     <div className="p-12 text-center text-zinc-400">
-                      No invoices yet. Click <span className="text-cyan-300">New invoice</span> to create your first.
+                      No invoices yet. Click <span className="text-accent">New invoice</span> to create your first.
                     </div>
                   ) : (
                     <div className="divide-y divide-white/5">
@@ -292,8 +297,6 @@ function InvoiceRow({ invoice, onMarkPaid, onCancel, onSend }: { invoice: Invoic
 
 // ── Create modal ────────────────────────────────────────────────────────────
 
-const VFIDE_TOKEN_PLACEHOLDER = '0x0000000000000000000000000000000000000000';
-
 function CreateInvoiceModal({
   merchantAddress: _merchantAddress,
   onClose,
@@ -314,9 +317,10 @@ function CreateInvoiceModal({
   const [taxRate, setTaxRate] = useState(0);
   const [memo, setMemo] = useState('');
   const [dueDate, setDueDate] = useState('');
-  const [token, _setToken] = useState<string>(
-    process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS ?? VFIDE_TOKEN_PLACEHOLDER,
-  );
+  const configuredToken = isConfiguredContractAddress(CONTRACT_ADDRESSES.VFIDEToken)
+    ? CONTRACT_ADDRESSES.VFIDEToken
+    : '';
+  const [token, _setToken] = useState<string>(configuredToken);
   const [sendImmediately, setSendImmediately] = useState(true);
 
   const subtotal = useMemo(() => items.reduce((s, it) => s + (Number(it.quantity) * Number(it.unit_price)), 0), [items]);
@@ -378,19 +382,24 @@ function CreateInvoiceModal({
         </div>
 
         <div className="space-y-5">
+          {!configuredToken && (
+            <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-200">
+              VFIDE token contract is not configured. Set NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS before creating invoices.
+            </div>
+          )}
           {/* Customer */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <label className="block">
               <span className="text-xs text-zinc-400 mb-1 block">Customer name</span>
-              <input type="text" value={customer.name} onChange={(e) => setCustomer((c) => ({ ...c, name: e.target.value }))} placeholder="Acme Co." className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none" />
+              <input type="text" value={customer.name} onChange={(e) => setCustomer((c) => ({ ...c, name: e.target.value }))} placeholder="Acme Co." className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none" />
             </label>
             <label className="block">
               <span className="text-xs text-zinc-400 mb-1 block">Email (optional)</span>
-              <input type="email" autoComplete="email" inputMode="email" value={customer.email} onChange={(e) => setCustomer((c) => ({ ...c, email: e.target.value }))} placeholder="billing@acme.co" className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none" />
+              <input type="email" autoComplete="email" inputMode="email" value={customer.email} onChange={(e) => setCustomer((c) => ({ ...c, email: e.target.value }))} placeholder="billing@acme.co" className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none" />
             </label>
             <label className="block sm:col-span-2">
               <span className="text-xs text-zinc-400 mb-1 block">Customer wallet (optional)</span>
-              <input type="text" value={customer.address} onChange={(e) => setCustomer((c) => ({ ...c, address: e.target.value }))} placeholder="0x…" className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm font-mono focus:border-cyan-500 outline-none" />
+              <input type="text" value={customer.address} onChange={(e) => setCustomer((c) => ({ ...c, address: e.target.value }))} placeholder="0x…" className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm font-mono focus:border-accent outline-none" />
             </label>
           </div>
 
@@ -400,7 +409,7 @@ function CreateInvoiceModal({
               <span className="text-sm font-medium">Line items</span>
               <button
                 onClick={() => setItems((i) => [...i, { description: '', quantity: 1, unit_price: 0 }])}
-                className="text-xs text-cyan-300 hover:text-cyan-200 inline-flex items-center gap-1"
+                className="text-xs text-accent hover:text-accent inline-flex items-center gap-1"
               >
                 <Plus size={12} /> Add item
               </button>
@@ -413,7 +422,7 @@ function CreateInvoiceModal({
                     value={it.description}
                     onChange={(e) => setItems((arr) => arr.map((x, i) => i === idx ? { ...x, description: e.target.value } : x))}
                     placeholder="Description"
-                    className="col-span-6 bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none"
+                    className="col-span-6 bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none"
                   />
                   <input
                     type="number"
@@ -422,7 +431,7 @@ function CreateInvoiceModal({
                     value={it.quantity}
                     onChange={(e) => setItems((arr) => arr.map((x, i) => i === idx ? { ...x, quantity: Number(e.target.value) } : x))}
                     placeholder="Qty"
-                    className="col-span-2 bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none"
+                    className="col-span-2 bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none"
                   />
                   <input
                     type="number"
@@ -431,7 +440,7 @@ function CreateInvoiceModal({
                     value={it.unit_price}
                     onChange={(e) => setItems((arr) => arr.map((x, i) => i === idx ? { ...x, unit_price: Number(e.target.value) } : x))}
                     placeholder="Unit"
-                    className="col-span-3 bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none"
+                    className="col-span-3 bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none"
                   />
                   <button
                     onClick={() => setItems((arr) => arr.length > 1 ? arr.filter((_, i) => i !== idx) : arr)}
@@ -450,16 +459,16 @@ function CreateInvoiceModal({
           <div className="grid grid-cols-2 gap-3">
             <label className="block">
               <span className="text-xs text-zinc-400 mb-1 block">Tax rate (%)</span>
-              <input type="number" min={0} max={100} step={0.01} value={taxRate} onChange={(e) => setTaxRate(Number(e.target.value))} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none" />
+              <input type="number" min={0} max={100} step={0.01} value={taxRate} onChange={(e) => setTaxRate(Number(e.target.value))} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none" />
             </label>
             <label className="block">
               <span className="text-xs text-zinc-400 mb-1 block">Due date (optional)</span>
-              <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none" />
+              <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none" />
             </label>
           </div>
           <label className="block">
             <span className="text-xs text-zinc-400 mb-1 block">Memo (optional)</span>
-            <textarea value={memo} onChange={(e) => setMemo(e.target.value)} rows={2} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none resize-none" />
+            <textarea value={memo} onChange={(e) => setMemo(e.target.value)} rows={2} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none resize-none" />
           </label>
 
           {/* Totals */}
@@ -470,11 +479,11 @@ function CreateInvoiceModal({
           </div>
 
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={sendImmediately} onChange={(e) => setSendImmediately(e.target.checked)} className="accent-cyan-500" />
+            <input type="checkbox" checked={sendImmediately} onChange={(e) => setSendImmediately(e.target.checked)} className="accent-accent" />
             <span>Send immediately (otherwise saves as draft)</span>
           </label>
 
-          <button onClick={submit} disabled={!canSubmit} className="w-full px-5 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
+          <button onClick={submit} disabled={!canSubmit} className="w-full px-5 py-3 bg-gradient-to-r from-accent to-blue-500 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
             {creating ? 'Creating…' : 'Create invoice'}
           </button>
         </div>

@@ -88,6 +88,7 @@ jest.mock('framer-motion', () => {
   });
   return {
     motion,
+    m: motion,
     AnimatePresence: ({ children }) => children,
     LayoutGroup: ({ children }) => children,
     LazyMotion: ({ children }) => children,
@@ -159,9 +160,9 @@ describe('Benefits page pathways', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Membership Tiers/i }));
 
-    expect(screen.getByRole('heading', { name: /Membership Tiers/i })).toBeTruthy();
-    expect(screen.getByText(/Bronze/i)).toBeTruthy();
-    expect(screen.getByText(/Platinum/i)).toBeTruthy();
+    expect(screen.getByRole('heading', { name: /ProofScore Tiers/i })).toBeTruthy();
+    expect(screen.getAllByText(/Risky/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Elite/i).length).toBeGreaterThan(0);
   });
 
   it('switches to rewards and stats tabs with connect-state stats', () => {
@@ -171,7 +172,8 @@ describe('Benefits page pathways', () => {
     expect(screen.getByRole('heading', { name: /Available Rewards/i })).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: /My Stats/i }));
-    expect(screen.getByRole('heading', { name: /Gold Member/i })).toBeTruthy();
-    expect(screen.getByText(/ProofScore: 68/i)).toBeTruthy();
+    // StatsTab now shows real hook-derived tier (score=0 → Risky in test env)
+    expect(screen.getByText(/VFIDE Balance/i)).toBeTruthy();
+    expect(screen.getAllByText(/ProofScore/i).length).toBeGreaterThan(0);
   });
 });

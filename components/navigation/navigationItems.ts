@@ -44,7 +44,6 @@ import {
   ArrowLeftRight,
   Eye,
   Clock,
-  Users,
   TrendingUp,
   PiggyBank,
   FileText,
@@ -74,6 +73,14 @@ import {
   Heart,
   // CODE-4: Calendar added for Payroll (scheduled payment, not a banknote)
   Calendar,
+  // NAV: icons for product pages that were previously reachable only by URL
+  Users,
+  Plane,
+  Split,
+  QrCode,
+  FlaskConical,
+  GraduationCap,
+  Map,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -119,9 +126,9 @@ export const navigationItems: NavItem[] = [
       { id: 'guardians', label: 'Guardians', href: '/guardians', icon: ShieldCheck, color: '#8B5CF6' },
       { id: 'vault-recover', label: 'Recovery', href: '/vault/recover', icon: KeyRound, color: '#8B5CF6' },
       { id: 'vault-settings', label: 'Settings', href: '/vault/settings', icon: Settings, color: '#8B5CF6' },
-      { id: 'multisig', label: 'Multi-Sig', href: '/multisig', icon: Users, color: '#8B5CF6' },
-      { id: 'time-locks', label: 'Time Locks', href: '/time-locks', icon: Clock, color: '#8B5CF6' },
+      { id: 'time-locks', label: 'Time Locks', href: '/time-locks', icon: Clock, color: '#8B5CF6', comingSoon: true },
       { id: 'vesting', label: 'Vesting', href: '/vesting', icon: Gift, color: '#8B5CF6' },
+      { id: 'inheritance', label: 'Inheritance', href: '/inheritance', icon: Users, color: '#8B5CF6' },
     ],
   },
   {
@@ -140,12 +147,14 @@ export const navigationItems: NavItem[] = [
       { id: 'payroll',       label: 'Payroll',       href: '/payroll',       icon: Calendar,       color: '#10B981' },
       { id: 'streaming',     label: 'Streaming',     href: '/streaming',     icon: Zap,            color: '#10B981', comingSoon: true },
       { id: 'cross-chain',   label: 'Cross-Chain',   href: '/cross-chain',   icon: ArrowLeftRight, color: '#10B981' },
-      { id: 'stealth',       label: 'Private Pay',   href: '/stealth',       icon: Eye,            color: '#10B981' },
+      { id: 'stealth',       label: 'Private Pay',   href: '/stealth',       icon: Eye,            color: '#10B981', comingSoon: true },
       { id: 'pay',           label: 'Quick Pay',     href: '/pay',           icon: Send,           color: '#10B981' },
+      { id: 'remittance',    label: 'Remittance',    href: '/remittance',    icon: Plane,          color: '#10B981' },
+      { id: 'scan',          label: 'Scan to Pay',   href: '/scan',          icon: QrCode,         color: '#10B981' },
+      { id: 'splitter',      label: 'Bill Splitter', href: '/splitter',      icon: Split,          color: '#10B981' },
       { id: 'subscriptions', label: 'Subscriptions', href: '/subscriptions', icon: Repeat,         color: '#10B981' },
       { id: 'lending',       label: 'Lending',       href: '/lending',       icon: Scale,          color: '#10B981', comingSoon: true },
       // NAV-10: Use merchant-prefixed IDs to avoid duplicate IDs with Vault group
-      { id: 'merchant-multisig',    label: 'Multi-Sig',     href: '/multisig',      icon: Users,          color: '#10B981', comingSoon: true },
       { id: 'merchant-time-locks',  label: 'Time Locks',    href: '/time-locks',    icon: Clock,          color: '#10B981', comingSoon: true },
       { id: 'agent',         label: 'AI Agent',      href: '/agent',         icon: Cpu,            color: '#10B981', comingSoon: true },
     ],
@@ -226,6 +235,10 @@ export const navigationItems: NavItem[] = [
       { id: 'hardware-wallet', label: 'Hardware Wallet', href: '/hardware-wallet', icon: HardDrive, color: '#64748B' },
       { id: 'enterprise', label: 'Enterprise', href: '/enterprise', icon: Landmark, color: '#64748B' },
       { id: 'token-launch', label: 'Token Launch', href: '/token-launch', icon: Rocket, color: '#64748B' },
+      { id: 'dev-portal',   label: 'Developer',      href: '/developer',     icon: Code,          color: '#64748B' },
+      { id: 'testnet',      label: 'Testnet Faucet', href: '/testnet',       icon: FlaskConical,  color: '#64748B' },
+      { id: 'seer-academy', label: 'Seer Academy',   href: '/seer-academy',  icon: GraduationCap, color: '#64748B' },
+      { id: 'seer-service', label: 'Seer Oracle',    href: '/seer-service',  icon: Eye,           color: '#64748B' },
     ],
   },
   {
@@ -244,6 +257,7 @@ export const navigationItems: NavItem[] = [
       { id: 'legal',         label: 'Legal',        href: '/legal',           icon: Scale,     color: '#94A3B8' },
       { id: 'about',         label: 'About',        href: '/about',           icon: Info,      color: '#94A3B8' },
       { id: 'support',       label: 'Support',      href: '/support',         icon: LifeBuoy,  color: '#94A3B8' },
+      { id: 'roadmap',       label: 'Roadmap',      href: '/roadmap',         icon: Map,       color: '#94A3B8' },
       // T1-4: Admin/Control Panel removed from public nav; they still exist at their routes
       //       but are not listed here so regular users don't see them.
     ],

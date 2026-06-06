@@ -123,11 +123,11 @@ export function AppLockSettings() {
   return (
     <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl p-6 space-y-6">
       <div className="flex items-center gap-3">
-        <SettingsIcon className="w-6 h-6 text-cyan-400" />
+        <SettingsIcon className="w-6 h-6 text-accent" />
         <h2 className="text-2xl font-bold text-white">App Lock</h2>
       </div>
 
-      <div className="rounded-lg bg-cyan-500/10 border border-cyan-500/30 p-3 text-xs text-cyan-100 flex gap-2">
+      <div className="rounded-lg bg-accent/10 border border-accent/30 p-3 text-xs text-accent flex gap-2">
         <Info size={14} className="flex-shrink-0 mt-0.5" />
         <span>
           App Lock is a <em>device-only</em> speed-bump. It prompts on this device
@@ -183,7 +183,7 @@ export function AppLockSettings() {
         />
         {pinReady && (
           <button
-            className="text-xs text-cyan-400 hover:text-cyan-300 underline"
+            className="text-xs text-accent hover:text-accent underline"
             onClick={() => {
               setShowPinSetup(true);
               setPin1('');
@@ -196,7 +196,7 @@ export function AppLockSettings() {
         )}
 
         {showPinSetup && (
-          <div className="rounded-lg border border-cyan-500/30 bg-gray-900/60 p-4 space-y-3">
+          <div className="rounded-lg border border-accent/30 bg-gray-900/60 p-4 space-y-3">
             <div className="text-sm text-white font-medium">
               {pinReady ? 'Change your PIN' : 'Create a PIN'}
             </div>
@@ -222,7 +222,7 @@ export function AppLockSettings() {
               <button
                 onClick={submitPinSetup}
                 disabled={pinSaving}
-                className="flex-1 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-medium disabled:opacity-50"
+                className="flex-1 py-2 rounded-lg bg-accent-dark hover:bg-accent text-white text-sm font-medium disabled:opacity-50"
               >
                 {pinSaving ? 'Saving…' : 'Save PIN'}
               </button>
@@ -266,7 +266,7 @@ export function AppLockSettings() {
           <span className="self-center text-gray-400 text-sm">VFIDE</span>
           <button
             onClick={saveThreshold}
-            className="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-medium"
+            className="px-4 py-2 rounded-lg bg-accent-dark hover:bg-accent text-white text-sm font-medium"
           >
             Save
           </button>
@@ -342,7 +342,7 @@ function ToggleRow({
         disabled ? 'border-gray-800 opacity-60' : 'border-gray-700'
       } bg-gray-900/40`}
     >
-      {icon && <div className="text-cyan-400 mt-1">{icon}</div>}
+      {icon && <div className="text-accent mt-1">{icon}</div>}
       <div className="flex-1 min-w-0">
         <div className="text-sm font-medium text-white">{title}</div>
         <div className="text-xs text-gray-400 mt-0.5">{description}</div>
@@ -357,7 +357,7 @@ function ToggleRow({
         onClick={onChange}
         disabled={disabled}
         className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors ${
-          checked ? 'bg-cyan-600' : 'bg-gray-700'
+          checked ? 'bg-accent-dark' : 'bg-gray-700'
         } ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
       >
         <span

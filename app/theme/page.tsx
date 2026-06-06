@@ -1,6 +1,6 @@
 'use client';
 
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m as motion } from 'framer-motion';
 import { Eye, Palette, Sliders } from 'lucide-react';
 import { useState } from 'react';
 
@@ -9,6 +9,7 @@ import { Footer } from '@/components/layout/Footer';
 import { AdvancedTab } from './components/AdvancedTab';
 import { PreviewTab } from './components/PreviewTab';
 import { PresetsTab } from './components/PresetsTab';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 type TabId = 'presets' | 'preview' | 'advanced';
 
@@ -19,6 +20,9 @@ const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
 ];
 
 export default function ThemeManagementPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [activeTab, setActiveTab] = useState<TabId>('presets');
 
   return (

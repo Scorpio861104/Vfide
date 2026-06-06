@@ -12,6 +12,7 @@ describe('EcosystemVault (EV-07: payExpense accounting order)', { concurrency: 1
       connectionPromise = network.connect({
         override: {
           allowUnlimitedContractSize: true,
+          hardfork: 'prague',
         },
       });
     }

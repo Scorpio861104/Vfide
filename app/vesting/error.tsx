@@ -23,24 +23,26 @@ export default function VestingError({
           <AlertTriangle className="w-10 h-10 text-red-600" />
         </div>
         <h1 className="text-2xl font-bold text-zinc-100 mb-3">Vesting Error</h1>
-        <p className="text-zinc-400 mb-2">Vesting page failed to load. Please retry.</p>
+        <p className="text-zinc-400 mb-2">
+          Something went wrong loading your vesting schedule. Retry to fetch the latest on-chain state.
+        </p>
         {error.digest && (
           <p className="text-sm text-zinc-500 mb-6 font-mono">Error ID: {error.digest}</p>
         )}
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button
             onClick={reset}
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-cyan-500 text-zinc-900 rounded-lg font-bold hover:bg-cyan-400 transition-colors"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-accent text-zinc-900 rounded-lg font-bold hover:bg-accent-light transition-colors"
           >
             <RefreshCw className="w-4 h-4" />
             Retry
           </button>
           <Link
-            href="/"
+            href="/dashboard"
             className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-zinc-600 text-zinc-300 rounded-lg font-bold hover:bg-zinc-800 transition-colors"
           >
             <Home className="w-4 h-4" />
-            Home
+            Back to Dashboard
           </Link>
         </div>
       </div>

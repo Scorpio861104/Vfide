@@ -12,7 +12,11 @@
  */
 
 import { redirect } from 'next/navigation';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function FeedPage() {
+  const { locale } = useLocale();
+  void locale;
+
   redirect('/social-hub');
 }

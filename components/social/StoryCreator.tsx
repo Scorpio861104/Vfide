@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import React, { useState, useRef } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { m, useReducedMotion } from 'framer-motion';
 import { X, Camera, Type, Image as ImageIcon } from 'lucide-react';
 import { createTextStory, createMediaStory, STORY_BACKGROUNDS, Story } from '@/lib/storiesSystem';
 import { toast } from '@/lib/toast';
@@ -103,13 +103,13 @@ export function StoryCreator({
   };
 
   return (
-    <motion.div 
+    <m.div 
       initial={shouldReduceMotion ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={shouldReduceMotion ? { opacity: 1 } : { opacity: 0 }}
       className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4"
     >
-      <motion.div 
+      <m.div 
         initial={shouldReduceMotion ? false : { scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={shouldReduceMotion ? { opacity: 1 } : { scale: 0.9, opacity: 0 }}
@@ -117,7 +117,7 @@ export function StoryCreator({
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-zinc-700">
-          <h2 className="text-xl font-bold text-cyan-400">Create Story</h2>
+          <h2 className="text-xl font-bold text-accent">Create Story</h2>
           <button
             onClick={onClose}
             aria-label="Close story creator"
@@ -133,7 +133,7 @@ export function StoryCreator({
             onClick={() => setMode('text')}
             className={`flex-1 py-3 font-semibold transition-colors flex items-center justify-center gap-2 ${
               mode === 'text'
-                ? 'bg-cyan-400/10 text-cyan-400 border-b-2 border-cyan-400'
+                ? 'bg-accent/10 text-accent border-b-2 border-accent'
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
@@ -144,7 +144,7 @@ export function StoryCreator({
             onClick={() => setMode('media')}
             className={`flex-1 py-3 font-semibold transition-colors flex items-center justify-center gap-2 ${
               mode === 'media'
-                ? 'bg-cyan-400/10 text-cyan-400 border-b-2 border-cyan-400'
+                ? 'bg-accent/10 text-accent border-b-2 border-accent'
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
@@ -186,7 +186,7 @@ export function StoryCreator({
                       onClick={() => setSelectedBackground(index)}
                       className={`aspect-square rounded-lg transition-all ${
                         selectedBackground === index
-                          ? 'ring-2 ring-cyan-400 scale-110'
+                          ? 'ring-2 ring-accent scale-110'
                           : 'hover:scale-105'
                       }`}
                       style={{ background: bg.gradient }}
@@ -213,7 +213,7 @@ export function StoryCreator({
                   role="button"
                   tabIndex={0}
                   aria-label="Add photo or video to story"
-                  className="aspect-9/16 max-w-sm mx-auto border-2 border-dashed border-zinc-700 rounded-xl flex flex-col items-center justify-center p-8 cursor-pointer hover:border-cyan-400 focus-visible:outline-2 focus-visible:outline-cyan-400 transition-colors"
+                  className="aspect-9/16 max-w-sm mx-auto border-2 border-dashed border-zinc-700 rounded-xl flex flex-col items-center justify-center p-8 cursor-pointer hover:border-accent focus-visible:outline-2 focus-visible:outline-accent transition-colors"
                   onClick={() => fileInputRef.current?.click()}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
@@ -265,7 +265,7 @@ export function StoryCreator({
                     value={caption}
                     onChange={(e) =>  setCaption(e.target.value)}
                    
-                    className="w-full px-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100  focus:border-cyan-400 focus:outline-none"
+                    className="w-full px-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100  focus:border-accent focus:outline-none"
                     maxLength={100}
                   />
                 </div>
@@ -285,13 +285,13 @@ export function StoryCreator({
           <button
             onClick={handleCreate}
             disabled={(mode === 'text' && !textContent.trim()) || (mode === 'media' && !mediaPreview)}
-            className="flex-1 rounded-lg bg-cyan-400 py-3 font-semibold text-zinc-950 transition-colors hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-50 min-h-[44px]"
+            className="flex-1 rounded-lg bg-accent py-3 font-semibold text-zinc-950 transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50 min-h-[44px]"
           >
             Share Story
           </button>
         </div>
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 }
 

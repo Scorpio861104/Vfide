@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import {IERC20, ReentrancyGuard, SafeERC20} from "./SharedInterfaces.sol";
-import {ScoringConstants} from "./lib/ScoringConstants.sol";
+import "./SharedInterfaces.sol";
+import "./lib/ScoringConstants.sol";
 
 /**
  * VFIDETermLoan — Trust-Based Peer-to-Peer Lending
@@ -170,6 +170,7 @@ error TL_NoVault();
 
 // ── Contract ────────────────────────────────────────────────────────────────
 
+
 /// @notice IFeeDistributor
 /// @title IFeeDistributor
 /// @author Vfide
@@ -190,31 +191,31 @@ contract VFIDETermLoan is ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
 
     /// @notice MAX_INTEREST_BPS
-    uint256 public constant MAX_INTEREST_BPS = 1200; // 12% cap
+    uint256 public constant MAX_INTEREST_BPS = 1200;   // 12% cap
     /// @notice MAX_DURATION
-    uint64 public constant MAX_DURATION = 30 days;
+    uint64  public constant MAX_DURATION = 30 days;
     /// @notice MIN_DURATION
-    uint64 public constant MIN_DURATION = 1 days;
+    uint64  public constant MIN_DURATION = 1 days;
     /// @notice GRACE_PERIOD
-    uint64 public constant GRACE_PERIOD = 3 days;
+    uint64  public constant GRACE_PERIOD = 3 days;
     /// @notice PROTOCOL_CUT_PCT
-    uint256 public constant PROTOCOL_CUT_PCT = 10; // 10% of interest → community
+    uint256 public constant PROTOCOL_CUT_PCT = 10;     // 10% of interest → community
     /// @notice MAX_ACTIVE_LOANS
     uint256 public constant MAX_ACTIVE_LOANS = 10;
     /// @notice REQUIRED_GUARANTORS
-    uint8 public constant REQUIRED_GUARANTORS = 1; // At least 1 guardian must co-sign
+    uint8   public constant REQUIRED_GUARANTORS = 1;   // At least 1 guardian must co-sign
     /// @notice MAX_PLAN_DURATION
-    uint64 public constant MAX_PLAN_DURATION = 90 days;
+    uint64  public constant MAX_PLAN_DURATION = 90 days;
     /// @notice MAX_PLAN_INSTALLMENTS
-    uint8 public constant MAX_PLAN_INSTALLMENTS = 12;
+    uint8   public constant MAX_PLAN_INSTALLMENTS = 12;
 
     // Guarantor financial liability
     /// @notice GUARANTOR_LIABILITY_PCT
     uint256 public constant GUARANTOR_LIABILITY_PCT = 100; // Guarantors collectively cover 100% of principal
     /// @notice EXTRACTION_INTERVAL
-    uint64 public constant EXTRACTION_INTERVAL = 1 days; // Daily extractions after default
+    uint64  public constant EXTRACTION_INTERVAL = 1 days;  // Daily extractions after default
     /// @notice EXTRACTION_RATE_PCT
-    uint256 public constant EXTRACTION_RATE_PCT = 10; // 10% of their liability per extraction
+    uint256 public constant EXTRACTION_RATE_PCT = 10;      // 10% of their liability per extraction
 
     // F-SC-025 FIX: Bound how long a loan can sit in the COSIGNING state before
     // either party can cancel and reclaim funds. Without this timeout, if the
@@ -222,54 +223,54 @@ contract VFIDETermLoan is ReentrancyGuard {
     // permanently locked in this contract and the borrower's activeLoanCount
     // stayed incremented (preventing them from taking other loans).
     /// @notice COSIGNING_TIMEOUT
-    uint64 public constant COSIGNING_TIMEOUT = 14 days;
+    uint64  public constant COSIGNING_TIMEOUT = 14 days;
 
     // ProofScore thresholds → max loan amount (in token units, 18 decimals)
     // DAO can adjust these via setScoreTiers()
     /// @notice TIER_1_SCORE
-    uint16 public constant TIER_1_SCORE = ScoringConstants.TIER_1; // 50% – neutral
+    uint16 public constant TIER_1_SCORE = ScoringConstants.TIER_1;  // 50% – neutral
     /// @notice TIER_2_SCORE
-    uint16 public constant TIER_2_SCORE = ScoringConstants.TIER_2; // 60%
+    uint16 public constant TIER_2_SCORE = ScoringConstants.TIER_2;  // 60%
     /// @notice TIER_3_SCORE
-    uint16 public constant TIER_3_SCORE = ScoringConstants.TIER_3; // 70%
+    uint16 public constant TIER_3_SCORE = ScoringConstants.TIER_3;  // 70%
     /// @notice TIER_4_SCORE
-    uint16 public constant TIER_4_SCORE = ScoringConstants.TIER_4; // 80% – highly trusted
+    uint16 public constant TIER_4_SCORE = ScoringConstants.TIER_4;  // 80% – highly trusted
 
     // Graduated ProofScore adjustments
     /// @notice REWARD_ONTIME_BORROWER
-    uint16 public constant REWARD_ONTIME_BORROWER = 5; // +0.5
+    uint16 public constant REWARD_ONTIME_BORROWER = 5;      // +0.5
     /// @notice REWARD_ONTIME_LENDER
-    uint16 public constant REWARD_ONTIME_LENDER = 2; // +0.2
+    uint16 public constant REWARD_ONTIME_LENDER = 2;        // +0.2
     /// @notice PENALTY_LATE
-    uint16 public constant PENALTY_LATE = 15; // -1.5
+    uint16 public constant PENALTY_LATE = 15;                // -1.5
     /// @notice PENALTY_PLAN_COMPLETED
-    uint16 public constant PENALTY_PLAN_COMPLETED = 30; // -3.0 (good faith acknowledged)
+    uint16 public constant PENALTY_PLAN_COMPLETED = 30;      // -3.0 (good faith acknowledged)
     /// @notice PENALTY_PLAN_FAILED_1
-    uint16 public constant PENALTY_PLAN_FAILED_1 = 100; // -10.0 (first hit)
+    uint16 public constant PENALTY_PLAN_FAILED_1 = 100;      // -10.0 (first hit)
     /// @notice PENALTY_PLAN_FAILED_2
-    uint16 public constant PENALTY_PLAN_FAILED_2 = 50; // -5.0  (second hit, same tx = -15.0 total)
+    uint16 public constant PENALTY_PLAN_FAILED_2 = 50;       // -5.0  (second hit, same tx = -15.0 total)
     /// @notice PENALTY_PLAN_FAILED_GUARANTOR
     uint16 public constant PENALTY_PLAN_FAILED_GUARANTOR = 50; // -5.0 per guarantor
     /// @notice PENALTY_FULL_DEFAULT_1
-    uint16 public constant PENALTY_FULL_DEFAULT_1 = 100; // -10.0 (first hit)
+    uint16 public constant PENALTY_FULL_DEFAULT_1 = 100;     // -10.0 (first hit)
     /// @notice PENALTY_FULL_DEFAULT_2
-    uint16 public constant PENALTY_FULL_DEFAULT_2 = 100; // -10.0 (second hit, same tx = -20.0 total)
+    uint16 public constant PENALTY_FULL_DEFAULT_2 = 100;     // -10.0 (second hit, same tx = -20.0 total)
     /// @notice PENALTY_DEFAULT_GUARANTOR
-    uint16 public constant PENALTY_DEFAULT_GUARANTOR = 100; // -10.0 per guarantor
+    uint16 public constant PENALTY_DEFAULT_GUARANTOR = 100;  // -10.0 per guarantor
 
     // ═══════════════════════════════════════════════════════════════════════
     //                              TYPES
     // ═══════════════════════════════════════════════════════════════════════
 
     enum LoanState {
-        OPEN, // Offer created, waiting for borrower
-        COSIGNING, // Borrower accepted, waiting for guarantor signatures
-        ACTIVE, // Fully signed, principal disbursed
-        GRACE, // Past deadline, in grace period
-        RESTRUCTURED, // Payment plan agreed
-        REPAID, // Successfully repaid (any path)
-        DEFAULTED, // Full default — no effort to repay
-        CANCELLED // Lender cancelled before acceptance
+        OPEN,           // Offer created, waiting for borrower
+        COSIGNING,      // Borrower accepted, waiting for guarantor signatures
+        ACTIVE,         // Fully signed, principal disbursed
+        GRACE,          // Past deadline, in grace period
+        RESTRUCTURED,   // Payment plan agreed
+        REPAID,         // Successfully repaid (any path)
+        DEFAULTED,      // Full default — no effort to repay
+        CANCELLED       // Lender cancelled before acceptance
     }
 
     struct Loan {
@@ -277,22 +278,22 @@ contract VFIDETermLoan is ReentrancyGuard {
         address borrower;
         uint256 principal;
         uint256 interestBps;
-        uint64 duration;
-        uint64 startTime;
-        uint64 deadline;
-        uint256 amountRepaid; // Tracks partial repayments
-        bool revenueAssignment; // Borrower authorized auto-deduction
+        uint64  duration;
+        uint64  startTime;
+        uint64  deadline;
+        uint256 amountRepaid;      // Tracks partial repayments
+        bool    revenueAssignment; // Borrower authorized auto-deduction
         LoanState state;
     }
 
     struct PaymentPlan {
-        uint256 totalOwed; // Remaining debt when plan was created
-        uint256 installmentAmount; // Per-installment payment
-        uint8 totalInstallments;
-        uint8 paidInstallments;
-        uint64 intervalDays; // Days between installments
-        uint64 nextDue; // Next installment deadline
-        bool accepted; // Lender accepted the plan
+        uint256 totalOwed;          // Remaining debt when plan was created
+        uint256 installmentAmount;  // Per-installment payment
+        uint8   totalInstallments;
+        uint8   paidInstallments;
+        uint64  intervalDays;       // Days between installments
+        uint64  nextDue;            // Next installment deadline
+        bool    accepted;           // Lender accepted the plan
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -319,7 +320,7 @@ contract VFIDETermLoan is ReentrancyGuard {
     /// @notice plans
     mapping(uint256 => PaymentPlan) public plans;
     /// @notice guarantors
-    mapping(uint256 => address[]) public guarantors; // Loan → guarantor addresses
+    mapping(uint256 => address[]) public guarantors;          // Loan → guarantor addresses
     /// @notice hasSigned
     mapping(uint256 => mapping(address => bool)) public hasSigned; // Loan → guarantor → signed
     /// @notice guarantorVault
@@ -327,7 +328,7 @@ contract VFIDETermLoan is ReentrancyGuard {
     /// @notice guarantorCommittedLiability
     mapping(uint256 => mapping(address => uint256)) public guarantorCommittedLiability; // Loan → guarantor → committed liability
     /// @notice signatureCount
-    mapping(uint256 => uint8) public signatureCount; // Loan → number of guarantor signatures
+    mapping(uint256 => uint8) public signatureCount;          // Loan → number of guarantor signatures
     /// @notice guarantorLiabilityEach
     mapping(uint256 => uint256) public guarantorLiabilityEach; // Loan → liability per guarantor
     /// @notice guarantorExtracted
@@ -342,9 +343,9 @@ contract VFIDETermLoan is ReentrancyGuard {
     /// @notice committedLiabilityBySource
     mapping(address => uint256) public committedLiabilityBySource; // Approval source (vault/wallet) → aggregate active liability
     /// @notice lastExtractionTime
-    mapping(uint256 => uint64) public lastExtractionTime; // When last extraction happened
+    mapping(uint256 => uint64) public lastExtractionTime;     // When last extraction happened
     /// @notice totalExtracted
-    mapping(uint256 => uint256) public totalExtracted; // Total extracted across all guarantors
+    mapping(uint256 => uint256) public totalExtracted;        // Total extracted across all guarantors
     /// @notice nextLoanId
     uint256 public nextLoanId = 1;
 
@@ -359,13 +360,13 @@ contract VFIDETermLoan is ReentrancyGuard {
 
     // ProofScore → max loan tiers (configurable by DAO)
     /// @notice tier1Limit
-    uint256 public tier1Limit = 100e18; // Score 5000+: 100 VFIDE
+    uint256 public tier1Limit = 100e18;     // Score 5000+: 100 VFIDE
     /// @notice tier2Limit
-    uint256 public tier2Limit = 1_000e18; // Score 6000+: 1,000 VFIDE
+    uint256 public tier2Limit = 1_000e18;   // Score 6000+: 1,000 VFIDE
     /// @notice tier3Limit
-    uint256 public tier3Limit = 5_000e18; // Score 7000+: 5,000 VFIDE
+    uint256 public tier3Limit = 5_000e18;   // Score 7000+: 5,000 VFIDE
     /// @notice tier4Limit
-    uint256 public tier4Limit = 20_000e18; // Score 8000+: 20,000 VFIDE
+    uint256 public tier4Limit = 20_000e18;  // Score 8000+: 20,000 VFIDE
 
     /// @notice totalLoans
     uint256 public totalLoans;
@@ -477,15 +478,9 @@ contract VFIDETermLoan is ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
 
     /// @notice onlyDAO
-    modifier onlyDAO() {
-        if (msg.sender != dao) revert TL_NotDAO();
-        _;
-    }
+    modifier onlyDAO() { if (msg.sender != dao) revert TL_NotDAO(); _; }
     /// @notice whenNotPaused
-    modifier whenNotPaused() {
-        if (paused) revert TL_Paused();
-        _;
-    }
+    modifier whenNotPaused() { if (paused) revert TL_Paused(); _; }
 
     // ═══════════════════════════════════════════════════════════════════════
     //                              CONSTRUCTOR
@@ -516,7 +511,9 @@ contract VFIDETermLoan is ReentrancyGuard {
     /// @param interestBps interestBps
     /// @param duration duration
     /// @return id id
-    function createLoan(uint256 principal, uint256 interestBps, uint64 duration) external nonReentrant whenNotPaused returns (uint256 id) {
+    function createLoan(uint256 principal, uint256 interestBps, uint64 duration)
+        external nonReentrant whenNotPaused returns (uint256 id)
+    {
         if (principal == 0) revert TL_Zero();
         if (interestBps > MAX_INTEREST_BPS) revert TL_InvalidTerms();
         if (duration < MIN_DURATION || duration > MAX_DURATION) revert TL_InvalidTerms();
@@ -526,15 +523,10 @@ contract VFIDETermLoan is ReentrancyGuard {
 
         id = nextLoanId++;
         loans[id] = Loan({
-            lender: msg.sender,
-            borrower: address(0),
-            principal: principal,
-            interestBps: interestBps,
-            duration: duration,
-            startTime: 0,
-            deadline: 0,
-            amountRepaid: 0,
-            revenueAssignment: false,
+            lender: msg.sender, borrower: address(0),
+            principal: principal, interestBps: interestBps,
+            duration: duration, startTime: 0, deadline: 0,
+            amountRepaid: 0, revenueAssignment: false,
             state: LoanState.OPEN
         });
         ++activeLoanCount[msg.sender];
@@ -891,7 +883,9 @@ contract VFIDETermLoan is ReentrancyGuard {
      *  in 4 installments over 2 months." This is good faith. The
      *  protocol recognizes the difference between can't-pay and won't-pay.
      */
-    function proposePaymentPlan(uint256 id, uint8 installments, uint64 intervalDays) external nonReentrant {
+    function proposePaymentPlan(uint256 id, uint8 installments, uint64 intervalDays)
+        external nonReentrant
+    {
         Loan storage l = loans[id];
         if (l.borrower != msg.sender) revert TL_NotBorrower();
         // Can propose during GRACE or if lender hasn't claimed default yet
@@ -1087,11 +1081,11 @@ contract VFIDETermLoan is ReentrancyGuard {
      * @notice Extract payment from a guarantor after default
      * @param id Loan ID (must be in DEFAULTED state)
      *
-     * Can only be called once per EXTRACTION_INTERVAL (1 day).
+    * Can only be called once per EXTRACTION_INTERVAL (1 day).
      * Extracts EXTRACTION_RATE_PCT (10%) of each guarantor's liability per call.
      * Lender calls this periodically. Guarantor's pre-approved allowance is used.
      *
-     * This creates steady pressure: the guarantor has a day between extractions
+    * This creates steady pressure: the guarantor has a day between extractions
      * to find the borrower and make them pay. If the borrower shows up and
      * repays via repayDefaultedLoan(), extraction stops immediately.
      */
@@ -1124,11 +1118,24 @@ contract VFIDETermLoan is ReentrancyGuard {
         if (l.state != LoanState.DEFAULTED) revert TL_WrongState();
 
         // Enforce extraction interval
-        if (lastExtractionTime[id] != 0 && block.timestamp < lastExtractionTime[id] + EXTRACTION_INTERVAL) {
+        if (lastExtractionTime[id] != 0 &&
+            block.timestamp < lastExtractionTime[id] + EXTRACTION_INTERVAL) {
             revert TL_GraceNotExpired();
         }
 
         uint256 liabilityPer = guarantorLiabilityEach[id];
+        {
+            uint256 gCount = guarantors[id].length;
+            if (gCount > 0) {
+                uint256 principalOutstanding =
+                    l.principal > l.amountRepaid ? (l.principal - l.amountRepaid) : 0;
+                uint256 cappedPer =
+                    (principalOutstanding * GUARANTOR_LIABILITY_PCT) / (100 * gCount);
+                if (cappedPer < liabilityPer) {
+                    liabilityPer = cappedPer;
+                }
+            }
+        }
         address[] storage g = guarantors[id];
         uint256 totalThisRound = 0;
         uint256 skippedThisRound = 0;
@@ -1294,7 +1301,10 @@ contract VFIDETermLoan is ReentrancyGuard {
         Loan storage l = loans[id];
         // H-25 FIX: Restrict callers to the borrower themselves or an allowlisted revenue router
         // (e.g., MerchantPortal). This prevents ProofScore manipulation via third-party repayment.
-        require(msg.sender == l.borrower || isAuthorizedRevenueRouter[msg.sender], "TL: not authorized");
+        require(
+            msg.sender == l.borrower || isAuthorizedRevenueRouter[msg.sender],
+            "TL: not authorized"
+        );
         if (l.state != LoanState.ACTIVE && l.state != LoanState.RESTRUCTURED) revert TL_WrongState();
         if (!l.revenueAssignment) revert TL_WrongState();
         if (amount == 0) revert TL_Zero();
@@ -1421,7 +1431,9 @@ contract VFIDETermLoan is ReentrancyGuard {
         if (address(vaultHub) == address(0) || source == address(0)) return false;
 
         // Use staticcall for fail-closed behavior if a non-conforming vault hub is configured.
-        (bool ok, bytes memory data) = address(vaultHub).staticcall(abi.encodeWithSignature("vaultOf(address)", guarantor));
+        (bool ok, bytes memory data) = address(vaultHub).staticcall(
+            abi.encodeWithSignature("vaultOf(address)", guarantor)
+        );
         if (!ok || data.length < 32) return false;
 
         address currentVault = abi.decode(data, (address));
@@ -1448,29 +1460,18 @@ contract VFIDETermLoan is ReentrancyGuard {
 
     /// @notice getLoan
     /// @param id id
-    /// @return _arg _arg
-    function getLoan(uint256 id) external view returns (Loan memory) {
-        return loans[id];
-    }
+    function getLoan(uint256 id) external view returns (Loan memory) { return loans[id]; }
     /// @notice getPlan
     /// @param id id
-    /// @return _arg _arg
-    function getPlan(uint256 id) external view returns (PaymentPlan memory) {
-        return plans[id];
-    }
+    function getPlan(uint256 id) external view returns (PaymentPlan memory) { return plans[id]; }
     /// @notice getGuarantors
     /// @param id id
-    /// @return _arg _arg
-    function getGuarantors(uint256 id) external view returns (address[] memory) {
-        return guarantors[id];
-    }
+    function getGuarantors(uint256 id) external view returns (address[] memory) { return guarantors[id]; }
 
     /// @notice maxBorrowable
     /// @param user user
     /// @return _uint256 _uint256
-    function maxBorrowable(address user) external view returns (uint256) {
-        return _maxBorrowable(user);
-    }
+    function maxBorrowable(address user) external view returns (uint256) { return _maxBorrowable(user); }
 
     /// @notice amountOwed
     /// @param id id
@@ -1508,18 +1509,13 @@ contract VFIDETermLoan is ReentrancyGuard {
     /// @param t4 t4
     function setScoreTiers(uint256 t1, uint256 t2, uint256 t3, uint256 t4) external onlyDAO {
         if (t1 > t2 || t2 > t3 || t3 > t4) revert TL_InvalidTerms();
-        tier1Limit = t1;
-        tier2Limit = t2;
-        tier3Limit = t3;
-        tier4Limit = t4;
+        tier1Limit = t1; tier2Limit = t2; tier3Limit = t3; tier4Limit = t4;
         emit TiersUpdated(t1, t2, t3, t4);
     }
 
     /// @notice setPaused
     /// @param _p _p
-    function setPaused(bool _p) external onlyDAO {
-        paused = _p;
-    }
+    function setPaused(bool _p) external onlyDAO { paused = _p; }
 
     // H-6 FIX: Timelocked DAO rotation to prevent instant governance capture on key compromise
     /// @notice pendingDAO_TL
@@ -1561,20 +1557,14 @@ contract VFIDETermLoan is ReentrancyGuard {
     }
     /// @notice setSeer
     /// @param _s _s
-    function setSeer(address _s) external onlyDAO {
-        seer = ISeerTL(_s);
-    }
+    function setSeer(address _s) external onlyDAO { seer = ISeerTL(_s); }
     /// @notice setVaultHub
     /// @param _v _v
-    function setVaultHub(address _v) external onlyDAO {
-        vaultHub = IVaultHubTL(_v);
-    }
+    function setVaultHub(address _v) external onlyDAO { vaultHub = IVaultHubTL(_v); }
     // slither-disable-next-line missing-zero-check
     /// @notice setFeeDistributor
     /// @param _f _f
-    function setFeeDistributor(address _f) external onlyDAO {
-        feeDistributor = _f;
-    }
+    function setFeeDistributor(address _f) external onlyDAO { feeDistributor = _f; }
     /// @notice H-25 FIX: authorize/deauthorize a revenue router that may call payFromRevenue.
     /// @param router router
     /// @param allowed allowed
@@ -1585,7 +1575,5 @@ contract VFIDETermLoan is ReentrancyGuard {
     // slither-disable-next-line missing-zero-check
     /// @notice setFraudRegistry
     /// @param _fr _fr
-    function setFraudRegistry(address _fr) external onlyDAO {
-        fraudRegistry = _fr;
-    }
+    function setFraudRegistry(address _fr) external onlyDAO { fraudRegistry = _fr; }
 }

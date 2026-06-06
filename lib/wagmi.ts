@@ -189,22 +189,19 @@ const testnetConfig = createConfig({
   connectors,
   chains: testnetChains,
   transports: {
-    // Base Sepolia with fallback RPCs
+    // Browser-facing RPC fallbacks must support CORS. Avoid BlockPI public
+    // endpoints here because they reject browser preflights and flood the UI
+    // console/network panel with failed fallback reads.
     [baseSepolia.id]: fallback([
       http('https://sepolia.base.org'),
-      http('https://base-sepolia.blockpi.network/v1/rpc/public'),
       http(),
     ]),
-    // Polygon Amoy with fallback RPCs
     [polygonAmoy.id]: fallback([
       http('https://rpc-amoy.polygon.technology'),
-      http('https://polygon-amoy.blockpi.network/v1/rpc/public'),
       http(),
     ]),
-    // zkSync Sepolia with fallback RPCs
     [zkSyncSepoliaTestnet.id]: fallback([
       http('https://sepolia.era.zksync.dev'),
-      http('https://zksync-sepolia.blockpi.network/v1/rpc/public'),
     ]),
   },
   ssr: true,
@@ -217,24 +214,21 @@ const mainnetConfig = createConfig({
   connectors,
   chains: mainnetChains,
   transports: {
-    // Base with fallback RPCs
+    // Browser-facing RPC fallbacks must support CORS. Avoid BlockPI public
+    // endpoints here because they reject browser preflights and flood the UI
+    // console/network panel with failed fallback reads.
     [base.id]: fallback([
       http('https://mainnet.base.org'),
-      http('https://base.blockpi.network/v1/rpc/public'),
       http('https://base.llamarpc.com'),
       http(),
     ]),
-    // Polygon with fallback RPCs
     [polygon.id]: fallback([
       http('https://polygon-rpc.com'),
       http('https://polygon.llamarpc.com'),
-      http('https://polygon.blockpi.network/v1/rpc/public'),
       http(),
     ]),
-    // zkSync with fallback RPCs
     [zkSync.id]: fallback([
       http('https://mainnet.era.zksync.io'),
-      http('https://zksync.blockpi.network/v1/rpc/public'),
       http('https://zksync.meowrpc.com'),
     ]),
   },

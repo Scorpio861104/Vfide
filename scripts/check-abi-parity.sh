@@ -5,6 +5,10 @@ cd "$(dirname "$0")/.."
 
 KNOWN_ORPHAN_ABIS=(
   DevReserveVesting
+  # DeployPhase3Peripherals helper is intentionally outside contracts/
+  # (scripts/DeployPhase3Peripherals.sol) and not part of the V1
+  # production contract set. Keep its ABI for alternate deploy/test paths.
+  DeployPhase3Peripherals
   ERC20
   # VFIDECommerce.json is an intentional merged-ABI bundle that contains
   # MerchantRegistry + VFIDECommerce + CommerceEscrow function ABIs in

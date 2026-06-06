@@ -377,7 +377,7 @@ describe('CardBoundVault (Fix 2)', () => {
 describe('MerchantPortal (Fixes 3 and 5)', { concurrency: 1 }, () => {
   async function merchantPortalFixture() {
     const { ethers } = (await getConnection()) as any;
-    const [dao, customer, merchant, feeSink] = await ethers.getSigners();
+    const [dao, customer, merchant] = await ethers.getSigners();
 
     const VaultHubStub = await ethers.getContractFactory(
       'test/contracts/helpers/Stubs.sol:VaultHubStub'
@@ -404,8 +404,7 @@ describe('MerchantPortal (Fixes 3 and 5)', { concurrency: 1 }, () => {
       dao.address,
       await vaultHub.getAddress(),
       await seer.getAddress(),
-      await securityHub.getAddress(),
-      feeSink.address
+      await securityHub.getAddress()
     );
     await portal.waitForDeployment();
 
@@ -416,7 +415,8 @@ describe('MerchantPortal (Fixes 3 and 5)', { concurrency: 1 }, () => {
     await token.waitForDeployment();
 
     await portal.connect(dao).setAcceptedToken(await token.getAddress(), true);
-    await portal.connect(dao).setProtocolFee(100); // 1%
+    // Protocol fee is hardcoded to 0 by constitutional commitment.
+    // setProtocolFee no longer exists; protocolFeeBps is a public constant.
 
     await vaultHub.setVault(customer.address, customer.address);
     await vaultHub.setVault(merchant.address, merchant.address);

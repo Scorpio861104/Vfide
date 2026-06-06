@@ -198,7 +198,7 @@ export function useEscrowCount() {
   });
 
   return {
-    count: data !== undefined ? BigInt(data as any) : 0n,
+    count: (data !== undefined && data !== null) ? BigInt(data as any) : 0n,
     refetch,
   };
 }

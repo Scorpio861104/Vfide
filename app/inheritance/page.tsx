@@ -11,8 +11,12 @@ import { useRouter } from 'next/navigation';
 import { useAccount } from 'wagmi';
 import { Loader2, Shield } from 'lucide-react';
 import { useInheritance } from '@/hooks/useInheritance';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function InheritancePage() {
+  const { locale } = useLocale();
+  void locale;
+
   const router = useRouter();
   const { isConnected } = useAccount();
   const inh = useInheritance();

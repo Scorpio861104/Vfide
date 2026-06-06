@@ -1,0 +1,206 @@
+[
+  {
+    "type": "constructor",
+    "inputs": [
+      {
+        "name": "_portal",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "portal",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getMerchantStats",
+    "inputs": [
+      {
+        "name": "merchant",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "registered",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "suspended",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "totalVolume",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "txCount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "avgTxSize",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "trustScore",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getCustomerTrustScore",
+    "inputs": [
+      {
+        "name": "customer",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "score",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "highTrust",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "lowTrust",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "eligible",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getRefundStatus",
+    "inputs": [
+      {
+        "name": "refundId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "customer",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "merchant",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "token",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "orderId",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "requestTime",
+        "type": "uint64",
+        "internalType": "uint64"
+      },
+      {
+        "name": "approved",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "completed",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getCustomerRefunds",
+    "inputs": [
+      {
+        "name": "customer",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "maxResults",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "ids",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getMerchantRefunds",
+    "inputs": [
+      {
+        "name": "merchant",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "maxResults",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "ids",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      }
+    ],
+    "stateMutability": "view"
+  }
+]

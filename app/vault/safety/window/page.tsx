@@ -34,6 +34,7 @@ import { Footer } from '@/components/layout/Footer';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useVaultHub } from '@/hooks/useVaultHub';
 import { ACTIVE_VAULT_ABI } from '@/lib/contracts';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 const SECONDS_PER_DAY = 86_400;
 const MIN_DAYS = 3;
@@ -86,6 +87,9 @@ function formatDays(seconds: bigint | number): string {
 }
 
 export default function ChallengeWindowPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { vaultAddress, hasVault } = useVaultHub();
   const { address: connectedAddress } = useAccount();
   const publicClient = usePublicClient();
@@ -189,14 +193,14 @@ export default function ChallengeWindowPage() {
         <div className="container mx-auto max-w-3xl px-4 pb-16">
           <Link
             href="/vault/safety"
-            className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200"
+            className="mb-6 inline-flex items-center gap-2 text-accent hover:text-accent"
           >
             <ArrowLeft size={16} /> Back to safety overview
           </Link>
 
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-white mb-3 flex items-center gap-3">
-              <Clock className="text-cyan-400" size={28} />
+              <Clock className="text-accent" size={28} />
               Your veto window
             </h1>
             <p className="text-gray-400 leading-relaxed">
@@ -210,7 +214,7 @@ export default function ChallengeWindowPage() {
           {/* Current state */}
           <GlassCard hover={false} className="mb-6 p-5">
             <div className="flex items-start gap-3">
-              <Shield className="mt-0.5 text-cyan-400 shrink-0" size={20} />
+              <Shield className="mt-0.5 text-accent shrink-0" size={20} />
               <div className="flex-1">
                 <p className="text-sm text-gray-400">Current preference</p>
                 <p className="text-xl font-bold text-white mt-1">{formatDays(currentSeconds)}</p>
@@ -226,7 +230,7 @@ export default function ChallengeWindowPage() {
 
           {/* Tradeoff explainer */}
           <GlassCard hover={false} gradient="cyan" className="mb-6 p-5">
-            <h3 className="text-sm font-bold text-cyan-300 mb-2">How to choose</h3>
+            <h3 className="text-sm font-bold text-accent mb-2">How to choose</h3>
             <ul className="text-sm text-gray-300 space-y-2 leading-relaxed">
               <li>
                 <strong className="text-white">Shorter window (3 days):</strong> Faster real
@@ -262,7 +266,7 @@ export default function ChallengeWindowPage() {
                   disabled={!isAdmin}
                   className={`w-full text-left p-4 rounded-xl border-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                     isSelected
-                      ? 'border-cyan-400 bg-cyan-500/10'
+                      ? 'border-accent bg-accent/10'
                       : 'border-white/10 bg-white/5 hover:border-white/20'
                   }`}
                 >
@@ -270,9 +274,9 @@ export default function ChallengeWindowPage() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="font-bold text-white">{preset.label}</span>
-                        {isSelected && <CheckCircle2 className="text-cyan-400" size={16} />}
+                        {isSelected && <CheckCircle2 className="text-accent" size={16} />}
                       </div>
-                      <p className="text-xs text-cyan-300 mb-1">{preset.sub}</p>
+                      <p className="text-xs text-accent mb-1">{preset.sub}</p>
                       <p className="text-xs text-gray-400 leading-relaxed">{preset.description}</p>
                     </div>
                   </div>
@@ -290,14 +294,14 @@ export default function ChallengeWindowPage() {
               }}
               disabled={!isAdmin}
               className={`w-full text-left p-4 rounded-xl border-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                useCustom ? 'border-cyan-400 bg-cyan-500/10' : 'border-white/10 bg-white/5 hover:border-white/20'
+                useCustom ? 'border-accent bg-accent/10' : 'border-white/10 bg-white/5 hover:border-white/20'
               }`}
             >
               <div className="flex items-center gap-2 mb-1">
                 <span className="font-bold text-white">Custom value</span>
-                {useCustom && <CheckCircle2 className="text-cyan-400" size={16} />}
+                {useCustom && <CheckCircle2 className="text-accent" size={16} />}
               </div>
-              <p className="text-xs text-cyan-300 mb-2">Any value between {MIN_DAYS} and {MAX_DAYS} days</p>
+              <p className="text-xs text-accent mb-2">Any value between {MIN_DAYS} and {MAX_DAYS} days</p>
               {useCustom && (
                 <div className="mt-3" onClick={(e) => e.stopPropagation()}>
                   <input
@@ -308,7 +312,7 @@ export default function ChallengeWindowPage() {
                     onChange={(e) => setCustomDays(e.target.value)}
                     placeholder={`${MIN_DAYS}–${MAX_DAYS}`}
                     disabled={isWritePending}
-                    className="w-32 px-3 py-2 rounded-lg bg-black/30 border border-white/20 text-white placeholder:text-gray-600 focus:outline-none focus:border-cyan-500/50 disabled:opacity-50"
+                    className="w-32 px-3 py-2 rounded-lg bg-black/30 border border-white/20 text-white placeholder:text-gray-600 focus:outline-none focus:border-accent/50 disabled:opacity-50"
                   />
                   <span className="ml-3 text-sm text-gray-400">days</span>
                   {!customIsValid && customDays && (
@@ -364,7 +368,7 @@ export default function ChallengeWindowPage() {
           <button
             onClick={() => void handleSave()}
             disabled={!canSubmit}
-            className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-accent to-blue-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-accent/30 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isWritePending ? (
               <>
@@ -382,7 +386,7 @@ export default function ChallengeWindowPage() {
           {hasUnsavedChange && customIsValid && (
             <p className="text-xs text-gray-500 mt-3">
               You will change from <span className="text-white font-semibold">{formatDays(currentSeconds)}</span> to{' '}
-              <span className="text-cyan-300 font-semibold">{formatDays((finalSeconds ?? 0))}</span>.
+              <span className="text-accent font-semibold">{formatDays((finalSeconds ?? 0))}</span>.
             </p>
           )}
         </div>

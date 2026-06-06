@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Share2 } from 'lucide-react';
 import { Friend } from '@/types/messaging';
 import { formatAddress } from '@/lib/messageEncryption';
@@ -33,11 +33,11 @@ export function MutualFriends({ userAddress, currentUserAddress }: MutualFriends
       try {
         // Load current user's friends
         const myFriendsData = safeLocalStorage.getItem(`vfide_friends_${currentUserAddress}`);
-        const myFriends: Friend[] = myFriendsData ? JSON.parse(myFriendsData) : [];
+        let myFriends: Friend[] = []; try { myFriends = myFriendsData ? JSON.parse(myFriendsData) : []; } catch { myFriends = []; }
 
         // Load other user's friends
         const theirFriendsData = safeLocalStorage.getItem(`vfide_friends_${userAddress}`);
-        const theirFriends: Friend[] = theirFriendsData ? JSON.parse(theirFriendsData) : [];
+        let theirFriends: Friend[] = []; try { theirFriends = theirFriendsData ? JSON.parse(theirFriendsData) : []; } catch { theirFriends = []; }
 
         // Find mutual friends
         const mutual = myFriends.filter(myFriend =>
@@ -73,13 +73,13 @@ export function MutualFriends({ userAddress, currentUserAddress }: MutualFriends
   }
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className="p-4 bg-zinc-950 border border-zinc-800 rounded-xl"
     >
       <div className="flex items-center gap-2 mb-3">
-        <Share2 className="w-4 h-4 text-cyan-400" />
+        <Share2 className="w-4 h-4 text-accent" />
         <h4 className="font-semibold text-zinc-100">
           Mutual Friends ({mutualFriends.length})
         </h4>
@@ -92,7 +92,7 @@ export function MutualFriends({ userAddress, currentUserAddress }: MutualFriends
               key={friend.address}
               className="flex items-center gap-2 p-2 bg-zinc-900 rounded-lg"
             >
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-xs font-bold text-zinc-100">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent to-violet-400 flex items-center justify-center text-xs font-bold text-zinc-100">
                 {(friend.alias || friend.address).slice(0, 2).toUpperCase()}
               </div>
               <UserDisplay address={friend.address} />
@@ -105,7 +105,7 @@ export function MutualFriends({ userAddress, currentUserAddress }: MutualFriends
             {mutualFriends.slice(0, 5).map((friend, index) => (
               <div
                 key={friend.address}
-                className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-xs font-bold text-zinc-100 border-2 border-zinc-950"
+                className="w-8 h-8 rounded-full bg-gradient-to-br from-accent to-violet-400 flex items-center justify-center text-xs font-bold text-zinc-100 border-2 border-zinc-950"
                 style={{ zIndex: 5 - index }}
                 title={friend.alias || formatAddress(friend.address)}
               >
@@ -127,6 +127,6 @@ export function MutualFriends({ userAddress, currentUserAddress }: MutualFriends
           </p>
         </div>
       )}
-    </motion.div>
+    </m.div>
   );
 }

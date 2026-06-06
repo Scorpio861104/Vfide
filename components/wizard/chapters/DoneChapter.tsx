@@ -33,11 +33,16 @@ export function DoneChapter({
   return (
     <ChapterShell
       chapter="done"
-      description="Here's where you landed. Skipped chapters are always available — re-open the wizard or jump straight to the page that handles them."
+      description="You are now protected. Your wallet and vault setup are active, and you can continue strengthening trust, recovery readiness, and payment capability over time."
       onPrimary={onClose}
-      primaryLabel="Close wizard"
+      primaryLabel="Enter Dashboard"
     >
       <div className="space-y-4">
+        <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3 text-sm text-cyan-100">
+          <p className="font-semibold text-white">VFIDE principles</p>
+          <p className="mt-1 text-white/80">Protect people. Build trust. Enable freedom while keeping users in control of their assets.</p>
+        </div>
+
         <ul className="space-y-2">
           {recap.map((c) => (
             <li
@@ -90,6 +95,12 @@ export function DoneChapter({
             className="rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2 text-center text-sm font-semibold text-white/80 hover:bg-white/10"
           >
             Browse merchants
+          </Link>
+          <Link
+            href="/governance"
+            className="rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2 text-center text-sm font-semibold text-white/80 hover:bg-white/10"
+          >
+            Governance
           </Link>
         </div>
 

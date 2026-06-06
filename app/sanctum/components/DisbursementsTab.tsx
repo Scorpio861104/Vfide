@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useAccount } from 'wagmi';
 import { formatEther } from 'viem';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -167,7 +167,7 @@ export function DisbursementsTab({ isConnected: _isConnected }: { isConnected: b
           const status = deriveDisbursementStatus(d, approvalsRequired);
           const isCurrentAction = pendingActionId === d.id;
           return (
-            <motion.div
+            <m.div
               key={d.id.toString()}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
@@ -183,7 +183,6 @@ export function DisbursementsTab({ isConnected: _isConnected }: { isConnected: b
                       d={d}
                       status={status}
                       approvalsRequired={approvalsRequired}
-                      connectedAddress={connectedAddress}
                       pending={isCurrentAction && isWritePending}
                       onApprove={() => handleApprove(d.id)}
                       onExecute={() => handleExecute(d.id)}
@@ -193,7 +192,7 @@ export function DisbursementsTab({ isConnected: _isConnected }: { isConnected: b
                   )}
                 </div>
               )}
-            </motion.div>
+            </m.div>
           );
         })}
       </div>
@@ -262,7 +261,7 @@ function DisbursementRow({
         <div className="text-sm text-zinc-400 mt-1">
           <Link
             href={`/sanctum/charities/${d.charity}`}
-            className="text-cyan-400 hover:text-cyan-300 transition-colors"
+            className="text-accent hover:text-accent transition-colors"
           >
             {shortAddr(d.charity)}
           </Link>
@@ -296,7 +295,6 @@ function ApproverActions({
   d,
   status,
   approvalsRequired,
-  connectedAddress: _connectedAddress,
   pending,
   onApprove,
   onExecute,
@@ -304,7 +302,6 @@ function ApproverActions({
   d: Disbursement;
   status: DisbursementStatus;
   approvalsRequired: number;
-  connectedAddress: `0x${string}` | undefined;
   pending: boolean;
   onApprove: () => void;
   onExecute: () => void;
@@ -345,7 +342,7 @@ function ApproverActions({
                 ? `Execution unlocks ${new Date(cooloffEndsAtMs).toLocaleString()}.`
                 : ''
           }
-          className="px-4 py-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/30 rounded-lg text-sm font-bold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="px-4 py-2 bg-accent/20 hover:bg-accent/30 text-accent border border-accent/30 rounded-lg text-sm font-bold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {pending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Coins className="w-4 h-4" />}
           {isExpired ? 'Expired' : inCooloff ? 'In cooloff' : 'Execute'}

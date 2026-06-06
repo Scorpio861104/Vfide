@@ -200,38 +200,19 @@ CREATE TABLE IF NOT EXISTS monthly_leaderboard (
   UNIQUE(user_id, month_year)
 );
 
--- Create indexes for better performance.
--- Note: This is an *initial* schema migration applied to empty tables, so we use
--- plain `CREATE INDEX` (not `CREATE INDEX CONCURRENTLY`). The migration runner
--- wraps each migration in a Postgres transaction, and `CREATE INDEX CONCURRENTLY`
--- is illegal inside a transaction. There is no concurrency to protect against
--- here because the tables were just created in this same migration.
-CREATE INDEX IF NOT EXISTS idx_users_wallet ON users(wallet_address);
-DO $$
-BEGIN
-  IF EXISTS (
-    SELECT 1
-    FROM information_schema.columns
-    WHERE table_schema = 'public' AND table_name = 'messages' AND column_name = 'sender_id'
-  ) THEN
-    CREATE INDEX IF NOT EXISTS idx_messages_sender ON messages(sender_id);
-  END IF;
-END $$;
-
-DO $$
-BEGIN
-  IF EXISTS (
-    SELECT 1
-    FROM information_schema.columns
-    WHERE table_schema = 'public' AND table_name = 'messages' AND column_name = 'recipient_id'
-  ) THEN
-    CREATE INDEX IF NOT EXISTS idx_messages_recipient ON messages(recipient_id);
-  END IF;
-END $$;
-CREATE INDEX IF NOT EXISTS idx_friendships_user ON friendships(user_id);
-CREATE INDEX IF NOT EXISTS idx_friendships_friend ON friendships(friend_id);
-CREATE INDEX IF NOT EXISTS idx_group_members_group ON group_members(group_id);
-CREATE INDEX IF NOT EXISTS idx_group_members_user ON group_members(user_id);
-CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id);
-CREATE INDEX IF NOT EXISTS idx_proposals_status ON proposals(status);
-CREATE INDEX IF NOT EXISTS idx_transactions_user ON transactions(user_id);
+-- Create indexes for better performance
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_users_wallet ON users(wallet_address);
+-- The `messages` table is defined earlier in this same migration with `sender_id`
+-- and `recipient_id` columns, so the previous defensive `DO $$ ... IF EXISTS ...
+-- CREATE INDEX CONCURRENTLY ... END $$;` blocks were both redundant and broken:
+-- `CREATE INDEX CONCURRENTLY` cannot run inside a transaction, and `DO` blocks
+-- always create one. `IF NOT EXISTS` on the index already provides idempotency.
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_messages_sender ON messages(sender_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_messages_recipient ON messages(recipient_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_friendships_user ON friendships(user_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_friendships_friend ON friendships(friend_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_group_members_group ON group_members(group_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_group_members_user ON group_members(user_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_notifications_user ON notifications(user_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_proposals_status ON proposals(status);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_transactions_user ON transactions(user_id);

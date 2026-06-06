@@ -7,7 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAccount, useReadContract } from 'wagmi';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Vote, Users, Shield, Star, Award, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
 import { isConfiguredContractAddress, ZERO_ADDRESS } from '@/lib/contracts';
 import { CouncilElectionABI } from '@/lib/abis/future';
@@ -56,22 +56,37 @@ export function ElectionsTabContent() {
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [expandedCandidate, setExpandedCandidate] = useState<string | null>(null);
 
-  const { data: electionInfoData } = useReadContract({
+  // CouncilElection.sol exposes `getElectionStatus()` and `getElectionWindow()`.
+  // There is no `getElectionInfo()`. Fetch both and remap to the UI shape.
+  const enabled = isConfiguredContractAddress(COUNCIL_ELECTION_ADDRESS);
+
+  const { data: statusData } = useReadContract({
     address: COUNCIL_ELECTION_ADDRESS as `0x${string}`,
     abi: CouncilElectionABI,
-    functionName: 'getElectionInfo',
-    query: { enabled: isConfiguredContractAddress(COUNCIL_ELECTION_ADDRESS) },
+    functionName: 'getElectionStatus',
+    query: { enabled },
   });
 
-  const electionInfo: ElectionInfo = electionInfoData
+  const { data: windowData } = useReadContract({
+    address: COUNCIL_ELECTION_ADDRESS as `0x${string}`,
+    abi: CouncilElectionABI,
+    functionName: 'getElectionWindow',
+    query: { enabled },
+  });
+
+  const electionInfo: ElectionInfo = statusData
     ? {
-        councilSize: Number((electionInfoData as any)[0] ?? 12),
-        termDays: Number((electionInfoData as any)[1] ?? 365),
-        minScore: Number((electionInfoData as any)[2] ?? 7000),
-        currentTermEnd: Number((electionInfoData as any)[3] ?? 0),
-        electionActive: Boolean((electionInfoData as any)[4] ?? true),
-        totalVotes: Number((electionInfoData as any)[5] ?? 0),
-        totalVotePower: Number((electionInfoData as any)[6] ?? 0),
+        // currentCouncilSize, maxCouncilSize, termEndTime, daysRemaining,
+        // candidateCount, eligibleCandidateCount
+        councilSize: Number((statusData as readonly [bigint, bigint, bigint, bigint, bigint, bigint])[1] ?? 12n),
+        termDays: 365, // not exposed onchain; UI default
+        minScore: 7000, // not exposed onchain; UI default
+        currentTermEnd: Number((statusData as readonly [bigint, bigint, bigint, bigint, bigint, bigint])[2] ?? 0n),
+        electionActive: windowData
+          ? Number((windowData as readonly [bigint, bigint, bigint])[1] ?? 0n) > Math.floor(Date.now() / 1000)
+          : true,
+        totalVotes: Number((statusData as readonly [bigint, bigint, bigint, bigint, bigint, bigint])[4] ?? 0n),
+        totalVotePower: Number((statusData as readonly [bigint, bigint, bigint, bigint, bigint, bigint])[5] ?? 0n),
       }
     : DEFAULT_ELECTION;
 
@@ -101,11 +116,26 @@ export function ElectionsTabContent() {
 
   return (
     <div className="space-y-8">
+      {/* CouncilElection ships in V1 but a council only exists once one is
+          ELECTED. This is people-gated, not a future code release — so frame it
+          as "awaiting an election," not "coming later." */}
+      {!enabled && (
+        <div className="rounded-lg border border-amber-400/30 bg-amber-500/5 p-4 text-sm">
+          <p className="font-semibold text-amber-200">No council has been elected yet.</p>
+          <p className="mt-1 text-amber-100/80">
+            The elected-council layer is part of V1 — it activates as soon as the DAO opens an
+            election and the community votes members in. Until then, governance runs on direct
+            ProofScore-weighted voting (see the Proposals tab). The council size, term length, and
+            minimum-score values below are the rules an election will use; live results appear here
+            once a council is voted in.
+          </p>
+        </div>
+      )}
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
           { label: 'Council Size',    value: electionInfo.councilSize,                      color: 'text-violet-400'  },
-          { label: 'Term Length',     value: `${electionInfo.termDays}d`,                   color: 'text-cyan-400'    },
+          { label: 'Term Length',     value: `${electionInfo.termDays}d`,                   color: 'text-accent'    },
           { label: 'Min ProofScore',  value: electionInfo.minScore.toLocaleString(),         color: 'text-amber-400'   },
           { label: 'Term End',        value: termEndDate,                                    color: 'text-emerald-400' },
         ].map(({ label, value, color }) => (
@@ -171,11 +201,11 @@ export function ElectionsTabContent() {
                 </div>
                 <AnimatePresence>
                   {expandedCandidate === c.address && c.platform && (
-                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
+                    <m.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }}
                       className="overflow-hidden mt-3 pt-3 border-t border-white/10 text-sm text-white/60">
                       {c.platform}
-                    </motion.div>
+                    </m.div>
                   )}
                 </AnimatePresence>
               </div>
@@ -192,7 +222,7 @@ export function ElectionsTabContent() {
       ) : !loading && proposals.length > 0 && (
         <div>
           <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-            <Shield size={18} className="text-cyan-400" /> Recent Proposals
+            <Shield size={18} className="text-accent" /> Recent Proposals
           </h3>
           <div className="space-y-2">
             {proposals.map((p) => (

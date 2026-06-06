@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * DAILY QUESTS PANEL - Enhanced
  * 
@@ -15,7 +17,7 @@ import {
   Clock, TrendingUp, Star, Award, Calendar,
   ChevronLeft, ChevronRight, Zap
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
 import { triggerAchievement } from './AchievementToast';
 
@@ -69,7 +71,7 @@ function ProgressRing({ progress, size = 60, strokeWidth = 4, color = '#FFD700' 
           fill="transparent"
           className="stroke-zinc-800"
         />
-        <motion.circle
+        <m.circle
           cx={size / 2}
           cy={size / 2}
           r={radius}
@@ -134,7 +136,7 @@ function StreakCalendar({ history, onMonthChange }: { history: boolean[]; onMont
       </div>
       <div className="grid grid-cols-7 gap-1">
         {days.map((active, i) => (
-          <motion.div
+          <m.div
             key={i}
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
@@ -146,7 +148,7 @@ function StreakCalendar({ history, onMonthChange }: { history: boolean[]; onMont
             }`}
           >
             {active === true && <Flame className="w-3 h-3" />}
-          </motion.div>
+          </m.div>
         ))}
       </div>
     </div>
@@ -217,7 +219,7 @@ export default function DailyQuestsPanel() {
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'daily': return 'from-blue-500 to-cyan-500';
+      case 'daily': return 'from-blue-500 to-accent';
       case 'weekly': return 'from-purple-500 to-pink-500';
       case 'monthly': return 'from-yellow-500 to-orange-500';
       default: return 'from-gray-500 to-gray-600';
@@ -243,7 +245,7 @@ export default function DailyQuestsPanel() {
 
   if (!isConnected) {
     return (
-      <motion.div 
+      <m.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 text-center"
@@ -252,14 +254,14 @@ export default function DailyQuestsPanel() {
         <h3 className="text-xl font-bold text-white mb-2">Connect Wallet</h3>
         <p className="text-zinc-400">Connect your wallet to see daily quests</p>
         <div className="mt-6 flex justify-center"><VfideConnectButton size="md" /></div>
-      </motion.div>
+      </m.div>
     );
   }
 
   return (
     <div className="space-y-6">
       {/* Streak Counter - Enhanced */}
-      <motion.div 
+      <m.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 rounded-xl p-6 relative overflow-hidden"
@@ -267,7 +269,7 @@ export default function DailyQuestsPanel() {
         {/* Animated Fire Particles */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           {[...Array(8)].map((_, i) => (
-            <motion.div
+            <m.div
               key={i}
               className="absolute w-2 h-2 rounded-full bg-orange-500/40"
               initial={{ y: '100%', x: Math.random() * 100 + '%', opacity: 0 }}
@@ -288,20 +290,20 @@ export default function DailyQuestsPanel() {
 
         <div className="flex items-center justify-between mb-4 relative z-10">
           <div className="flex items-center gap-4">
-            <motion.div 
+            <m.div 
               className="relative"
               animate={{ scale: [1, 1.1, 1] }}
               transition={{ duration: 1.5, repeat: Infinity }}
             >
               <Flame className="w-14 h-14 text-orange-500" />
-              <motion.div 
+              <m.div 
                 className="absolute -top-2 -right-2 w-7 h-7 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-lg"
                 animate={{ scale: [1, 1.15, 1] }}
                 transition={{ duration: 0.5, repeat: Infinity }}
               >
                 {streak.current}
-              </motion.div>
-            </motion.div>
+              </m.div>
+            </m.div>
             <div>
               <h3 className="text-2xl font-bold text-white">{streak.current} Day Streak! 🔥</h3>
               <p className="text-zinc-400 text-sm flex items-center gap-2">
@@ -331,14 +333,14 @@ export default function DailyQuestsPanel() {
         {/* Streak Calendar */}
         <AnimatePresence>
           {showCalendar && (
-            <motion.div
+            <m.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               className="overflow-hidden"
             >
               <StreakCalendar history={streak.history} />
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
 
@@ -349,7 +351,7 @@ export default function DailyQuestsPanel() {
             <span className="text-white font-bold">{streak.current}/{streak.nextMilestone}</span>
           </div>
           <div className="w-full bg-zinc-800 rounded-full h-3 overflow-hidden">
-            <motion.div 
+            <m.div 
               className="bg-gradient-to-r from-orange-500 to-red-500 h-3 rounded-full"
               initial={{ width: 0 }}
               animate={{ width: `${(streak.current / streak.nextMilestone) * 100}%` }}
@@ -362,14 +364,14 @@ export default function DailyQuestsPanel() {
             <span className="text-zinc-500">🔒 90 days: 2x</span>
           </div>
         </div>
-      </motion.div>
+      </m.div>
 
       {/* Quest Tabs - Enhanced */}
       <div className="flex gap-2 border-b border-zinc-800">
         {(['daily', 'weekly', 'monthly'] as const).map((tab) => {
           const count = quests.filter(q => q.type === tab && q.completed && !q.claimed).length;
           return (
-            <motion.button
+            <m.button
               key={tab}
               onClick={() => setActiveTab(tab)}
               whileHover={{ y: -2 }}
@@ -382,27 +384,27 @@ export default function DailyQuestsPanel() {
             >
               {tab}
               {count > 0 && (
-                <motion.span 
+                <m.span 
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full text-[10px] font-bold text-black flex items-center justify-center"
                 >
                   {count}
-                </motion.span>
+                </m.span>
               )}
               {activeTab === tab && (
-                <motion.div
+                <m.div
                   layoutId="questTabIndicator"
                   className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-400 to-orange-500"
                 />
               )}
-            </motion.button>
+            </m.button>
           );
         })}
       </div>
 
       {/* Quests Grid - Enhanced */}
-      <motion.div 
+      <m.div 
         className="grid grid-cols-1 md:grid-cols-2 gap-4"
         initial="hidden"
         animate="visible"
@@ -412,7 +414,7 @@ export default function DailyQuestsPanel() {
       >
         <AnimatePresence mode="popLayout">
           {quests.filter(q => q.type === activeTab).map((quest, index) => (
-            <motion.div
+            <m.div
               key={quest.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -426,13 +428,13 @@ export default function DailyQuestsPanel() {
                 getTypeColor={getTypeColor}
                 getTimeRemaining={getTimeRemaining}
               />
-            </motion.div>
+            </m.div>
           ))}
         </AnimatePresence>
-      </motion.div>
+      </m.div>
 
       {/* Daily Summary - Enhanced with Progress Rings */}
-      <motion.div 
+      <m.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
@@ -470,7 +472,7 @@ export default function DailyQuestsPanel() {
             color="text-orange-500" 
           />
         </div>
-      </motion.div>
+      </m.div>
 
       {/* Claim Modal */}
       <AnimatePresence>

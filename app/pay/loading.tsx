@@ -20,7 +20,7 @@ export default function PayLoading() {
               </div>
             ))}
           </div>
-          <div className="h-12 w-full rounded-xl bg-cyan-500/20 border border-cyan-500/30 animate-pulse" />
+          <div className="h-12 w-full rounded-xl bg-accent/20 border border-accent/30 animate-pulse" />
         </div>
       </div>
     </div>

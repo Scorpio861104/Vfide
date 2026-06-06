@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * VFIDE Point of Sale System
  * Complete POS with product management, QR payments, and live calculations
@@ -6,7 +8,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { useAccount, useWatchContractEvent, useSignMessage } from 'wagmi'
 import { QRCodeSVG } from 'qrcode.react'
 import { formatEther } from 'viem'
@@ -44,6 +46,7 @@ export function MerchantPOS() {
 
   // Fetch products from DB on mount
   useEffect(() => {
+    let _cancelled = false;
     if (!address) return
     fetch(`/api/merchant/products?merchant=${encodeURIComponent(address)}`)
       .then(r => r.ok ? r.json() : null)
@@ -68,7 +71,8 @@ export function MerchantPOS() {
         setProductsLoaded(true)
       })
       .catch(() => setProductsLoaded(true))
-  }, [address, productsLoaded])
+    return () => { _cancelled = true; };
+    }, [address, productsLoaded])
   
   // Cart
   const [cart, setCart] = useState<CartItem[]>([])
@@ -512,7 +516,7 @@ export function MerchantPOS() {
             onClick={() => setActiveTab('pos')}
             className={`px-6 py-3 rounded-lg font-bold transition-all ${
               activeTab === 'pos'
-                ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white'
+                ? 'bg-gradient-to-r from-accent to-blue-500 text-white'
                 : 'bg-zinc-950/50 text-zinc-100/60 hover:text-zinc-100'
             }`}
           >
@@ -522,7 +526,7 @@ export function MerchantPOS() {
             onClick={() => setActiveTab('products')}
             className={`px-6 py-3 rounded-lg font-bold transition-all ${
               activeTab === 'products'
-                ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white'
+                ? 'bg-gradient-to-r from-accent to-blue-500 text-white'
                 : 'bg-zinc-950/50 text-zinc-100/60 hover:text-zinc-100'
             }`}
           >
@@ -532,7 +536,7 @@ export function MerchantPOS() {
             onClick={() => setActiveTab('sales')}
             className={`px-6 py-3 rounded-lg font-bold transition-all ${
               activeTab === 'sales'
-                ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white'
+                ? 'bg-gradient-to-r from-accent to-blue-500 text-white'
                 : 'bg-zinc-950/50 text-zinc-100/60 hover:text-zinc-100'
             }`}
           >
@@ -545,7 +549,7 @@ export function MerchantPOS() {
           <div className="grid lg:grid-cols-3 gap-6">
             {/* Product Grid - Left Side */}
             <div className="lg:col-span-2 space-y-4">
-              <div className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-cyan-400/20">
+              <div className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-accent/20">
                 <h2 className="text-2xl font-bold text-zinc-100 mb-4">Products</h2>
                 
                 {/* Category Filter */}
@@ -557,8 +561,8 @@ export function MerchantPOS() {
                       aria-pressed={selectedCategory === cat}
                       className={`px-4 py-2 rounded-lg transition-colors text-sm ${
                         selectedCategory === cat
-                          ? 'bg-cyan-400 text-zinc-950 font-semibold'
-                          : 'bg-cyan-400/10 text-cyan-400 hover:bg-cyan-400/20'
+                          ? 'bg-accent text-zinc-950 font-semibold'
+                          : 'bg-accent/10 text-accent hover:bg-accent/20'
                       }`}
                     >
                       {cat}
@@ -569,18 +573,18 @@ export function MerchantPOS() {
                 {/* Product Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {filteredProducts.map(product => (
-                    <motion.button
+                    <m.button
                       key={product.id}
                       onClick={() => addToCart(product)}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="bg-zinc-950 border border-cyan-400/30 rounded-xl p-4 text-left hover:border-cyan-400 transition-all"
+                      className="bg-zinc-950 border border-accent/30 rounded-xl p-4 text-left hover:border-accent transition-all"
                     >
                       <div className="text-2xl mb-2">☕</div>
                       <h3 className="font-bold text-zinc-100 mb-1">{product.name}</h3>
                       <p className="text-sm text-zinc-100/60 mb-2">{product.description}</p>
                       <p className="text-xl font-bold text-emerald-400">${product.price.toFixed(2)}</p>
-                    </motion.button>
+                    </m.button>
                   ))}
                 </div>
               </div>
@@ -589,7 +593,7 @@ export function MerchantPOS() {
             {/* Cart & Checkout - Right Side */}
             <div className="space-y-4">
               {/* Cart */}
-              <div className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-cyan-400/20">
+              <div className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-accent/20">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-2xl font-bold text-zinc-100">Cart</h2>
                   {cart.length && (
@@ -642,10 +646,10 @@ export function MerchantPOS() {
               
               {/* Totals */}
               {cart.length > 0 && (
-                <motion.div
+                <m.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-cyan-400/20 space-y-4"
+                  className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-accent/20 space-y-4"
                 >
                   <div className="space-y-2">
                     <div className="flex justify-between text-zinc-100/60">
@@ -656,7 +660,7 @@ export function MerchantPOS() {
                       <span>VFIDE Fee (0%)</span>
                       <span className="font-bold text-emerald-400">$0.00</span>
                     </div>
-                    <div className="h-px bg-cyan-400/20" />
+                    <div className="h-px bg-accent/20" />
                     <div className="flex justify-between text-xl font-bold">
                       <span className="text-zinc-100">Total</span>
                       <div className="text-right">
@@ -674,7 +678,7 @@ export function MerchantPOS() {
                   </div>
                   
                   {/* Processor Comparison */}
-                  <div className="bg-zinc-950 border border-cyan-400/30 rounded-lg p-4 space-y-3">
+                  <div className="bg-zinc-950 border border-accent/30 rounded-lg p-4 space-y-3">
                     <p className="text-xs text-zinc-100/60 mb-2">Fee Comparison</p>
                     
                     <div className="space-y-2 text-sm">
@@ -694,14 +698,14 @@ export function MerchantPOS() {
                         <span className="text-zinc-100/70">PayPal</span>
                         <span className="text-red-300 font-mono">${processorFees.paypal.toFixed(2)}</span>
                       </div>
-                      <div className="h-px bg-cyan-400/20" />
+                      <div className="h-px bg-accent/20" />
                       <div className="flex justify-between items-center">
                         <span className="text-emerald-400 font-bold">VFIDE</span>
                         <span className="text-emerald-400 font-bold font-mono">${processorFees.vfide.toFixed(2)}</span>
                       </div>
                     </div>
                     
-                    <motion.div
+                    <m.div
                       animate={{ scale: [1, 1.02, 1] }}
                       transition={{ duration: 2, repeat: Infinity }}
                       className="bg-emerald-400/10 border border-emerald-400/30 rounded px-3 py-2 text-center"
@@ -710,7 +714,7 @@ export function MerchantPOS() {
                         Save ${Math.max(processorFees.stripe, processorFees.square, processorFees.clover, processorFees.paypal).toFixed(2)}!
                       </p>
                       <p className="text-xs text-zinc-100/60">vs most expensive</p>
-                    </motion.div>
+                    </m.div>
                   </div>
 
                   {!hasQuotedVfideAmount && (
@@ -739,7 +743,7 @@ export function MerchantPOS() {
                       setShowQRPayment(true)
                     }}
                     disabled={!hasPayableVfideAmount}
-                    className="w-full bg-gradient-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold py-4 rounded-xl hover:scale-105 transition-transform disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+                    className="w-full bg-gradient-to-r from-emerald-400 to-accent text-zinc-950 font-bold py-4 rounded-xl hover:scale-105 transition-transform disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
                   >
                     {hasPayableVfideAmount ? 'Generate QR Payment' : 'QR Payment Requires VFIDE Amount'}
                   </button>
@@ -748,7 +752,7 @@ export function MerchantPOS() {
                       {priceError ? 'Unable to fetch a live VFIDE quote right now.' : 'Waiting for a live VFIDE quote before enabling QR checkout.'}
                     </p>
                   )}
-                </motion.div>
+                </m.div>
               )}
             </div>
           </div>
@@ -756,12 +760,12 @@ export function MerchantPOS() {
         
         {activeTab === 'products' && (
           /* PRODUCTS MANAGEMENT VIEW */
-          <div className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-cyan-400/20">
+          <div className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-accent/20">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-zinc-100">Manage Products</h2>
               <button
                 onClick={() => setShowAddProduct(true)}
-                className="bg-gradient-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold px-6 py-3 rounded-lg hover:scale-105 transition-transform"
+                className="bg-gradient-to-r from-emerald-400 to-accent text-zinc-950 font-bold px-6 py-3 rounded-lg hover:scale-105 transition-transform"
               >
                 + Add Product
               </button>
@@ -772,7 +776,7 @@ export function MerchantPOS() {
               {products.map(product => (
                 <div
                   key={product.id}
-                  className="bg-zinc-950 border border-cyan-400/30 rounded-lg p-4 flex items-center justify-between"
+                  className="bg-zinc-950 border border-accent/30 rounded-lg p-4 flex items-center justify-between"
                 >
                   <div className="flex items-center gap-4">
                     <div className="text-3xl">☕</div>
@@ -801,9 +805,9 @@ export function MerchantPOS() {
           <div className="space-y-6">
             {/* Today's Summary */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-cyan-400/20">
+              <div className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-accent/20">
                 <p className="text-sm text-zinc-100/60 mb-2">Today&apos;s Sales</p>
-                <p className="text-3xl font-bold text-cyan-400">{todaysSales.length}</p>
+                <p className="text-3xl font-bold text-accent">{todaysSales.length}</p>
               </div>
               <div className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-emerald-400/20">
                 <p className="text-sm text-zinc-100/60 mb-2">Revenue</p>
@@ -820,7 +824,7 @@ export function MerchantPOS() {
             </div>
             
             {/* Sales History */}
-            <div className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-cyan-400/20">
+            <div className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-accent/20">
               <h2 className="text-2xl font-bold text-zinc-100 mb-4">Recent Transactions</h2>
               
               {salesHistory.length === 0 ? (
@@ -828,11 +832,11 @@ export function MerchantPOS() {
               ) : (
                 <div className="space-y-3">
                   {salesHistory.slice(0, 10).map(sale => (
-                    <motion.div
+                    <m.div
                       key={sale.id}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      className="bg-zinc-950 border border-cyan-400/30 rounded-lg p-4 hover:border-cyan-400 transition-colors cursor-pointer"
+                      className="bg-zinc-950 border border-accent/30 rounded-lg p-4 hover:border-accent transition-colors cursor-pointer"
                       onClick={() => {
                         setCurrentSale(sale)
                         setShowReceipt(true)
@@ -857,7 +861,7 @@ export function MerchantPOS() {
                           <p className="text-xs text-zinc-100/60">{sale.vfideAmount} VFIDE</p>
                         </div>
                       </div>
-                    </motion.div>
+                    </m.div>
                   ))}
                 </div>
               )}
@@ -869,19 +873,19 @@ export function MerchantPOS() {
       {/* Add Product Modal */}
       <AnimatePresence>
         {showAddProduct && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onClick={() => setShowAddProduct(false)}
           >
-            <motion.div
+            <m.div
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-zinc-950 border border-cyan-400/30 rounded-2xl p-8 max-w-md w-full"
+              className="bg-zinc-950 border border-accent/30 rounded-2xl p-8 max-w-md w-full"
             >
               <h3 className="text-2xl font-bold text-zinc-100 mb-6">Add New Product</h3>
               
@@ -893,7 +897,7 @@ export function MerchantPOS() {
                     value={newProduct.name}
                     onChange={(e) =>  setNewProduct({...newProduct, name: e.target.value})}
                    
-                    className="w-full bg-zinc-950 border border-cyan-400/30 rounded-lg px-4 py-3 text-zinc-100 focus:border-cyan-400 outline-none"
+                    className="w-full bg-zinc-950 border border-accent/30 rounded-lg px-4 py-3 text-zinc-100 focus:border-accent outline-none"
                   />
                 </div>
                 
@@ -905,7 +909,7 @@ export function MerchantPOS() {
                     value={newProduct.price}
                     onChange={(e) =>  setNewProduct({...newProduct, price: e.target.value})}
                    
-                    className="w-full bg-zinc-950 border border-cyan-400/30 rounded-lg px-4 py-3 text-zinc-100 focus:border-cyan-400 outline-none"
+                    className="w-full bg-zinc-950 border border-accent/30 rounded-lg px-4 py-3 text-zinc-100 focus:border-accent outline-none"
                   />
                 </div>
                 
@@ -916,7 +920,7 @@ export function MerchantPOS() {
                     value={newProduct.category}
                     onChange={(e) =>  setNewProduct({...newProduct, category: e.target.value})}
                    
-                    className="w-full bg-zinc-950 border border-cyan-400/30 rounded-lg px-4 py-3 text-zinc-100 focus:border-cyan-400 outline-none"
+                    className="w-full bg-zinc-950 border border-accent/30 rounded-lg px-4 py-3 text-zinc-100 focus:border-accent outline-none"
                   />
                 </div>
                 
@@ -927,46 +931,46 @@ export function MerchantPOS() {
                     onChange={(e) =>  setNewProduct({...newProduct, description: e.target.value})}
                    
                     rows={3}
-                    className="w-full bg-zinc-950 border border-cyan-400/30 rounded-lg px-4 py-3 text-zinc-100 focus:border-cyan-400 outline-none resize-none"
+                    className="w-full bg-zinc-950 border border-accent/30 rounded-lg px-4 py-3 text-zinc-100 focus:border-accent outline-none resize-none"
                   />
                 </div>
                 
                 <div className="flex gap-3 pt-4">
                   <button
                     onClick={handleAddProduct}
-                    className="flex-1 bg-gradient-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold py-3 rounded-lg hover:scale-105 transition-transform"
+                    className="flex-1 bg-gradient-to-r from-emerald-400 to-accent text-zinc-950 font-bold py-3 rounded-lg hover:scale-105 transition-transform"
                   >
                     Add Product
                   </button>
                   <button
                     onClick={() => setShowAddProduct(false)}
-                    className="px-6 bg-zinc-950 border border-cyan-400/30 text-zinc-100 font-bold py-3 rounded-lg hover:border-cyan-400 transition-colors"
+                    className="px-6 bg-zinc-950 border border-accent/30 text-zinc-100 font-bold py-3 rounded-lg hover:border-accent transition-colors"
                   >
                     Cancel
                   </button>
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         )}
       </AnimatePresence>
       
       {/* QR Payment Modal */}
       <AnimatePresence>
         {showQRPayment && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onClick={() => setShowQRPayment(false)}
           >
-            <motion.div
+            <m.div
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-zinc-950 border-2 border-cyan-400/50 rounded-2xl p-8 max-w-md w-full text-center"
+              className="bg-zinc-950 border-2 border-accent/50 rounded-2xl p-8 max-w-md w-full text-center"
             >
               <h3 className="text-3xl font-bold text-zinc-100 mb-2">Scan to Pay</h3>
               <p className="text-zinc-100/60 mb-6">Customer scans with VFIDE app</p>
@@ -1025,12 +1029,17 @@ export function MerchantPOS() {
                 <div className="flex justify-between text-zinc-100/60">
                   <span>QR Status</span>
                   <span className="font-bold text-zinc-100">{qrSignature && qrExpiresAt ? 'Signed' : 'Not signed'}</span>
+                  {qrSignature && qrExpiresAt && (
+                    <span className="text-xs text-amber-300 ml-2">
+                      expires {new Date(qrExpiresAt * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  )}
                 </div>
                 <div className="flex justify-between text-zinc-100/60">
                   <span>VFIDE Fee</span>
                   <span className="font-bold text-emerald-400">${processorFees.vfide.toFixed(2)}</span>
                 </div>
-                <div className="h-px bg-cyan-400/20 my-2" />
+                <div className="h-px bg-accent/20 my-2" />
                 
                 <div className="space-y-1.5 text-xs">
                   <p className="text-zinc-100/40 mb-1">Other processors would charge:</p>
@@ -1052,7 +1061,7 @@ export function MerchantPOS() {
                   </div>
                 </div>
                 
-                <motion.div
+                <m.div
                   animate={{ scale: [1, 1.05, 1] }}
                   transition={{ duration: 2, repeat: Infinity }}
                   className="bg-emerald-400/20 border border-emerald-400 rounded-lg p-3 text-center"
@@ -1060,21 +1069,21 @@ export function MerchantPOS() {
                   <p className="text-emerald-400 font-bold text-lg">
                     You Save Up To ${(Math.max(processorFees.stripe, processorFees.square, processorFees.clover, processorFees.paypal) - processorFees.vfide).toFixed(2)}!
                   </p>
-                </motion.div>
+                </m.div>
               </div>
               
               {/* Waiting for payment indicator */}
               <div className="mb-4">
                 {qrSignature && qrExpiresAt ? (
                   <>
-                    <motion.div
+                    <m.div
                       animate={{ opacity: [0.5, 1, 0.5] }}
                       transition={{ duration: 1.5, repeat: Infinity }}
-                      className="flex items-center justify-center gap-2 text-cyan-400"
+                      className="flex items-center justify-center gap-2 text-accent"
                     >
-                      <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                      <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
                       <span className="text-sm">Waiting for blockchain confirmation...</span>
-                    </motion.div>
+                    </m.div>
                     <p className="text-xs text-center text-zinc-100/40 mt-2">
                       Payment will auto-confirm when detected on-chain
                     </p>
@@ -1091,32 +1100,32 @@ export function MerchantPOS() {
               <div className="space-y-3">
                 <button
                   onClick={() => setShowQRPayment(false)}
-                  className="w-full bg-zinc-950 border border-cyan-400/30 text-zinc-100 font-bold py-4 rounded-xl hover:border-cyan-400 transition-colors"
+                  className="w-full bg-zinc-950 border border-accent/30 text-zinc-100 font-bold py-4 rounded-xl hover:border-accent transition-colors"
                 >
                   Cancel Payment
                 </button>
               </div>
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         )}
       </AnimatePresence>
       
       {/* Email Opt-in Modal */}
       <AnimatePresence>
         {showEmailPrompt && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onClick={() => setShowEmailPrompt(false)}
           >
-            <motion.div
+            <m.div
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-zinc-950 border-2 border-cyan-400/50 rounded-2xl p-8 max-w-md w-full"
+              className="bg-zinc-950 border-2 border-accent/50 rounded-2xl p-8 max-w-md w-full"
             >
               <div className="text-center mb-6">
                 <div className="text-6xl mb-4">📧</div>
@@ -1138,11 +1147,11 @@ export function MerchantPOS() {
                     value={customerEmail}
                     onChange={(e) =>  setCustomerEmail(e.target.value)}
                    
-                    className="w-full bg-zinc-950 border border-cyan-400/30 rounded-lg px-4 py-3 text-zinc-100 focus:border-cyan-400 outline-none"
+                    className="w-full bg-zinc-950 border border-accent/30 rounded-lg px-4 py-3 text-zinc-100 focus:border-accent outline-none"
                   />
                 </div>
                 
-                <div className="bg-cyan-400/10 border border-cyan-400/30 rounded-lg p-3">
+                <div className="bg-accent/10 border border-accent/30 rounded-lg p-3">
                   <p className="text-xs text-zinc-100/70">
                     ✅ Instant email delivery<br />
                     ✅ Itemized receipt with totals<br />
@@ -1154,7 +1163,7 @@ export function MerchantPOS() {
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={() => completeSale()}
-                    className="bg-zinc-950 border border-cyan-400/30 text-zinc-100 font-bold py-3 rounded-lg hover:border-cyan-400 transition-colors"
+                    className="bg-zinc-950 border border-accent/30 text-zinc-100 font-bold py-3 rounded-lg hover:border-accent transition-colors"
                   >
                     Skip
                   </button>
@@ -1166,28 +1175,28 @@ export function MerchantPOS() {
                         completeSale()
                       }
                     }}
-                    className="bg-gradient-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold py-3 rounded-lg hover:scale-105 transition-transform"
+                    className="bg-gradient-to-r from-emerald-400 to-accent text-zinc-950 font-bold py-3 rounded-lg hover:scale-105 transition-transform"
                   >
                     {customerEmail ? 'Send Receipt' : 'Continue'}
                   </button>
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         )}
       </AnimatePresence>
       
       {/* Receipt Modal */}
       <AnimatePresence>
         {showReceipt && currentSale && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onClick={() => setShowReceipt(false)}
           >
-            <motion.div
+            <m.div
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
@@ -1279,8 +1288,8 @@ export function MerchantPOS() {
                   </button>
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

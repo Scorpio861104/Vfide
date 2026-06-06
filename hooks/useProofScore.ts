@@ -1,4 +1,10 @@
 import { useReadContract, useAccount } from 'wagmi'
+import { useState } from 'react'
+import { useWriteContract, useWaitForTransactionReceipt, usePublicClient, useChainId } from 'wagmi'
+import { SeerSocialABI } from '@/lib/abis'
+import { ZERO_ADDRESS } from '@/lib/constants'
+import { CURRENT_CHAIN_ID } from '@/lib/testnet'
+import { parseContractError, logError } from '@/lib/errorHandling'
 import { ProofScoreBurnRouterABI, SeerABI, isConfiguredContractAddress } from '@/lib/contracts'
 import { useContractAddresses } from './useContractAddresses'
 import { PROOF_SCORE_PERMISSIONS, PROOF_SCORE_TIERS } from '@/lib/constants'
@@ -38,20 +44,26 @@ export function useProofScore(userAddress?: `0x${string}`) {
     },
   })
 
-  const scoreNum = data ? Number(data) : 5000 // Default neutral score (10x scale); new users with no on-chain score start at 5000
+  // When no address is connected, return null so UIs can show "connect wallet" 
+  // instead of misleadingly showing a neutral 5000 score as the user's own.
+  const scoreNum = !targetAddress ? null : (data ? Number(data) : 5000)
   
   // Get current tier from unified constants
-  const currentTier = getScoreTierObject(scoreNum)
+  const currentTier = scoreNum !== null ? getScoreTierObject(scoreNum) : null
   
   // Calculate burn fee based on ProofScore
   // Contract: minTotalBps=25 (0.25%) at score≥8000, maxTotalBps=500 (5%) at score≤4000
-  // Neutral score (5000) sits at the midpoint → 2.5%
-  const fallbackBurnFee =
-    scoreNum >= 8000 ? 0.25 :
-    scoreNum >= 7000 ? 1.0 :
-    scoreNum >= 5000 ? 2.5 :
-    scoreNum >= 4000 ? 3.5 :
-    5.0
+  // Neutral score (5000): 500 − ((5000−4000)×475)/4000 = 381.25 bps = 3.8125%
+  // Linear interpolation matching ProofScoreBurnRouter.sol computeFees():
+  //   score ≤ 4000 (LOW_SCORE_THRESHOLD) → maxTotalBps = 500 bps = 5.00%
+  //   score ≥ 8000 (HIGH_SCORE_THRESHOLD) → minTotalBps = 25 bps = 0.25%
+  //   4000–8000 → linear: maxBps - ((score - 4000) * (maxBps - minBps)) / 4000
+  const MIN_BPS = 25;   // 0.25% — ProofScoreBurnRouter.minTotalBps
+  const MAX_BPS = 500;  // 5.00% — ProofScoreBurnRouter.maxTotalBps
+  const fallbackBurnFee = scoreNum === null ? null :
+    scoreNum >= 8000 ? MIN_BPS / 100 :
+    scoreNum <= 4000 ? MAX_BPS / 100 :
+    (MAX_BPS - ((scoreNum - 4000) * (MAX_BPS - MIN_BPS)) / 4000) / 100
   const burnFee = onChainFeeQuote !== undefined
     ? (() => {
         if (!Array.isArray(onChainFeeQuote)) return fallbackBurnFee
@@ -65,17 +77,19 @@ export function useProofScore(userAddress?: `0x${string}`) {
 
   return {
     score: scoreNum,
+    /** True when no wallet is connected — score is null, not a real value */
+    isDisconnected: !targetAddress,
     tier: currentTier,
-    tierName: currentTier.label,
-    tierColor: currentTier.color,
+    tierName: currentTier?.label ?? null,
+    tierColor: currentTier?.color ?? null,
     burnFee,
-    color: getTierColor(scoreNum),
-    canVote: scoreNum >= PROOF_SCORE_PERMISSIONS.MIN_FOR_GOVERNANCE,
-    canMerchant: scoreNum >= PROOF_SCORE_PERMISSIONS.MIN_FOR_MERCHANT,
-    canCouncil: scoreNum >= PROOF_SCORE_PERMISSIONS.MIN_FOR_COUNCIL,
-    canEndorse: scoreNum >= PROOF_SCORE_PERMISSIONS.MIN_FOR_ENDORSE,
-    canMentor: scoreNum >= PROOF_SCORE_PERMISSIONS.MIN_FOR_MENTOR,
-    isElite: scoreNum >= 8000,
+    color: scoreNum !== null ? getTierColor(scoreNum) : '#71717a',
+    canVote: (scoreNum ?? 0) >= PROOF_SCORE_PERMISSIONS.MIN_FOR_GOVERNANCE,
+    canMerchant: (scoreNum ?? 0) >= PROOF_SCORE_PERMISSIONS.MIN_FOR_MERCHANT,
+    canCouncil: (scoreNum ?? 0) >= PROOF_SCORE_PERMISSIONS.MIN_FOR_COUNCIL,
+    canEndorse: (scoreNum ?? 0) >= PROOF_SCORE_PERMISSIONS.MIN_FOR_ENDORSE,
+    canMentor: (scoreNum ?? 0) >= PROOF_SCORE_PERMISSIONS.MIN_FOR_MENTOR,
+    isElite: (scoreNum ?? 0) >= 8000,
     isError,
     isLoading,
     refetch,
@@ -108,7 +122,7 @@ function getTierColor(score: number): string {
   if (score >= 8000) return '#00FF88' // Elite green
   if (score >= 7000) return '#00F0FF' // High trust cyan
   if (score >= 5000) return '#FFD700' // Neutral gold
-  if (score >= 3500) return '#FFA500' // Low trust orange
+  if (score >= 4000) return '#FFA500' // Low trust orange
   return '#FF4444' // Risky red
 }
 
@@ -150,7 +164,7 @@ export function useSeerThresholds() {
   return {
     minForGovernance: minForGovernance ? Number(minForGovernance) : PROOF_SCORE_PERMISSIONS.MIN_FOR_GOVERNANCE,
     minForMerchant: minForMerchant ? Number(minForMerchant) : PROOF_SCORE_PERMISSIONS.MIN_FOR_MERCHANT,
-    lowTrustThreshold: lowTrustThreshold ? Number(lowTrustThreshold) : 3500,
+    lowTrustThreshold: lowTrustThreshold ? Number(lowTrustThreshold) : 4000,
     highTrustThreshold: highTrustThreshold ? Number(highTrustThreshold) : 8000,
   }
 }
@@ -177,5 +191,108 @@ export function useHasBadge(badgeId: `0x${string}`, userAddress?: `0x${string}`)
   return {
     hasBadge: !!data,
     isLoading,
+  }
+}
+
+// ─── Consolidated from useProofScoreHooks.ts ─────────────────────────────
+
+export function useEndorse(targetAddress?: `0x${string}`) {
+  const CONTRACT_ADDRESSES = useContractAddresses();
+  const chainId = useChainId()
+  const publicClient = usePublicClient()
+  const { writeContractAsync, data, isPending } = useWriteContract()
+  const [error, setError] = useState<string | null>(null)
+  const hasSeerSocialConfig = isConfiguredContractAddress(CONTRACT_ADDRESSES.SeerSocial)
+  
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+    hash: data,
+  })
+  
+  const endorse = async (reason = 'endorsement') => {
+    setError(null)
+    if (!targetAddress || targetAddress === ZERO_ADDRESS) {
+      setError('Invalid target address')
+      return { success: false, error: 'Invalid target address' }
+    }
+    if (!hasSeerSocialConfig) {
+      const message = 'SeerSocial contract is not configured'
+      setError(message)
+      return { success: false, error: message }
+    }
+    if (chainId !== CURRENT_CHAIN_ID) {
+      const message = 'Switch to the configured network before endorsing'
+      setError(message)
+      return { success: false, error: message }
+    }
+    try {
+      const hash = await writeContractAsync({
+        address: CONTRACT_ADDRESSES.SeerSocial,
+        abi: SeerSocialABI,
+        functionName: 'endorse',
+        args: [targetAddress, reason],
+        chainId: CURRENT_CHAIN_ID,
+      })
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash })
+      }
+      return { success: true, hash }
+    } catch (err: unknown) {
+      logError('endorse', err);
+      const parsed = parseContractError(err);
+      const errorMsg = `Failed to endorse: ${parsed.userMessage}`;
+      setError(errorMsg)
+      return { success: false, error: errorMsg }
+    }
+  }
+  
+  return {
+    endorse,
+    isEndorsing: isPending || isConfirming,
+    isSuccess,
+    error,
+    isValid: !!targetAddress && targetAddress !== ZERO_ADDRESS,
+    isAvailable: !!targetAddress && hasSeerSocialConfig,
+  }
+}
+
+/**
+/**
+ * Score breakdown hook - Breakdown of a user's proof score components
+ */
+
+export function useScoreBreakdown(userAddress?: `0x${string}`) {
+  const CONTRACT_ADDRESSES = useContractAddresses();
+  const { address: connectedAddress } = useAccount()
+  const targetAddress = userAddress || connectedAddress
+  const hasSeerConfig = isConfiguredContractAddress(CONTRACT_ADDRESSES.Seer)
+  
+  const { data, isLoading, refetch } = useReadContract({
+    address: CONTRACT_ADDRESSES.Seer,
+    abi: SeerABI,
+    functionName: 'getScore',
+    args: targetAddress ? [targetAddress] : undefined,
+    query: {
+      enabled: !!targetAddress && hasSeerConfig,
+    }
+  })
+  
+  const totalScore = data ? Number(data) : 5000
+
+  // Component-level score decomposition is unavailable until ProofLedger exposes breakdown reads.
+  return {
+    breakdown: {
+      totalScore,
+      baseScore: 0,
+      activityBonus: 0,
+      ageBonus: 0,
+      activityPoints: 0,
+      endorsementPoints: 0,
+      vaultBonus: 0,
+      badgePoints: 0,
+      reputationDelta: 0,
+      hasDiversityBonus: false,
+    },
+    isLoading,
+    refetch,
   }
 }

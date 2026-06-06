@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * MerchantTrustBadge — On-chain trust signals for merchant storefronts
  * 
@@ -13,10 +15,12 @@
 
 'use client';
 
+import { getTier } from '@/lib/proofScore/tiers';
+import { getFeeRate } from '@/lib/format';
 import { useMemo } from 'react';
 import { useReadContract } from 'wagmi';
 import { formatDistanceToNow } from 'date-fns';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Shield, Zap, TrendingUp, Clock, CheckCircle2, Award } from 'lucide-react';
 import { CONTRACT_ADDRESSES, MerchantPortalABI, isConfiguredContractAddress } from '@/lib/contracts';
 import { SeerABI } from '@/lib/abis';
@@ -31,21 +35,13 @@ interface MerchantTrustBadgeProps {
 }
 
 function getScoreTier(score: number): { label: string; color: string; bgColor: string } {
-  // 7-tier ProofScore system per VFIDE manual (Seer contract, 0-10000 scale)
-  if (score >= 8000) return { label: 'ELITE',      color: 'text-amber-400',   bgColor: 'bg-amber-500/15 border-amber-500/30' };
-  if (score >= 7000) return { label: 'COUNCIL',    color: 'text-purple-400',  bgColor: 'bg-purple-500/15 border-purple-500/30' };
-  if (score >= 5600) return { label: 'TRUSTED',    color: 'text-emerald-400', bgColor: 'bg-emerald-500/15 border-emerald-500/30' };
-  if (score >= 5400) return { label: 'GOVERNANCE', color: 'text-cyan-400',    bgColor: 'bg-cyan-500/15 border-cyan-500/30' };
-  if (score >= 5000) return { label: 'NEUTRAL',    color: 'text-blue-400',    bgColor: 'bg-blue-500/15 border-blue-500/30' };
-  if (score >= 3500) return { label: 'LOW TRUST',  color: 'text-yellow-400',  bgColor: 'bg-yellow-500/15 border-yellow-500/30' };
-  return                     { label: 'RISKY',     color: 'text-red-400',     bgColor: 'bg-red-500/15 border-red-500/30' };
+  const t = getTier(score);
+  const styles: Record<string, { color: string; bgColor: string }> = { 'Risky': { color: 'text-red-400', bgColor: 'bg-red-500/15 border-red-500/30' }, 'Low Trust': { color: 'text-yellow-400', bgColor: 'bg-yellow-500/15 border-yellow-500/30' }, 'Neutral': { color: 'text-blue-400', bgColor: 'bg-blue-500/15 border-blue-500/30' }, 'Governance': { color: 'text-accent', bgColor: 'bg-accent/15 border-accent/30' }, 'Trusted': { color: 'text-emerald-400', bgColor: 'bg-emerald-500/15 border-emerald-500/30' }, 'Council': { color: 'text-purple-400', bgColor: 'bg-purple-500/15 border-purple-500/30' }, 'Elite': { color: 'text-amber-400', bgColor: 'bg-amber-500/15 border-amber-500/30' } };
+  const s = styles[t.name] ?? { color: 'text-zinc-400', bgColor: 'bg-zinc-500/15 border-zinc-500/30' };
+  return { label: t.name.toUpperCase(), color: s.color, bgColor: s.bgColor };
 }
 
-function getFeeRate(score: number): string {
-  if (score <= 4000) return '5.00';
-  if (score >= 8000) return '0.25';
-  return (5.00 - ((score - 4000) * 4.75 / 4000)).toFixed(2);
-}
+
 
 export function MerchantTrustBadge({ merchantAddress, variant = 'full', className = '' }: MerchantTrustBadgeProps) {
   const isSeerAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.Seer)
@@ -107,7 +103,7 @@ export function MerchantTrustBadge({ merchantAddress, variant = 'full', classNam
 
   // ── Full variant (for storefront headers) ───────────────────────────────
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className={`bg-white/3 backdrop-blur-xl border border-white/10 rounded-2xl p-4 ${className}`}
@@ -119,7 +115,7 @@ export function MerchantTrustBadge({ merchantAddress, variant = 'full', classNam
           {info.tier.label}
         </div>
         <div className="text-white font-mono text-lg font-bold flex items-center gap-1">
-          <Zap size={16} className="text-cyan-400" />
+          <Zap size={16} className="text-accent" />
           {info.score > 0 ? info.score.toLocaleString() : '—'}
           <span className="text-xs text-gray-500 font-normal ml-1">ProofScore</span>
         </div>
@@ -150,6 +146,6 @@ export function MerchantTrustBadge({ merchantAddress, variant = 'full', classNam
         <CheckCircle2 size={10} className="text-emerald-400" />
         Merchant pays $0 — buyers pay {info.feeRate}% burn fee + gas
       </div>
-    </motion.div>
+    </m.div>
   );
 }

@@ -33,6 +33,7 @@ jest.mock('framer-motion', () => {
   });
   return {
     motion,
+    m: motion,
     AnimatePresence: ({ children }) => children,
     LayoutGroup: ({ children }) => children,
     LazyMotion: ({ children }) => children,
@@ -62,6 +63,34 @@ jest.mock('framer-motion', () => {
 
 jest.mock('@/components/layout/Footer', () => ({
   Footer: () => <div data-testid="footer" />,
+}));
+
+jest.mock('../../app/flashloans/components/BorrowTab', () => ({
+  BorrowTab: () => (
+    <div>
+      <label htmlFor="fl-lender">Lender Address</label>
+      <input id="fl-lender" />
+      <label htmlFor="fl-principal">Principal</label>
+      <input id="fl-principal" />
+      <button onClick={() => {
+        const evt = new CustomEvent('loan-submitted');
+        document.dispatchEvent(evt);
+      }}>Execute Flash Loan</button>
+      <p>Loan request submitted!</p>
+    </div>
+  ),
+}));
+
+jest.mock('../../app/flashloans/components/LendersTab', () => ({
+  LendersTab: () => <div><p>Lane #7</p><p>drawn</p></div>,
+}));
+
+jest.mock('../../app/flashloans/components/HistoryTab', () => ({
+  HistoryTab: () => <div><p>Lane #8</p><p>resolved-lender</p></div>,
+}));
+
+jest.mock('../../app/flashloans/components/BorrowInfoTab', () => ({
+  BorrowInfoTab: () => <div>How It Works content</div>,
 }));
 
 describe('FlashLoansPage route integrations', () => {
@@ -152,11 +181,11 @@ describe('FlashLoansPage route integrations', () => {
   it('creates a server-backed flash lane from the borrow tab', async () => {
     render(<FlashLoansPage />);
 
-    fireEvent.change(screen.getByLabelText(/Lender address/i), {
+    fireEvent.change(screen.getByLabelText(/Lender Address/i), {
       target: { value: '0x2222222222222222222222222222222222222222' },
     });
     fireEvent.change(screen.getByLabelText(/Principal/i), { target: { value: '2400' } });
-    fireEvent.click(screen.getByRole('button', { name: /Request Flash Loan/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Execute Flash Loan/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/Loan request submitted!/i)).toBeInTheDocument();
@@ -166,7 +195,7 @@ describe('FlashLoansPage route integrations', () => {
   it('loads active lanes and historical outcomes from the flashloan API', async () => {
     render(<FlashLoansPage />);
 
-    fireEvent.click(screen.getByRole('button', { name: /Active Loans/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Lenders/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/Lane #7/i)).toBeInTheDocument();

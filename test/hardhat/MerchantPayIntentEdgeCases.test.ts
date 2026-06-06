@@ -84,10 +84,29 @@ describe('MerchantPortal.payWithIntent edge cases', () => {
       dao.address,
       await vaultHub.getAddress(),
       await seer.getAddress(),
-      await securityHub.getAddress(),
-      feeSink.address
+      await securityHub.getAddress()
     );
     await portal.waitForDeployment();
+
+    const PaymentQueueManager = await ethers.getContractFactory('CardBoundVaultPaymentQueueManager');
+    const paymentQueueManager = await PaymentQueueManager.deploy(dao.address, ethers.parseEther('2000'));
+    await paymentQueueManager.waitForDeployment();
+
+    const WithdrawalQueueManager = await ethers.getContractFactory('CardBoundVaultWithdrawalQueueManager');
+    const withdrawalQueueManager = await WithdrawalQueueManager.deploy(dao.address);
+    await withdrawalQueueManager.waitForDeployment();
+
+    const InheritanceManager = await ethers.getContractFactory('CardBoundVaultInheritanceManager');
+    const inheritanceManager = await InheritanceManager.deploy(dao.address);
+    await inheritanceManager.waitForDeployment();
+
+    const AdminManager = await ethers.getContractFactory('CardBoundVaultAdminManager');
+    const adminManager = await AdminManager.deploy(dao.address);
+    await adminManager.waitForDeployment();
+
+    const AdminFacet = await ethers.getContractFactory('CardBoundVaultAdminFacet');
+    const adminFacet = await AdminFacet.deploy();
+    await adminFacet.waitForDeployment();
 
     await portal.connect(dao).setAcceptedToken(await token.getAddress(), true);
     await portal.connect(merchant).registerMerchant('Edge Shop', 'retail');
@@ -102,7 +121,12 @@ describe('MerchantPortal.payWithIntent edge cases', () => {
       1,
       ethers.parseEther('1000'),
       ethers.parseEther('2000'),
-      ethers.ZeroAddress
+      ethers.ZeroAddress,
+      await paymentQueueManager.getAddress(),
+      await withdrawalQueueManager.getAddress(),
+      await inheritanceManager.getAddress(),
+      await adminManager.getAddress(),
+      await adminFacet.getAddress()
     );
     await customerVault.waitForDeployment();
 

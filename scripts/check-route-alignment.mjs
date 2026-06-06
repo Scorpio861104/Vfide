@@ -21,6 +21,9 @@ const ALLOWED_ASSET_PATHS = new Set([
   '/robots.txt',
   '/sitemap.xml',
   '/manifest.json',
+  // Static PDF assets served from public/whitepaper/ — not Next.js app/ routes
+  '/whitepaper/vfide-whitepaper.pdf',
+  '/whitepaper/vfide-executive-summary.pdf',
 ])
 
 function walk(dir, out = []) {
@@ -48,8 +51,8 @@ function normalizeRoute(filePath) {
 function routeToRegex(route) {
   const escaped = route
     .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    .replace(/\\\[\.\.\.[^/\]]+\\\]/g, '.+')
-    .replace(/\\\[[^/\]]+\\\]/g, '[^/]+')
+    .replace(/\\[\.\.\.[^/\]]+\\]/g, '.+')
+    .replace(/\\[[^/\]]+\\]/g, '[^/]+')
   return new RegExp(`^${escaped}$`)
 }
 

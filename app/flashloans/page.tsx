@@ -1,30 +1,38 @@
 'use client';
+import _dynamic from 'next/dynamic';
 
 export const dynamic = 'force-dynamic';
 
-import { AnimatePresence, motion } from 'framer-motion';
-import { Clock, History, Zap } from 'lucide-react';
+import { AnimatePresence, m , LazyMotion, domAnimation } from 'framer-motion';
+import { History, Info, Users, Zap } from 'lucide-react';
 import { useState } from 'react';
 
 import { Footer } from '@/components/layout/Footer';
 
-import { ActiveTab } from './components/ActiveTab';
-import { BorrowTab } from './components/BorrowTab';
+const LendersTab = _dynamic(() => import('./components/LendersTab').then(m => ({ default: m.LendersTab })), { ssr: false });
+const BorrowInfoTab = _dynamic(() => import('./components/BorrowInfoTab').then(m => ({ default: m.BorrowInfoTab })), { ssr: false });
+const BorrowTab = _dynamic(() => import('./components/BorrowTab').then(m => ({ default: m.BorrowTab })), { ssr: false });
 import { HistoryTab } from './components/HistoryTab';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
-type TabId = 'borrow' | 'active' | 'history';
+type TabId = 'borrow' | 'lenders' | 'info' | 'history';
 
 const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
   { id: 'borrow',  label: 'Borrow',       icon: Zap     },
-  { id: 'active',  label: 'Active Loans', icon: Clock   },
+  { id: 'lenders', label: 'Lenders',      icon: Users   },
+  { id: 'info',    label: 'How It Works', icon: Info    },
   { id: 'history', label: 'History',      icon: History },
 ];
 
 export default function FlashLoansPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [activeTab, setActiveTab] = useState<TabId>('borrow');
 
   return (
-    <div className="relative min-h-screen bg-zinc-950 md:pt-[3.5rem]">
+    <LazyMotion features={domAnimation}>
+      <div className="relative min-h-screen bg-zinc-950 md:pt-[3.5rem]">
       {/* Ambient background */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
@@ -38,14 +46,14 @@ export default function FlashLoansPage() {
 
       <div className="relative container mx-auto px-4 max-w-6xl py-8">
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <div className="flex items-center gap-3 mb-3">
             <span className="badge-live"><span className="badge-live-dot" />Atomic Borrowing</span>
           </div>
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
               <h1 className="text-4xl font-bold mb-2">
-                <span className="bg-gradient-to-r from-amber-400 via-orange-400 to-cyan-400 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-amber-400 via-orange-400 to-accent bg-clip-text text-transparent">
                   Flash Loans
                 </span>
               </h1>
@@ -57,12 +65,12 @@ export default function FlashLoansPage() {
                 <div className="text-xs text-white/40">Collateral</div>
               </div>
               <div className="analytics-card text-center px-5 py-3">
-                <div className="text-xl font-bold text-cyan-400">0.09%</div>
+                <div className="text-xl font-bold text-accent">0.09%</div>
                 <div className="text-xs text-white/40">Flash Fee</div>
               </div>
             </div>
           </div>
-        </motion.div>
+        </m.div>
 
         {/* Sticky Tab Bar */}
         <div className="sticky top-7 md:top-[5.25rem] z-30 -mx-4 px-4 py-3 backdrop-blur-xl border-b border-white/5 mb-8"
@@ -79,16 +87,18 @@ export default function FlashLoansPage() {
 
         {/* Tab Content */}
         <AnimatePresence mode="wait">
-          <motion.div key={activeTab}
+          <m.div key={activeTab}
             initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}>
             {activeTab === 'borrow'  && <BorrowTab />}
-            {activeTab === 'active'  && <ActiveTab />}
+            {activeTab === 'lenders' && <LendersTab />}
+            {activeTab === 'info'    && <BorrowInfoTab />}
             {activeTab === 'history' && <HistoryTab />}
-          </motion.div>
+          </m.div>
         </AnimatePresence>
       </div>
       <Footer />
     </div>
+    </LazyMotion>
   );
 }

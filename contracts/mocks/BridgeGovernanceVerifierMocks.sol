@@ -13,7 +13,13 @@ interface ILayerZeroReceiverForBridgeMock {
     /// @param _message _message
     /// @param _executor _executor
     /// @param _extraData _extraData
-    function lzReceive(Origin calldata _origin, bytes32 _guid, bytes calldata _message, address _executor, bytes calldata _extraData) external payable;
+    function lzReceive(
+        Origin calldata _origin,
+        bytes32 _guid,
+        bytes calldata _message,
+        address _executor,
+        bytes calldata _extraData
+    ) external payable;
 }
 
 /// @notice MockLzEndpointForBridge
@@ -51,7 +57,6 @@ contract MockLzEndpointForBridge {
     }
 
     /// @notice quote
-    /// @return _arg _arg
     function quote(MessagingParams calldata, address) external pure returns (MessagingFee memory) {
         return MessagingFee(0, 0);
     }
@@ -59,7 +64,10 @@ contract MockLzEndpointForBridge {
     /// @notice send
     /// @param _params _params
     /// @return receipt receipt
-    function send(MessagingParams calldata _params, address) external payable returns (MessagingReceipt memory receipt) {
+    function send(
+        MessagingParams calldata _params,
+        address
+    ) external payable returns (MessagingReceipt memory receipt) {
         uint64 nonce = nextNonce++;
         bytes32 guid = keccak256(abi.encode(msg.sender, _params.dstEid, nonce, _params.message));
         address receiver = address(uint160(uint256(_params.receiver)));

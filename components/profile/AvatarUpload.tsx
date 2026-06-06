@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Avatar Upload Component
  * 
@@ -8,7 +10,7 @@
 'use client';
 
 import React, { useState, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Upload, Camera, X, Check, AlertCircle, Loader2, Image as ImageIcon } from 'lucide-react';
 import NextImage from 'next/image';
 import { useAccount } from 'wagmi';
@@ -187,29 +189,29 @@ export function AvatarUpload({
       <div className="flex flex-col items-center gap-4">
         <div className={`${sizeClasses[size]} relative`}>
           {preview || currentAvatar ? (
-            <div className="relative w-full h-full rounded-full overflow-hidden border-4 border-cyan-400/20">
+            <div className="relative w-full h-full rounded-full overflow-hidden border-4 border-accent/20">
               <img
                 src={preview || currentAvatar}
                 alt="Avatar preview"
                 className="w-full h-full object-cover"
               />
               {preview && !isUploading && (
-                <motion.button
+                <m.button
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   onClick={handleCancel}
                   className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors" aria-label="Close">
                   <X className="w-4 h-4" />
-                </motion.button>
+                </m.button>
               )}
               {isUploading && (
                 <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                  <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+                  <Loader2 className="w-8 h-8 text-accent animate-spin" />
                 </div>
               )}
             </div>
           ) : (
-            <div className="w-full h-full rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center">
+            <div className="w-full h-full rounded-full bg-gradient-to-br from-accent to-violet-400 flex items-center justify-center">
               <ImageIcon className="w-12 h-12 text-white/50" />
             </div>
           )}
@@ -218,7 +220,7 @@ export function AvatarUpload({
         {/* Upload Progress */}
         <AnimatePresence>
           {isUploading && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
@@ -229,21 +231,21 @@ export function AvatarUpload({
                 <span>{uploadProgress}%</span>
               </div>
               <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
-                <motion.div
+                <m.div
                   initial={{ width: 0 }}
                   animate={{ width: `${uploadProgress}%` }}
                   transition={{ duration: 0.3 }}
-                  className="h-full bg-gradient-to-r from-cyan-400 to-blue-500"
+                  className="h-full bg-gradient-to-r from-accent to-blue-500"
                 />
               </div>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
 
         {/* Error Message */}
         <AnimatePresence>
           {error && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
@@ -253,7 +255,7 @@ export function AvatarUpload({
                 <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
                 <p className="text-xs text-red-400">{error}</p>
               </div>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
 
@@ -265,8 +267,8 @@ export function AvatarUpload({
             onDrop={handleDrop}
             className={`w-full max-w-xs p-6 border-2 border-dashed rounded-xl transition-all ${
               isDragging
-                ? 'border-cyan-400 bg-cyan-400/5'
-                : 'border-zinc-700 hover:border-cyan-400/50'
+                ? 'border-accent bg-accent/5'
+                : 'border-zinc-700 hover:border-accent/50'
             }`}
           >
             <input
@@ -278,8 +280,8 @@ export function AvatarUpload({
              aria-label="Upload file" />
 
             <div className="flex flex-col items-center gap-3 text-center">
-              <div className="p-3 bg-cyan-400/10 rounded-full">
-                <Upload className="w-6 h-6 text-cyan-400" />
+              <div className="p-3 bg-accent/10 rounded-full">
+                <Upload className="w-6 h-6 text-accent" />
               </div>
               
               <div>
@@ -293,7 +295,7 @@ export function AvatarUpload({
 
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="px-4 py-2 bg-cyan-400 text-zinc-950 rounded-lg text-sm font-semibold hover:bg-cyan-400 transition-colors"
+                className="px-4 py-2 bg-accent text-zinc-950 rounded-lg text-sm font-semibold hover:bg-accent transition-colors"
               >
                 Choose File
               </button>
@@ -317,7 +319,7 @@ export function AvatarUpload({
             <button
               onClick={handleUpload}
               disabled={!file}
-              className="flex-1 px-4 py-2 bg-cyan-400 text-zinc-950 rounded-lg text-sm font-semibold hover:bg-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-2 bg-accent text-zinc-950 rounded-lg text-sm font-semibold hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
               <Check className="w-4 h-4" />
               Upload
@@ -387,7 +389,7 @@ export function AvatarUploadCompact({
         {currentAvatar ? (
           <NextImage src={currentAvatar} alt="Avatar" fill className="object-cover" sizes="80px" />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center">
+          <div className="w-full h-full bg-gradient-to-br from-accent to-violet-400 flex items-center justify-center">
             <ImageIcon className="w-8 h-8 text-white/50" />
           </div>
         )}

@@ -32,9 +32,6 @@ export interface VaultTransaction {
 const GUARDIAN_ADDED = parseAbiItem(
   'event GuardianChanged(address indexed guardian, bool active)'
 );
-const _TRUSTEE_CHANGED = parseAbiItem(
-  'event TrusteeChanged(address indexed trustee, bool active)'
-);
 const PAYMENT_QUEUED = parseAbiItem(
   'event PaymentQueued(uint256 indexed queueIndex, address indexed token, address indexed merchant, address recipient, uint256 amount, uint64 executeAfter)'
 );
@@ -308,7 +305,6 @@ export function useVaultTransactions(vaultAddress: Address | undefined): {
 
     load();
     return () => { cancelled = true; };
-   
   }, [vaultAddress, publicClient, chainId, tick]);
 
   return { transactions, isLoading, error, refetch };

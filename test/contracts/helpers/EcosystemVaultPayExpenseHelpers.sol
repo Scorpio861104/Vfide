@@ -9,8 +9,8 @@ interface IEcosystemVaultOpsObserver {
 }
 
 contract EcosystemVaultTestable is EcosystemVault {
-    constructor(address _vfide, address _seer, address _operationsWallet)
-        EcosystemVault(_vfide, _seer, _operationsWallet)
+    constructor(address _vfide, address _seer, address _operationsWallet, address _adminFacet)
+        EcosystemVault(_vfide, _seer, _operationsWallet, _adminFacet)
     {}
 
     /// @dev Bypasses the onlyOwner gate for test harness — sets the sandwich-prevention floor.

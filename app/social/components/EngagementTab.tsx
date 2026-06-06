@@ -31,6 +31,7 @@ export function EngagementTab() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    let _cancelled = false;
     if (!address) return;
     setLoading(true);
     Promise.all([
@@ -43,7 +44,8 @@ export function EngagementTab() {
         setEndorsements(a.activities ?? []);
       })
       .finally(() => setLoading(false));
-  }, [address]);
+    return () => { _cancelled = true; };
+    }, [address]);
 
   if (!address) {
     return (
@@ -60,7 +62,7 @@ export function EngagementTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 size={22} className="text-cyan-400 animate-spin" />
+        <Loader2 size={22} className="text-accent animate-spin" />
       </div>
     );
   }

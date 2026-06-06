@@ -23,12 +23,12 @@ interface IProofLedger_GH {
 /// @notice ISeer_GH
 /// @title ISeer_GH
 /// @author Vfide
-interface ISeer_GH {
+interface ISeer_GH { 
     /// @notice punish
     /// @param subject subject
     /// @param delta delta
     /// @param reason reason
-    function punish(address subject, uint16 delta, string calldata reason) external;
+    function punish(address subject, uint16 delta, string calldata reason) external; 
     /// @notice reward
     /// @param subject subject
     /// @param delta delta
@@ -77,7 +77,7 @@ contract GovernanceHooks is ReentrancyGuard {
     /// @notice ledger
     IProofLedger_GH public ledger; // optional
     /// @notice seer
-    ISeer_GH public seer; // optional
+    ISeer_GH public seer;          // optional
     /// @notice guardian
     ISeerGuardian_GH public guardian; // SeerGuardian for mutual checks
 
@@ -150,21 +150,15 @@ contract GovernanceHooks is ReentrancyGuard {
     bool public hasPendingModules;
 
     /// @notice onlyOwner
-    modifier onlyOwner() {
-        require(msg.sender == owner, "not owner");
-        _;
-    }
+    modifier onlyOwner() { require(msg.sender == owner, "not owner"); _; }
     /// @notice onlyDAO
-    modifier onlyDAO() {
-        if (msg.sender != dao) revert GH_NotAuthorized();
-        _;
-    }
+    modifier onlyDAO() { if (msg.sender != dao) revert GH_NotAuthorized(); _; }
 
     /// @notice constructor
     /// @param _ledger _ledger
     /// @param _seer _seer
     /// @param _dao _dao
-    constructor(address _ledger, address _seer, address _dao) {
+    constructor(address _ledger, address _seer, address _dao) { 
         require(_dao != address(0), "zero dao");
         owner = msg.sender;
         dao = _dao;
@@ -188,7 +182,9 @@ contract GovernanceHooks is ReentrancyGuard {
     /// @param _ledger _ledger
     /// @param _seer _seer
     /// @param _guardian _guardian
-    function proposeModules(address _ledger, address _seer, address _guardian) external onlyOwner nonReentrant {
+    function proposeModules(address _ledger, address _seer, address _guardian)
+        external onlyOwner nonReentrant
+    {
         require(_seer != address(0), "zero seer");
         uint64 effectiveAt = uint64(block.timestamp) + MODULE_CHANGE_DELAY;
         pendingModules = PendingModulesChange({ledger: _ledger, seer: _seer, guardian: _guardian, effectiveAt: effectiveAt});
@@ -308,8 +304,9 @@ contract GovernanceHooks is ReentrancyGuard {
             try seer.reward(voter, 5, "governance_vote") {} catch {}
         }
     }
-
+    
     /// @notice onFinalized
+    /// @param /*id*/ /*id*/
     /// @param passed passed
     function onFinalized(uint256 /*id*/, bool passed) external onlyDAO nonReentrant {
         _log(passed ? "gh_passed" : "gh_failed");
@@ -338,9 +335,5 @@ contract GovernanceHooks is ReentrancyGuard {
 
     /// @notice _log
     /// @param action action
-    function _log(string memory action) internal {
-        if (address(ledger) != address(0)) {
-            try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {}
-        }
-    }
+    function _log(string memory action) internal { if (address(ledger)!=address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {} } }
 }

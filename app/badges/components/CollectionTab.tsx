@@ -27,6 +27,7 @@ export function CollectionTab() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let _cancelled = false;
     if (!address) return;
     setLoading(true);
     setError(null);
@@ -35,7 +36,8 @@ export function CollectionTab() {
       .then((data) => setBadges(data.badges ?? []))
       .catch(() => setError('Failed to load badges'))
       .finally(() => setLoading(false));
-  }, [address]);
+    return () => { _cancelled = true; };
+    }, [address]);
 
   if (!address) {
     return (
@@ -52,7 +54,7 @@ export function CollectionTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 size={24} className="text-cyan-400 animate-spin" />
+        <Loader2 size={24} className="text-accent animate-spin" />
       </div>
     );
   }
@@ -85,7 +87,7 @@ export function CollectionTab() {
           return (
             <div key={i} className="bg-white/3 border border-white/10 rounded-2xl p-5 flex flex-col gap-3">
               <div className="flex items-start justify-between gap-2">
-                <div className="w-12 h-12 bg-cyan-500/10 rounded-xl flex items-center justify-center text-2xl flex-shrink-0">
+                <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center text-2xl flex-shrink-0">
                   {badge.badge_icon ?? '🏅'}
                 </div>
                 <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border ${colorClass} capitalize`}>

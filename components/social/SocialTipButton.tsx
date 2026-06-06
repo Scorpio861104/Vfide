@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Social Tip Button
  * 
@@ -10,7 +12,7 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
 import { useTipping } from '@/lib/socialPayments';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import { DollarSign, Send, Sparkles, X } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from '@/lib/toast';
@@ -102,7 +104,7 @@ export function SocialTipButton({
         {isOpen && (
           <>
             {/* Backdrop */}
-            <motion.div
+            <m.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -111,7 +113,7 @@ export function SocialTipButton({
             />
 
             {/* Modal */}
-            <motion.div
+            <m.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -258,7 +260,7 @@ export function SocialTipButton({
                   </>
                 )}
               </div>
-            </motion.div>
+            </m.div>
           </>
         )}
       </AnimatePresence>

@@ -12,8 +12,8 @@ import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
 import { logger } from '@/lib/logger';
-import { createPublicClient, http } from 'viem';
-import type { Hash } from 'viem';
+import { createPublicClient, decodeEventLog, getAddress, http, parseAbiItem, parseUnits } from 'viem';
+import { CONTRACT_ADDRESSES, StablecoinRegistryABI, isConfiguredContractAddress } from '@/lib/contracts';
 import { z } from 'zod4';
 
 const TX_HASH_REGEX = /^0x[a-fA-F0-9]{64}$/;
@@ -23,49 +23,165 @@ const checkoutActionSchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('pay'), tx_hash: z.string().regex(TX_HASH_REGEX) }),
 ]);
 
-function getCheckoutRpcUrl(): string | null {
-  const url = process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC || process.env.NEXT_PUBLIC_RPC_URL || process.env.RPC_URL;
-  if (!url || typeof url !== 'string') return null;
-  const trimmed = url.trim();
-  return trimmed.length > 0 ? trimmed : null;
+const PAYMENT_PROCESSED_EVENT = parseAbiItem(
+  'event PaymentProcessed(address indexed customer, address indexed merchant, address token, uint256 amount, uint256 fee, string orderId, uint16 customerScore, uint8 channel)'
+);
+const DEFAULT_MIN_CONFIRMATIONS = 2n;
+
+function getMerchantPortalAddress(): string | null {
+  if (isConfiguredContractAddress(CONTRACT_ADDRESSES.MerchantPortal)) {
+    return CONTRACT_ADDRESSES.MerchantPortal;
+  }
+  const value = process.env.MERCHANT_PORTAL_ADDRESS?.trim();
+  return value && /^0x[a-fA-F0-9]{40}$/.test(value) ? value : null;
 }
 
-async function verifySubmittedTransaction(
-  hash: string,
-  expectedFrom: string,
-): Promise<{ verified: boolean; confirmed: boolean; senderMatches: boolean }> {
-  const rpcUrl = getCheckoutRpcUrl();
-  if (!rpcUrl) return { verified: false, confirmed: false, senderMatches: false };
+function getMinConfirmations(): bigint {
+  const configured = process.env.MERCHANT_PAYMENT_MIN_CONFIRMATIONS;
+  if (!configured || !/^\d+$/.test(configured)) return DEFAULT_MIN_CONFIRMATIONS;
+  const parsed = BigInt(configured);
+  return parsed < 1n ? DEFAULT_MIN_CONFIRMATIONS : parsed;
+}
+
+function decimalStringToUnits(value: string | number, decimals: number): bigint | null {
+  const text = String(value).trim();
+  if (!/^[0-9]+(\.[0-9]+)?$/.test(text)) return null;
+  const [intPart, fracRaw = ''] = text.split('.');
+  const frac = fracRaw.replace(/0+$/, '');
+  if (frac.length > decimals) return null;
+  try {
+    const units = parseUnits((frac ? `${intPart}.${frac}` : intPart) as `${number}`, decimals);
+    return units > 0n ? units : null;
+  } catch {
+    return null;
+  }
+}
+
+async function isAcceptedSettlementToken(
+  client: ReturnType<typeof createPublicClient>,
+  token: string,
+): Promise<boolean> {
+  const normalized = getAddress(token);
+  if (
+    isConfiguredContractAddress(CONTRACT_ADDRESSES.VFIDEToken) &&
+    getAddress(CONTRACT_ADDRESSES.VFIDEToken) === normalized
+  ) {
+    return true;
+  }
+  if (!isConfiguredContractAddress(CONTRACT_ADDRESSES.StablecoinRegistry)) return false;
+  try {
+    const allowed = await client.readContract({
+      address: CONTRACT_ADDRESSES.StablecoinRegistry,
+      abi: StablecoinRegistryABI,
+      functionName: 'isAllowed',
+      args: [normalized],
+    });
+    return Boolean(allowed);
+  } catch {
+    return false;
+  }
+}
+
+type InvoiceForVerify = {
+  id: number | string;
+  merchant_address: string;
+  token: string;
+  total: string;
+  customer_address: string | null;
+  status: string;
+};
+
+async function verifyInvoicePaymentOnChain(
+  invoice: InvoiceForVerify,
+  txHash: string,
+): Promise<
+  | { ok: true }
+  | { ok: false; status: 503 | 422 | 400; error: string }
+> {
+  const rpcUrl =
+    process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC ||
+    process.env.NEXT_PUBLIC_RPC_URL ||
+    process.env.RPC_URL;
+  const portal = getMerchantPortalAddress();
+  if (!rpcUrl || !portal) {
+    return { ok: false, status: 503, error: 'Payment verification temporarily unavailable — missing chain configuration' };
+  }
+
+  let expectedMerchant: `0x${string}`;
+  let expectedToken: `0x${string}`;
+  let expectedPortal: `0x${string}`;
+  let expectedCustomer: `0x${string}` | null = null;
+  try {
+    expectedMerchant = getAddress(invoice.merchant_address);
+    expectedToken = getAddress(invoice.token);
+    expectedPortal = getAddress(portal);
+    if (invoice.customer_address && /^0x[a-fA-F0-9]{40}$/.test(invoice.customer_address)) {
+      expectedCustomer = getAddress(invoice.customer_address);
+    }
+  } catch {
+    return { ok: false, status: 422, error: 'Invoice has an invalid address configuration' };
+  }
+
+  const client = createPublicClient({ transport: http(rpcUrl) });
+
+  let expectedAmount: bigint | null = null;
+  try {
+    const decimals = await client.readContract({
+      address: expectedToken,
+      abi: [parseAbiItem('function decimals() view returns (uint8)')],
+      functionName: 'decimals',
+    });
+    const num = Number(decimals);
+    if (!Number.isInteger(num) || num < 0 || num > 30) {
+      return { ok: false, status: 422, error: 'Could not read token decimals' };
+    }
+    expectedAmount = decimalStringToUnits(invoice.total, num);
+  } catch {
+    return { ok: false, status: 422, error: 'Could not read token decimals — check token address and RPC connectivity' };
+  }
+  if (expectedAmount === null) {
+    return { ok: false, status: 422, error: 'Invoice amount is not representable in the token unit' };
+  }
 
   try {
-    const client = createPublicClient({ transport: http(rpcUrl) });
-    // F-BE-033 FIX: Verify both the receipt (for confirmation status) and the
-    // transaction (for sender). Without the sender check the customer-facing
-    // checkout PATCH could be advanced to `pending_confirmation` by submitting
-    // ANY confirmed tx hash on-chain (e.g., a Uniswap swap, a friend's transfer
-    // elsewhere). The merchant's downstream verification was the only guard.
-    // We additionally require the tx.from to match the authenticated customer
-    // address so an attacker who guesses a payment_link_id cannot brick the
-    // invoice with an unrelated hash.
-    const [receipt, tx] = await Promise.all([
-      client.getTransactionReceipt({ hash: hash as Hash }),
-      client.getTransaction({ hash: hash as Hash }),
-    ]);
-    const txFrom = typeof tx?.from === 'string' ? tx.from.toLowerCase() : '';
-    const senderMatches = txFrom !== '' && txFrom === expectedFrom.toLowerCase();
-    return {
-      verified: true,
-      confirmed: receipt.status === 'success',
-      senderMatches,
-    };
-  } catch (error) {
-    const message = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
-    if (message.includes('not found') || message.includes('unknown') || message.includes('missing')) {
-      return { verified: true, confirmed: false, senderMatches: false };
+    const receipt = await client.getTransactionReceipt({ hash: txHash as `0x${string}` });
+    if (!receipt || receipt.status !== 'success') {
+      return { ok: false, status: 400, error: 'Transaction not confirmed on-chain' };
+    }
+    if (!receipt.to || getAddress(receipt.to) !== expectedPortal) {
+      return { ok: false, status: 400, error: 'Transaction target does not match the MerchantPortal contract' };
     }
 
-    logger.warn('[Checkout PATCH] Transaction verification RPC failure', error);
-    return { verified: false, confirmed: false, senderMatches: false };
+    const currentBlock = await client.getBlockNumber();
+    if (currentBlock - receipt.blockNumber + 1n < getMinConfirmations()) {
+      return { ok: false, status: 400, error: 'Transaction does not have enough confirmations yet' };
+    }
+
+    for (const log of receipt.logs) {
+      if (getAddress(log.address) !== expectedPortal) continue;
+      try {
+        const decoded = decodeEventLog({ abi: [PAYMENT_PROCESSED_EVENT], data: log.data, topics: log.topics });
+        if (!decoded || decoded.eventName !== 'PaymentProcessed') continue;
+        const args = decoded.args as unknown as {
+          customer: string; merchant: string; token: string; amount: bigint;
+        };
+        const eventToken = getAddress(args.token);
+        if (eventToken !== expectedToken) continue;
+        if (getAddress(args.merchant) !== expectedMerchant) continue;
+        if (args.amount !== expectedAmount) continue;
+        if (expectedCustomer && getAddress(args.customer) !== expectedCustomer) continue;
+        if (!(await isAcceptedSettlementToken(client, eventToken))) {
+          return { ok: false, status: 422, error: 'Token is not in the accepted settlement list' };
+        }
+        return { ok: true };
+      } catch {
+        continue;
+      }
+    }
+
+    return { ok: false, status: 400, error: 'Transaction does not contain a payment matching this invoice' };
+  } catch {
+    return { ok: false, status: 400, error: 'Transaction not found or not yet mined' };
   }
 }
 
@@ -139,7 +255,10 @@ export const PATCH = withAuth(async (request: NextRequest, user: JWTPayload, con
 
     // Fetch invoice
     const invoiceResult = await query(
-      'SELECT * FROM merchant_invoices WHERE payment_link_id = $1',
+      `SELECT id, merchant_address, token, total, customer_address, status
+       FROM merchant_invoices
+       WHERE payment_link_id = $1
+       LIMIT 1`,
       [paymentLinkId]
     );
 
@@ -200,26 +319,28 @@ export const PATCH = withAuth(async (request: NextRequest, user: JWTPayload, con
 
       // Require a valid transaction hash — payment confirmation should be verified on-chain
       const txHash = parsedBody.data.tx_hash;
+      const txHashLower = txHash.toLowerCase();
 
-      const txVerification = await verifySubmittedTransaction(txHash, authAddress);
-      if (!txVerification.verified) {
-        return NextResponse.json({ error: 'Payment verification temporarily unavailable' }, { status: 503 });
-      }
-      if (!txVerification.confirmed) {
-        return NextResponse.json({ error: 'Transaction hash not confirmed on-chain' }, { status: 400 });
-      }
-      // F-BE-033 FIX: tx must originate from the authenticated customer wallet.
-      // Note: this does NOT validate the recipient or value matches the invoice;
-      // that validation requires per-token-decoding logic and remains a manual
-      // step performed by the merchant when transitioning the invoice from
-      // `pending_confirmation` to `paid`. The from-check alone is sufficient
-      // to prevent arbitrary attackers from bricking invoices with unrelated
-      // confirmed hashes.
-      if (!txVerification.senderMatches) {
+      // Anti-replay: a settlement tx must bind to exactly one invoice.
+      let replay: { rows: unknown[] } = { rows: [] };
+      try {
+        replay = await query(
+          `SELECT 1 FROM merchant_invoices WHERE LOWER(tx_hash) = $1 AND id != $2 LIMIT 1`,
+          [txHashLower, invoice.id]
+        ) as { rows: unknown[] };
+      } catch {
         return NextResponse.json(
-          { error: 'Transaction sender does not match the authenticated customer' },
-          { status: 400 },
+          { error: 'Payment verification temporarily unavailable — could not validate transaction uniqueness' },
+          { status: 503 }
         );
+      }
+      if (replay.rows.length > 0) {
+        return NextResponse.json({ error: 'Transaction has already been used for another invoice' }, { status: 409 });
+      }
+
+      const verification = await verifyInvoicePaymentOnChain(invoice as InvoiceForVerify, txHash);
+      if (!verification.ok) {
+        return NextResponse.json({ error: verification.error }, { status: verification.status });
       }
 
       // Mark as pending_confirmation, not paid — merchant or backend job verifies on-chain.

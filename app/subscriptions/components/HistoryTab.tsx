@@ -29,6 +29,7 @@ export function HistoryTab() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let _cancelled = false;
     if (!address) return;
     setLoading(true);
     setError(null);
@@ -37,7 +38,8 @@ export function HistoryTab() {
       .then((data) => setSubs(data.subscriptions ?? []))
       .catch(() => setError('Failed to load subscription history'))
       .finally(() => setLoading(false));
-  }, [address]);
+    return () => { _cancelled = true; };
+    }, [address]);
 
   if (!address) {
     return (
@@ -54,7 +56,7 @@ export function HistoryTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 size={24} className="text-cyan-400 animate-spin" />
+        <Loader2 size={24} className="text-accent animate-spin" />
       </div>
     );
   }

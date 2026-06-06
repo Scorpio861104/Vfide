@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { m, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { KeyRound } from 'lucide-react';
 
 export { GlassCard } from '@/components/ui/GlassCard';
@@ -9,17 +9,17 @@ export { GlassCard } from '@/components/ui/GlassCard';
 export function AuroraBackground() {
   return (
     <div className="pointer-events-none fixed inset-0 overflow-hidden">
-      <motion.div
+      <m.div
         animate={{ x: [0, 100, -50, 0], y: [0, -50, 50, 0], scale: [1, 1.2, 0.9, 1] }}
         transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute left-1/4 top-0 h-200 w-200 rounded-full bg-gradient-to-br from-cyan-500/20 via-blue-500/10 to-transparent blur-[150px]"
+        className="absolute left-1/4 top-0 h-200 w-200 rounded-full bg-gradient-to-br from-accent/20 via-blue-500/10 to-transparent blur-[150px]"
       />
-      <motion.div
+      <m.div
         animate={{ x: [0, -80, 60, 0], y: [0, 60, -40, 0], scale: [1, 0.8, 1.1, 1] }}
         transition={{ duration: 25, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
         className="absolute bottom-0 right-1/4 h-175 w-175 rounded-full bg-gradient-to-br from-purple-500/15 via-pink-500/10 to-transparent blur-[130px]"
       />
-      <motion.div
+      <m.div
         animate={{ opacity: [0.3, 0.6, 0.3], scale: [1, 1.3, 1] }}
         transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
         className="absolute left-1/2 top-1/2 h-150 w-150 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-br from-emerald-500/10 to-transparent blur-[100px]"
@@ -61,12 +61,12 @@ export function FloatingParticles() {
   return (
     <div className="pointer-events-none fixed inset-0 overflow-hidden">
       {particles.map((particle) => (
-        <motion.div
+        <m.div
           key={particle.id}
           initial={{ x: `${particle.x}%`, y: '110%', opacity: 0 }}
           animate={{ y: '-10%', opacity: [0, 0.6, 0] }}
           transition={{ duration: particle.duration, repeat: Infinity, delay: particle.delay, ease: 'linear' }}
-          className="absolute h-1 w-1 rounded-full bg-cyan-400/40"
+          className="absolute h-1 w-1 rounded-full bg-accent/40"
         />
       ))}
     </div>
@@ -82,7 +82,7 @@ export function VaultKeyVisualization({ isSearching }: { isSearching: boolean })
   const springRotateY = useSpring(rotateY, { stiffness: 100, damping: 30 });
 
   return (
-    <motion.div
+    <m.div
       className="relative mx-auto h-48 w-48 md:h-64 md:w-64"
       style={{ perspective: 1000 }}
       onMouseMove={(event) => {
@@ -95,28 +95,28 @@ export function VaultKeyVisualization({ isSearching }: { isSearching: boolean })
         mouseY.set(0);
       }}
     >
-      <motion.div style={{ rotateX: springRotateX, rotateY: springRotateY, transformStyle: 'preserve-3d' }} className="relative h-full w-full">
-        <motion.div
+      <m.div style={{ rotateX: springRotateX, rotateY: springRotateY, transformStyle: 'preserve-3d' }} className="relative h-full w-full">
+        <m.div
           animate={isSearching ? { rotate: 360 } : { rotate: 0 }}
           transition={{ duration: 3, repeat: isSearching ? Infinity : 0, ease: 'linear' }}
-          className="absolute inset-0 rounded-full border-2 border-cyan-500/30 border-dashed"
+          className="absolute inset-0 rounded-full border-2 border-accent/30 border-dashed"
         />
-        <motion.div
+        <m.div
           animate={isSearching ? { rotate: -360 } : { rotate: 0 }}
           transition={{ duration: 5, repeat: isSearching ? Infinity : 0, ease: 'linear' }}
           className="absolute inset-4 rounded-full border-2 border-purple-500/30 md:inset-6"
         />
-        <motion.div
+        <m.div
           animate={isSearching ? { rotate: 360 } : { rotate: 0 }}
           transition={{ duration: 2, repeat: isSearching ? Infinity : 0, ease: 'linear' }}
           className="absolute inset-8 rounded-full border-2 border-emerald-500/30 md:inset-12"
         />
-        <motion.div
+        <m.div
           animate={isSearching ? { scale: [1, 1.1, 1] } : { scale: 1 }}
           transition={{ duration: 1, repeat: isSearching ? Infinity : 0 }}
           className="absolute inset-0 flex items-center justify-center"
         >
-          <motion.div
+          <m.div
             animate={{
               boxShadow: isSearching
                 ? [
@@ -127,20 +127,20 @@ export function VaultKeyVisualization({ isSearching }: { isSearching: boolean })
                 : '0 0 40px rgba(6, 182, 212, 0.3)',
             }}
             transition={{ duration: 1, repeat: Infinity }}
-            className="flex h-16 w-16 items-center justify-center rounded-2xl border border-cyan-500/50 bg-gradient-to-br from-cyan-500/30 to-blue-600/30 backdrop-blur-xl md:h-20 md:w-20"
+            className="flex h-16 w-16 items-center justify-center rounded-2xl border border-accent/50 bg-gradient-to-br from-accent/30 to-blue-600/30 backdrop-blur-xl md:h-20 md:w-20"
           >
-            <KeyRound className="h-8 w-8 text-cyan-400 md:h-10 md:w-10" />
-          </motion.div>
+            <KeyRound className="h-8 w-8 text-accent md:h-10 md:w-10" />
+          </m.div>
           {isSearching && (
-            <motion.div
+            <m.div
               animate={{ y: [-40, 40] }}
               transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-              className="absolute inset-x-4 h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent"
+              className="absolute inset-x-4 h-0.5 bg-gradient-to-r from-transparent via-accent to-transparent"
             />
           )}
-        </motion.div>
-      </motion.div>
-    </motion.div>
+        </m.div>
+      </m.div>
+    </m.div>
   );
 }
 

@@ -29,6 +29,7 @@ export function VaultTab() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    let _cancelled = false;
     if (!address) return;
     setLoading(true);
     Promise.all([
@@ -40,7 +41,8 @@ export function VaultTab() {
         setStats(p);
       })
       .finally(() => setLoading(false));
-  }, [address]);
+    return () => { _cancelled = true; };
+    }, [address]);
 
   // UX-2: Disconnected-wallet guard — show prompt instead of trying to fetch
   if (!address) {
@@ -56,7 +58,7 @@ export function VaultTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 size={24} className="text-cyan-400 animate-spin" />
+        <Loader2 size={24} className="text-accent animate-spin" />
       </div>
     );
   }
@@ -68,8 +70,8 @@ export function VaultTab() {
       {/* Proof score */}
       <div className="bg-white/3 border border-white/10 rounded-2xl p-6">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 bg-cyan-500/10 rounded-xl flex items-center justify-center">
-            <TrendingUp size={18} className="text-cyan-400" />
+          <div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center">
+            <TrendingUp size={18} className="text-accent" />
           </div>
           <div>
             <p className="text-xs text-gray-400">Proof Score</p>
@@ -78,7 +80,7 @@ export function VaultTab() {
         </div>
         <div className="w-full bg-white/5 rounded-full h-2">
           <div
-            className="h-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all"
+            className="h-2 rounded-full bg-gradient-to-r from-accent to-blue-500 transition-all"
             style={{ width: `${Math.min(((state?.proofScore ?? 0) / 1000) * 100, 100)}%` }}
           />
         </div>
@@ -122,7 +124,7 @@ export function VaultTab() {
           <p className="text-xs text-gray-400 mb-3">Active Badges</p>
           <div className="flex flex-wrap gap-2">
             {state.badges.map((b) => (
-              <span key={b} className="px-2 py-1 rounded-full bg-cyan-500/10 text-cyan-400 text-xs border border-cyan-500/20">{b}</span>
+              <span key={b} className="px-2 py-1 rounded-full bg-accent/10 text-accent text-xs border border-accent/20">{b}</span>
             ))}
           </div>
         </div>

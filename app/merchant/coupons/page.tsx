@@ -8,6 +8,7 @@ import { Tag, ArrowLeft } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { Footer } from '@/components/layout/Footer';
 import { DiscountManager, type Discount } from '@/components/discounts';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 interface CouponResponse {
   id: string;
@@ -36,6 +37,9 @@ function toDiscount(coupon: CouponResponse): Discount {
 }
 
 export default function MerchantCouponsPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address } = useAccount();
   const [discounts, setDiscounts] = useState<Discount[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -136,7 +140,7 @@ export default function MerchantCouponsPage() {
         <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         <section className="py-16">
           <div className="container mx-auto max-w-6xl px-4">
-            <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200">
+            <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-accent hover:text-accent">
               <ArrowLeft size={16} /> Back to Merchant Hub
             </Link>
 

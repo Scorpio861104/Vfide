@@ -106,7 +106,7 @@ export function SanctumTab({ isConnected }: { isConnected: boolean }) {
           <h3 className="text-xl font-bold text-zinc-100">Registered Charities</h3>
           <Link
             href="/sanctum"
-            className="text-cyan-400 hover:text-cyan-300 text-sm flex items-center gap-1 transition-colors"
+            className="text-accent hover:text-accent text-sm flex items-center gap-1 transition-colors"
           >
             See full Sanctum dashboard <ExternalLink size={12} />
           </Link>
@@ -122,7 +122,7 @@ export function SanctumTab({ isConnected }: { isConnected: boolean }) {
             No charities approved yet. Approvals flow through DAO governance —{' '}
             <Link
               href="/governance?template=approveCharity"
-              className="text-cyan-400 hover:text-cyan-300 underline"
+              className="text-accent hover:text-accent underline"
             >
               propose one
             </Link>
@@ -151,7 +151,7 @@ export function SanctumTab({ isConnected }: { isConnected: boolean }) {
                   </div>
                   <div className="text-right flex-shrink-0">
                     <div
-                      className="text-cyan-400 font-bold tabular-nums"
+                      className="text-accent font-bold tabular-nums"
                       title={`${formatEther(totalReceived)} VFIDE`}
                     >
                       {formatVFIDECompact(totalReceived)}
@@ -165,7 +165,7 @@ export function SanctumTab({ isConnected }: { isConnected: boolean }) {
               <div className="text-center pt-2">
                 <Link
                   href="/sanctum"
-                  className="text-xs text-zinc-500 hover:text-cyan-400 transition-colors"
+                  className="text-xs text-zinc-500 hover:text-accent transition-colors"
                 >
                   +{activeCharities.length - 6} more · view all in /sanctum
                 </Link>
@@ -207,12 +207,12 @@ export function SanctumTab({ isConnected }: { isConnected: boolean }) {
                     <div className="min-w-0">
                       <Link
                         href={`/sanctum/charities/${d.charity}`}
-                        className="text-zinc-100 font-bold hover:text-cyan-400 transition-colors truncate block"
+                        className="text-zinc-100 font-bold hover:text-accent transition-colors truncate block"
                       >
                         {d.description || `Disbursement #${d.id.toString()}`}
                       </Link>
                       <div
-                        className="text-cyan-400 font-bold tabular-nums mt-0.5"
+                        className="text-accent font-bold tabular-nums mt-0.5"
                         title={`${formatEther(d.amount)} VFIDE`}
                       >
                         {formatVFIDECompact(d.amount)} VFIDE
@@ -227,7 +227,7 @@ export function SanctumTab({ isConnected }: { isConnected: boolean }) {
                         {d.approvalCount}/{approvalsRequired} Approvals
                       </div>
                       <div className="text-xs text-zinc-400">
-                        {isReady ? 'Ready to execute' : 'Multi-sig in progress'}
+                        {isReady ? 'Ready to execute' : 'Guardian Approval in progress'}
                       </div>
                     </div>
                   </div>

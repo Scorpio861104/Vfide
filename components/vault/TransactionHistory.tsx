@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import {
   ArrowUpRight,
   ArrowDownLeft,
@@ -60,7 +60,7 @@ export function TransactionHistory({ transactions = [], loading = false }: Trans
       case 'vault_withdraw':
         return 'text-blue-500';
       default:
-        return 'text-cyan-400';
+        return 'text-accent';
     }
   };
 
@@ -92,12 +92,12 @@ export function TransactionHistory({ transactions = [], loading = false }: Trans
 
   const renderTransactionRow = (tx: Transaction, idx: number, padded = false) => {
     const content = (
-      <motion.div
+      <m.div
         key={tx.id}
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: idx * 0.05 }}
-        className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-zinc-900 border border-zinc-700 rounded-lg hover:border-cyan-400/50 transition-colors gap-3 sm:gap-0"
+        className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-zinc-900 border border-zinc-700 rounded-lg hover:border-accent/50 transition-colors gap-3 sm:gap-0"
       >
         <div className="flex items-center gap-4 w-full sm:w-auto">
           <div className={`p-3 rounded-full ${
@@ -107,7 +107,7 @@ export function TransactionHistory({ transactions = [], loading = false }: Trans
               ? 'bg-red-400/20'
               : tx.type.includes('vault')
               ? 'bg-blue-500/20'
-              : 'bg-cyan-400/20'
+              : 'bg-accent/20'
           } ${getColor(tx.type)}`}>
             {getIcon(tx.type)}
           </div>
@@ -146,13 +146,13 @@ export function TransactionHistory({ transactions = [], loading = false }: Trans
             href={getExplorerLink(chainId, tx.txHash, 'tx')}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-cyan-400 hover:text-cyan-400 transition-colors flex items-center gap-1 text-xs"
+            className="text-accent hover:text-accent transition-colors flex items-center gap-1 text-xs"
           >
             View
             <ExternalLink size={12} />
           </a>
         </div>
-      </motion.div>
+      </m.div>
     );
 
     return padded ? <div className="h-full pb-3">{content}</div> : content;
@@ -211,7 +211,7 @@ export function TransactionHistory({ transactions = [], loading = false }: Trans
         </div>
       ) : usePerformanceMode ? (
         <div className="space-y-3">
-          <div className="rounded-lg border border-cyan-400/30 bg-cyan-400/5 px-3 py-2 text-sm text-cyan-100">
+          <div className="rounded-lg border border-accent/30 bg-accent/5 px-3 py-2 text-sm text-accent">
             Performance mode active — long transaction histories are windowed for smoother scrolling.
           </div>
           <VirtualizedList
@@ -235,7 +235,7 @@ export function TransactionHistory({ transactions = [], loading = false }: Trans
             <button
               type="button"
               onClick={() => setShowFullHistory((prev) => !prev)}
-              className="text-cyan-400 text-sm hover:underline"
+              className="text-accent text-sm hover:underline"
             >
               {usePerformanceMode ? 'Show full list →' : 'Use performance mode →'}
             </button>

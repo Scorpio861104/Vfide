@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 
 import { useAnimatedCounter } from './useAnimatedCounter';
 import { usePrefersReducedMotion } from './usePrefersReducedMotion';
@@ -27,7 +27,7 @@ export function StatItem({ value, label, prefix = '', suffix = '', color }: Stat
   const neonClass = NEON_CLASSES[color] ?? '';
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, scale: 0.92 }}
       whileInView={{ opacity: 1, scale: 1 }}
       viewport={{ once: true }}
@@ -42,6 +42,6 @@ export function StatItem({ value, label, prefix = '', suffix = '', color }: Stat
       <div className="text-xs font-bold uppercase tracking-widest text-zinc-500 mt-1">
         {label}
       </div>
-    </motion.div>
+    </m.div>
   );
 }

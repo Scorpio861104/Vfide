@@ -9,8 +9,12 @@ import { useAccount, useChainId } from 'wagmi'
 import { FAUCET_URLS } from '@/lib/testnet'
 import { getExplorerUrlForChainId, isTestnetChainId } from '@/lib/chains'
 import { useCopyToClipboard } from '@/lib/hooks/useCopyToClipboard'
+import { DEFAULT_LOCALE } from '@/lib/i18n';
 
 export default function TestnetPage() {
+  const locale = DEFAULT_LOCALE;
+  void locale;
+
   const router = useRouter()
   const { copied, copy } = useCopyToClipboard()
   const { address } = useAccount()

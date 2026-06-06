@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useAccount } from 'wagmi';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 import {
   ArrowLeft,
   Package,
@@ -17,7 +18,6 @@ import {
   Trash2,
 } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
-import { ConfirmModal } from '@/components/ui/ConfirmModal';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -51,6 +51,9 @@ const LOW_STOCK_THRESHOLD = 5;
 // ── Page ────────────────────────────────────────────────────────────────────
 
 export default function MerchantInventoryPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address } = useAccount();
   const [products, setProducts] = useState<Product[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -58,7 +61,6 @@ export default function MerchantInventoryPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | ProductStatus>('active');
   const [showCreate, setShowCreate] = useState(false);
-  const [pendingDelete, setPendingDelete] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     if (!address) return;
@@ -117,13 +119,7 @@ export default function MerchantInventoryPage() {
   }, [load]);
 
   const deleteProduct = useCallback(async (id: number) => {
-    setPendingDelete(id);
-  }, []);
-
-  const confirmDeleteProduct = useCallback(async () => {
-    const id = pendingDelete;
-    if (id == null) return;
-    setPendingDelete(null);
+    if (!confirm('Delete this product? This cannot be undone.')) return;
     try {
       const response = await fetch(`/api/merchant/products?id=${id}`, { method: 'DELETE' });
       const data = await response.json().catch(() => ({}));
@@ -132,7 +128,7 @@ export default function MerchantInventoryPage() {
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to delete product');
     }
-  }, [pendingDelete, load]);
+  }, [load]);
 
   return (
     <>
@@ -147,7 +143,7 @@ export default function MerchantInventoryPage() {
         <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         <section className="py-12">
           <div className="container mx-auto max-w-6xl px-4">
-            <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200">
+            <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-accent hover:text-accent">
               <ArrowLeft size={16} /> Back to Merchant Hub
             </Link>
 
@@ -161,7 +157,7 @@ export default function MerchantInventoryPage() {
                   Manage your catalog, track stock levels, and get low-stock alerts.
                 </p>
               </div>
-              <button onClick={() => setShowCreate(true)} disabled={!address} className="px-5 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90">
+              <button onClick={() => setShowCreate(true)} disabled={!address} className="px-5 py-3 bg-gradient-to-r from-accent to-blue-500 rounded-xl font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90">
                 <Plus size={18} /> New product
               </button>
             </div>
@@ -197,13 +193,13 @@ export default function MerchantInventoryPage() {
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
                       placeholder="Search by name or SKU…"
-                      className="w-full bg-zinc-900 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-sm focus:border-cyan-500 outline-none"
+                      className="w-full bg-zinc-900 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-sm focus:border-accent outline-none"
                     />
                   </div>
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
-                    className="bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none"
+                    className="bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none"
                   >
                     <option value="all">All</option>
                     <option value="active">Active</option>
@@ -248,17 +244,6 @@ export default function MerchantInventoryPage() {
         />
       )}
 
-      <ConfirmModal
-        isOpen={pendingDelete !== null}
-        onClose={() => setPendingDelete(null)}
-        onConfirm={confirmDeleteProduct}
-        title="Delete product?"
-        message="This cannot be undone. Customers with the product link will get an error."
-        confirmText="Delete"
-        cancelText="Keep"
-        variant="danger"
-      />
-
       <Footer />
     </>
   );
@@ -288,7 +273,6 @@ function ProductRow({ product, onArchive, onActivate, onDelete }: { product: Pro
     <div className="p-4 hover:bg-white/5 transition-colors flex items-start gap-4 flex-wrap">
       <div className="w-12 h-12 rounded-lg bg-zinc-800 flex items-center justify-center flex-shrink-0 overflow-hidden">
         {product.images?.[0]?.url ? (
-           
           <img src={product.images[0].url} alt={product.images[0].alt ?? product.name} className="w-full h-full object-cover" />
         ) : (
           <Package size={20} className="text-zinc-500" />
@@ -301,7 +285,7 @@ function ProductRow({ product, onArchive, onActivate, onDelete }: { product: Pro
             {product.status}
           </span>
           {product.featured && (
-            <span className="inline-flex items-center px-2 py-0.5 text-xs rounded border border-cyan-500/30 bg-cyan-500/10 text-cyan-300">
+            <span className="inline-flex items-center px-2 py-0.5 text-xs rounded border border-accent/30 bg-accent/10 text-accent">
               Featured
             </span>
           )}
@@ -386,38 +370,31 @@ function CreateProductModal({ onClose, onCreated, onError }: { onClose: () => vo
   }, [canSubmit, name, price, sku, type, description, tracking, stock, status, onCreated, onError]);
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      className="fixed inset-0 z-50 bg-black/70 backdrop-blur flex items-start sm:items-center justify-center p-4 overflow-y-auto"
-      onClick={onClose}
-      onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
-      tabIndex={-1}
-    >
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur flex items-start sm:items-center justify-center p-4 overflow-y-auto" onClick={onClose}>
       <div className="bg-zinc-950 border border-white/10 rounded-2xl p-6 max-w-lg w-full my-8" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-xl font-bold">New product</h2>
-          <button onClick={onClose} className="text-zinc-400 hover:text-white" aria-label="Close"><X size={20} /></button>
+          <button onClick={onClose} className="text-zinc-400 hover:text-white"><X size={20} /></button>
         </div>
 
         <div className="space-y-4">
           <label className="block">
             <span className="text-xs text-zinc-400 mb-1 block">Name *</span>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Haircut – Adult" className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none" />
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Haircut – Adult" className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none" />
           </label>
           <div className="grid grid-cols-2 gap-3">
             <label className="block">
               <span className="text-xs text-zinc-400 mb-1 block">Price (VFIDE) *</span>
-              <input type="number" min={0.01} step={0.01} value={price} onChange={(e) => setPrice(Number(e.target.value))} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none" />
+              <input type="number" min={0.01} step={0.01} value={price} onChange={(e) => setPrice(Number(e.target.value))} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none" />
             </label>
             <label className="block">
               <span className="text-xs text-zinc-400 mb-1 block">SKU (optional)</span>
-              <input type="text" value={sku} onChange={(e) => setSku(e.target.value)} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none" />
+              <input type="text" value={sku} onChange={(e) => setSku(e.target.value)} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none" />
             </label>
           </div>
           <label className="block">
             <span className="text-xs text-zinc-400 mb-1 block">Type</span>
-            <select value={type} onChange={(e) => setType(e.target.value as typeof type)} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none">
+            <select value={type} onChange={(e) => setType(e.target.value as typeof type)} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none">
               <option value="physical">Physical product</option>
               <option value="digital">Digital download</option>
               <option value="service">Service / appointment</option>
@@ -425,30 +402,30 @@ function CreateProductModal({ onClose, onCreated, onError }: { onClose: () => vo
           </label>
           <label className="block">
             <span className="text-xs text-zinc-400 mb-1 block">Description (optional)</span>
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none resize-none" />
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none resize-none" />
           </label>
           {type === 'physical' && (
             <div className="rounded-lg border border-white/10 bg-zinc-900/40 p-3 space-y-3">
               <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={tracking} onChange={(e) => setTracking(e.target.checked)} className="accent-cyan-500" />
+                <input type="checkbox" checked={tracking} onChange={(e) => setTracking(e.target.checked)} className="accent-accent" />
                 <span>Track inventory</span>
               </label>
               {tracking && (
                 <label className="block">
                   <span className="text-xs text-zinc-400 mb-1 block">Initial stock</span>
-                  <input type="number" min={0} step={1} value={stock} onChange={(e) => setStock(Number(e.target.value))} className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none" />
+                  <input type="number" min={0} step={1} value={stock} onChange={(e) => setStock(Number(e.target.value))} className="w-full bg-zinc-950 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none" />
                 </label>
               )}
             </div>
           )}
           <label className="block">
             <span className="text-xs text-zinc-400 mb-1 block">Visibility</span>
-            <select value={status} onChange={(e) => setStatus(e.target.value as typeof status)} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none">
+            <select value={status} onChange={(e) => setStatus(e.target.value as typeof status)} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none">
               <option value="active">Active (visible in store)</option>
               <option value="draft">Draft (not visible)</option>
             </select>
           </label>
-          <button onClick={submit} disabled={!canSubmit} className="w-full px-5 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
+          <button onClick={submit} disabled={!canSubmit} className="w-full px-5 py-3 bg-gradient-to-r from-accent to-blue-500 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
             {submitting ? 'Creating…' : 'Create product'}
           </button>
         </div>

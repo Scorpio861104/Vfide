@@ -1,0 +1,47 @@
+[
+  {
+    "type": "event",
+    "name": "DAOMemberCapUpdated",
+    "inputs": [
+      {
+        "name": "oldCap",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "newCap",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "constructor",
+    "inputs": [
+      {
+        "name": "_token",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "_admin",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "_initialMaxMembers",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "_maxPayoutPerPeriod",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  }
+]

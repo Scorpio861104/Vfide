@@ -66,12 +66,14 @@ export function BrowseTab() {
   // loan from OPEN to COSIGNING; the user should see it disappear
   // from the browse list once the chain confirms.
   useEffect(() => {
+    let _cancelled = false;
     if (isConfirmed && accepting) {
       refetch();
       refetchStats();
       setAccepting(null);
     }
-  }, [isConfirmed, accepting, refetch, refetchStats]);
+    return () => { _cancelled = true; };
+    }, [isConfirmed, accepting, refetch, refetchStats]);
 
   const openOffers = useMemo(
     () =>
@@ -109,7 +111,7 @@ export function BrowseTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 size={24} className="text-cyan-400 animate-spin" aria-hidden="true" />
+        <Loader2 size={24} className="text-accent animate-spin" aria-hidden="true" />
       </div>
     );
   }
@@ -168,7 +170,7 @@ export function BrowseTab() {
                     <Percent size={10} aria-hidden="true" />
                     <p className="text-xs">Interest</p>
                   </div>
-                  <p className="text-sm text-cyan-400 font-mono">{interestPct.toFixed(2)}%</p>
+                  <p className="text-sm text-accent font-mono">{interestPct.toFixed(2)}%</p>
                 </div>
                 <div>
                   <div className="flex items-center gap-1 mb-1 text-zinc-500">
@@ -223,7 +225,7 @@ function AcceptButton({ principal, maxBorrow, connected, accepting, confirming, 
     return (
       <button
         disabled
-        className="flex items-center justify-center gap-2 w-full rounded-lg bg-zinc-700/20 px-4 py-2 text-sm font-semibold text-zinc-500 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+        className="flex items-center justify-center gap-2 w-full rounded-lg bg-zinc-700/20 px-4 py-2 text-sm font-semibold text-zinc-500 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
       >
         <CheckCircle size={14} aria-hidden="true" />
         Connect wallet to accept
@@ -236,7 +238,7 @@ function AcceptButton({ principal, maxBorrow, connected, accepting, confirming, 
       <button
         disabled
         title="This offer's principal exceeds your current borrow limit based on your ProofScore."
-        className="flex items-center justify-center gap-2 w-full rounded-lg bg-amber-500/10 border border-amber-500/20 px-4 py-2 text-sm font-semibold text-amber-400 disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+        className="flex items-center justify-center gap-2 w-full rounded-lg bg-amber-500/10 border border-amber-500/20 px-4 py-2 text-sm font-semibold text-amber-400 disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
       >
         <AlertCircle size={14} aria-hidden="true" />
         Above your borrow limit
@@ -248,7 +250,7 @@ function AcceptButton({ principal, maxBorrow, connected, accepting, confirming, 
     <button
       onClick={onClick}
       disabled={disabled || accepting}
-      className="flex items-center justify-center gap-2 w-full rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 px-4 py-2 text-sm font-semibold text-cyan-400 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+      className="flex items-center justify-center gap-2 w-full rounded-lg bg-accent/20 hover:bg-accent/30 px-4 py-2 text-sm font-semibold text-accent transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
     >
       {accepting ? (
         <Loader2 size={14} className="animate-spin" aria-hidden="true" />

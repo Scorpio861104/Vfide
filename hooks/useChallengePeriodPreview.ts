@@ -29,7 +29,7 @@
 import { useMemo } from 'react';
 import { useReadContracts } from 'wagmi';
 import { type Address } from 'viem';
-import { ACTIVE_VAULT_ABI, CONTRACT_ADDRESSES, isConfiguredContractAddress, ZERO_ADDRESS } from '@/lib/contracts';
+import { ACTIVE_VAULT_ABI, VAULT_HUB_ABI, CONTRACT_ADDRESSES, isConfiguredContractAddress, ZERO_ADDRESS } from '@/lib/contracts';
 import VaultRecoveryClaimABI from '@/lib/abis/VaultRecoveryClaim.json';
 
 // Mirror the contract constants exactly. Source of truth:
@@ -91,6 +91,15 @@ export function useChallengePeriodPreview(
         functionName: 'vaultLastActivity',
         args: vaultAddress ? [vaultAddress] : undefined,
       },
+      // 3. VaultHub.guardianSetupComplete(vaultAddress) — if guardians haven't been
+      //    configured yet, we always return the extended period so the owner has
+      //    maximum time to react. guardianSetupComplete is on VaultHub, not the vault.
+      {
+        address: CONTRACT_ADDRESSES.VaultHub as Address,
+        abi: VAULT_HUB_ABI as any,
+        functionName: 'guardianSetupComplete',
+        args: vaultAddress ? [vaultAddress] : undefined,
+      },
     ],
     query: { enabled },
   });
@@ -110,6 +119,7 @@ export function useChallengePeriodPreview(
 
     const userPreferenceRaw = data?.[0]?.result as bigint | undefined;
     const lastActivityRaw = data?.[1]?.result as bigint | undefined;
+    const guardianSetupComplete = data?.[2]?.result as boolean | undefined;
 
     const userPreferenceSeconds = Number(userPreferenceRaw ?? 0n);
     const lastActivityTimestamp = Number(lastActivityRaw ?? 0n);
@@ -119,9 +129,15 @@ export function useChallengePeriodPreview(
       lastActivityTimestamp > 0 &&
       nowSeconds - lastActivityTimestamp <= ACTIVITY_WINDOW_SECS;
 
-    const basePeriodSeconds = vaultConsideredActive
-      ? ACTIVE_VAULT_CHALLENGE_PERIOD_SECS
-      : CHALLENGE_PERIOD_SECS;
+    // If guardians are not yet configured, always use the extended period.
+    // Rationale: without guardians the owner has no recovery path — the longer
+    // window gives them maximum time to notice a fraudulent claim and react.
+    const guardianIncomplete = guardianSetupComplete === false;
+
+    const basePeriodSeconds =
+      vaultConsideredActive || guardianIncomplete
+        ? ACTIVE_VAULT_CHALLENGE_PERIOD_SECS
+        : CHALLENGE_PERIOD_SECS;
 
     const effectiveSeconds = userPreferenceSeconds > basePeriodSeconds
       ? userPreferenceSeconds
@@ -130,6 +146,8 @@ export function useChallengePeriodPreview(
     let reason: string;
     if (userPreferenceSeconds > basePeriodSeconds) {
       reason = `Your custom preference (${formatDays(userPreferenceSeconds)}) exceeds the base period.`;
+    } else if (guardianIncomplete) {
+      reason = 'Guardian setup incomplete — extended 14-day period applies until guardians are configured.';
     } else if (vaultConsideredActive) {
       reason = `Vault was active within the last ${ACTIVITY_WINDOW_SECS / 86400} days → extended base period applies.`;
     } else {

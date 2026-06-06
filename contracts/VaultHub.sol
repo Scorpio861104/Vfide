@@ -4,10 +4,6 @@ pragma solidity 0.8.30;
 import {LedgerLogFailed, IProofLedger, Ownable, ReentrancyGuard, Pausable} from "./SharedInterfaces.sol";
 import {CardBoundVault} from "./vault/CardBoundVault.sol";
 import {CardBoundVaultDeployer} from "./vault/CardBoundVaultDeployer.sol";
-import {CardBoundVaultPaymentQueueManager} from "./vault/CardBoundVaultPaymentQueueManager.sol";
-import {CardBoundVaultWithdrawalQueueManager} from "./vault/CardBoundVaultWithdrawalQueueManager.sol";
-import {CardBoundVaultInheritanceManager} from "./vault/CardBoundVaultInheritanceManager.sol";
-import {CardBoundVaultAdminManager} from "./vault/CardBoundVaultAdminManager.sol";
 
 /**
  * @title VaultHub
@@ -21,9 +17,9 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     /// @notice vfideToken
     address public vfideToken;
     /// @notice ledger
-    IProofLedger public ledger; // optional ledger
+    IProofLedger public ledger;       // optional ledger
     /// @notice dao
-    address public dao; // DAO can force recover
+    address public dao;               // DAO can force recover
 
     /// @notice CARD_GUARDIAN_THRESHOLD
     uint8 public constant CARD_GUARDIAN_THRESHOLD = 1;
@@ -72,10 +68,6 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     mapping(address => uint256) public recoveryNonce;
     /// @notice RECOVERY_DELAY
     uint64 public constant RECOVERY_DELAY = 7 days; // H-5: Increased from 3 to 7 days
-    /// @notice DAO_RECOVERY_DELAY
-    uint64 public constant DAO_RECOVERY_DELAY = 14 days; // F-23 FIX: DAO-triggered recovery uses extended delay
-    /// @notice RECOVERY_APPROVALS_REQUIRED
-    uint8 public constant RECOVERY_APPROVALS_REQUIRED = 3; // H-5: Multi-sig requirement
     /// @notice RECOVERY_CHALLENGE_DELAY
     uint64 public constant RECOVERY_CHALLENGE_DELAY = 72 hours;
     /// @notice ROTATION_APPROVALS_REQUIRED
@@ -94,20 +86,6 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     address public council;
     /// @notice vaultDeployer
     CardBoundVaultDeployer private immutable vaultDeployer;
-
-    /// @notice intentValidator — stateless external validator used by every vault to keep
-    ///         CardBoundVault under the EIP-170 24,576-byte runtime-bytecode limit.
-    ///         Deployed once by the hub and shared by all vaults.
-    address public immutable intentValidator;
-
-    /// @notice paymentQueueManagerImplementation — clone target used by every vault.
-    address public immutable paymentQueueManagerImplementation;
-    /// @notice withdrawalQueueManagerImplementation — clone target used by every vault.
-    address public immutable withdrawalQueueManagerImplementation;
-    /// @notice inheritanceManagerImplementation — clone target used by every vault.
-    address public immutable inheritanceManagerImplementation;
-    /// @notice adminManagerImplementation — clone target used by every vault.
-    address public immutable adminManagerImplementation;
 
     // 48-hour timelock for module changes
     /// @notice MODULE_CHANGE_DELAY
@@ -137,13 +115,13 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     /// @notice pendingRecoveryApproverAddr
     address public pendingRecoveryApproverAddr;
     /// @notice pendingRecoveryApproverStatus
-    bool public pendingRecoveryApproverStatus;
+    bool    public pendingRecoveryApproverStatus;
     /// @notice pendingRecoveryApproverAt
-    uint64 public pendingRecoveryApproverAt;
+    uint64  public pendingRecoveryApproverAt;
     /// @notice pendingCouncil
     address public pendingCouncil;
     /// @notice pendingCouncilAt
-    uint64 public pendingCouncilAt;
+    uint64  public pendingCouncilAt;
 
     /// Events
     /// @notice VFIDEScheduled_VH
@@ -262,39 +240,16 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     /// @param _vfideToken _vfideToken
     /// @param _ledger _ledger
     /// @param _dao _dao
-    /// @param _vaultDeployer Predeployed CREATE2 helper used for CardBoundVault deployments.
-    /// @param _intentValidator Predeployed stateless validator shared by all CardBoundVault instances.
-    /// @param _paymentQueueManagerImplementation Predeployed payment queue manager implementation for EIP-1167 vault clones.
-    /// @param _withdrawalQueueManagerImplementation Predeployed withdrawal queue manager implementation for EIP-1167 vault clones.
-    /// @param _inheritanceManagerImplementation Predeployed inheritance manager implementation for EIP-1167 vault clones.
-    /// @param _adminManagerImplementation Predeployed admin manager implementation for EIP-1167 vault clones.
-    constructor(
-        address _vfideToken,
-        address _ledger,
-        address _dao,
-        address _vaultDeployer,
-        address _intentValidator,
-        address _paymentQueueManagerImplementation,
-        address _withdrawalQueueManagerImplementation,
-        address _inheritanceManagerImplementation,
-        address _adminManagerImplementation
-    ) {
-        if (
-            _vfideToken == address(0) || _dao == address(0) || _vaultDeployer == address(0) || _intentValidator == address(0)
-                || _paymentQueueManagerImplementation == address(0) || _withdrawalQueueManagerImplementation == address(0)
-                || _inheritanceManagerImplementation == address(0) || _adminManagerImplementation == address(0)
-        ) {
-            revert VH_Zero();
-        }
+    constructor(address _vfideToken, address _ledger, address _dao, address _vaultDeployer) {
+        if (_vfideToken == address(0) || _dao == address(0)) revert VH_Zero();
+        // _vaultDeployer must be pre-deployed (CBVDeployer + SubManagerDeployer
+        // are deployed first in the deployment script to avoid embedding their
+        // initcode here and busting the Prague 49152-byte initcode limit).
+        require(_vaultDeployer != address(0), "VaultHub: zero vaultDeployer");
         vfideToken = _vfideToken;
         ledger = IProofLedger(_ledger);
         dao = _dao;
         vaultDeployer = CardBoundVaultDeployer(_vaultDeployer);
-        intentValidator = _intentValidator;
-        paymentQueueManagerImplementation = _paymentQueueManagerImplementation;
-        withdrawalQueueManagerImplementation = _withdrawalQueueManagerImplementation;
-        inheritanceManagerImplementation = _inheritanceManagerImplementation;
-        adminManagerImplementation = _adminManagerImplementation;
     }
 
     // ——— Module wiring
@@ -634,7 +589,11 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     /// @return isExpired True if the grace period has elapsed without setup completion.
     /// @return isComplete True if guardian setup has already been completed.
     /// @param vault vault
-    function guardianSetupTimeRemaining(address vault) external view returns (uint256 remaining, bool isExpired, bool isComplete) {
+    function guardianSetupTimeRemaining(address vault)
+        external
+        view
+        returns (uint256 remaining, bool isExpired, bool isComplete)
+    {
         isComplete = guardianSetupComplete[vault];
         if (isComplete) return (0, false, true);
         uint256 created = vaultCreatedAt[vault];
@@ -697,6 +656,12 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
             return;
         }
 
+        // Recovery-completeness fix: stage the rotation on the vault first. A fully locked-out owner
+        // cannot stage it via the onlyAdmin proposeWalletRotation path, so without this the vault's
+        // executeRecoveryRotation reverts CBV_InvalidRecoveryRotation. Staging happens only here, after
+        // M-of-N recovery-approver consensus + the 72h challenge (owner could abortRecoveryRotation up
+        // to this point) on a guardian-approved claim — see CardBoundVault.stageRecoveryRotation.
+        CardBoundVault(payable(vault)).stageRecoveryRotation(newWallet);
         CardBoundVault(payable(vault)).executeRecoveryRotation(newWallet);
 
         address oldOwner = ownerOfVault[vault];

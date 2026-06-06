@@ -1,125 +1,78 @@
-import { query } from '@/lib/db';
-import { withAuth } from '@/lib/auth/middleware';
+/**
+ * /api/crypto/transactions/[userId]
+ * GET — paginated transaction history for the AUTHENTICATED caller.
+ *
+ * The [userId] path segment is retained for backward-compatible URLs but is
+ * NOT used to select rows. Results are always scoped to the authenticated
+ * wallet — as owner, sender, or receiver — mirroring the transactions_party_access
+ * RLS policy. This prevents reading another user's history by passing their id,
+ * and ensures authorization does not rely on RLS alone (defense-in-depth).
+ *
+ * Query params:
+ *   limit  — max records, clamped to 100 (default 50)
+ *   offset — skip N records, clamped to 10000 (default 0)
+ */
 import { NextRequest, NextResponse } from 'next/server';
-import type { JWTPayload } from '@/lib/auth/jwt';
-
+import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { logger } from '@/lib/logger';
+import { requireAuth } from '@/lib/auth/middleware';
 
-const MAX_TRANSACTIONS_LIMIT = 100;
-const MAX_TRANSACTIONS_OFFSET = 10000;
-const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{40}$/;
+export const runtime = 'nodejs';
 
-function parseStrictIntegerParam(value: string | null): number | null {
-  if (value === null) return null;
-  const trimmed = value.trim();
-  if (!/^\d+$/.test(trimmed)) return null;
-  return Number.parseInt(trimmed, 10);
-}
-
-function parsePositiveInteger(value: string): number | null {
-  const trimmed = value.trim();
-  if (!/^\d+$/.test(trimmed)) return null;
-  const parsed = Number.parseInt(trimmed, 10);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
-}
-
-export const GET = withAuth(async (request: NextRequest, user: JWTPayload, context?: { params: Promise<Record<string, string>> | Record<string, string> }) => {
-  // Rate limiting: 100 requests per minute
+export async function GET(request: NextRequest) {
+  // Rate-limit guard
   const rateLimitResponse = await withRateLimit(request, 'read');
   if (rateLimitResponse) return rateLimitResponse;
-  const authAddress = typeof user?.address === 'string'
-    ? user.address.trim().toLowerCase()
-    : '';
-  if (!authAddress || !ADDRESS_LIKE_REGEX.test(authAddress)) {
+
+  // Auth guard — requireAuth returns a NextResponse (401) when unauthorized,
+  // or { user } when authenticated.
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
+  // Scope strictly to the authenticated wallet. requireAuth guarantees a
+  // verified token; defensively re-validate the address shape.
+  const callerAddress =
+    typeof authResult.user.address === 'string'
+      ? authResult.user.address.trim().toLowerCase()
+      : '';
+  if (!/^0x[a-f0-9]{40}$/.test(callerAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  try {
-    const resolvedParams = await context!.params;
-    const userIdParam = resolvedParams?.userId;
+  // Validate & clamp pagination params
+  const { searchParams } = new URL(request.url);
+  const rawLimit = searchParams.get('limit');
+  const rawOffset = searchParams.get('offset');
 
-    if (!userIdParam || typeof userIdParam !== 'string') {
-      return NextResponse.json(
-        { error: 'Invalid userId parameter' },
-        { status: 400 }
-      );
-    }
-
-    // Validate format before any DB lookup: accept positive integer OR own wallet address.
-    let requestedUserId = parsePositiveInteger(userIdParam);
-
-    if (requestedUserId === null) {
-      const normalizedRequestedAddress = userIdParam.trim().toLowerCase();
-      if (!ADDRESS_LIKE_REGEX.test(normalizedRequestedAddress)) {
-        return NextResponse.json(
-          { error: 'Invalid userId parameter' },
-          { status: 400 }
-        );
-      }
-
-      if (normalizedRequestedAddress !== authAddress) {
-        return NextResponse.json(
-          { error: 'You can only view your own transactions' },
-          { status: 403 }
-        );
-      }
-    }
-
-    // Resolve authenticated user once.
-    const userResult = await query(
-      'SELECT id FROM users WHERE wallet_address = $1',
-      [authAddress]
-    );
-
-    const authenticatedUserId = userResult.rows[0]?.id;
-    if (userResult.rows.length === 0 || !authenticatedUserId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    if (requestedUserId === null) {
-      requestedUserId = Number(authenticatedUserId);
-    }
-
-    if (authenticatedUserId.toString() !== requestedUserId.toString()) {
-      return NextResponse.json(
-        { error: 'You can only view your own transactions' },
-        { status: 403 }
-      );
-    }
-
-    const { searchParams } = new URL(request.url);
-    const parsedLimit = parseStrictIntegerParam(searchParams.get('limit'));
-    const parsedOffset = parseStrictIntegerParam(searchParams.get('offset'));
-
-    if (
-      (searchParams.get('limit') !== null && parsedLimit === null) ||
-      (searchParams.get('offset') !== null && parsedOffset === null)
-    ) {
-      return NextResponse.json(
-        { error: 'Invalid limit or offset parameter' },
-        { status: 400 }
-      );
-    }
-
-    const limit = Math.min(Math.max(parsedLimit ?? 50, 0), MAX_TRANSACTIONS_LIMIT);
-    const offset = Math.min(Math.max(parsedOffset ?? 0, 0), MAX_TRANSACTIONS_OFFSET);
-
-    const result = await query(
-      `SELECT t.* FROM transactions t
-       WHERE t.user_id = $1
-       ORDER BY t.timestamp DESC
-       LIMIT $2 OFFSET $3`,
-      [requestedUserId, limit, offset]
-    );
-
-    return NextResponse.json({ transactions: result.rows, total: result.rows.length });
-  } catch (error) {
-    logger.error('[Transactions API] Error:', error);
-    const errorMessage = 'Failed to fetch transactions';
-    return NextResponse.json(
-      { error: errorMessage },
-      { status: 500 }
-    );
+  if (rawLimit !== null && !/^\d+$/.test(rawLimit)) {
+    return NextResponse.json({ error: 'Invalid limit parameter' }, { status: 400 });
   }
-});
+  if (rawOffset !== null && !/^\d+$/.test(rawOffset)) {
+    return NextResponse.json({ error: 'Invalid offset parameter' }, { status: 400 });
+  }
+
+  const limit = Math.min(rawLimit ? parseInt(rawLimit, 10) : 50, 100);
+  const offset = Math.min(rawOffset ? parseInt(rawOffset, 10) : 0, 10000);
+
+  // Fetch paginated transactions where the caller is a party (owner, sender,
+  // or receiver). RLS (transactions_party_access) enforces the same restriction
+  // at the row level; this WHERE mirrors it so the route does not rely on RLS
+  // alone. query() also sets app.current_user_address to the caller for RLS.
+  const txResult = await query(
+    `SELECT * FROM transactions
+       WHERE LOWER(COALESCE(user_address, '')) = $1
+          OR LOWER(COALESCE(from_address, '')) = $1
+          OR LOWER(COALESCE(to_address, '')) = $1
+     ORDER BY created_at DESC
+     LIMIT $2 OFFSET $3`,
+    [callerAddress, limit, offset]
+  );
+
+  return NextResponse.json({
+    transactions: txResult.rows,
+    hasMore: txResult.rows.length === limit,
+    total: txResult.rows.length,
+  });
+}

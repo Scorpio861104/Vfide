@@ -1,31 +1,17 @@
-'use client';
+import { redirect } from 'next/navigation';
 
-export const dynamic = 'force-dynamic';
-
-import { ComingSoonPage } from '@/components/feedback/ComingSoonPage';
-
-export default function MultisigPage() {
-  return (
-    <ComingSoonPage
-      title="Multi-Signature Wallet"
-      tagline="Require multiple approvals before any transaction executes"
-      description={
-        'Configure an M-of-N approval scheme (e.g. 2-of-3, 3-of-5) where multiple wallets must ' +
-        'sign before any outgoing payment, governance vote, or vault action runs. Used by treasuries, ' +
-        'shared business accounts, and high-value personal wallets that want defense against single-key compromise.'
-      }
-      requirements={[
-        'Multisig factory contract (Safe-compatible) deployed to Base',
-        'Per-user multisig registry so the frontend can list which Safes a wallet belongs to',
-        'Proposal / confirmation / execution flow integrated with the existing payment pipeline',
-        'Recovery path that respects the M-of-N threshold (overlaps with Guardians)',
-      ]}
-      alternative={{
-        href: '/guardians',
-        label: 'Guardian-based recovery',
-        description: 'Today VFIDE\'s native protection is guardian-set vault recovery, which covers the same threat (single key compromise) with a different mechanism.',
-      }}
-      backHref="/"
-    />
-  );
+/**
+ * /multisig — merged into /guardians.
+ *
+ * The standalone "user multi-sig vault" page was confusing: VFIDE's live mechanism for protecting
+ * funds with multiple parties is the Guardian system on CardBoundVault (M-of-N guardians authorize
+ * wallet rotation if a key is compromised) — the same threat a user multi-sig addresses, with a
+ * mechanism that already ships. (The protocol-governance multi-sig, AdminMultiSig, lives in the
+ * Council tab of /governance — a separate, protocol-level concern.)
+ *
+ * Redirect to /guardians so there's a single, non-confusing home for "multiple people protect my
+ * funds." If a dedicated user multi-sig vault contract is built later, give it its own route then.
+ */
+export default function MultiSigPage() {
+  redirect('/guardians');
 }

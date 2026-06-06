@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
-import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
+import { m, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
 import { Sparkles } from 'lucide-react';
 import { logger } from '@/lib/logger';
@@ -31,7 +31,7 @@ function AnimatedNumber({ value, prefix = '', suffix = '', decimals = 0 }: { val
     return unsubscribe;
   }, [rounded]);
   
-  return <motion.span>{prefix}{displayValue}{suffix}</motion.span>;
+  return <m.span>{prefix}{displayValue}{suffix}</m.span>;
 }
 
 interface CreatorStats {
@@ -69,6 +69,7 @@ export function CreatorDashboard() {
   const { playSuccess, playNotification: _playNotification } = useTransactionSounds();
 
   useEffect(() => {
+    let _cancelled = false;
     const loadStats = async () => {
       if (!address) {
         setStats({
@@ -129,8 +130,13 @@ export function CreatorDashboard() {
 
         const supporterMap = new Map<string, { address: string; displayName: string; amount: string }>();
         for (const activity of [...tipRows, ...unlockRows, ...subscriberRows]) {
-          const supporterAddress = String(activity.user_address ?? activity.data?.from ?? '0x0000000000000000000000000000000000000000');
-          const displayName = String(activity.user_username ?? `${supporterAddress.slice(0, 6)}…${supporterAddress.slice(-4)}`);
+          const supporterAddress = String(activity.user_address ?? activity.data?.from ?? 'Unknown');
+          const displayName = String(
+            activity.user_username ??
+              (supporterAddress.startsWith('0x') && supporterAddress.length > 10
+                ? `${supporterAddress.slice(0, 6)}…${supporterAddress.slice(-4)}`
+                : 'Unknown supporter')
+          );
           if (!supporterMap.has(displayName)) {
             supporterMap.set(displayName, {
               address: supporterAddress,
@@ -174,14 +180,15 @@ export function CreatorDashboard() {
     };
 
     void loadStats();
-  }, [address]);
+    return () => { _cancelled = true; };
+    }, [address]);
 
   const usdEarnings = (parseFloat(stats.totalEarnings) * ethPrice).toFixed(2);
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-12">
-        <motion.div 
+        <m.div 
           className="rounded-full h-12 w-12 border-4 border-purple-500/30 border-t-purple-500"
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
@@ -195,28 +202,28 @@ export function CreatorDashboard() {
       {/* Claim Celebration Overlay */}
       <AnimatePresence>
         {showClaimCelebration && (
-          <motion.div
+          <m.div
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <motion.div
+            <m.div
               className="text-center"
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0 }}
             >
-              <motion.div
+              <m.div
                 className="text-8xl mb-4"
                 animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.2, 1] }}
                 transition={{ duration: 0.5, repeat: 3 }}
               >
                 💰
-              </motion.div>
+              </m.div>
               <p className="text-3xl font-bold text-white">Earnings Claimed!</p>
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         )}
       </AnimatePresence>
 
@@ -228,7 +235,7 @@ export function CreatorDashboard() {
           { label: 'Content Unlocks', value: stats.totalUnlocks, suffix: '', sub: '+3 this week', icon: '🔓', color: 'blue' },
           { label: 'Subscribers', value: stats.totalSubscribers, suffix: '', sub: '+8 this week', icon: '⭐', color: 'yellow' }
         ].map((stat, index) => (
-          <motion.div
+          <m.div
             key={stat.label}
             className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
             initial={{ opacity: 0, y: 20 }}
@@ -238,13 +245,13 @@ export function CreatorDashboard() {
           >
             <div className="flex items-center justify-between mb-1">
               <div className="text-sm text-gray-600 dark:text-gray-400">{stat.label}</div>
-              <motion.span
+              <m.span
                 className="text-2xl"
                 animate={{ scale: [1, 1.1, 1] }}
                 transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
               >
                 {stat.icon}
-              </motion.span>
+              </m.span>
             </div>
             <div className="text-2xl font-bold mb-1">
               {typeof stat.value === 'string' ? (
@@ -253,20 +260,20 @@ export function CreatorDashboard() {
                 <AnimatedNumber value={stat.value} suffix={stat.suffix} />
               )}
             </div>
-            <motion.div 
+            <m.div 
               className="text-sm text-green-600"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 + index * 0.1 }}
             >
               {stat.sub}
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         ))}
       </div>
 
       {/* Revenue Breakdown */}
-      <motion.div 
+      <m.div 
         className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -279,7 +286,7 @@ export function CreatorDashboard() {
             { icon: '🔓', label: 'Content Unlocks', count: stats.totalUnlocks, amount: '0.80', pct: 33, color: 'blue' },
             { icon: '⭐', label: 'Subscriptions', count: stats.totalSubscribers, amount: '0.50', pct: 20, color: 'green' }
           ].map((item, index) => (
-            <motion.div 
+            <m.div 
               key={item.label}
               className="flex items-center justify-between"
               initial={{ opacity: 0, x: -20 }}
@@ -287,12 +294,12 @@ export function CreatorDashboard() {
               transition={{ delay: 0.5 + index * 0.1 }}
             >
               <div className="flex items-center gap-3">
-                <motion.div 
+                <m.div 
                   className={`w-10 h-10 rounded-full bg-${item.color}-100 dark:bg-${item.color}-900/20 flex items-center justify-center`}
                   whileHover={{ scale: 1.1, rotate: 10 }}
                 >
                   {item.icon}
-                </motion.div>
+                </m.div>
                 <div>
                   <div className="font-medium">{item.label}</div>
                   <div className="text-sm text-gray-500">{item.count} transactions</div>
@@ -300,7 +307,7 @@ export function CreatorDashboard() {
               </div>
               <div className="text-right flex items-center gap-4">
                 <div className="w-24 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                  <motion.div
+                  <m.div
                     className={`h-full bg-${item.color}-500 rounded-full`}
                     initial={{ width: 0 }}
                     animate={{ width: `${item.pct}%` }}
@@ -312,14 +319,14 @@ export function CreatorDashboard() {
                   <div className="text-sm text-gray-500">{item.pct}%</div>
                 </div>
               </div>
-            </motion.div>
+            </m.div>
           ))}
         </div>
-      </motion.div>
+      </m.div>
 
       <div className="grid md:grid-cols-2 gap-6">
         {/* Top Supporters */}
-        <motion.div 
+        <m.div 
           className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -328,7 +335,7 @@ export function CreatorDashboard() {
           <h3 className="text-lg font-semibold mb-4">Top Supporters</h3>
           <div className="space-y-3">
             {stats.topSupporters.map((supporter, index) => (
-              <motion.div 
+              <m.div 
                 key={supporter.address} 
                 className="flex items-center justify-between"
                 initial={{ opacity: 0, x: -20 }}
@@ -336,14 +343,14 @@ export function CreatorDashboard() {
                 transition={{ delay: 0.7 + index * 0.1 }}
               >
                 <div className="flex items-center gap-3">
-                  <motion.div 
+                  <m.div 
                     className="text-2xl"
                     initial={{ scale: 0, rotate: -180 }}
                     animate={{ scale: 1, rotate: 0 }}
                     transition={{ type: 'spring', stiffness: 300, delay: 0.8 + index * 0.15 }}
                   >
                     {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
-                  </motion.div>
+                  </m.div>
                   <div>
                     <div className="font-medium">{supporter.displayName}</div>
                     <div className="text-sm text-gray-500">
@@ -351,19 +358,19 @@ export function CreatorDashboard() {
                     </div>
                   </div>
                 </div>
-                <motion.div 
+                <m.div 
                   className="font-semibold"
                   whileHover={{ scale: 1.1 }}
                 >
                   {supporter.amount} ETH
-                </motion.div>
-              </motion.div>
+                </m.div>
+              </m.div>
             ))}
           </div>
-        </motion.div>
+        </m.div>
 
         {/* Recent Transactions */}
-        <motion.div 
+        <m.div 
           className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -372,7 +379,7 @@ export function CreatorDashboard() {
           <h3 className="text-lg font-semibold mb-4">Recent Transactions</h3>
           <div className="space-y-3">
             {stats.recentTransactions.map((tx, index) => (
-              <motion.div 
+              <m.div 
                 key={tx.id} 
                 className="flex items-center justify-between"
                 initial={{ opacity: 0, x: 20 }}
@@ -381,12 +388,12 @@ export function CreatorDashboard() {
                 whileHover={{ backgroundColor: 'rgba(139, 92, 246, 0.05)', borderRadius: 8 }}
               >
                 <div className="flex items-center gap-3 p-2">
-                  <motion.div 
+                  <m.div 
                     className="text-2xl"
                     whileHover={{ scale: 1.2, rotate: 10 }}
                   >
                     {tx.type === 'tip' ? '💰' : tx.type === 'unlock' ? '🔓' : '⭐'}
-                  </motion.div>
+                  </m.div>
                   <div>
                     <div className="font-medium capitalize">{tx.type}</div>
                     <div className="text-sm text-gray-500">
@@ -395,26 +402,26 @@ export function CreatorDashboard() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <motion.div 
+                  <m.div 
                     className="font-semibold text-green-600"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.9 + index * 0.1 }}
                   >
                     +{tx.amount} ETH
-                  </motion.div>
+                  </m.div>
                   <div className="text-sm text-gray-500">
                     <Address address={tx.from} />
                   </div>
                 </div>
-              </motion.div>
+              </m.div>
             ))}
           </div>
-        </motion.div>
+        </m.div>
       </div>
 
       {/* Claim Earnings */}
-      <motion.div 
+      <m.div 
         className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-xl border border-purple-200 dark:border-purple-800 p-6"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -427,7 +434,7 @@ export function CreatorDashboard() {
               Withdraw your earnings to your wallet
             </p>
           </div>
-          <motion.button 
+          <m.button 
             className="px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg text-white font-medium flex items-center gap-2"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -441,9 +448,9 @@ export function CreatorDashboard() {
           >
             <Sparkles className="w-4 h-4" />
             Claim {stats.totalEarnings} ETH
-          </motion.button>
+          </m.button>
         </div>
-      </motion.div>
+      </m.div>
     </div>
   );
 }

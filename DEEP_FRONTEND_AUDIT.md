@@ -1,11 +1,13 @@
 # Deep Frontend Audit (v2)
 
-Files scanned: 1411
-Routes registered: 124 static + 11 dynamic
-Findings: high=0 medium=0 low=0
+Files scanned: 1498
+Routes registered: 131 static + 11 dynamic
+Findings: high=0 medium=10 low=0
 
 ## By category
 
+- placeholder-copy: 9
+- native-dialog: 1
 
 ## Whitelists (intentional choices documented in code)
 
@@ -43,4 +45,13 @@ Findings: high=0 medium=0 low=0
 
 ## Findings
 
-_No findings — frontend is clean._
+- **MEDIUM** [placeholder-copy] app/agent/layout.tsx:5 — title: 'Cash Agent Mode (Coming Soon)',
+- **MEDIUM** [placeholder-copy] app/lending/layout.tsx:5 — title: 'Peer-to-Peer Lending (Coming Soon)',
+- **MEDIUM** [native-dialog] app/merchant/inventory/page.tsx:122 — if (!confirm('Delete this product? This cannot be undone.')) return;
+- **MEDIUM** [placeholder-copy] app/multisig/layout.tsx:5 — title: 'Guardian Approval Wallet (Coming Soon)',
+- **MEDIUM** [placeholder-copy] app/remittance/layout.tsx:5 — title: 'Remittance — Wallet-to-Wallet (Cash-Out Partners Coming Soon)',
+- **MEDIUM** [placeholder-copy] app/reporting/layout.tsx:5 — title: 'Reports & Dashboards (Coming Soon)',
+- **MEDIUM** [placeholder-copy] app/streaming/layout.tsx:5 — title: 'Money Streaming (Coming Soon)',
+- **MEDIUM** [placeholder-copy] app/subscriptions/layout.tsx:4 — title: "Subscriptions — Tracker (Auto-Debit Coming Soon) - VFIDE",
+- **MEDIUM** [placeholder-copy] app/time-locks/layout.tsx:5 — title: 'Transaction Time Locks (Coming Soon)',
+- **MEDIUM** [placeholder-copy] lib/i18n/useT.ts:102 — common_back: 'Back', common_loading: 'Loading…', common_comingSoon: 'Coming Soon',

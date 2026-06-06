@@ -28,6 +28,7 @@ export function ActiveTab() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    let _cancelled = false;
     setLoading(true);
     const analyticsP = fetch('/api/seer/analytics?windowHours=720').then((r) => r.json()).catch(() => null);
     const ticketsP = address
@@ -40,7 +41,8 @@ export function ActiveTab() {
         setTickets(all.filter((tk) => tk.status === 'open'));
       })
       .finally(() => setLoading(false));
-  }, [address]);
+    return () => { _cancelled = true; };
+    }, [address]);
 
   return (
     <div className="space-y-6">
@@ -68,7 +70,7 @@ export function ActiveTab() {
         </div>
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 size={20} className="text-cyan-400 animate-spin" />
+            <Loader2 size={20} className="text-accent animate-spin" />
           </div>
         ) : tickets.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-center">

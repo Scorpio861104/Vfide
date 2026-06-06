@@ -1,0 +1,49 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" fill="#09090B"/>
+  <!-- Grid pattern -->
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#ffffff" stroke-width="0.3" opacity="0.08"/>
+    </pattern>
+    <radialGradient id="glow1" cx="30%" cy="40%" r="50%">
+      <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#06b6d4" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="75%" cy="60%" r="50%">
+      <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#22d3ee"/>
+      <stop offset="100%" stop-color="#a78bfa"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+  <ellipse cx="360" cy="252" rx="500" ry="380" fill="url(#glow1)"/>
+  <ellipse cx="900" cy="378" rx="450" ry="350" fill="url(#glow2)"/>
+  <!-- VFIDE wordmark -->
+  <text x="80" y="120" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="900" fill="url(#textGrad)" letter-spacing="-1">VFIDE</text>
+  <!-- Main headline -->
+  <text x="80" y="230" font-family="system-ui, -apple-system, sans-serif" font-size="72" font-weight="900" fill="white" letter-spacing="-2">Zero merchant fees.</text>
+  <text x="80" y="320" font-family="system-ui, -apple-system, sans-serif" font-size="72" font-weight="900" fill="white" letter-spacing="-2">You hold your keys.</text>
+  <!-- Sub -->
+  <text x="80" y="400" font-family="system-ui, -apple-system, sans-serif" font-size="32" font-weight="400" fill="#a1a1aa">
+    Self-custodial payments &amp; commerce on Base.
+  </text>
+  <!-- Stats row -->
+  <rect x="80" y="460" width="200" height="80" rx="16" fill="#ffffff08" stroke="#ffffff12" stroke-width="1"/>
+  <text x="180" y="494" text-anchor="middle" font-family="system-ui" font-size="28" font-weight="900" fill="#22d3ee">0%</text>
+  <text x="180" y="522" text-anchor="middle" font-family="system-ui" font-size="14" fill="#71717a">Merchant fees</text>
+
+  <rect x="300" y="460" width="200" height="80" rx="16" fill="#ffffff08" stroke="#ffffff12" stroke-width="1"/>
+  <text x="400" y="494" text-anchor="middle" font-family="system-ui" font-size="28" font-weight="900" fill="#10b981">&lt;3s</text>
+  <text x="400" y="522" text-anchor="middle" font-family="system-ui" font-size="14" fill="#71717a">Settlement</text>
+
+  <rect x="520" y="460" width="200" height="80" rx="16" fill="#ffffff08" stroke="#ffffff12" stroke-width="1"/>
+  <text x="620" y="494" text-anchor="middle" font-family="system-ui" font-size="28" font-weight="900" fill="#a78bfa">200M</text>
+  <text x="620" y="522" text-anchor="middle" font-family="system-ui" font-size="14" fill="#71717a">Fixed supply</text>
+
+  <!-- Base badge -->
+  <rect x="980" y="560" width="140" height="40" rx="20" fill="#0052ff18" stroke="#0052ff40" stroke-width="1"/>
+  <text x="1050" y="585" text-anchor="middle" font-family="system-ui" font-size="14" font-weight="600" fill="#4f8fff">Built on Base</text>
+</svg>

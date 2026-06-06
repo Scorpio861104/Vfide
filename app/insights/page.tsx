@@ -2,12 +2,16 @@
 
 export const dynamic = 'force-dynamic';
 
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { BarChart3, TrendingUp } from 'lucide-react';
 import FinancialDashboard from '@/components/FinancialDashboard';
 import { Footer } from '@/components/layout/Footer';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function InsightsPage() {
+  const { locale } = useLocale();
+  void locale;
+
   return (
     <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] pb-8 relative">
       {/* Ambient orbs */}

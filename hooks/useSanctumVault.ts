@@ -192,6 +192,7 @@ export function useSanctumVault() {
     address: sanctumAddress!,
     abi: SanctumVaultABI as Abi,
     functionName: 'charityList' as const,
+    // abi-parity-ok: charityList is a public address[] auto-getter — 1 uint256 index arg
     args: [BigInt(i)] as const,
   }));
 
@@ -214,6 +215,7 @@ export function useSanctumVault() {
     address: sanctumAddress!,
     abi: SanctumVaultABI as Abi,
     functionName: 'getCharityInfo' as const,
+    // abi-parity-ok: getCharityInfo(address charity) — 1 arg, statically present
     args: [addr] as const,
   }));
 
@@ -255,6 +257,7 @@ export function useSanctumVault() {
     address: sanctumAddress!,
     abi: SanctumVaultABI as Abi,
     functionName: 'getDisbursement' as const,
+    // abi-parity-ok: getDisbursement(uint256 proposalId) — 1 arg, statically present
     args: [BigInt(i)] as const,
   }));
 

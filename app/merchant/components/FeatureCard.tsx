@@ -1,7 +1,7 @@
 'use client';
 
 import type { ElementType } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 
 interface FeatureCardProps {
   icon: ElementType;
@@ -20,7 +20,7 @@ export function FeatureCard({
 }: FeatureCardProps) {
   const colorClasses = {
     green: { bg: 'from-emerald-500/20 to-green-500/10', border: 'border-emerald-500/30', text: 'text-emerald-400', glow: 'group-hover:shadow-emerald-500/20' },
-    blue: { bg: 'from-blue-500/20 to-cyan-500/10', border: 'border-blue-500/30', text: 'text-blue-400', glow: 'group-hover:shadow-blue-500/20' },
+    blue: { bg: 'from-blue-500/20 to-accent/10', border: 'border-blue-500/30', text: 'text-blue-400', glow: 'group-hover:shadow-blue-500/20' },
     purple: { bg: 'from-purple-500/20 to-pink-500/10', border: 'border-purple-500/30', text: 'text-purple-400', glow: 'group-hover:shadow-purple-500/20' },
     orange: { bg: 'from-orange-500/20 to-amber-500/10', border: 'border-orange-500/30', text: 'text-orange-400', glow: 'group-hover:shadow-orange-500/20' },
   } as const;
@@ -28,7 +28,7 @@ export function FeatureCard({
   const c = colorClasses[color];
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
@@ -44,6 +44,6 @@ export function FeatureCard({
         <h3 className={`mb-2 text-lg font-bold ${c.text}`}>{title}</h3>
         <p className="text-sm leading-relaxed text-gray-400">{description}</p>
       </div>
-    </motion.div>
+    </m.div>
   );
 }

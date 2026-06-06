@@ -118,6 +118,7 @@ export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
 
     const faucetAddress = CONTRACT_ADDRESSES.VFIDETestnetFaucet;
     const operatorKey = process.env.FAUCET_OPERATOR_PRIVATE_KEY;
+    if (!operatorKey) return NextResponse.json({ error: 'Faucet operator key not configured' }, { status: 503 });
     const chainConfig = resolveTestnetChain();
     if (!chainConfig) {
       return NextResponse.json({ error: 'Unsupported testnet chain' }, { status: 503 });

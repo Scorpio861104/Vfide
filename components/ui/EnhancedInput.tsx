@@ -3,7 +3,7 @@
  * Beautiful form inputs with advanced styling
  */
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { ReactNode, InputHTMLAttributes, TextareaHTMLAttributes, forwardRef } from "react";
 
 interface EnhancedInputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -21,7 +21,7 @@ export const EnhancedInput = forwardRef<HTMLInputElement, EnhancedInputProps>(
       default: `
         bg-zinc-900 
         border border-zinc-800
-        focus:border-cyan-400/50 
+        focus:border-accent/50 
         focus:shadow-[0_0_20px_rgba(0,240,255,0.2)]
       `,
       glass: `
@@ -34,9 +34,9 @@ export const EnhancedInput = forwardRef<HTMLInputElement, EnhancedInputProps>(
       `,
       glow: `
         bg-zinc-950 
-        border border-cyan-400/30
+        border border-accent/30
         shadow-[0_0_10px_rgba(0,240,255,0.1),inset_0_0_10px_rgba(0,240,255,0.05)]
-        focus:border-cyan-400/50
+        focus:border-accent/50
         focus:shadow-[0_0_30px_rgba(0,240,255,0.3),inset_0_0_20px_rgba(0,240,255,0.1)]
       `
     };
@@ -80,13 +80,13 @@ export const EnhancedInput = forwardRef<HTMLInputElement, EnhancedInputProps>(
         </div>
         
         {error && (
-          <motion.p
+          <m.p
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
             className="mt-1.5 text-sm text-red-400"
           >
             {error}
-          </motion.p>
+          </m.p>
         )}
       </div>
     );
@@ -108,7 +108,7 @@ export const EnhancedTextarea = forwardRef<HTMLTextAreaElement, EnhancedTextarea
       default: `
         bg-zinc-900 
         border border-zinc-800
-        focus:border-cyan-400/50 
+        focus:border-accent/50 
         focus:shadow-[0_0_20px_rgba(0,240,255,0.2)]
       `,
       glass: `
@@ -121,9 +121,9 @@ export const EnhancedTextarea = forwardRef<HTMLTextAreaElement, EnhancedTextarea
       `,
       glow: `
         bg-zinc-950 
-        border border-cyan-400/30
+        border border-accent/30
         shadow-[0_0_10px_rgba(0,240,255,0.1),inset_0_0_10px_rgba(0,240,255,0.05)]
-        focus:border-cyan-400/50
+        focus:border-accent/50
         focus:shadow-[0_0_30px_rgba(0,240,255,0.3),inset_0_0_20px_rgba(0,240,255,0.1)]
       `
     };
@@ -152,13 +152,13 @@ export const EnhancedTextarea = forwardRef<HTMLTextAreaElement, EnhancedTextarea
          aria-label="Input field" />
         
         {error && (
-          <motion.p
+          <m.p
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
             className="mt-1.5 text-sm text-red-400"
           >
             {error}
-          </motion.p>
+          </m.p>
         )}
       </div>
     );
@@ -181,7 +181,7 @@ export const EnhancedSelect = forwardRef<HTMLSelectElement, EnhancedSelectProps>
       default: `
         bg-zinc-900 
         border border-zinc-800
-        focus:border-cyan-400/50 
+        focus:border-accent/50 
         focus:shadow-[0_0_20px_rgba(0,240,255,0.2)]
       `,
       glass: `
@@ -194,9 +194,9 @@ export const EnhancedSelect = forwardRef<HTMLSelectElement, EnhancedSelectProps>
       `,
       glow: `
         bg-zinc-950 
-        border border-cyan-400/30
+        border border-accent/30
         shadow-[0_0_10px_rgba(0,240,255,0.1),inset_0_0_10px_rgba(0,240,255,0.05)]
-        focus:border-cyan-400/50
+        focus:border-accent/50
         focus:shadow-[0_0_30px_rgba(0,240,255,0.3),inset_0_0_20px_rgba(0,240,255,0.1)]
       `
     };
@@ -235,13 +235,13 @@ export const EnhancedSelect = forwardRef<HTMLSelectElement, EnhancedSelectProps>
         </select>
         
         {error && (
-          <motion.p
+          <m.p
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
             className="mt-1.5 text-sm text-red-400"
           >
             {error}
-          </motion.p>
+          </m.p>
         )}
       </div>
     );

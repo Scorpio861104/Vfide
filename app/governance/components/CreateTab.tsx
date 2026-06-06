@@ -53,7 +53,7 @@ import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts
 // MerchantRegistryABI is the re-export name for the merged VFIDECommerce.json file,
 // which contains MerchantRegistry + VFIDECommerce + CommerceEscrow function ABIs.
 // We use it here for encoding CommerceEscrow.resolve and CommerceEscrow.setMinDisputeAmountForPenalty calls.
-import { VFIDECommerceABI, FraudRegistryABI, SanctumVaultABI, EcoTreasuryVaultABI } from '@/lib/abis';
+import { MerchantRegistryABI as VFIDECommerceABI, FraudRegistryABI, SanctumVaultABI, EcoTreasuryVaultABI } from '@/lib/abis';
 
 type Mode = 'template' | 'custom';
 type TemplateKey =
@@ -103,7 +103,7 @@ const TEMPLATES: TemplateDescriptor[] = [
     key: 'confirmFraud',
     label: 'Confirm fraud against an address',
     description:
-      'DAO confirms an address committed fraud after community complaints. The address gets flagged: outgoing transfers held in 30-day escrow.',
+      'DAO confirms an address committed fraud after community complaints. The address gets flagged: service-banned and marked with a fraud risk signal. No funds are ever held or frozen.',
     ptype: ProposalType.SecurityAction,
     Icon: Flag,
     group: 'fraud',
@@ -279,8 +279,6 @@ export function CreateTab() {
     if (typeof prefill.resolveBuyerWins === 'boolean') {
       setResolveBuyerWins(prefill.resolveBuyerWins);
     }
-    // The effect intentionally runs only on initial mount + when query string changes.
-     
   }, [searchParams]);
 
   const currentTemplate = TEMPLATES.find((t) => t.key === templateKey)!;
@@ -656,7 +654,7 @@ export function CreateTab() {
     <div className="space-y-6 max-w-2xl">
       {/* Eligibility banner */}
       <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-4 flex items-start gap-3">
-        <Wallet className="text-cyan-400 shrink-0 mt-0.5" size={18} />
+        <Wallet className="text-accent shrink-0 mt-0.5" size={18} />
         <div className="flex-1 text-sm">
           <p className="text-zinc-100">
             Voting power: <span className="font-semibold tabular-nums">{dao.votingPower.toString()}</span>
@@ -684,7 +682,7 @@ export function CreateTab() {
             onClick={() => setMode('template')}
             className={`flex-1 px-4 py-2 rounded-lg text-sm font-bold transition-colors inline-flex items-center justify-center gap-2 ${
               mode === 'template'
-                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                ? 'bg-accent/20 text-accent border border-accent/30'
                 : 'bg-white/5 text-gray-400 border border-white/10 hover:text-white'
             }`}
           >
@@ -694,7 +692,7 @@ export function CreateTab() {
             onClick={() => setMode('custom')}
             className={`flex-1 px-4 py-2 rounded-lg text-sm font-bold transition-colors inline-flex items-center justify-center gap-2 ${
               mode === 'custom'
-                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                ? 'bg-accent/20 text-accent border border-accent/30'
                 : 'bg-white/5 text-gray-400 border border-white/10 hover:text-white'
             }`}
           >
@@ -716,12 +714,12 @@ export function CreateTab() {
                     onClick={() => setTemplateKey(t.key)}
                     className={`w-full text-left p-4 rounded-lg border transition-colors ${
                       selected
-                        ? 'bg-cyan-500/5 border-cyan-500/30'
+                        ? 'bg-accent/5 border-accent/30'
                         : 'bg-zinc-900 border-zinc-700 hover:border-zinc-600'
                     }`}
                   >
                     <div className="flex items-start gap-3">
-                      <Icon size={18} className={selected ? 'text-cyan-400' : 'text-zinc-400'} />
+                      <Icon size={18} className={selected ? 'text-accent' : 'text-zinc-400'} />
                       <div className="flex-1 min-w-0">
                         <p className={`text-sm font-semibold ${selected ? 'text-white' : 'text-zinc-200'}`}>
                           {t.label}
@@ -740,7 +738,7 @@ export function CreateTab() {
 
             {/* Resolve dispute template inputs */}
             {templateKey === 'resolve' && (
-              <div className="space-y-3 pl-1 border-l-2 border-cyan-500/20 ml-1">
+              <div className="space-y-3 pl-1 border-l-2 border-accent/20 ml-1">
                 <div className="pl-3">
                   <label className="block text-xs text-zinc-400 mb-1">Escrow id</label>
                   <input
@@ -748,7 +746,7 @@ export function CreateTab() {
                     value={resolveEscrowId}
                     onChange={(e) => setResolveEscrowId(e.target.value)}
                     placeholder="e.g. 42"
-                    className="w-full bg-black/40 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder:text-zinc-600 focus:border-cyan-500 focus:outline-none text-sm tabular-nums"
+                    className="w-full bg-black/40 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder:text-zinc-600 focus:border-accent focus:outline-none text-sm tabular-nums"
                   />
                 </div>
                 <div className="pl-3">
@@ -781,7 +779,7 @@ export function CreateTab() {
 
             {/* Set min dispute amount inputs */}
             {templateKey === 'setMinDispute' && (
-              <div className="space-y-3 pl-1 border-l-2 border-cyan-500/20 ml-1">
+              <div className="space-y-3 pl-1 border-l-2 border-accent/20 ml-1">
                 <div className="pl-3">
                   <label className="block text-xs text-zinc-400 mb-1">Minimum dispute amount (VFIDE)</label>
                   <input
@@ -791,7 +789,7 @@ export function CreateTab() {
                     placeholder="e.g. 10"
                     step="0.01"
                     min="0"
-                    className="w-full bg-black/40 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder:text-zinc-600 focus:border-cyan-500 focus:outline-none text-sm tabular-nums"
+                    className="w-full bg-black/40 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder:text-zinc-600 focus:border-accent focus:outline-none text-sm tabular-nums"
                   />
                   <p className="text-xs text-zinc-500 mt-1">
                     Escrows below this amount won&apos;t trigger the merchant penalty on dispute resolution.
@@ -804,7 +802,7 @@ export function CreateTab() {
             {(templateKey === 'clearFlag' ||
               templateKey === 'confirmFraud' ||
               templateKey === 'dismissComplaints') && (
-              <div className="space-y-3 pl-1 border-l-2 border-cyan-500/20 ml-1">
+              <div className="space-y-3 pl-1 border-l-2 border-accent/20 ml-1">
                 <div className="pl-3">
                   <label className="block text-xs text-zinc-400 mb-1">Target address</label>
                   <input
@@ -812,7 +810,7 @@ export function CreateTab() {
                     value={fraudTarget}
                     onChange={(e) => setFraudTarget(e.target.value)}
                     placeholder="0x…"
-                    className="w-full bg-black/40 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder:text-zinc-600 focus:border-cyan-500 focus:outline-none text-sm font-mono"
+                    className="w-full bg-black/40 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder:text-zinc-600 focus:border-accent focus:outline-none text-sm font-mono"
                   />
                   <p className="text-xs text-zinc-500 mt-1">
                     {templateKey === 'clearFlag' &&
@@ -1012,7 +1010,7 @@ export function CreateTab() {
                       onClick={() => setCustomPtype(p)}
                       className={`px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
                         customPtype === p
-                          ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                          ? 'bg-accent/20 text-accent border border-accent/30'
                           : 'bg-zinc-900 text-zinc-400 border border-zinc-700 hover:text-white'
                       }`}
                     >
@@ -1029,7 +1027,7 @@ export function CreateTab() {
                 value={customTarget}
                 onChange={(e) => setCustomTarget(e.target.value)}
                 placeholder="0x…"
-                className="w-full bg-black/40 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder:text-zinc-600 focus:border-cyan-500 focus:outline-none text-sm font-mono"
+                className="w-full bg-black/40 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder:text-zinc-600 focus:border-accent focus:outline-none text-sm font-mono"
               />
             </div>
             <div>
@@ -1039,7 +1037,7 @@ export function CreateTab() {
                 value={customData}
                 onChange={(e) => setCustomData(e.target.value)}
                 placeholder="0x…"
-                className="w-full bg-black/40 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder:text-zinc-600 focus:border-cyan-500 focus:outline-none text-xs font-mono"
+                className="w-full bg-black/40 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder:text-zinc-600 focus:border-accent focus:outline-none text-xs font-mono"
               />
               <p className="text-xs text-zinc-500 mt-1 inline-flex items-start gap-1">
                 <Info size={10} className="mt-0.5 shrink-0" />
@@ -1062,7 +1060,7 @@ export function CreateTab() {
             rows={5}
             maxLength={5000}
             placeholder="Explain why the DAO should pass this proposal. Voters use this to decide."
-            className="w-full bg-black/40 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder:text-zinc-600 focus:border-cyan-500 focus:outline-none text-sm"
+            className="w-full bg-black/40 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder:text-zinc-600 focus:border-accent focus:outline-none text-sm"
           />
           <p className="text-xs text-zinc-500 text-right mt-1">{description.length} / 5000</p>
         </div>
@@ -1092,7 +1090,7 @@ export function CreateTab() {
         <button
           onClick={() => void handleSubmit()}
           disabled={dao.isWritePending || !description.trim() || eligibilityWarning || cooldownWarning}
-          className="mt-6 w-full py-3 rounded-lg bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed text-black font-bold text-sm transition-colors flex items-center justify-center gap-2"
+          className="mt-6 w-full py-3 rounded-lg bg-accent hover:bg-accent-light disabled:opacity-50 disabled:cursor-not-allowed text-black font-bold text-sm transition-colors flex items-center justify-center gap-2"
         >
           {dao.isWritePending ? (
             <>

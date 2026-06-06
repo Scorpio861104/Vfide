@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import { ImageIcon, MapPin, Send, Smile, Video } from 'lucide-react';
 
 export function CreatePostCard({ onPost }: { onPost: (content: string) => void }) {
@@ -17,12 +17,12 @@ export function CreatePostCard({ onPost }: { onPost: (content: string) => void }
   };
 
   return (
-    <motion.div
+    <m.div
       layout
       className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-2xl p-4 ring-effect"
     >
       <div className="flex gap-3">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-lg">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent to-violet-400 flex items-center justify-center text-lg">
           ✨
         </div>
         <div className="flex-1">
@@ -37,7 +37,7 @@ export function CreatePostCard({ onPost }: { onPost: (content: string) => void }
           
           <AnimatePresence>
             {isFocused && (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
@@ -47,7 +47,7 @@ export function CreatePostCard({ onPost }: { onPost: (content: string) => void }
                   <button
                     disabled
                     title="Image upload requires the /api/upload endpoint, not built yet."
-                    className="p-2 rounded-lg text-cyan-400/40 cursor-not-allowed"
+                    className="p-2 rounded-lg text-accent/40 cursor-not-allowed"
                   >
                     <ImageIcon className="w-5 h-5" />
                   </button>
@@ -80,17 +80,17 @@ export function CreatePostCard({ onPost }: { onPost: (content: string) => void }
                   <button
                     onClick={handleSubmit}
                     disabled={!content.trim() || content.length > 280}
-                    className="px-4 py-2 bg-gradient-to-r from-cyan-400 to-violet-400 text-zinc-950 font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    className="px-4 py-2 bg-gradient-to-r from-accent to-violet-400 text-zinc-950 font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   >
                     <Send className="w-4 h-4" />
                     Post
                   </button>
                 </div>
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 }

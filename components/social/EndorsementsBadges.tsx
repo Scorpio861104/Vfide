@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import {
   Award,
   Shield,
@@ -130,7 +130,7 @@ export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEnd
       <div>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Award className="w-5 h-5 text-cyan-400" />
+            <Award className="w-5 h-5 text-accent" />
             <h3 className="font-bold text-zinc-100">
               Endorsements ({totalEndorsements})
             </h3>
@@ -138,7 +138,7 @@ export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEnd
           {showGiveEndorsement && onGiveEndorsement && (
             <button
               onClick={onGiveEndorsement}
-              className="px-3 py-1 bg-cyan-400 text-zinc-950 rounded-lg text-sm font-semibold hover:bg-cyan-400 transition-colors"
+              className="px-3 py-1 bg-accent text-zinc-950 rounded-lg text-sm font-semibold hover:bg-accent transition-colors"
             >
               Give Endorsement
             </button>
@@ -182,7 +182,7 @@ export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEnd
               {endorsements.slice(0, 5).map((endorsement) => {
                 const color = getCategoryColor(endorsement.category);
                 return (
-                  <motion.div
+                  <m.div
                     key={endorsement.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -218,7 +218,7 @@ export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEnd
                         </p>
                       </div>
                     </div>
-                  </motion.div>
+                  </m.div>
                 );
               })}
             </div>
@@ -245,7 +245,7 @@ export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEnd
             {badges.map((badge) => {
               const color = getRarityColor(badge.rarity);
               return (
-                <motion.div
+                <m.div
                   key={badge.id}
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -280,7 +280,7 @@ export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEnd
                       {new Date(badge.earnedAt).toLocaleDateString()}
                     </span>
                   </div>
-                </motion.div>
+                </m.div>
               );
             })}
           </div>
@@ -289,13 +289,13 @@ export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEnd
 
       {/* Guardian Status */}
       {endorsements.filter(e => e.category === 'trustworthy').length >= 5 && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-4 bg-gradient-to-r from-emerald-500/20 to-cyan-400/20 border border-emerald-500/30 rounded-xl"
+          className="p-4 bg-gradient-to-r from-emerald-500/20 to-accent/20 border border-emerald-500/30 rounded-xl"
         >
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-cyan-400 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-accent flex items-center justify-center">
               <Shield className="w-6 h-6 text-zinc-950" />
             </div>
             <div>
@@ -308,7 +308,7 @@ export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEnd
               </p>
             </div>
           </div>
-        </motion.div>
+        </m.div>
       )}
     </div>
   );

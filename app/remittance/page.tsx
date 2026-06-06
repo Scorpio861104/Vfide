@@ -5,27 +5,42 @@ export const dynamic = 'force-dynamic';
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { ArrowRight, Coins, Send, Shield, Wallet } from 'lucide-react';
 import { useAccount } from 'wagmi';
+import { useProofScore } from '@/hooks/useProofScore';
 import { Footer } from '@/components/layout/Footer';
 import { Beneficiary, BeneficiaryManager } from '@/components/remittance/BeneficiaryManager';
 import { FutureReleaseBanner } from '@/components/feedback/FutureReleaseBanner';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 const comparisonRows = [
-  { provider: 'VFIDE (wallet-to-wallet)', fee: '0.25%–1.00%', payout: 'Minutes', highlight: true },
+  { provider: 'VFIDE (wallet-to-wallet)', fee: '0.25%–5% (by trust score)', payout: 'Minutes', highlight: true },
   { provider: 'Western Union', fee: '≈ 7.5%', payout: 'Hours–days' },
   { provider: 'Bank wire', fee: '$25 flat', payout: '1–3 business days' },
 ];
 
 export default function RemittancePage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { isConnected } = useAccount();
   const [selectedBeneficiary, setSelectedBeneficiary] = useState<Beneficiary | null>(null);
   const [amount, setAmount] = useState('100');
   const [shareReceipt, setShareReceipt] = useState(false);
 
   const parsedAmount = Number.parseFloat(amount || '0');
-  const vfideFee = Number.isFinite(parsedAmount) ? parsedAmount * 0.0075 : 0;
+  // Fee is ProofScore-based on-chain (ProofScoreBurnRouter.computeFees): 0.25% at
+  // high trust, up to 5% at low trust, ~3.81% at a neutral score. A connected user
+  // sees their actual effective rate (burnFee — derived from the on-chain fee quote
+  // when available); while disconnected or still loading we show the neutral-score
+  // estimate so the number is never misattributed as the user's own.
+  const { burnFee, isLoading: scoreLoading } = useProofScore();
+  const NEUTRAL_FEE_PCT = 3.8125; // effective rate at the neutral score (5000)
+  const actualFeePct = isConnected && !scoreLoading ? burnFee : null;
+  const usingActualRate = actualFeePct !== null;
+  const effectiveFeePct = actualFeePct ?? NEUTRAL_FEE_PCT;
+  const vfideFee = Number.isFinite(parsedAmount) ? parsedAmount * (effectiveFeePct / 100) : 0;
   const netAmount = Math.max(parsedAmount - vfideFee, 0);
   const whatsappText = selectedBeneficiary
     ? encodeURIComponent(`VFIDE remittance ready for ${selectedBeneficiary.name}: send ${parsedAmount.toFixed(2)} and ${netAmount.toFixed(2)} lands after transparent fees.`)
@@ -123,7 +138,7 @@ export default function RemittancePage() {
 
                 <div className="space-y-2 rounded-xl border border-white/10 bg-black/20 p-4 text-sm text-zinc-300">
                   <div className="flex items-center justify-between"><span>Selected beneficiary</span><span>{selectedBeneficiary?.name ?? 'Choose one'}</span></div>
-                  <div className="flex items-center justify-between"><span>Estimated VFIDE fee</span><span>{vfideFee.toFixed(2)}</span></div>
+                  <div className="flex items-center justify-between"><span>{usingActualRate ? `Est. fee (your rate, ${effectiveFeePct.toFixed(2)}%)` : `Est. fee (neutral estimate, ${NEUTRAL_FEE_PCT.toFixed(2)}%)`}</span><span>{vfideFee.toFixed(2)}</span></div>
                   <div className="flex items-center justify-between"><span>Estimated recipient amount</span><span>{netAmount.toFixed(2)}</span></div>
                   <div className="flex items-center justify-between"><span>Rail</span><span>{selectedBeneficiary?.network ?? '—'}</span></div>
                 </div>

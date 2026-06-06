@@ -11,7 +11,7 @@ export default defineConfig({
     ['list'],
   ],
   use: {
-    baseURL: 'http://127.0.0.1:3000',
+    baseURL: 'http://127.0.0.1:3001',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
@@ -42,9 +42,12 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run -s start',
-    url: 'http://127.0.0.1:3000/api/health',
-    reuseExistingServer: true,
+    // Use PORT=3001 for the runtime matrix to avoid collision with any lingering
+    // Lighthouse / quality-gate server on 3000. EADDRINUSE in CI was traced to
+    // reuseExistingServer: true silently binding to an already-occupied 3000.
+    command: 'PORT=3001 npm run -s start',
+    url: 'http://127.0.0.1:3001/api/health',
+    reuseExistingServer: false,
     timeout: 120 * 1000,
   },
 })

@@ -177,10 +177,10 @@ export default function MerchantTraining({ onComplete, onSkip }: MerchantTrainin
 
   return (
     <div className="space-y-4">
-      <Card className="border-cyan-500/30 bg-gradient-to-br from-cyan-500/10 to-blue-500/10">
+      <Card className="border-accent/30 bg-gradient-to-br from-accent/10 to-blue-500/10">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-white">
-            <Sparkles className="h-5 w-5 text-cyan-300" />
+            <Sparkles className="h-5 w-5 text-accent" />
             Guided quick launch
           </CardTitle>
         </CardHeader>
@@ -188,7 +188,7 @@ export default function MerchantTraining({ onComplete, onSkip }: MerchantTrainin
           <Progress value={quickProgress} className="h-2" />
           <div className="rounded-xl border border-white/10 bg-black/20 p-4">
             <div className="mb-3 flex items-center gap-3">
-              <div className="rounded-xl bg-cyan-500/10 p-2 text-cyan-300">
+              <div className="rounded-xl bg-accent/10 p-2 text-accent">
                 <StepIcon className="h-5 w-5" />
               </div>
               <div>

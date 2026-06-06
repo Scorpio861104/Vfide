@@ -45,9 +45,8 @@ const ARG_VERIFY = argv.includes('--verify');
 const BATCH_SIZE = (() => {
   const arg = argv.find((a) => a.startsWith('--batch='));
   if (!arg) return 100;
-  const value = arg.split('=')[1];
-  if (!value) return 100;
-  return Math.max(1, Math.min(1000, parseInt(value, 10) || 100));
+  const batchStr = arg.split('=')[1] ?? '100';
+  return Math.max(1, Math.min(1000, parseInt(batchStr, 10) || 100));
 })();
 
 if (!ARG_DRY_RUN && !ARG_APPLY && !ARG_VERIFY) {

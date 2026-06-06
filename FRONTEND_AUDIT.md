@@ -1,17 +1,17 @@
 # VFIDE Frontend Mainnet-Readiness Audit
 
-_Generated: 2026-05-20T05:34:52.331Z_  
+_Generated: 2026-06-03T16:29:04.856Z_  
 _Mode A — automated + manual sweep across all 135 user-facing pages._
 
 ## Summary
 
-- **Pages audited:** 135
-- **Files scanned in page scope (page + components):** 354
-- **Pages clean (zero findings):** 135 / 135 (100%)
-- **Total raw findings:** 0
+- **Pages audited:** 142
+- **Files scanned in page scope (page + components):** 383
+- **Pages clean (zero findings):** 139 / 142 (98%)
+- **Total raw findings:** 4
   - 🔴 High:   0
-  - 🟡 Medium: 0
-  - 🟢 Low:    0
+  - 🟡 Medium: 1
+  - 🟢 Low:    3
 - **Pages without `loading.tsx` (own or inherited):** 0
 - **Pages without `error.tsx`  (own or inherited):** 0
 
@@ -38,7 +38,7 @@ Status: 🟢 clean · 🟡 medium · 🔴 high. Loading/Error: ✅ present (own 
 | 4 | `/achievements` | ✅ | ✅ | 4 | — | 🟢 |
 | 5 | `/admin` | ✅ | ✅ | 2 | — | 🟢 |
 | 6 | `/agent` | ✅ | ✅ | 1 | — | 🟢 |
-| 7 | `/api-coverage` | ✅ | ✅ | 1 | — | 🟢 |
+| 7 | `/api-coverage` | ✅ | ✅ | 2 | — | 🟢 |
 | 8 | `/appeals` | ✅ | ✅ | 4 | — | 🟢 |
 | 9 | `/badges` | ✅ | ✅ | 4 | — | 🟢 |
 | 10 | `/benefits` | ✅ | ✅ | 5 | — | 🟢 |
@@ -51,126 +51,148 @@ Status: 🟢 clean · 🟡 medium · 🔴 high. Loading/Error: ✅ present (own 
 | 17 | `/crypto` | ✅ | ✅ | 1 | — | 🟢 |
 | 18 | `/dao-hub` | ✅ | ✅ | 5 | — | 🟢 |
 | 19 | `/dashboard` | ✅ | ✅ | 8 | — | 🟢 |
-| 20 | `/demo/crypto-social` | ✅ | ✅ | 5 | — | 🟢 |
-| 21 | `/developer` | ✅ | ✅ | 1 | — | 🟢 |
-| 22 | `/disputes` | ✅ | ✅ | 1 | — | 🟢 |
-| 23 | `/docs` | ✅ | ✅ | 5 | — | 🟢 |
-| 24 | `/elections` | ✅ | ✅ | 1 | — | 🟢 |
-| 25 | `/endorsements` | ✅ | ✅ | 1 | — | 🟢 |
-| 26 | `/enterprise` | ✅ | ✅ | 6 | — | 🟢 |
-| 27 | `/escrow/[id]` | ✅ | ✅ | 2 | — | 🟢 |
-| 28 | `/escrow` | ✅ | ✅ | 6 | — | 🟢 |
-| 29 | `/explorer/[id]` | ✅ | ✅ | 1 | — | 🟢 |
-| 30 | `/explorer` | ✅ | ✅ | 1 | — | 🟢 |
-| 31 | `/feed` | ✅ | ✅ | 1 | — | 🟢 |
-| 32 | `/flashloans` | ✅ | ✅ | 7 | — | 🟢 |
-| 33 | `/fraud` | ✅ | ✅ | 5 | — | 🟢 |
-| 34 | `/governance` | ✅ | ✅ | 13 | — | 🟢 |
-| 35 | `/governance/proposal/[id]` | ✅ | ✅ | 1 | — | 🟢 |
-| 36 | `/guardians` | ✅ | ✅ | 15 | — | 🟢 |
-| 37 | `/hardware-wallet` | ✅ | ✅ | 4 | — | 🟢 |
-| 38 | `/headhunter` | ✅ | ✅ | 5 | — | 🟢 |
-| 39 | `/inheritance/claim` | ✅ | ✅ | 1 | — | 🟢 |
-| 40 | `/inheritance/memorial` | ✅ | ✅ | 1 | — | 🟢 |
-| 41 | `/inheritance/override` | ✅ | ✅ | 1 | — | 🟢 |
-| 42 | `/inheritance` | ✅ | ✅ | 1 | — | 🟢 |
-| 43 | `/inheritance/setup` | ✅ | ✅ | 1 | — | 🟢 |
-| 44 | `/inheritance/status` | ✅ | ✅ | 1 | — | 🟢 |
-| 45 | `/insights` | ✅ | ✅ | 1 | — | 🟢 |
-| 46 | `/invite/[code]` | ✅ | ✅ | 1 | — | 🟢 |
-| 47 | `/invite` | ✅ | ✅ | 1 | — | 🟢 |
-| 48 | `/leaderboard` | ✅ | ✅ | 5 | — | 🟢 |
-| 49 | `/legal` | ✅ | ✅ | 1 | — | 🟢 |
-| 50 | `/lending` | ✅ | ✅ | 4 | — | 🟢 |
-| 51 | `/live-demo` | ✅ | ✅ | 1 | — | 🟢 |
-| 52 | `/marketplace` | ✅ | ✅ | 4 | — | 🟢 |
-| 53 | `/me` | ✅ | ✅ | 1 | — | 🟢 |
-| 54 | `/merchant/analytics` | ✅ | ✅ | 1 | — | 🟢 |
-| 55 | `/merchant/bookings` | ✅ | ✅ | 1 | — | 🟢 |
-| 56 | `/merchant/coupons` | ✅ | ✅ | 1 | — | 🟢 |
-| 57 | `/merchant/customers` | ✅ | ✅ | 1 | — | 🟢 |
-| 58 | `/merchant/expenses` | ✅ | ✅ | 1 | — | 🟢 |
-| 59 | `/merchant/gift-cards` | ✅ | ✅ | 1 | — | 🟢 |
-| 60 | `/merchant/installments` | ✅ | ✅ | 1 | — | 🟢 |
-| 61 | `/merchant/inventory` | ✅ | ✅ | 1 | — | 🟢 |
-| 62 | `/merchant/invoices` | ✅ | ✅ | 1 | — | 🟢 |
-| 63 | `/merchant/locations` | ✅ | ✅ | 1 | — | 🟢 |
-| 64 | `/merchant/loyalty` | ✅ | ✅ | 1 | — | 🟢 |
-| 65 | `/merchant` | ✅ | ✅ | 5 | — | 🟢 |
-| 66 | `/merchant/payment-links` | ✅ | ✅ | 1 | — | 🟢 |
-| 67 | `/merchant/payouts` | ✅ | ✅ | 1 | — | 🟢 |
-| 68 | `/merchant/profile/edit` | ✅ | ✅ | 1 | — | 🟢 |
-| 69 | `/merchant/profile/setup` | ✅ | ✅ | 1 | — | 🟢 |
-| 70 | `/merchant/refunds` | ✅ | ✅ | 1 | — | 🟢 |
-| 71 | `/merchant/returns` | ✅ | ✅ | 1 | — | 🟢 |
-| 72 | `/merchant/setup` | ✅ | ✅ | 1 | — | 🟢 |
-| 73 | `/merchant/staff` | ✅ | ✅ | 1 | — | 🟢 |
-| 74 | `/merchant/subscriptions` | ✅ | ✅ | 1 | — | 🟢 |
-| 75 | `/merchant/suppliers` | ✅ | ✅ | 1 | — | 🟢 |
-| 76 | `/merchant/tax` | ✅ | ✅ | 1 | — | 🟢 |
-| 77 | `/merchant/tips` | ✅ | ✅ | 1 | — | 🟢 |
-| 78 | `/merchant/wholesale` | ✅ | ✅ | 1 | — | 🟢 |
-| 79 | `/merchants` | ✅ | ✅ | 1 | — | 🟢 |
-| 80 | `/multisig` | ✅ | ✅ | 1 | — | 🟢 |
-| 81 | `/notifications` | ✅ | ✅ | 1 | — | 🟢 |
-| 82 | `/onboarding` | ✅ | ✅ | 1 | — | 🟢 |
-| 83 | `/` | ✅ | ✅ | 13 | — | 🟢 |
-| 84 | `/paper-wallet` | ✅ | ✅ | 3 | — | 🟢 |
-| 85 | `/pay/link/[id]` | ✅ | ✅ | 2 | — | 🟢 |
-| 86 | `/pay` | ✅ | ✅ | 2 | — | 🟢 |
-| 87 | `/payroll` | ✅ | ✅ | 5 | — | 🟢 |
-| 88 | `/performance` | ✅ | ✅ | 6 | — | 🟢 |
-| 89 | `/pos` | ✅ | ✅ | 1 | — | 🟢 |
-| 90 | `/price-alerts` | ✅ | ✅ | 4 | — | 🟢 |
-| 91 | `/product/[id]` | ✅ | ✅ | 6 | — | 🟢 |
-| 92 | `/profile` | ✅ | ✅ | 1 | — | 🟢 |
-| 93 | `/proofscore` | ✅ | ✅ | 3 | — | 🟢 |
-| 94 | `/quests` | ✅ | ✅ | 1 | — | 🟢 |
-| 95 | `/remittance` | ✅ | ✅ | 1 | — | 🟢 |
-| 96 | `/reporting` | ✅ | ✅ | 1 | — | 🟢 |
-| 97 | `/rewards` | ✅ | ✅ | 1 | — | 🟢 |
-| 98 | `/sanctum/charities/[id]` | ✅ | ✅ | 1 | — | 🟢 |
-| 99 | `/sanctum` | ✅ | ✅ | 6 | — | 🟢 |
-| 100 | `/scan` | ✅ | ✅ | 2 | — | 🟢 |
-| 101 | `/security-center` | ✅ | ✅ | 1 | — | 🟢 |
-| 102 | `/seer-academy` | ✅ | ✅ | 1 | — | 🟢 |
-| 103 | `/seer-service` | ✅ | ✅ | 4 | — | 🟢 |
-| 104 | `/settings` | ✅ | ✅ | 2 | — | 🟢 |
-| 105 | `/setup` | ✅ | ✅ | 4 | — | 🟢 |
-| 106 | `/social-hub` | ✅ | ✅ | 4 | — | 🟢 |
-| 107 | `/social-messaging` | ✅ | ✅ | 8 | — | 🟢 |
-| 108 | `/social-payments` | ✅ | ✅ | 1 | — | 🟢 |
-| 109 | `/social` | ✅ | ✅ | 4 | — | 🟢 |
-| 110 | `/splitter` | ✅ | ✅ | 1 | — | 🟢 |
-| 111 | `/staking` | ✅ | ✅ | 1 | — | 🟢 |
-| 112 | `/stealth` | ✅ | ✅ | 1 | — | 🟢 |
-| 113 | `/store/[slug]` | ✅ | ✅ | 4 | — | 🟢 |
-| 114 | `/stories` | ✅ | ✅ | 1 | — | 🟢 |
-| 115 | `/streaming` | ✅ | ✅ | 1 | — | 🟢 |
-| 116 | `/subscriptions` | ✅ | ✅ | 4 | — | 🟢 |
-| 117 | `/support` | ✅ | ✅ | 4 | — | 🟢 |
-| 118 | `/taxes` | ✅ | ✅ | 1 | — | 🟢 |
-| 119 | `/testnet` | ✅ | ✅ | 1 | — | 🟢 |
-| 120 | `/theme-manager` | ✅ | ✅ | 1 | — | 🟢 |
-| 121 | `/theme-showcase` | ✅ | ✅ | 1 | — | 🟢 |
-| 122 | `/theme` | ✅ | ✅ | 4 | — | 🟢 |
-| 123 | `/time-locks` | ✅ | ✅ | 1 | — | 🟢 |
-| 124 | `/token-launch` | ✅ | ✅ | 1 | — | 🟢 |
-| 125 | `/treasury` | ✅ | ✅ | 6 | — | 🟢 |
-| 126 | `/vault/lock` | ✅ | ✅ | 1 | — | 🟢 |
-| 127 | `/vault` | ✅ | ✅ | 12 | — | 🟢 |
-| 128 | `/vault/pending-changes` | ✅ | ✅ | 1 | — | 🟢 |
-| 129 | `/vault/recover` | ✅ | ✅ | 4 | — | 🟢 |
-| 130 | `/vault/recover/status` | ✅ | ✅ | 1 | — | 🟢 |
-| 131 | `/vault/safety` | ✅ | ✅ | 1 | — | 🟢 |
-| 132 | `/vault/safety/window` | ✅ | ✅ | 1 | — | 🟢 |
-| 133 | `/vault/settings` | ✅ | ✅ | 1 | — | 🟢 |
-| 134 | `/verifier` | ✅ | ✅ | 1 | — | 🟢 |
-| 135 | `/vesting` | ✅ | ✅ | 4 | — | 🟢 |
+| 20 | `/demo/crypto-social` | ✅ | ✅ | 6 | — | 🟢 |
+| 21 | `/demo` | ✅ | ✅ | 1 | — | 🟢 |
+| 22 | `/developer` | ✅ | ✅ | 2 | — | 🟢 |
+| 23 | `/disputes` | ✅ | ✅ | 1 | — | 🟢 |
+| 24 | `/docs` | ✅ | ✅ | 5 | — | 🟢 |
+| 25 | `/elections` | ✅ | ✅ | 1 | — | 🟢 |
+| 26 | `/endorsements` | ✅ | ✅ | 1 | — | 🟢 |
+| 27 | `/enterprise` | ✅ | ✅ | 6 | — | 🟢 |
+| 28 | `/escrow/[id]` | ✅ | ✅ | 2 | — | 🟢 |
+| 29 | `/escrow` | ✅ | ✅ | 6 | — | 🟢 |
+| 30 | `/explorer/[id]` | ✅ | ✅ | 1 | — | 🟢 |
+| 31 | `/explorer` | ✅ | ✅ | 1 | — | 🟢 |
+| 32 | `/feed` | ✅ | ✅ | 1 | — | 🟢 |
+| 33 | `/flashloans` | ✅ | ✅ | 7 | — | 🟢 |
+| 34 | `/fraud` | ✅ | ✅ | 5 | — | 🟢 |
+| 35 | `/governance` | ✅ | ✅ | 16 | — | 🟢 |
+| 36 | `/governance/proposal/[id]` | ✅ | ✅ | 1 | — | 🟢 |
+| 37 | `/guardians` | ✅ | ✅ | 15 | — | 🟢 |
+| 38 | `/hardware-wallet` | ✅ | ✅ | 4 | — | 🟢 |
+| 39 | `/headhunter` | ✅ | ✅ | 5 | — | 🟢 |
+| 40 | `/inheritance/claim` | ✅ | ✅ | 1 | — | 🟢 |
+| 41 | `/inheritance/memorial` | ✅ | ✅ | 1 | — | 🟢 |
+| 42 | `/inheritance/override` | ✅ | ✅ | 1 | — | 🟢 |
+| 43 | `/inheritance` | ✅ | ✅ | 1 | — | 🟢 |
+| 44 | `/inheritance/setup` | ✅ | ✅ | 1 | — | 🟢 |
+| 45 | `/inheritance/status` | ✅ | ✅ | 1 | — | 🟢 |
+| 46 | `/insights` | ✅ | ✅ | 4 | — | 🟢 |
+| 47 | `/invite/[code]` | ✅ | ✅ | 1 | — | 🟢 |
+| 48 | `/invite` | ✅ | ✅ | 1 | — | 🟢 |
+| 49 | `/leaderboard` | ✅ | ✅ | 5 | — | 🟢 |
+| 50 | `/legal` | ✅ | ✅ | 1 | — | 🟢 |
+| 51 | `/lending` | ✅ | ✅ | 4 | — | 🟢 |
+| 52 | `/live-demo` | ✅ | ✅ | 1 | — | 🟢 |
+| 53 | `/marketplace` | ✅ | ✅ | 5 | — | 🟢 |
+| 54 | `/me` | ✅ | ✅ | 1 | — | 🟢 |
+| 55 | `/merchant/analytics` | ✅ | ✅ | 1 | — | 🟢 |
+| 56 | `/merchant/bookings` | ✅ | ✅ | 1 | — | 🟢 |
+| 57 | `/merchant/coupons` | ✅ | ✅ | 1 | — | 🟢 |
+| 58 | `/merchant/customers` | ✅ | ✅ | 1 | — | 🟢 |
+| 59 | `/merchant/expenses` | ✅ | ✅ | 1 | — | 🟢 |
+| 60 | `/merchant/gift-cards` | ✅ | ✅ | 1 | — | 🟢 |
+| 61 | `/merchant/installments` | ✅ | ✅ | 1 | — | 🟢 |
+| 62 | `/merchant/inventory` | ✅ | ✅ | 1 | — | 🟢 |
+| 63 | `/merchant/invoices` | ✅ | ✅ | 1 | — | 🟢 |
+| 64 | `/merchant/locations` | ✅ | ✅ | 1 | — | 🟢 |
+| 65 | `/merchant/loyalty` | ✅ | ✅ | 1 | — | 🟢 |
+| 66 | `/merchant` | ✅ | ✅ | 8 | — | 🟢 |
+| 67 | `/merchant/payment-links` | ✅ | ✅ | 1 | — | 🟢 |
+| 68 | `/merchant/payouts` | ✅ | ✅ | 1 | — | 🟢 |
+| 69 | `/merchant/profile/edit` | ✅ | ✅ | 1 | — | 🟢 |
+| 70 | `/merchant/profile/setup` | ✅ | ✅ | 1 | — | 🟢 |
+| 71 | `/merchant/refunds` | ✅ | ✅ | 1 | — | 🟢 |
+| 72 | `/merchant/returns` | ✅ | ✅ | 1 | — | 🟢 |
+| 73 | `/merchant/setup` | ✅ | ✅ | 1 | — | 🟢 |
+| 74 | `/merchant/staff` | ✅ | ✅ | 1 | — | 🟢 |
+| 75 | `/merchant/subscriptions` | ✅ | ✅ | 1 | — | 🟢 |
+| 76 | `/merchant/suppliers` | ✅ | ✅ | 1 | — | 🟢 |
+| 77 | `/merchant/tax` | ✅ | ✅ | 1 | — | 🟢 |
+| 78 | `/merchant/tips` | ✅ | ✅ | 1 | — | 🟢 |
+| 79 | `/merchant/wholesale` | ✅ | ✅ | 1 | — | 🟢 |
+| 80 | `/merchants` | ✅ | ✅ | 1 | — | 🟢 |
+| 81 | `/multisig` | ✅ | ✅ | 1 | — | 🟢 |
+| 82 | `/notifications` | ✅ | ✅ | 1 | — | 🟢 |
+| 83 | `/onboarding` | ✅ | ✅ | 1 | — | 🟢 |
+| 84 | `/` | ✅ | ✅ | 15 | `testnet-copy`×1 | 🟢 |
+| 85 | `/paper-wallet` | ✅ | ✅ | 3 | — | 🟢 |
+| 86 | `/pay/link/[id]` | ✅ | ✅ | 2 | — | 🟢 |
+| 87 | `/pay` | ✅ | ✅ | 2 | — | 🟢 |
+| 88 | `/payroll` | ✅ | ✅ | 5 | — | 🟢 |
+| 89 | `/performance` | ✅ | ✅ | 6 | — | 🟢 |
+| 90 | `/pos` | ✅ | ✅ | 1 | — | 🟢 |
+| 91 | `/price-alerts` | ✅ | ✅ | 4 | — | 🟢 |
+| 92 | `/product/[id]` | ✅ | ✅ | 6 | — | 🟢 |
+| 93 | `/profile` | ✅ | ✅ | 1 | — | 🟢 |
+| 94 | `/proofscore` | ✅ | ✅ | 3 | — | 🟢 |
+| 95 | `/quests` | ✅ | ✅ | 1 | — | 🟢 |
+| 96 | `/recovery-challenge` | ✅ | ✅ | 1 | `hardcoded-address`×1 | 🟡 |
+| 97 | `/recovery-sign` | ✅ | ✅ | 1 | — | 🟢 |
+| 98 | `/recovery-status` | ✅ | ✅ | 1 | — | 🟢 |
+| 99 | `/remittance` | ✅ | ✅ | 1 | — | 🟢 |
+| 100 | `/reporting` | ✅ | ✅ | 1 | — | 🟢 |
+| 101 | `/rewards-hub` | ✅ | ✅ | 3 | — | 🟢 |
+| 102 | `/rewards` | ✅ | ✅ | 1 | — | 🟢 |
+| 103 | `/roadmap` | ✅ | ✅ | 1 | `testnet-copy`×2 | 🟢 |
+| 104 | `/sanctum/charities/[id]` | ✅ | ✅ | 1 | — | 🟢 |
+| 105 | `/sanctum` | ✅ | ✅ | 6 | — | 🟢 |
+| 106 | `/scan` | ✅ | ✅ | 2 | — | 🟢 |
+| 107 | `/security-center` | ✅ | ✅ | 2 | — | 🟢 |
+| 108 | `/seer-academy` | ✅ | ✅ | 1 | — | 🟢 |
+| 109 | `/seer-service` | ✅ | ✅ | 4 | — | 🟢 |
+| 110 | `/settings` | ✅ | ✅ | 2 | — | 🟢 |
+| 111 | `/setup` | ✅ | ✅ | 4 | — | 🟢 |
+| 112 | `/social-hub` | ✅ | ✅ | 4 | — | 🟢 |
+| 113 | `/social-messaging` | ✅ | ✅ | 8 | — | 🟢 |
+| 114 | `/social-payments` | ✅ | ✅ | 1 | — | 🟢 |
+| 115 | `/social` | ✅ | ✅ | 4 | — | 🟢 |
+| 116 | `/splitter` | ✅ | ✅ | 1 | — | 🟢 |
+| 117 | `/staking` | ✅ | ✅ | 1 | — | 🟢 |
+| 118 | `/stealth` | ✅ | ✅ | 1 | — | 🟢 |
+| 119 | `/store/[slug]` | ✅ | ✅ | 4 | — | 🟢 |
+| 120 | `/stories` | ✅ | ✅ | 2 | — | 🟢 |
+| 121 | `/streaming` | ✅ | ✅ | 1 | — | 🟢 |
+| 122 | `/subscriptions` | ✅ | ✅ | 4 | — | 🟢 |
+| 123 | `/support` | ✅ | ✅ | 4 | — | 🟢 |
+| 124 | `/taxes` | ✅ | ✅ | 1 | — | 🟢 |
+| 125 | `/testnet` | ✅ | ✅ | 1 | — | 🟢 |
+| 126 | `/theme-manager` | ✅ | ✅ | 1 | — | 🟢 |
+| 127 | `/theme-showcase` | ✅ | ✅ | 1 | — | 🟢 |
+| 128 | `/theme` | ✅ | ✅ | 4 | — | 🟢 |
+| 129 | `/time-locks` | ✅ | ✅ | 1 | — | 🟢 |
+| 130 | `/token-launch` | ✅ | ✅ | 1 | — | 🟢 |
+| 131 | `/treasury` | ✅ | ✅ | 6 | — | 🟢 |
+| 132 | `/vault/lock` | ✅ | ✅ | 1 | — | 🟢 |
+| 133 | `/vault` | ✅ | ✅ | 12 | — | 🟢 |
+| 134 | `/vault/pending-changes` | ✅ | ✅ | 1 | — | 🟢 |
+| 135 | `/vault/recover` | ✅ | ✅ | 4 | — | 🟢 |
+| 136 | `/vault/recover/status` | ✅ | ✅ | 1 | — | 🟢 |
+| 137 | `/vault/safety` | ✅ | ✅ | 1 | — | 🟢 |
+| 138 | `/vault/safety/window` | ✅ | ✅ | 1 | — | 🟢 |
+| 139 | `/vault/settings` | ✅ | ✅ | 1 | — | 🟢 |
+| 140 | `/verifier` | ✅ | ✅ | 1 | — | 🟢 |
+| 141 | `/vesting` | ✅ | ✅ | 4 | — | 🟢 |
+| 142 | `/wallet` | ✅ | ✅ | 4 | — | 🟢 |
 
 ## Detail — pages with findings
 
-_All 135 pages clean. ✅_
+### `/`
+
+- **[low] testnet-copy** — `app/robots.ts`:50
+  `'/testnet/',       // Testnet-only faucet hub (auto-redirects on mainnet)`
+
+### `/recovery-challenge`
+
+- **[medium] hardcoded-address** — `app/recovery-challenge/page.tsx`:20
+  `const VAULT_FAKE = '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb1' as const;`
+
+### `/roadmap`
+
+- **[low] testnet-copy** — `app/roadmap/page.tsx`:163
+  `'v1.1': { label: 'V1.1 — Post-testnet',     badge: 'Next release',    color: '#06b6d4' },`
+- **[low] testnet-copy** — `app/roadmap/page.tsx`:204
+  `<Section title="V1.1 — Post-testnet" features={v11} phaseMeta={PHASE_META['v1.1']} />`
 
 ## Manual review notes
 

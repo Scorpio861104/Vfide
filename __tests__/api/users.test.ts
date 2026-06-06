@@ -11,46 +11,18 @@ jest.mock('@/lib/auth/rateLimit', () => ({
 
 jest.mock('@/lib/auth/middleware', () => ({
   requireAuth: jest.fn(),
-  requireOwnership: jest.fn(async () => ({ user: { sub: 'test', address: '0x0000000000000000000000000000000000000000' } })),
-  requireAdmin: jest.fn(async () => ({ user: { sub: 'test', address: '0x0000000000000000000000000000000000000000' } })),
-  verifyAuth: jest.fn(async () => ({ ok: true, user: { sub: 'test' } })),
-  getRequestAuthToken: jest.fn(async () => null),
-  optionalAuth: jest.fn(async () => null),
-  isAdmin: jest.fn(() => false),
-  verifyOnChainAdmin: jest.fn(async () => false),
-  checkOwnership: jest.fn(() => true),
-  withAuth: jest.fn((handler: any) => async (req: any, ctx?: any) => {
-    // V3: consult requireAuth (sync or async) so tests that set its return value flow through.
-    const m = (jest.requireMock('@/lib/auth/middleware') as any);
-    let user: any = { sub: 'test', address: '0x0000000000000000000000000000000000000000' };
-    try {
-      const r0 = typeof m.requireAuth === 'function' ? m.requireAuth(req) : null;
-      const r = (r0 && typeof (r0 as any).then === 'function') ? await r0 : r0;
-      if (r && typeof r.status === 'number' && typeof r.json === 'function') return r;
-      if (r && r.user) user = r.user;
-    } catch { /* ignore */ }
-    return handler(req, user, ctx);
-  }),
-  withOwnership: jest.fn((extractor: any, handler: any) => async (req: any, ctx?: any) => {
-    // V3: extract target address from request and use it as auth user, bubble up
-    // requireAuth Response if set.
-    const m = (jest.requireMock('@/lib/auth/middleware') as any);
-    let user: any = { sub: 'test', address: '0x0000000000000000000000000000000000000000' };
-    try {
-      const r0 = typeof m.requireAuth === 'function' ? m.requireAuth(req) : null;
-      const r = (r0 && typeof (r0 as any).then === 'function') ? await r0 : r0;
-      if (r && typeof r.status === 'number' && typeof r.json === 'function') return r;
-      if (r && r.user) user = r.user;
-      else {
-        const target = await extractor(req, ctx);
-        if (typeof target === 'string' && target) {
-          const addr = target.toLowerCase();
-          user = { sub: addr, address: addr };
-        }
-      }
-    } catch { /* ignore */ }
-    return handler(req, user, ctx);
-  }),
+  withAuth: (handler: (...args: any[]) => Promise<Response> | Response) => async (request: NextRequest, context?: unknown) => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { requireAuth } = require('@/lib/auth/middleware');
+    const auth = await requireAuth(request);
+    if (!auth?.user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    return handler(request, auth.user, context);
+  },
 }));
 
 jest.mock('@/lib/optimization/apiOptimization', () => ({

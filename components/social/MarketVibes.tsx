@@ -13,7 +13,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { Clock, MapPin, Shield, RotateCcw, Check, Sparkles } from 'lucide-react';
 
 interface VibePost {
@@ -34,13 +34,13 @@ interface MarketVibesCaptureProps {
   timeRemaining: number;
 }
 
-export function MarketVibesCapture({ promptTime: _promptTime, onCapture, timeRemaining }: MarketVibesCaptureProps) {
+export function MarketVibesCapture({ promptTime, onCapture, timeRemaining }: MarketVibesCaptureProps) {
+  void promptTime;
   const videoRef = useRef<HTMLVideoElement>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
   const [frontImage, setFrontImage] = useState<Blob | null>(null);
   const [backImage, setBackImage] = useState<Blob | null>(null);
   const [caption, setCaption] = useState('');
-  const [_capturing, _setCapturing] = useState(false);
   const streamRef = useRef<MediaStream | null>(null);
 
   const startCamera = useCallback(async (facing: 'user' | 'environment') => {
@@ -145,37 +145,12 @@ export function MarketVibeCard({ vibe, onReact }: MarketVibeCardProps) {
   return (
     <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="rounded-2xl overflow-hidden border border-white/10">
       {/* Dual image */}
-      <div
-        role="button"
-        tabIndex={0}
-        aria-label={showFront ? 'Show back camera view' : 'Show front camera view'}
-        className="relative aspect-[3/4] bg-zinc-800 cursor-pointer focus-visible:outline-2 focus-visible:outline-cyan-400"
-        onClick={() => setShowFront(!showFront)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            setShowFront(!showFront);
-          }
-        }}
-      >
+      <div className="relative aspect-[3/4] bg-zinc-800 cursor-pointer" onClick={() => setShowFront(!showFront)}>
         <Image src={showFront ? vibe.frontImageUrl : vibe.backImageUrl} alt="" className="w-full h-full object-cover"  width={48} height={48} />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
         {/* PIP of the other camera */}
-        <div
-          role="button"
-          tabIndex={0}
-          aria-label="Swap camera view"
-          className="absolute top-3 left-3 w-20 h-28 rounded-xl overflow-hidden border-2 border-white/30 focus-visible:outline-2 focus-visible:outline-cyan-400"
-          onClick={e => { e.stopPropagation(); setShowFront(!showFront); }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              e.stopPropagation();
-              setShowFront(!showFront);
-            }
-          }}
-        >
+        <div className="absolute top-3 left-3 w-20 h-28 rounded-xl overflow-hidden border-2 border-white/30" onClick={e => { e.stopPropagation(); setShowFront(!showFront); }}>
           <Image src={showFront ? vibe.backImageUrl : vibe.frontImageUrl} alt="" className="w-full h-full object-cover"  width={48} height={48} />
         </div>
 

@@ -26,13 +26,15 @@ export function StreamsTab() {
   const [filter, setFilter] = useState<'all' | 'sending' | 'receiving'>('all');
 
   useEffect(() => {
+    let _cancelled = false;
     if (!address) return;
     setLoading(true);
     fetch(`/api/streams?address=${address}&role=all`)
       .then((r) => r.json())
       .then((data) => setStreams((data.streams ?? []).filter((s: Stream) => s.status === 'active')))
       .finally(() => setLoading(false));
-  }, [address]);
+    return () => { _cancelled = true; };
+    }, [address]);
 
   const filtered = streams.filter((s) => {
     if (filter === 'sending') return s.sender_address.toLowerCase() === address?.toLowerCase();
@@ -60,7 +62,7 @@ export function StreamsTab() {
             key={f}
             onClick={() => setFilter(f)}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-colors ${
-              filter === f ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'bg-white/3 border border-white/10 text-gray-400 hover:border-white/20'
+              filter === f ? 'bg-accent/20 text-accent border border-accent/30' : 'bg-white/3 border border-white/10 text-gray-400 hover:border-white/20'
             }`}
           >
             {f}
@@ -70,7 +72,7 @@ export function StreamsTab() {
 
       {loading ? (
         <div className="flex items-center justify-center py-10">
-          <Loader2 size={22} className="text-cyan-400 animate-spin" />
+          <Loader2 size={22} className="text-accent animate-spin" />
         </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-14 text-center bg-white/3 border border-white/10 rounded-2xl">
@@ -102,7 +104,7 @@ export function StreamsTab() {
                 </div>
                 <div className="flex items-center gap-2 mb-1">
                   <div className="flex-1 bg-white/5 rounded-full h-1.5">
-                    <div className="h-1.5 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500" style={{ width: `${progress}%` }} />
+                    <div className="h-1.5 rounded-full bg-gradient-to-r from-accent to-blue-500" style={{ width: `${progress}%` }} />
                   </div>
                   <p className="text-xs text-gray-500 flex-shrink-0">{progress.toFixed(0)}%</p>
                 </div>

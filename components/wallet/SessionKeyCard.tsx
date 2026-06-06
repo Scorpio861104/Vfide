@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Key, Trash2, Clock, ChevronDown } from 'lucide-react';
 import { shortAddress as formatAddress } from '@/lib/format';
 import { type SessionKeyCardProps, formatTimeRemaining } from './session-key-types';
@@ -13,7 +13,7 @@ export function SessionKeyCard({ session, onRevoke }: SessionKeyCardProps) {
   const isActive = session.isActive && !isExpired;
 
   return (
-    <motion.div
+    <m.div
       layout
       className={`border rounded-xl overflow-hidden transition-colors ${
         isActive
@@ -24,7 +24,7 @@ export function SessionKeyCard({ session, onRevoke }: SessionKeyCardProps) {
       <div
         role="button"
         tabIndex={0}
-        className="w-full flex items-center justify-between p-4 cursor-pointer focus-visible:outline-2 focus-visible:outline-cyan-400 focus-visible:outline-offset-[-2px] rounded-lg"
+        className="w-full flex items-center justify-between p-4 cursor-pointer focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-[-2px] rounded-lg"
         aria-expanded={expanded}
         aria-controls={`session-${session.id}-details`}
         onClick={() => setExpanded(!expanded)}
@@ -69,7 +69,7 @@ export function SessionKeyCard({ session, onRevoke }: SessionKeyCardProps) {
 
       <AnimatePresence>
         {expanded && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden" id={`session-${session.id}-details`}>
+          <m.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden" id={`session-${session.id}-details`}>
             <div className="px-4 pb-4 pt-2 border-t border-gray-200 dark:border-gray-700 space-y-3">
               <div>
                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Permissions</p>
@@ -91,9 +91,9 @@ export function SessionKeyCard({ session, onRevoke }: SessionKeyCardProps) {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </m.div>
   );
 }

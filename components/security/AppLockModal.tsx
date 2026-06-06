@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Fingerprint, KeyRound, X, Loader2 } from 'lucide-react';
 import { thresholdWeiToVfide, AppLockMethod } from '@/lib/security/appLock';
 
@@ -74,7 +74,6 @@ export function AppLockModal({
     return () => {
       cancelled = true;
     };
-     
   }, [tab]);
 
   const submitPin = async () => {
@@ -96,7 +95,7 @@ export function AppLockModal({
 
   return (
     <AnimatePresence>
-      <motion.div
+      <m.div
         className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/70 backdrop-blur-sm"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -105,8 +104,8 @@ export function AppLockModal({
         aria-modal="true"
         aria-label="Confirm transaction with App Lock"
       >
-        <motion.div
-          className="relative w-full max-w-sm rounded-2xl border border-cyan-500/30 bg-gray-900 p-6 shadow-2xl"
+        <m.div
+          className="relative w-full max-w-sm rounded-2xl border border-accent/30 bg-gray-900 p-6 shadow-2xl"
           initial={{ y: 24, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 24, opacity: 0 }}
@@ -136,7 +135,7 @@ export function AppLockModal({
               <button
                 className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
                   tab === 'webauthn'
-                    ? 'bg-cyan-600 text-white'
+                    ? 'bg-accent-dark text-white'
                     : 'text-gray-400 hover:text-white'
                 }`}
                 onClick={() => {
@@ -148,7 +147,7 @@ export function AppLockModal({
               </button>
               <button
                 className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
-                  tab === 'pin' ? 'bg-cyan-600 text-white' : 'text-gray-400 hover:text-white'
+                  tab === 'pin' ? 'bg-accent-dark text-white' : 'text-gray-400 hover:text-white'
                 }`}
                 onClick={() => {
                   setTab('pin');
@@ -163,19 +162,19 @@ export function AppLockModal({
           {tab === 'webauthn' ? (
             <div className="text-center py-6">
               {busy ? (
-                <div className="flex flex-col items-center gap-3 text-cyan-400">
+                <div className="flex flex-col items-center gap-3 text-accent">
                   <Loader2 size={32} className="animate-spin" />
                   <div className="text-sm">Waiting for biometric…</div>
                 </div>
               ) : (
                 <div className="text-sm text-gray-300">
-                  <Fingerprint size={36} className="mx-auto mb-3 text-cyan-400" />
+                  <Fingerprint size={36} className="mx-auto mb-3 text-accent" />
                   Use your device biometric to confirm.
                   {error && (
                     <div className="mt-3 text-red-400 text-xs">{error}</div>
                   )}
                   <button
-                    className="mt-4 px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-medium"
+                    className="mt-4 px-4 py-2 rounded-lg bg-accent-dark hover:bg-accent text-white text-sm font-medium"
                     onClick={async () => {
                       setBusy(true);
                       setError(null);
@@ -203,7 +202,7 @@ export function AppLockModal({
                   if (e.key === 'Enter') submitPin();
                 }}
                 placeholder="Enter PIN"
-                className="w-full rounded-lg bg-gray-800 border border-gray-700 px-4 py-3 text-white text-center text-lg tracking-widest focus:outline-none focus:border-cyan-500 disabled:opacity-50"
+                className="w-full rounded-lg bg-gray-800 border border-gray-700 px-4 py-3 text-white text-center text-lg tracking-widest focus:outline-none focus:border-accent disabled:opacity-50"
               />
               {lockoutRemainingMs > 0 ? (
                 <div className="mt-3 text-center text-sm text-amber-400">
@@ -219,7 +218,7 @@ export function AppLockModal({
               <button
                 onClick={submitPin}
                 disabled={busy || lockoutRemainingMs > 0}
-                className="w-full mt-4 py-3 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full mt-4 py-3 rounded-lg bg-accent-dark hover:bg-accent text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {busy ? 'Verifying…' : 'Unlock'}
               </button>
@@ -234,8 +233,8 @@ export function AppLockModal({
               Cancel transaction
             </button>
           </div>
-        </motion.div>
-      </motion.div>
+        </m.div>
+      </m.div>
     </AnimatePresence>
   );
 }

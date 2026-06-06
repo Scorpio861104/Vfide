@@ -1,55 +1,27 @@
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { fireEvent, render, screen } from '@testing-library/react';
-import type React from 'react';
+'use client';
 
-const renderSubscriptionsPage = () => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const pageModule = require('../../app/subscriptions/page');
-  const SubscriptionsPage = pageModule.default as React.ComponentType;
-  return render(<SubscriptionsPage />);
-};
+import { render, screen } from '@testing-library/react';
+import SubscriptionsPage from '@/app/subscriptions/page';
 
-jest.mock('../../app/subscriptions/components/ActiveTab', () => ({
-  ActiveTab: () => <div>Active subscriptions content</div>,
-}));
+describe('Subscriptions Page', () => {
+  it('renders the subscriptions honest stub', () => {
+    render(<SubscriptionsPage />);
 
-jest.mock('../../app/subscriptions/components/CreateTab', () => ({
-  CreateTab: () => <div>Create subscriptions content</div>,
-}));
-
-jest.mock('../../app/subscriptions/components/HistoryTab', () => ({
-  HistoryTab: () => <div>History subscriptions content</div>,
-}));
-
-jest.mock('@/components/layout/Footer', () => ({
-  Footer: () => <div data-testid="footer" />,
-}));
-
-describe('Subscriptions page pathways', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
+    // The subscriptions page is now an honest stub explaining post-testnet timeline
+    expect(screen.getByRole('heading', { name: /Recurring Subscriptions/i })).toBeTruthy();
+    expect(screen.getByText(/in development/i)).toBeTruthy();
+    expect(screen.getByText(/Set up and manage subscription billing/i)).toBeTruthy();
   });
 
-  it('renders subscriptions heading and default active tab', () => {
-    renderSubscriptionsPage();
-
-    expect(screen.getByText(/^Subscriptions$/i)).toBeTruthy();
-    expect(screen.getAllByText(/Recurring payments/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Active subscriptions content/i)).toBeTruthy();
+  it('shows feature roadmap', () => {
+    render(<SubscriptionsPage />);
+    expect(screen.getByText(/Weekly, monthly, quarterly, and annual billing/i)).toBeTruthy();
   });
 
-  it('renders tab navigation labels', () => {
-    renderSubscriptionsPage();
-
-    expect(screen.getByRole('button', { name: /^Active$/i })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /^Create$/i })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /^History$/i })).toBeTruthy();
-  });
-
-  it('switches to create tab content', () => {
-    renderSubscriptionsPage();
-
-    fireEvent.click(screen.getByRole('button', { name: /^Create$/i }));
-    expect(screen.getByText(/Create subscriptions content/i)).toBeTruthy();
+  it('provides link to merchant portal', () => {
+    render(<SubscriptionsPage />);
+    const ctaLink = screen.getByRole('link', { name: /Configure subscriptions/i });
+    expect(ctaLink).toBeTruthy();
+    expect(ctaLink.getAttribute('href')).toBe('/merchant/subscriptions');
   });
 });

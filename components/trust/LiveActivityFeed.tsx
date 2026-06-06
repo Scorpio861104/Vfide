@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Live Activity Feed - Real-time blockchain events
  * Particle effects for each transaction type
@@ -6,7 +8,7 @@
 'use client'
 
 import { useActivityFeed, ActivityItem } from '@/lib/vfide-hooks'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { useEffect, useMemo, useState } from 'react'
 import { useChainId } from 'wagmi'
 import { getExplorerLink } from '@/components/ui/EtherscanLink'
@@ -80,7 +82,7 @@ export function LiveActivityFeed() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="text-base sm:text-lg md:text-xl font-bold text-zinc-100 flex items-center gap-2">
-          <motion.span
+          <m.span
             animate={prefersReducedMotion ? undefined : {
               scale: [1, 1.2, 1],
               opacity: [0.5, 1, 0.5],
@@ -96,7 +98,7 @@ export function LiveActivityFeed() {
       </div>
       
       {/* Activity List */}
-      <div className="relative h-[250px] sm:h-[300px] md:h-[350px] lg:h-[400px] overflow-hidden rounded-xl bg-zinc-950/50 backdrop-blur-xl border border-cyan-400/20">
+      <div className="relative h-[250px] sm:h-[300px] md:h-[350px] lg:h-[400px] overflow-hidden rounded-xl bg-zinc-950/50 backdrop-blur-xl border border-accent/20">
         <div className="absolute inset-0 overflow-y-auto scrollbar-thin scrollbar-thumb-[#00F0FF]/30 scrollbar-track-transparent p-2 sm:p-3 md:p-4 space-y-1 sm:space-y-2">
           <AnimatePresence initial={false}>
             {visibleActivities.map((activity) => (
@@ -131,7 +133,7 @@ function ActivityCard({ activity }: { activity: ActivityItem }) {
   }
   
   return (
-    <motion.div
+    <m.div
       layout={!prefersReducedMotion}
       initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, x: -50, scale: 0.8 }}
       animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, x: 0, scale: 1 }}
@@ -143,7 +145,7 @@ function ActivityCard({ activity }: { activity: ActivityItem }) {
       className="relative group"
     >
       {/* Glow effect */}
-      <motion.div
+      <m.div
         className="absolute inset-0 rounded-lg blur-xl opacity-0 group-hover:opacity-50 transition-opacity"
         style={{ backgroundColor: config.color }}
       />
@@ -158,7 +160,7 @@ function ActivityCard({ activity }: { activity: ActivityItem }) {
       >
         <div className="flex items-start gap-2 sm:gap-3">
           {/* Icon */}
-          <motion.div
+          <m.div
             className="text-lg sm:text-xl md:text-2xl shrink-0"
             animate={{
               scale: isHovered ? [1, 1.2, 1] : 1,
@@ -167,7 +169,7 @@ function ActivityCard({ activity }: { activity: ActivityItem }) {
             transition={{ duration: 0.5 }}
           >
             {config.icon}
-          </motion.div>
+          </m.div>
           
           {/* Content */}
           <div className="flex-1 min-w-0">
@@ -190,28 +192,28 @@ function ActivityCard({ activity }: { activity: ActivityItem }) {
             {activity.from && (
               <div className="flex items-center gap-1 sm:gap-2 mt-1 sm:mt-2 text-[10px] sm:text-xs">
                 <span className="text-zinc-100/50">From:</span>
-                <code className="text-cyan-400 font-mono truncate">
+                <code className="text-accent font-mono truncate">
                   {activity.from.slice(0, 6)}...{activity.from.slice(-4)}
                 </code>
               </div>
             )}
             
             {activity.txHash && isHovered && (
-              <motion.a
+              <m.a
                 initial={{ opacity: 0, y: -5 }}
                 animate={{ opacity: 1, y: 0 }}
                 href={getExplorerLink(chainId, activity.txHash, 'tx')}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-cyan-400 hover:text-cyan-400 mt-2 inline-flex items-center gap-1 transition-colors"
+                className="text-xs text-accent hover:text-accent mt-2 inline-flex items-center gap-1 transition-colors"
               >
                 View on Explorer →
-              </motion.a>
+              </m.a>
             )}
           </div>
         </div>
       </div>
-    </motion.div>
+    </m.div>
   )
 }
 
@@ -255,13 +257,13 @@ function ParticleStream() {
     <div className="absolute inset-0 overflow-hidden">
       <AnimatePresence>
         {particles.map((particle) => (
-          <motion.div
+          <m.div
             key={particle.id}
             initial={{ top: '100%', opacity: 0.6 }}
             animate={{ top: '-10%', opacity: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 3, ease: 'linear' }}
-            className="absolute w-1 h-1 bg-cyan-400 rounded-full"
+            className="absolute w-1 h-1 bg-accent rounded-full"
             style={{
               left: `${particle.left}%`,
               boxShadow: '0 0 8px #00F0FF',

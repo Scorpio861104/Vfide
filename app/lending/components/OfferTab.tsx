@@ -111,7 +111,7 @@ export function OfferTab() {
         </p>
         <button
           onClick={() => setSuccess(false)}
-          className="px-4 py-2 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 text-sm font-semibold transition-colors"
+          className="px-4 py-2 rounded-lg bg-accent/20 hover:bg-accent/30 text-accent text-sm font-semibold transition-colors"
         >
           Post Another
         </button>
@@ -169,12 +169,12 @@ export function OfferTab() {
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
       <div className="flex items-center gap-2 mb-5">
-        <Plus size={16} className="text-cyan-400" aria-hidden="true" />
+        <Plus size={16} className="text-accent" aria-hidden="true" />
         <h3 className="text-white font-semibold">New Loan Offer</h3>
       </div>
 
-      <div className="mb-5 flex items-start gap-2 rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-3 text-xs text-zinc-300">
-        <Info size={14} className="text-cyan-400 mt-0.5 shrink-0" aria-hidden="true" />
+      <div className="mb-5 flex items-start gap-2 rounded-lg border border-accent/20 bg-accent/5 p-3 text-xs text-zinc-300">
+        <Info size={14} className="text-accent mt-0.5 shrink-0" aria-hidden="true" />
         <span>
           Two-tx flow: approve the TermLoan contract for the principal, then post the offer. Your VFIDE
           stays in the contract until accepted (you can cancel before then) and is paid out to the
@@ -195,7 +195,7 @@ export function OfferTab() {
             min="0"
             step="any"
             placeholder="100"
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500/50"
+            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-accent/50"
             value={form.principal}
             onChange={(e) => setForm((f) => ({ ...f, principal: e.target.value}))}
           />
@@ -214,7 +214,7 @@ export function OfferTab() {
               min="0"
               max="12"
               step="0.01"
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500/50"
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-accent/50"
               value={form.interestPct}
               onChange={(e) => setForm((f) => ({ ...f, interestPct: e.target.value}))}
             />
@@ -230,7 +230,7 @@ export function OfferTab() {
             inputMode="decimal"
               min="1"
               max="30"
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500/50"
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-accent/50"
               value={form.durationDays}
               onChange={(e) => setForm((f) => ({ ...f, durationDays: e.target.value}))}
             />
@@ -239,7 +239,7 @@ export function OfferTab() {
 
         {principalWei > 0n && (
           <p className="text-xs text-zinc-400">
-            Borrower owes you <span className="text-cyan-400 font-mono">{formatUnits(totalWei, VFIDE_DECIMALS)} VFIDE</span> total
+            Borrower owes you <span className="text-accent font-mono">{formatUnits(totalWei, VFIDE_DECIMALS)} VFIDE</span> total
             (<span className="font-mono">{formatUnits(interestWei, VFIDE_DECIMALS)}</span> interest)
             at end of term.
           </p>
@@ -262,7 +262,7 @@ export function OfferTab() {
         <button
           type="submit"
           disabled={isPending || isConfirming || insufficientBalance}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 text-sm font-semibold transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent/20 hover:bg-accent/30 text-accent text-sm font-semibold transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
         >
           {isPending || isConfirming ? <Loader2 size={14} className="animate-spin" aria-hidden="true" /> : <Plus size={14} aria-hidden="true" />}
           {isPending ? 'Submitting…' : isConfirming ? 'Confirming…' : 'Post Offer'}

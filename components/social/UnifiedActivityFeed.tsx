@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Unified Activity Feed
  * 
@@ -7,7 +9,7 @@
 
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import {
     ArrowDownLeft,
     ArrowUpRight,
@@ -289,7 +291,7 @@ export function UnifiedActivityFeed({
       case 'post':
       case 'product_share':
       case 'comment':
-        return 'from-blue-500 to-cyan-500';
+        return 'from-blue-500 to-accent';
       case 'purchase_proof':
         return 'from-emerald-500 to-teal-500';
       case 'like':
@@ -369,7 +371,7 @@ export function UnifiedActivityFeed({
   return (
     <div className={`space-y-3 ${className}`}>
       {activities.map((activity, idx) => (
-        <motion.div
+        <m.div
           key={activity.id}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -425,7 +427,7 @@ export function UnifiedActivityFeed({
               </div>
             </div>
           )}
-        </motion.div>
+        </m.div>
       ))}
 
       {activities.length === 0 && (

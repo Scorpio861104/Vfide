@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import Image from 'next/image';
 import { Package, Camera, Plus, X, ArrowLeft, Rocket, Loader2 } from 'lucide-react';
 import { type QuickProduct } from './merchant-setup-types';
@@ -42,7 +42,7 @@ export function SetupStepProducts({
       </div>
 
       <div className="space-y-4">
-        {products.map((product, _idx) => (
+        {products.map((product) => (
           <motion.div key={product.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             className="bg-white/3 border border-white/10 rounded-xl p-4">
             <div className="flex items-start gap-3">

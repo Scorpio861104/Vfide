@@ -1,28 +1,25 @@
-# Vfide Production Readiness Push
+# Repository Audit and Fix Plan
 
-## 1. Baseline & Branch Hygiene
-- [x] Confirm repository branch, working tree, remotes, and GitHub auth state
-- [x] Create/confirm a dedicated readiness branch for changes
-- [x] Inventory current uncommitted changes and generated artifacts
+## Scope confirmation
+- [x] Confirm aggressive sweep scope and one-PR delivery requirement
 
-## 2. Deployment Safety Fixes
-- [x] Add a stale-chunk guard for CardBoundVault initcode chunks
-- [x] Wire the stale-chunk guard into package scripts or deployment verification
-- [x] Review deployment scripts/docs for consistency with chunked initcode and clone managers
+## Audit
+- [x] Inspect repo status and current branch
+- [x] Run available automated checks to identify failures
+- [x] Review high-risk warnings, TODOs, and obvious defects
 
-## 3. Contract Verification Gates
-- [x] Compile contracts and check initcode chunks
-- [x] Run runtime/initcode size gates
-- [x] Run targeted CardBoundVault, VaultHub, and merchant-pay tests/verifiers
-- [x] Run feasible contract security/static checks and document blockers
+## Fix
+- [x] Work from branch `aggressive-repo-sweep-fixes`
+- [x] Apply targeted fixes for confirmed issues
+  - [x] Fix ABI parity drift and mock contract address parity
+  - [x] Restore recovery status owner veto/challenge UI
+  - [x] Fix RainbowKit ConnectButton.Custom Jest mock for admin connect gate
+  - [x] Update commerce auto-convert audit for fail-closed deprecated path
+  - [x] Fix lint-blocking CommonJS import in demo server
+- [x] Add or update tests where practical
 
-## 4. Frontend Verification Gates
-- [x] Run frontend TypeScript and route/ABI alignment checks
-- [x] Run frontend lint/format checks where feasible
-- [x] Run production env/build validation or document missing-secret blockers
-- [x] Run high-signal frontend tests for critical routes/components
-
-## 5. Delivery
-- [x] Produce deployment readiness report with pass/fail evidence and remaining risks
-- [x] Commit changes to a dedicated branch
-- [x] Push branch and open a PR if GitHub auth permits
+## Verify and deliver
+- [x] Run targeted and relevant full checks
+- [x] Review diff and exclude generated files
+- [x] Commit, push branch, and open one PR
+- [x] Report summary and PR link

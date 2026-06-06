@@ -27,7 +27,7 @@ export function BadgeProgress({ address, maxItems = 5 }: BadgeProgressProps) {
   const badgesWithProgress: BadgeWithProgress[] = getAllBadges()
     .filter(badge => !earnedSet.has(badge.id))
     .map(badge => {
-      const { progress, progressText } = calculateBadgeProgress(badge, score)
+      const { progress, progressText } = calculateBadgeProgress(badge, score ?? 0)
       return {
         ...badge,
         progress,

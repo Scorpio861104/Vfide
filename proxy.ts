@@ -270,7 +270,7 @@ export function proxy(request: NextRequest) {
 
 	const response = applySecurityHeaders(NextResponse.next({
 		request: { headers: requestHeaders },
-	}), nonce, csp);
+	}), nonce, csp, isEmbeddable);
 
 	// Ensure a CSRF token cookie exists for subsequent state-changing API requests.
 	if (!request.cookies.get('csrf_token')?.value) {

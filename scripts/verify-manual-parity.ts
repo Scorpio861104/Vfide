@@ -258,15 +258,6 @@ const checks: Check[] = [
     expected: `${14 * 86400}`,
     alternates: ["14 days", "1209600"],
   },
-  // -- FraudRegistry --
-  {
-    id: "ESCROW_DURATION",
-    description: "ESCROW_DURATION (FraudRegistry) = 30 days",
-    file: "FraudRegistry.sol",
-    pattern: /ESCROW_DURATION\s*=\s*([^;]+);/,
-    expected: `${30 * 86400}`,
-    alternates: ["30 days", "2592000"],
-  },
   // -- DAO --
   {
     id: "DAO_votingPeriod",

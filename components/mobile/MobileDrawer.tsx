@@ -6,7 +6,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Menu, X, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
@@ -95,7 +95,7 @@ export function MobileDrawer({ items = [], logo, onNavClick, children, className
   return (
     <div className={className}>
       {/* Mobile Menu Button */}
-      <motion.button
+      <m.button
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
         className={`md:hidden p-2 text-zinc-400 hover:text-zinc-100 transition-colors ${isDesktop ? 'hidden' : ''}`}
@@ -108,7 +108,7 @@ export function MobileDrawer({ items = [], logo, onNavClick, children, className
       >
         <AnimatePresence mode="wait">
           {isOpen ? (
-            <motion.div
+            <m.div
               key="close"
               initial={{ rotate: -90, opacity: 0 }}
               animate={{ rotate: 0, opacity: 1 }}
@@ -116,9 +116,9 @@ export function MobileDrawer({ items = [], logo, onNavClick, children, className
               transition={{ duration: 0.2 }}
             >
               <X className="w-6 h-6" />
-            </motion.div>
+            </m.div>
           ) : (
-            <motion.div
+            <m.div
               key="menu"
               initial={{ rotate: 90, opacity: 0 }}
               animate={{ rotate: 0, opacity: 1 }}
@@ -126,15 +126,15 @@ export function MobileDrawer({ items = [], logo, onNavClick, children, className
               transition={{ duration: 0.2 }}
             >
               <Menu className="w-6 h-6" />
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
-      </motion.button>
+      </m.button>
 
       {/* Backdrop */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div
+          <m.div
             role="presentation"
             aria-hidden={!isOpen}
             onClick={() => setIsOpen(false)}
@@ -150,7 +150,7 @@ export function MobileDrawer({ items = [], logo, onNavClick, children, className
       {/* Drawer */}
       <AnimatePresence>
         {isOpen && (
-          <motion.aside
+          <m.aside
             id="mobile-drawer-panel"
             className="fixed left-0 top-0 h-full w-70 bg-zinc-900/80 backdrop-blur-2xl border-r border-white/10 shadow-2xl shadow-black/50 md:hidden z-50"
             aria-hidden={false}
@@ -161,14 +161,14 @@ export function MobileDrawer({ items = [], logo, onNavClick, children, className
           >
             <div className="flex flex-col h-full">
               {logo && (
-                <motion.div 
+                <m.div 
                   className="p-4 border-b border-zinc-700"
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
                 >
                   {logo}
-                </motion.div>
+                </m.div>
               )}
 
               <nav
@@ -182,7 +182,7 @@ export function MobileDrawer({ items = [], logo, onNavClick, children, className
                 {items.length > 0 ? (
                   <ul className="space-y-1 px-2">
                     {items.map((item, index) => (
-                      <motion.li 
+                      <m.li 
                         key={item.href}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -191,7 +191,7 @@ export function MobileDrawer({ items = [], logo, onNavClick, children, className
                         <Link
                           href={item.href}
                           onClick={() => handleNavClick(item.href)}
-                          className="flex items-center justify-between gap-3 px-4 py-3 text-zinc-400 hover:text-cyan-400 hover:bg-zinc-800 rounded-lg transition-all duration-200 group"
+                          className="flex items-center justify-between gap-3 px-4 py-3 text-zinc-400 hover:text-accent hover:bg-zinc-800 rounded-lg transition-all duration-200 group"
                         >
                           <div className="flex items-center gap-3">
                             {item.icon && <span className="w-5 h-5">{item.icon}</span>}
@@ -199,7 +199,7 @@ export function MobileDrawer({ items = [], logo, onNavClick, children, className
                           </div>
                           <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                         </Link>
-                      </motion.li>
+                      </m.li>
                     ))}
                   </ul>
                 ) : (
@@ -207,26 +207,26 @@ export function MobileDrawer({ items = [], logo, onNavClick, children, className
                 )}
               </nav>
 
-              <motion.div 
+              <m.div 
                 className="p-4 border-t border-zinc-700 space-y-2"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3 }}
               >
-                <motion.button
+                <m.button
                   aria-hidden
                   tabIndex={-1}
                   role="presentation"
-                  className="w-full px-4 py-2 bg-cyan-400/20 text-cyan-400 rounded-lg text-sm font-medium hover:bg-cyan-400/30 transition-colors"
+                  className="w-full px-4 py-2 bg-accent/20 text-accent rounded-lg text-sm font-medium hover:bg-accent/30 transition-colors"
                   onClick={() => setIsOpen(false)}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
                   Close
-                </motion.button>
-              </motion.div>
+                </m.button>
+              </m.div>
             </div>
-          </motion.aside>
+          </m.aside>
         )}
       </AnimatePresence>
     </div>

@@ -54,27 +54,6 @@ const SCAN_DIRS = ['app', 'components', 'lib'];
 const APPLY = argv.includes('--apply');
 const SHOW_DIFF = argv.includes('--diff');
 
-// Only the named exports we know are safe to rewrite from `motion` to
-// `m` (or to leave untouched). `AnimatePresence`, hooks, etc. don't
-// have an `m`-equivalent — they're already lazy-friendly.
-const _REWRITE_NAMED = new Set(['motion']);
-const _KEEP_AS_IS = new Set([
-  'AnimatePresence',
-  'useReducedMotion',
-  'useAnimation',
-  'useMotionValue',
-  'useTransform',
-  'useScroll',
-  'useSpring',
-  'useInView',
-  'useViewportScroll',
-  'usePresence',
-  'LazyMotion',
-  'domAnimation',
-  'domMax',
-  'm',
-]);
-
 async function* walkSource(dir) {
   let entries;
   try {

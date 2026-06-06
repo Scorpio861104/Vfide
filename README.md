@@ -1,6 +1,15 @@
+<!-- CI re-trigger: 1779599043.6223626 -->
 # VFIDE Frontend
 
 Next.js 16 frontend for the VFIDE trust-based payment protocol.
+
+## Documentation
+
+- 📄 **[White Paper](./WHITEPAPER.md)** ([PDF](./WHITEPAPER.pdf)) — full architecture, economics, governance, Howey compliance posture, threat model
+- 📋 **[Executive Summary](./WHITEPAPER-EXECUTIVE-SUMMARY.md)** ([PDF](./WHITEPAPER-EXECUTIVE-SUMMARY.pdf)) — 1-page TL;DR
+- 📚 **[Complete Manual](./docs/)** — the canonical technical reference (every threshold, every function, every line citation)
+- 🔐 **[Security Policy](./SECURITY.md)** — disclosure process and scope
+- 🛡️ **[Security Sweep](./SECURITY_SWEEP.md)** — full system security audit report
 
 ## Tech Stack
 
@@ -243,78 +252,37 @@ All critical and high-priority issues have been resolved. See:
 **Last Updated:** March 2, 2026  
 **Version:** 0.1.0
 
-## Fee Structure
 
-VFIDE's primary value proposition for merchants is the **0% protocol fee on incoming payments**. This section documents both the current behavior and the governance constraints around it, since some readers (regulators, partners, integrators) need both pieces of information.
+## Fee structure
 
-### Current default
+VFIDE's most distinctive commitment is that **merchants pay the protocol zero fees on incoming payments — and the code cannot do otherwise.**
 
-- **Merchant payment fee**: `protocolFeeBps = 0` (0%). When a customer pays a merchant via `/pay` or `MerchantPortal.payWithIntent`, the merchant receives 100% of the payment amount in their configured payout token (VFIDE or stablecoin).
-- **Buyer burn fee**: a token-burn fee applies on outgoing VFIDE transfers. It is **not** a protocol revenue stream — burned VFIDE leaves circulation. The burn percentage scales with the buyer's ProofScore: ~3.82% for a brand-new user, dropping to 0.25% for a trusted user (ProofScore ≥ 8000), with a 1% ceiling for micro-transactions ≤10 VFIDE.
-- **Buyer gas fee**: standard L2 gas. Not a VFIDE-controlled cost.
+### Merchant fee — hardcoded zero
 
-The merchant never pays protocol fees and never pays buyer-side burn or gas fees. That's the design.
+`MerchantPortal.protocolFeeBps` is declared `public constant = 0`. There is no setter, no proposal mechanism, and no timelock path that can change it. The functions that would change it (`setProtocolFee`, `applyProtocolFee`, `cancelProtocolFee`) do not exist in the contract. They were not removed — they were never written, and the surface is deliberately closed.
 
-### What can change
+When a customer pays a merchant via `/pay` or `MerchantPortal.payWithIntent`, the merchant receives 100% of the payment amount in their configured payout token (VFIDE or stablecoin). Every cent of the listed price flows to the merchant.
 
-`protocolFeeBps` is **governable**. It can be changed via DAO governance vote subject to `DAOTimelock`'s configured delay (typically 7 days). The path is:
+This is one of the three constitutional commitments described in the VFIDE Manual. It is not a default that can be tuned by governance — it is a property of the code itself.
 
-1. DAO proposal to call `MerchantPortal.queueProtocolFee(newBps)`
-2. Quorum vote — passes
-3. Wait for `DAOTimelock` delay
-4. Execute → `MerchantPortal.applyProtocolFee()` sets `protocolFeeBps = newBps`
+### Buyer-side burn fee
 
-This means: the 0% fee is the current default, not an architectural guarantee. A future DAO could vote to introduce a small protocol fee. Any such change has a 7-day timelock so users see it coming and can opt out (move to a fork, withdraw, etc.) before it takes effect.
+A separate burn fee applies on outgoing VFIDE transfers (token-level, not merchant-level). It is **not** a protocol revenue stream — burned VFIDE leaves circulation. The burn percentage scales with the buyer's ProofScore: ~3.82% for a brand-new user, dropping to 0.25% for a trusted user (ProofScore ≥ 8000), with a 1% ceiling for micro-transactions. The curve endpoints (`minTotalBps`, `maxTotalBps`) are DAO-bounded with a 10% absolute ceiling, a per-cooldown ≤2× rate limit, and a `MIN_TOTAL_FEE_FLOOR_BPS = 10` immutable floor.
 
-### Why this matters
+### Buyer gas fee
 
-For partners and integrators: when you tell merchants "VFIDE charges 0% fees", you are accurate today. You should not promise this in perpetuity — that would over-promise something the protocol's governance can change. The accurate version is:
+Standard L2 gas. Not a VFIDE-controlled cost.
 
-> "VFIDE charges 0% protocol fees on merchant payments today. This rate is set by DAO governance and can be changed via a DAO vote with a 7-day timelock. There is no fee schedule, no negotiated rates, and no surcharges — every merchant on every chain pays the same governance-set rate."
+### Why merchant fee is closed and burn fee is not
 
-For regulators: this is a permissionless protocol with on-chain-governable fee parameters, not a service offering. The protocol does not take custody of payments. It provides the rails and the governance mechanism; merchants and buyers transact directly.
+The merchant fee touches the **value the merchant earns from their labor.** Any non-zero merchant fee, however small, replicates the extraction model that VFIDE was built to move past. The code refuses to permit it.
+
+The buyer-side burn fee touches **the cost of using the network.** It exists to fund the burn, the Sanctum Fund, and ecosystem operations. Its value is bounded; its existence is intentional.
 
 ### See also
 
-- `contracts/MerchantPortal.sol` — `protocolFeeBps`, `queueProtocolFee`, `applyProtocolFee`
+- `contracts/MerchantPortal.sol` — `protocolFeeBps` (constant), `processPayment`, `payWithIntent`
 - `contracts/VFIDEToken.sol` — burn-fee calculation by ProofScore
+- `contracts/ProofScoreBurnRouter.sol` — fee curve and split math
+- `contracts/SanctumVault.sol` — the 10% community charity slice (also hardcoded inline)
 - `docs/VFIDE-TECHNICAL-REFERENCE.md` — full fee math reference
-- `contracts/FeeDistributor.sol` — how the burn-fee splits between burned/treasury/competition pools (also DAO-governable)
-
-## Fee Structure
-
-VFIDE's primary value proposition for merchants is the **0% protocol fee on incoming payments**. This section documents both the current behavior and the governance constraints around it, since some readers (regulators, partners, integrators) need both pieces of information.
-
-### Current default
-
-- **Merchant payment fee**: `protocolFeeBps = 0` (0%). When a customer pays a merchant via `/pay` or `MerchantPortal.payWithIntent`, the merchant receives 100% of the payment amount in their configured payout token (VFIDE or stablecoin).
-- **Buyer burn fee**: a token-burn fee applies on outgoing VFIDE transfers. It is **not** a protocol revenue stream — burned VFIDE leaves circulation. The burn percentage scales with the buyer's ProofScore: ~3.82% for a brand-new user, dropping to 0.25% for a trusted user (ProofScore ≥ 8000), with a 1% ceiling for micro-transactions ≤10 VFIDE.
-- **Buyer gas fee**: standard L2 gas. Not a VFIDE-controlled cost.
-
-The merchant never pays protocol fees and never pays buyer-side burn or gas fees. That's the design.
-
-### What can change
-
-`protocolFeeBps` is **governable**. It can be changed via DAO governance vote subject to `DAOTimelock`'s configured delay (typically 7 days). The path is:
-
-1. DAO proposal to call `MerchantPortal.queueProtocolFee(newBps)`
-2. Quorum vote — passes
-3. Wait for `DAOTimelock` delay
-4. Execute → `MerchantPortal.applyProtocolFee()` sets `protocolFeeBps = newBps`
-
-This means: the 0% fee is the current default, not an architectural guarantee. A future DAO could vote to introduce a small protocol fee. Any such change has a 7-day timelock so users see it coming and can opt out (move to a fork, withdraw, etc.) before it takes effect.
-
-### Why this matters
-
-For partners and integrators: when you tell merchants "VFIDE charges 0% fees", you are accurate today. You should not promise this in perpetuity — that would over-promise something the protocol's governance can change. The accurate version is:
-
-> "VFIDE charges 0% protocol fees on merchant payments today. This rate is set by DAO governance and can be changed via a DAO vote with a 7-day timelock. There is no fee schedule, no negotiated rates, and no surcharges — every merchant on every chain pays the same governance-set rate."
-
-For regulators: this is a permissionless protocol with on-chain-governable fee parameters, not a service offering. The protocol does not take custody of payments. It provides the rails and the governance mechanism; merchants and buyers transact directly.
-
-### See also
-
-- `contracts/MerchantPortal.sol` — `protocolFeeBps`, `queueProtocolFee`, `applyProtocolFee`
-- `contracts/VFIDEToken.sol` — burn-fee calculation by ProofScore
-- `docs/VFIDE-TECHNICAL-REFERENCE.md` — full fee math reference
-- `contracts/FeeDistributor.sol` — how the burn-fee splits between burned/treasury/competition pools (also DAO-governable)

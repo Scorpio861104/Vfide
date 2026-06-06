@@ -1,7 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { network } from 'hardhat';
-import { deployVaultHubStack } from './utils/deployVaultHubStack';
 
 let connectionPromise: Promise<any> | null = null;
 
@@ -19,12 +18,18 @@ describe('ProofScoreBurnRouter (F-26: only Seer updates score)', () => {
     const seer = await SeerStub.deploy();
     await seer.waitForDeployment();
 
+    // ProofScoreBurnRouter requires non-zero _token (BURN_Zero guard)
+    const TokenStubFact = await ethers.getContractFactory('TokenStub');
+    const routerToken = await TokenStubFact.deploy();
+    await routerToken.waitForDeployment();
+
     const Router = await ethers.getContractFactory('ProofScoreBurnRouter');
     const router = await Router.deploy(
       await seer.getAddress(),
       sanctum.address,
       burn.address,
-      ecosystem.address
+      ecosystem.address,
+      await routerToken.getAddress()
     );
     await router.waitForDeployment();
 
@@ -153,20 +158,23 @@ describe('ProofScoreBurnRouter (F-26: only Seer updates score)', () => {
   });
 
   it('computeFeesAndReserve matches computeFees for identical inputs', async () => {
-    const { owner, user, seer, router } = await deployBurnRouter();
+    const { ethers, owner, user, seer, router } = await deployBurnRouter();
     await seer.setScore(owner.address, 6200);
 
-    // Route computeFeesAndReserve authorization to owner for deterministic test calls.
-    await router.connect(owner).setToken(owner.address);
-    // Avoid `burnsPaused()` external totalSupply call against an EOA test token address.
-    // This keeps the test focused on compute parity rather than token wiring.
+    // token is immutable — impersonate token address to call computeFeesAndReserve
     await router.connect(owner).setSustainability(0n, 0n, 5);
 
     const amount = 1_000_000n;
     const expected = await router.computeFees(owner.address, user.address, amount);
+
+    const tokenAddr = await router.token();
+    await ethers.provider.send('hardhat_impersonateAccount', [tokenAddr]);
+    await ethers.provider.send('hardhat_setBalance', [tokenAddr, '0xde0b6b3a7640000']);
+    const tokenSigner = await ethers.getSigner(tokenAddr);
     const reserved = await router
-      .connect(owner)
+      .connect(tokenSigner)
       .computeFeesAndReserve.staticCall(owner.address, user.address, amount);
+    await ethers.provider.send('hardhat_stopImpersonatingAccount', [tokenAddr]);
 
     assert.deepEqual([...reserved], [...expected]);
   });
@@ -175,7 +183,7 @@ describe('ProofScoreBurnRouter (F-26: only Seer updates score)', () => {
     const { ethers, owner, user, seer, router } = await deployBurnRouter();
     await seer.setScore(owner.address, 4000); // worst-tier score -> max base fee before cap
 
-    await router.connect(owner).setToken(owner.address);
+    // token is immutable — setToken removed; setSustainability still required
     await router.connect(owner).setSustainability(0n, 0n, 5);
 
     const smallAmount = ethers.parseEther('5');
@@ -195,7 +203,7 @@ describe('ProofScoreBurnRouter (F-26: only Seer updates score)', () => {
     const { owner, user, seer, router } = await deployBurnRouter();
     await seer.setScore(owner.address, 6157); // force an interpolated fee tier
 
-    await router.connect(owner).setToken(owner.address);
+    // token is immutable — setToken removed; setSustainability still required
     await router.connect(owner).setSustainability(0n, 0n, 5);
 
     const amount = 1_234_567n;
@@ -234,12 +242,21 @@ describe('VaultHub (F-20: SecurityHub timelock)', () => {
     await oldDao.waitForDeployment();
     await newDao.waitForDeployment();
 
-    const { vaultHub: hub } = await deployVaultHubStack(
-      ethers,
+    // F-20 tests VaultHub timelocks (setProofLedger, setModules) — not CBV deployment.
+    // Use the lightweight stub deployer to avoid deploying the oversized BytecodeProvider.
+    const StubDeployerFact = await ethers.getContractFactory('RecoveryStubVaultDeployer');
+    const stubDeployer = await StubDeployerFact.deploy();
+    await stubDeployer.waitForDeployment();
+
+    const HubFact = await ethers.getContractFactory('VaultHub');
+    const hub = await HubFact.deploy(
       await token.getAddress(),
       await oldLedger.getAddress(),
-      await oldDao.getAddress()
+      await oldDao.getAddress(),
+      await stubDeployer.getAddress()
     );
+    await hub.waitForDeployment();
+    await (await stubDeployer.initHub(await hub.getAddress())).wait();
 
     return { ethers, owner, token, newToken, oldLedger, newLedger, oldDao, newDao, hub };
   }
@@ -342,12 +359,10 @@ describe('MerchantPortal (NEW-05: auto-convert safety hold)', () => {
     const TokenStub = await ethers.getContractFactory('TokenStub');
     const vaultHub = await Placeholder.deploy();
     const ledger = await Placeholder.deploy();
-    const feeSink = await Placeholder.deploy();
     const router = await Placeholder.deploy();
     const stablecoin = await TokenStub.deploy();
     await vaultHub.waitForDeployment();
     await ledger.waitForDeployment();
-    await feeSink.waitForDeployment();
     await router.waitForDeployment();
     await stablecoin.waitForDeployment();
 
@@ -356,8 +371,7 @@ describe('MerchantPortal (NEW-05: auto-convert safety hold)', () => {
       dao.address,
       await vaultHub.getAddress(),
       await seer.getAddress(),
-      await ledger.getAddress(),
-      await feeSink.getAddress()
+      await ledger.getAddress()
     );
     await portal.waitForDeployment();
 
@@ -479,7 +493,7 @@ describe('DAOTimelock (delay hardening)', () => {
   it('removes executed tx ids from queued tracking', async () => {
     const { ethers, admin, tl } = await deployTimelock();
 
-    const setDelayData = tl.interface.encodeFunctionData('setDelay', [13 * 60 * 60]);
+    const setDelayData = tl.interface.encodeFunctionData('setDelay', [24 * 60 * 60]); // ABSOLUTE_MIN_DELAY = 24h
     const queueTx = await tl.connect(admin).queueTx(await tl.getAddress(), 0, setDelayData);
     const queueReceipt = await queueTx.wait();
     const queueLog = queueReceipt?.logs.find((log: any) => {
@@ -536,7 +550,7 @@ describe('DAOTimelock (delay hardening)', () => {
     await tl.connect(admin).execute(setSecondaryId);
     assert.equal(await tl.secondaryExecutor(), secondary.address);
 
-    const setDelayData = tl.interface.encodeFunctionData('setDelay', [14 * 60 * 60]);
+    const setDelayData = tl.interface.encodeFunctionData('setDelay', [25 * 60 * 60]); // ABSOLUTE_MIN_DELAY = 24h
     const queueTx = await tl.connect(admin).queueTx(await tl.getAddress(), 0, setDelayData);
     const queueReceipt = await queueTx.wait();
     const queueLog = queueReceipt?.logs.find((log: any) => {

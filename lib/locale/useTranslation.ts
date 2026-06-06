@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { getUserLocale } from '@/lib/locale';
 import en from './translations/en.json';
 
@@ -34,11 +34,20 @@ export function useTranslation() {
   const locale = getUserLocale();
   const lang = locale.split('-')[0] ?? 'en';
 
-  const translations: TranslationMap = useMemo(() => {
-    if (!translationCache[lang] && lang !== 'en') {
-      void loadTranslations(lang);
+  const [translations, setTranslations] = useState<TranslationMap>(
+    () => translationCache[lang] ?? (en as TranslationMap)
+  );
+
+  useEffect(() => {
+    if (lang === 'en' || translationCache[lang]) {
+      setTranslations(translationCache[lang] ?? (en as TranslationMap));
+      return;
     }
-    return translationCache[lang] || (en as TranslationMap);
+    let cancelled = false;
+    loadTranslations(lang).then((map) => {
+      if (!cancelled) setTranslations(map);
+    });
+    return () => { cancelled = true; };
   }, [lang]);
 
   function t(
@@ -49,7 +58,7 @@ export function useTranslation() {
     const fallback = typeof fallbackOrParams === 'string' ? fallbackOrParams : undefined;
     const params = typeof fallbackOrParams === 'string' ? maybeParams : fallbackOrParams;
 
-    let text = translations[key] || en[key as keyof typeof en] || fallback || key;
+    let text = translations[key] || (en as TranslationMap)[key] || fallback || key;
     if (params) {
       for (const [paramKey, value] of Object.entries(params)) {
         text = text.split(`{${paramKey}}`).join(value);

@@ -5,10 +5,12 @@ export const dynamic = 'force-dynamic';
 import { lazy, Suspense, useState } from 'react';
 import { Footer } from "@/components/layout/Footer";
 import { useAccount } from "wagmi";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { Shield, Users, Key, FileText, Clock, Heart } from "lucide-react";
 
 import type { TabType } from './components/types';
+import { useLocale } from '@/lib/locale/LocaleProvider';
+import { TabTrigger } from '@/components/ui/TabTrigger';
 
 // ── Lazy-loaded tab components (code-split per tab) ─────────────────────────
 const OverviewTab = lazy(() => import('./components/OverviewTab').then(m => ({ default: m.OverviewTab })));
@@ -46,6 +48,9 @@ function TabSkeleton() {
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 export default function GuardiansPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { isConnected } = useAccount();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const visibleTabs = TAB_CONFIG;
@@ -85,8 +90,10 @@ export default function GuardiansPage() {
               {visibleTabs.map(tab => {
                 const isActive = activeTab === tab.id;
                 return (
-                  <button
-                    key={tab.id} role="tab" aria-selected={isActive} aria-controls={`tabpanel-${tab.id}`}
+                  <TabTrigger
+                    key={tab.id}
+                    active={isActive}
+                    aria-controls={`tabpanel-${tab.id}`}
                     onClick={() => setActiveTab(tab.id)}
                     className={`flex items-center gap-1.5 px-4 py-2 rounded-xl font-semibold text-sm whitespace-nowrap transition-all duration-200 ${
                       isActive ? 'tab-pill-active' : 'tab-pill-inactive'
@@ -94,7 +101,7 @@ export default function GuardiansPage() {
                   >
                     <tab.icon size={15} />
                     <span className="hidden sm:inline">{tab.label}</span>
-                  </button>
+                  </TabTrigger>
                 );
               })}
             </div>

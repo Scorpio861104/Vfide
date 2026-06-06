@@ -1,0 +1,86 @@
+[
+  {
+    "type": "function",
+    "name": "creationCode",
+    "inputs": [
+      {
+        "name": "hub",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "vfideToken",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "owner_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "recoveryAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "guardians",
+        "type": "address[]",
+        "internalType": "address[]"
+      },
+      {
+        "name": "guardianThreshold",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "maxPerTransfer",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "dailyLimit",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "ledger",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "paymentManager",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "withdrawalQueue",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "inheritanceManager",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "accessManager",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "adminFacet",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "stateMutability": "pure"
+  }
+]

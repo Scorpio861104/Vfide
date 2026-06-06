@@ -69,7 +69,7 @@ export default function PeerMediation({
         <p className="text-sm text-gray-300">
           No live mediation case is available yet. Start with merchant returns, then sync a real dispute to preview mediation details.
         </p>
-        <Link href="/merchant/returns" className="inline-flex items-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-200">
+        <Link href="/merchant/returns" className="inline-flex items-center gap-2 rounded-xl border border-accent/30 bg-accent/10 px-4 py-2 text-sm font-semibold text-accent">
           Merchant returns <ArrowRight size={14} />
         </Link>
       </div>
@@ -82,7 +82,7 @@ export default function PeerMediation({
 
   const statusClass = {
     open: 'border-amber-500/30 bg-amber-500/10 text-amber-200',
-    mediating: 'border-cyan-500/30 bg-cyan-500/10 text-cyan-200',
+    mediating: 'border-accent/30 bg-accent/10 text-accent',
     resolved: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200',
     escalated: 'border-rose-500/30 bg-rose-500/10 text-rose-200',
   }[currentDispute.status];
@@ -130,7 +130,7 @@ export default function PeerMediation({
       <div className="rounded-xl border border-white/10 bg-black/20 p-4 text-sm text-gray-300 space-y-2">
         <div className="flex items-center gap-2 text-purple-200"><Users size={16} /> Reason: {currentDispute.reason}</div>
         {currentDispute.mediatorName ? (
-          <div className="flex items-center gap-2 text-cyan-200"><ShieldCheck size={16} /> Mediator: {currentDispute.mediatorName}</div>
+          <div className="flex items-center gap-2 text-accent"><ShieldCheck size={16} /> Mediator: {currentDispute.mediatorName}</div>
         ) : null}
         {hoursRemaining > 0 ? (
           <div className="flex items-center gap-2 text-amber-200"><Clock size={16} /> {hoursRemaining}h left in the peer-review window</div>
@@ -149,7 +149,7 @@ export default function PeerMediation({
       </ul>
 
       {currentDispute.proposedResolution ? (
-        <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-4 text-sm text-gray-200">
+        <div className="rounded-xl border border-accent/20 bg-accent/5 p-4 text-sm text-gray-200">
           <div className="font-semibold text-white">Mediator proposal</div>
           <p className="mt-2">{currentDispute.proposedResolution}</p>
           {currentDispute.proposedSplit ? (
@@ -178,7 +178,7 @@ export default function PeerMediation({
         <button onClick={onEscalate} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white">
           Escalate to appeals <ArrowRight size={14} />
         </button>
-        <Link href="/merchant/returns" className="inline-flex items-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-200">
+        <Link href="/merchant/returns" className="inline-flex items-center gap-2 rounded-xl border border-accent/30 bg-accent/10 px-4 py-2 text-sm font-semibold text-accent">
           Merchant returns <ArrowRight size={14} />
         </Link>
       </div>

@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAccount } from 'wagmi';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 import {
   ArrowLeft,
   Percent,
@@ -48,6 +49,9 @@ function formatJurisdiction(t: TaxRate): string {
 // ── Page ────────────────────────────────────────────────────────────────────
 
 export default function MerchantTaxPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address } = useAccount();
   const [rates, setRates] = useState<TaxRate[]>([]);
   const [loading, setLoading] = useState(false);
@@ -119,7 +123,7 @@ export default function MerchantTaxPage() {
         <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         <section className="py-12">
           <div className="container mx-auto max-w-6xl px-4">
-            <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200">
+            <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-accent hover:text-accent">
               <ArrowLeft size={16} /> Back to Merchant Hub
             </Link>
 
@@ -134,7 +138,7 @@ export default function MerchantTaxPage() {
                   Tax is in basis points (1% = 100 bps) so 7.25% sales tax is <code className="bg-zinc-900 px-1 rounded">725</code>.
                 </p>
               </div>
-              <button onClick={() => setShowCreate(true)} disabled={!address} className="px-5 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90">
+              <button onClick={() => setShowCreate(true)} disabled={!address} className="px-5 py-3 bg-gradient-to-r from-accent to-blue-500 rounded-xl font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90">
                 <Plus size={18} /> New tax rate
               </button>
             </div>
@@ -153,7 +157,7 @@ export default function MerchantTaxPage() {
                   <div className="p-12 text-center text-zinc-400">Loading…</div>
                 ) : rates.length === 0 ? (
                   <div className="p-12 text-center text-zinc-400">
-                    No tax rates configured. Click <span className="text-cyan-300">New tax rate</span> to add your first.
+                    No tax rates configured. Click <span className="text-accent">New tax rate</span> to add your first.
                   </div>
                 ) : (
                   <div className="divide-y divide-white/5">
@@ -217,7 +221,7 @@ function TaxRateRow({ rate, onMakeDefault, onToggleEnabled, onDelete }: {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1 flex-wrap">
           <span className="font-medium">{rate.name}</span>
-          <span className="font-mono text-cyan-300">{formatRate(rate.rate_bps)}</span>
+          <span className="font-mono text-accent">{formatRate(rate.rate_bps)}</span>
           {rate.is_default && (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded border border-purple-500/30 bg-purple-500/10 text-purple-300">
               <Star size={11} fill="currentColor" /> Default
@@ -320,7 +324,7 @@ function CreateTaxRateModal({ onClose, onCreated, onError }: { onClose: () => vo
         <div className="space-y-4">
           <label className="block">
             <span className="text-xs text-zinc-400 mb-1 block">Name *</span>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="California Sales Tax" className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none" />
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="California Sales Tax" className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none" />
           </label>
 
           <label className="block">
@@ -332,7 +336,7 @@ function CreateTaxRateModal({ onClose, onCreated, onError }: { onClose: () => vo
               step={0.01}
               value={ratePercent}
               onChange={(e) => setRatePercent(Number(e.target.value))}
-              className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm font-mono focus:border-cyan-500 outline-none"
+              className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm font-mono focus:border-accent outline-none"
             />
             <span className="text-xs text-zinc-500 mt-1 block">
               Stored internally as {Math.round(ratePercent * 100)} basis points.
@@ -356,7 +360,7 @@ function CreateTaxRateModal({ onClose, onCreated, onError }: { onClose: () => vo
 
           <label className="block">
             <span className="text-xs text-zinc-400 mb-1 block">Postal code pattern (regex, optional)</span>
-            <input type="text" value={postalPattern} onChange={(e) => setPostalPattern(e.target.value)} placeholder="^9[0-1]\\d{3}" className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm font-mono focus:border-cyan-500 outline-none" />
+            <input type="text" value={postalPattern} onChange={(e) => setPostalPattern(e.target.value)} placeholder="^9[0-1]\\d{3}" className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm font-mono focus:border-accent outline-none" />
             <span className="text-xs text-zinc-500 mt-1 block">e.g. <code className="bg-zinc-900 px-1 rounded">^90\d{3}</code> for 90xxx ZIPs.</span>
           </label>
 
@@ -369,7 +373,7 @@ function CreateTaxRateModal({ onClose, onCreated, onError }: { onClose: () => vo
                     type="checkbox"
                     checked={applies[k]}
                     onChange={(e) => setApplies((a) => ({ ...a, [k]: e.target.checked }))}
-                    className="accent-cyan-500"
+                    className="accent-accent"
                   />
                   <span className="capitalize">{k}</span>
                 </label>
@@ -378,7 +382,7 @@ function CreateTaxRateModal({ onClose, onCreated, onError }: { onClose: () => vo
           </div>
 
           <label className="flex items-start gap-3 cursor-pointer">
-            <input type="checkbox" checked={isDefault} onChange={(e) => setIsDefault(e.target.checked)} className="accent-cyan-500 mt-1" />
+            <input type="checkbox" checked={isDefault} onChange={(e) => setIsDefault(e.target.checked)} className="accent-accent mt-1" />
             <div>
               <div className="font-medium text-sm">Make this the default rate</div>
               <div className="text-xs text-zinc-500">
@@ -387,7 +391,7 @@ function CreateTaxRateModal({ onClose, onCreated, onError }: { onClose: () => vo
             </div>
           </label>
 
-          <button onClick={submit} disabled={!canSubmit} className="w-full px-5 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
+          <button onClick={submit} disabled={!canSubmit} className="w-full px-5 py-3 bg-gradient-to-r from-accent to-blue-500 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
             {submitting ? 'Creating…' : 'Create tax rate'}
           </button>
         </div>

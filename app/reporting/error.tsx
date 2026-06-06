@@ -22,15 +22,17 @@ export default function ReportingError({
         <div className="w-20 h-20 mx-auto bg-red-600/20 border-2 border-red-600 rounded-full flex items-center justify-center mb-6">
           <AlertTriangle className="w-10 h-10 text-red-600" />
         </div>
-        <h1 className="text-2xl font-bold text-zinc-100 mb-3">Reporting Error</h1>
-        <p className="text-zinc-400 mb-2">Reporting tools failed to load. Please retry.</p>
+        <h1 className="text-2xl font-bold text-zinc-100 mb-3">Page Error</h1>
+        <p className="text-zinc-400 mb-2">
+          Something went wrong loading this page. The reporting page is currently a placeholder for a future feature, so no funds or on-chain state are involved.
+        </p>
         {error.digest && (
           <p className="text-sm text-zinc-500 mb-6 font-mono">Error ID: {error.digest}</p>
         )}
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button
             onClick={reset}
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-cyan-500 text-zinc-900 rounded-lg font-bold hover:bg-cyan-400 transition-colors"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-accent text-zinc-900 rounded-lg font-bold hover:bg-accent-light transition-colors"
           >
             <RefreshCw className="w-4 h-4" />
             Retry

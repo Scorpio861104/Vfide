@@ -7,6 +7,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { sendPayment } from './crypto';
+import { csrfHeaders } from './csrfClient';
 import { validateAmount, validateEthereumAddress } from './cryptoValidation';
 import { logger } from '@/lib/logger';
 
@@ -97,7 +98,7 @@ export async function tipPost(
     // Save tip to database
     await fetch('/api/social/tips', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await csrfHeaders(),
       body: JSON.stringify(tip),
     });
 
@@ -147,7 +148,7 @@ export async function tipComment(
 
     await fetch('/api/social/tips', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await csrfHeaders(),
       body: JSON.stringify(tip),
     });
 
@@ -203,7 +204,7 @@ export async function purchaseContent(
     // Save payment and grant access
     const response = await fetch('/api/social/content-purchases', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await csrfHeaders(),
       body: JSON.stringify(payment),
     });
 
@@ -289,7 +290,7 @@ async function postNotification(type: string, userId: string, data: SocialTip | 
   try {
     const response = await fetch('/api/notifications', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await csrfHeaders(),
       body: JSON.stringify({
         type,
         userId,

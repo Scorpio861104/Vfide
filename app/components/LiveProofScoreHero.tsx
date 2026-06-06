@@ -7,8 +7,11 @@
  *
  *   - Drag the score (0 → 10,000) and watch the burn fee curve move.
  *   - At the same moment a sample $50 payment recalculates: the fee
- *     splits into the five canonical streams (35% burn, 20% Sanctum,
- *     15% DAO payroll, 20% merchant comp, 10% headhunter).
+ *     FeeDistributor default split (FeeDistributor.sol L279, DAO-adjustable within protocol bounds):
+ *     Canonical end-to-end split: burn 40% | Sanctum 10% | DAO payroll 25%
+ *     merchantPoolBps=2000 (20%) | headhunterPoolBps=1000 (10%)
+ *     Note: BurnRouter also routes 10% of buyer fee directly to Sanctum + 40% to burn before
+ *     | merchant pool 15% | referral 10%. See FEE_MODEL_CANONICAL.md.
  *   - The Monument's vertex brightens with the score.
  *   - The tier badge changes label + colour as you cross thresholds.
  *
@@ -18,7 +21,7 @@
  *
  * Math: matches the on-chain ProofScoreBurnRouter behaviour mirrored in
  * useProofScore.ts (minTotalBps=25 at score≥8000, maxTotalBps=500 at
- * score≤4000, neutral midpoint at 5000≈2.5%).
+ * score≤4000). Score 5000 → 3.82%; mid-range 2.5% occurs at score≈6100.
  *
  * Performance: a single requestAnimationFrame-driven counter for the
  * draggable input. No infinite loops, no per-frame DOM thrashing — the
@@ -26,6 +29,7 @@
  * (which only runs before the user has interacted).
  */
 
+import { getFeeRate } from '@/lib/format';
 import {
   ChangeEvent,
   useCallback,
@@ -33,7 +37,7 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { m, useReducedMotion } from 'framer-motion';
 import { ShieldCheck, Sparkles, ArrowDownRight, Info } from 'lucide-react';
 
 import { Numeric } from '@/components/ui/Numeric';
@@ -51,9 +55,16 @@ interface Tier {
   hex: string;
 }
 
+/**
+ * NOTE ON SCALE: The hero uses the internal on-chain 0–10,000 scale
+ * (matching what useProofScore returns from Seer.getScore()).
+ * The /proofscore page displays the same score in a 0–999 display format
+ * (dividing by 10). The tier boundaries here are ×10 of those shown there.
+ * Both are correct — they just use different display scales.
+ */
 const TIERS: Tier[] = [
-  { min: 0,     max: 3500,  label: 'Risky',      tone: 'rose',     hex: '#fb7185' },
-  { min: 3500,  max: 5000,  label: 'Low Trust',  tone: 'orange',   hex: '#fb923c' },
+  { min: 0,     max: 4000,  label: 'Risky',      tone: 'rose',     hex: '#fb7185' },
+  { min: 4000,  max: 5000,  label: 'Low Trust',  tone: 'orange',   hex: '#fb923c' },
   { min: 5000,  max: 5400,  label: 'Neutral',    tone: 'amber',    hex: '#fbbf24' },
   { min: 5400,  max: 5600,  label: 'Governance', tone: 'sky',      hex: '#38bdf8' },
   { min: 5600,  max: 7000,  label: 'Trusted',    tone: 'emerald',  hex: '#34d399' },
@@ -66,29 +77,22 @@ function tierForScore(score: number): Tier {
 }
 
 /**
- * Burn-fee curve. Linear interpolation between the on-chain anchors:
- *   score ≤ 4000  →  5.00%
- *   score = 5000  →  2.50%
- *   score = 7000  →  1.00%
- *   score ≥ 8000  →  0.25%
- * Values between anchors are linear. Matches the fallback logic in
- * useProofScore.ts but smooths the curve so the slider feels live.
+ * Burn-fee curve. Mirrors ProofScoreBurnRouter.sol computeFees() exactly:
+ *   score ≤ 4000 (LOW_SCORE_THRESHOLD)  → maxTotalBps = 500 bps = 5.00%
+ *   score ≥ 8000 (HIGH_SCORE_THRESHOLD) → minTotalBps = 25 bps  = 0.25%
+ *   4000–8000 → linear: maxBps - ((score - 4000) * (maxBps - minBps)) / 4000
+ * Below 4000 the contract also returns maxTotalBps (flat 5%); shown here
+ * as flat for visual clarity.
  */
-function burnFeePercent(score: number): number {
-  if (score >= 8000) return 0.25;
-  if (score >= 7000) return 0.25 + (1.0 - 0.25) * (1 - (score - 7000) / 1000);
-  if (score >= 5000) return 1.0 + (2.5 - 1.0) * (1 - (score - 5000) / 2000);
-  if (score >= 4000) return 2.5 + (3.5 - 2.5) * (1 - (score - 4000) / 1000);
-  return 5.0 - (5.0 - 3.5) * (score / 4000);
-}
 
-/** Canonical 35 / 20 / 15 / 20 / 10 split (mirrors FeeDistributor.sol). */
+/** FeeDistributor default split (FeeDistributor.sol L279, DAO-adjustable within protocol bounds):
+ *  burn 40% | Sanctum 10% | DAO payroll 25% | merchant pool 15% | referral 10% (end-to-end) */
 const FEE_SPLITS: { id: string; label: string; pct: number; hex: string; help: string }[] = [
-  { id: 'burn',      label: 'Burn',           pct: 35, hex: '#f97316', help: 'Permanently removed from supply' },
-  { id: 'sanctum',   label: 'Sanctum Fund',   pct: 20, hex: '#ec4899', help: 'Charity + community grants' },
-  { id: 'merchant',  label: 'Merchant pool',  pct: 20, hex: '#10b981', help: 'Volume rewards for top merchants' },
-  { id: 'payroll',   label: 'DAO payroll',    pct: 15, hex: '#06b6d4', help: 'Pays elected council members' },
-  { id: 'headhunt',  label: 'Referral pool',  pct: 10, hex: '#a855f7', help: 'Rewards for inviting active users' },
+  { id: 'burn',      label: 'Burn',           pct: 40,   hex: '#f97316', help: 'Permanently removed from supply — 40% of every fee (ProofScoreBurnRouter)' },
+  { id: 'sanctum',   label: 'Sanctum Fund',   pct: 10,   hex: '#ec4899', help: 'Charity + community grants — 10% of every fee (ProofScoreBurnRouter)' },
+  { id: 'merchant',  label: 'Merchant pool',  pct: 15,   hex: '#10b981', help: 'Volume rewards for top merchants — 15% of every fee (FeeDistributor)' },
+  { id: 'payroll',   label: 'DAO payroll',    pct: 25,   hex: '#06b6d4', help: 'Pays elected council members — 25% of every fee (FeeDistributor)' },
+  { id: 'headhunt',  label: 'Referral pool',  pct: 10,   hex: '#a855f7', help: 'Rewards for inviting active users — 10% of every fee (FeeDistributor)' },
 ];
 
 // ── Component ────────────────────────────────────────────────────────
@@ -139,7 +143,7 @@ export function LiveProofScoreHero() {
   }, [interacted]);
 
   const tier = useMemo(() => tierForScore(score), [score]);
-  const feePct = useMemo(() => burnFeePercent(score), [score]);
+  const feePct = useMemo(() => getFeeRate(score), [score]);
   const feeAmount = useMemo(() => (DEMO_AMOUNT * feePct) / 100, [feePct]);
 
   // Per-stream allocations of the sample fee.
@@ -261,20 +265,20 @@ export function LiveProofScoreHero() {
 
           <div className="space-y-2">
             {allocations.map((a) => (
-              <div key={a.id} className="flex items-center gap-3">
-                <div className="w-20 text-xs text-gray-400">{a.label}</div>
+              <div key={a.id} className="flex items-center gap-2">
+                <div className="w-16 shrink-0 text-xs text-gray-400 truncate">{a.label}</div>
                 <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-white/5">
-                  <motion.div
+                  <m.div
                     className="absolute inset-y-0 left-0 rounded-full"
                     style={{ background: a.hex }}
                     animate={{ width: `${a.pct}%` }}
                     transition={{ type: 'spring', stiffness: 180, damping: 22 }}
                   />
                 </div>
-                <div className="w-20 text-right">
+                <div className="w-16 shrink-0 text-right">
                   <Numeric value={a.amount} format="currency" size="xs" weight={500} tone="neutral" />
                 </div>
-                <div className="w-10 text-right">
+                <div className="w-8 shrink-0 text-right">
                   <Numeric value={a.pct} format="integer" size="xs" tone="muted" weight={500} />
                   <span className="text-[10px] text-gray-500">%</span>
                 </div>
@@ -336,7 +340,7 @@ function FeeCurve({ score, hex, reduce }: { score: number; hex: string; reduce: 
     const pts: string[] = [];
     for (let i = 0; i <= samples; i++) {
       const s = (i / samples) * 10000;
-      const fee = burnFeePercent(s);
+      const fee = getFeeRate(s);
       const x = (s / 10000) * W;
       const y = H - (Math.min(fee, 6) / 6) * (H - 8) - 4;
       pts.push(`${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`);
@@ -346,7 +350,7 @@ function FeeCurve({ score, hex, reduce }: { score: number; hex: string; reduce: 
 
   const filled = useMemo(() => `${path} L ${W} ${H} L 0 ${H} Z`, [path]);
   const cursorX = (score / 10000) * W;
-  const cursorY = H - (Math.min(burnFeePercent(score), 6) / 6) * (H - 8) - 4;
+  const cursorY = H - (Math.min(getFeeRate(score), 6) / 6) * (H - 8) - 4;
 
   return (
     <svg
@@ -366,7 +370,7 @@ function FeeCurve({ score, hex, reduce }: { score: number; hex: string; reduce: 
       <path d={path} fill="none" stroke={hex} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
       {/* Cursor */}
       <line x1={cursorX} x2={cursorX} y1={4} y2={H} stroke="rgba(255,255,255,0.2)" strokeDasharray="3 3" />
-      <motion.circle
+      <m.circle
         cx={cursorX}
         cy={cursorY}
         r={5}

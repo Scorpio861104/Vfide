@@ -15,7 +15,17 @@ interface IMerchantPortalVolume {
     /// @return txCount txCount
     /// @return avgTxSize avgTxSize
     /// @return trustScore trustScore
-    function getMerchantStats(address merchant) external view returns (bool registered, bool suspended, uint256 totalVolume, uint256 txCount, uint256 avgTxSize, uint16 trustScore);
+    function getMerchantStats(address merchant)
+        external
+        view
+        returns (
+            bool registered,
+            bool suspended,
+            uint256 totalVolume,
+            uint256 txCount,
+            uint256 avgTxSize,
+            uint16 trustScore
+        );
 }
 
 /// @title MerchantCompetitionPool — Monthly competition for merchant processors
@@ -41,7 +51,12 @@ contract MerchantCompetitionPool is ServicePool {
     /// @param merchant merchant
     /// @param volume volume
     /// @param periodTotal periodTotal
-    event MerchantTransactionRecorded(uint256 indexed period, address indexed merchant, uint256 volume, uint256 periodTotal);
+    event MerchantTransactionRecorded(
+        uint256 indexed period,
+        address indexed merchant,
+        uint256 volume,
+        uint256 periodTotal
+    );
     /// @notice MerchantPortalSet
     /// @param portal portal
     event MerchantPortalSet(address indexed portal);
@@ -51,14 +66,22 @@ contract MerchantCompetitionPool is ServicePool {
     /// @param _admin _admin
     /// @param _maxPayoutPerPeriod _maxPayoutPerPeriod
     /// @param _minTransactionSize _minTransactionSize
-    constructor(address _token, address _admin, uint256 _maxPayoutPerPeriod, uint256 _minTransactionSize) ServicePool(_token, _admin, MAX_MERCHANTS, _maxPayoutPerPeriod) {
+    constructor(
+        address _token,
+        address _admin,
+        uint256 _maxPayoutPerPeriod,
+        uint256 _minTransactionSize
+    ) ServicePool(_token, _admin, MAX_MERCHANTS, _maxPayoutPerPeriod) {
         minTransactionSize = _minTransactionSize;
     }
 
     /// @notice recordTransaction
     /// @param merchant merchant
     /// @param volumeUsd volumeUsd
-    function recordTransaction(address merchant, uint256 volumeUsd) external onlyRole(RECORDER_ROLE) nonReentrant {
+    function recordTransaction(
+        address merchant,
+        uint256 volumeUsd
+    ) external onlyRole(RECORDER_ROLE) nonReentrant {
         require(address(merchantPortal) != address(0), "Merchant portal not configured");
 
         (, , uint256 totalVolume, , , ) = merchantPortal.getMerchantStats(merchant);

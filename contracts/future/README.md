@@ -28,7 +28,6 @@ Contracts in this directory are intentionally excluded from the active productio
 - SeerSocial.sol
 - SeerView.sol
 - SeerWorkAttestation.sol
-- SubscriptionManager.sol
 - VFIDEBadgeNFT.sol
 - VFIDEBenefits.sol
 - VFIDEBridge.sol

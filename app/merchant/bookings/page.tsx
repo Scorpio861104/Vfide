@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useAccount } from 'wagmi';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 import {
   ArrowLeft,
   CalendarDays,
@@ -66,6 +67,9 @@ const STATUS_META: Record<BookingStatus, { label: string; icon: typeof CheckCirc
 // ── Page ────────────────────────────────────────────────────────────────────
 
 export default function MerchantBookingsPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address } = useAccount();
   const [tab, setTab] = useState<'bookings' | 'slots'>('bookings');
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -147,7 +151,7 @@ export default function MerchantBookingsPage() {
         <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         <section className="py-12">
           <div className="container mx-auto max-w-6xl px-4">
-            <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200">
+            <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-accent hover:text-accent">
               <ArrowLeft size={16} /> Back to Merchant Hub
             </Link>
 
@@ -166,7 +170,7 @@ export default function MerchantBookingsPage() {
                   onClick={() => setShowCreateSlot(true)}
                   disabled={!address || services.length === 0}
                   title={services.length === 0 ? 'Create a service-type product first in Inventory' : undefined}
-                  className="px-5 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90"
+                  className="px-5 py-3 bg-gradient-to-r from-accent to-blue-500 rounded-xl font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90"
                 >
                   <Plus size={18} /> New slot
                 </button>
@@ -200,7 +204,7 @@ export default function MerchantBookingsPage() {
                     <button
                       key={t}
                       onClick={() => setTab(t)}
-                      className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${tab === t ? 'border-cyan-400 text-cyan-300' : 'border-transparent text-zinc-400 hover:text-zinc-300'}`}
+                      className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${tab === t ? 'border-accent text-accent' : 'border-transparent text-zinc-400 hover:text-zinc-300'}`}
                     >
                       {t === 'bookings' ? 'Appointments' : 'Availability slots'}
                     </button>
@@ -235,7 +239,7 @@ export default function MerchantBookingsPage() {
                       <div className="p-12 text-center text-zinc-400">
                         No availability slots yet.{' '}
                         {services.length === 0
-                          ? <>First create a service-type product in <Link href="/merchant/inventory" className="text-cyan-300 hover:text-cyan-200">Inventory</Link>, then come back here.</>
+                          ? <>First create a service-type product in <Link href="/merchant/inventory" className="text-accent hover:text-accent">Inventory</Link>, then come back here.</>
                           : <>Click New slot to add one.</>}
                       </div>
                     ) : (
@@ -412,7 +416,7 @@ function CreateSlotModal({ services, onClose, onCreated, onError }: {
         <div className="space-y-4">
           <label className="block">
             <span className="text-xs text-zinc-400 mb-1 block">Service</span>
-            <select value={productId} onChange={(e) => setProductId(Number(e.target.value))} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none">
+            <select value={productId} onChange={(e) => setProductId(Number(e.target.value))} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none">
               {services.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           </label>
@@ -420,10 +424,10 @@ function CreateSlotModal({ services, onClose, onCreated, onError }: {
           <div>
             <span className="text-xs text-zinc-400 mb-1 block">When</span>
             <div className="flex gap-2 mb-2">
-              <button onClick={() => setMode('recurring')} className={`flex-1 px-3 py-2 text-sm rounded-lg border ${mode === 'recurring' ? 'border-cyan-500 bg-cyan-500/10' : 'border-white/10 bg-zinc-900'}`}>
+              <button onClick={() => setMode('recurring')} className={`flex-1 px-3 py-2 text-sm rounded-lg border ${mode === 'recurring' ? 'border-accent bg-accent/10' : 'border-white/10 bg-zinc-900'}`}>
                 Weekly recurring
               </button>
-              <button onClick={() => setMode('specific')} className={`flex-1 px-3 py-2 text-sm rounded-lg border ${mode === 'specific' ? 'border-cyan-500 bg-cyan-500/10' : 'border-white/10 bg-zinc-900'}`}>
+              <button onClick={() => setMode('specific')} className={`flex-1 px-3 py-2 text-sm rounded-lg border ${mode === 'specific' ? 'border-accent bg-accent/10' : 'border-white/10 bg-zinc-900'}`}>
                 One-time date
               </button>
             </div>
@@ -453,7 +457,7 @@ function CreateSlotModal({ services, onClose, onCreated, onError }: {
             <span className="text-xs text-zinc-500 mt-1 block">Use 1 for 1-on-1 services, higher for group classes.</span>
           </label>
 
-          <button onClick={submit} disabled={!canSubmit} className="w-full px-5 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
+          <button onClick={submit} disabled={!canSubmit} className="w-full px-5 py-3 bg-gradient-to-r from-accent to-blue-500 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
             {submitting ? 'Creating…' : 'Create slot'}
           </button>
         </div>

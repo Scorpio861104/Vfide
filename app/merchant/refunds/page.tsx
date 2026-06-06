@@ -1,6 +1,7 @@
 'use client';
 
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 export const dynamic = 'force-dynamic';
 
 /**
@@ -40,7 +41,7 @@ export const dynamic = 'force-dynamic';
 import { useState } from 'react';
 import Link from 'next/link';
 import { useAccount } from 'wagmi';
-import { motion } from 'framer-motion';
+import { m , LazyMotion, domAnimation } from 'framer-motion';
 import { parseEther, formatEther, isAddress, type Address } from 'viem';
 import {
   ArrowLeft,
@@ -77,7 +78,7 @@ function formatStatusBadge(status: RefundEntry['status']) {
   switch (status) {
     case 'initiated':
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-cyan-500/20 text-cyan-300 text-xs font-semibold">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-accent/20 text-accent text-xs font-semibold">
           <Clock size={10} />
           Initiated
         </span>
@@ -100,6 +101,9 @@ function formatStatusBadge(status: RefundEntry['status']) {
 }
 
 export default function MerchantRefundsPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address } = useAccount();
   const { entries, isLoading, error, refetch } = useRefundHistory('merchant');
   const { initiateRefund, completeRefund, isWritePending } = useMerchantPayments();
@@ -197,7 +201,8 @@ export default function MerchantRefundsPage() {
   };
 
   return (
-    <>
+    <LazyMotion features={domAnimation}>
+      <>
       <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] text-white relative">
         {/* Ambient orbs */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -210,7 +215,7 @@ export default function MerchantRefundsPage() {
         <div className="container mx-auto max-w-4xl px-4 pb-16">
           <Link
             href="/merchant"
-            className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200"
+            className="mb-6 inline-flex items-center gap-2 text-accent hover:text-accent"
           >
             <ArrowLeft size={16} /> Back to Merchant Hub
           </Link>
@@ -218,10 +223,10 @@ export default function MerchantRefundsPage() {
           <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
             <div>
               <div className="badge-live mb-3">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> Refund Management
+              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" /> Refund Management
             </div>
             <h1 className="text-3xl font-black text-white mb-2 flex items-center gap-3 tracking-tight">
-                <RotateCcw className="text-cyan-400" size={28} />
+                <RotateCcw className="text-accent" size={28} />
                 Refunds
               </h1>
               <p className="text-gray-400 text-sm leading-relaxed max-w-2xl">
@@ -233,7 +238,7 @@ export default function MerchantRefundsPage() {
             {!showStartForm && (
               <button
                 onClick={() => setShowStartForm(true)}
-                className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg font-bold flex items-center gap-2 shadow-md shadow-cyan-500/20"
+                className="px-4 py-2 bg-gradient-to-r from-accent to-blue-500 text-white rounded-lg font-bold flex items-center gap-2 shadow-md shadow-accent/20"
               >
                 <Plus size={16} />
                 Start a refund
@@ -243,7 +248,7 @@ export default function MerchantRefundsPage() {
 
           {/* Start-refund form */}
           {showStartForm && (
-            <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+            <m.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
               <GlassCard hover={false} className="p-5">
                 <div className="flex items-start justify-between gap-4 mb-4">
                   <h3 className="text-sm font-bold text-white">Start a new refund</h3>
@@ -266,7 +271,7 @@ export default function MerchantRefundsPage() {
                       value={customer}
                       onChange={(e) => setCustomer(e.target.value)}
                       placeholder="0x..."
-                      className="w-full px-3 py-2 rounded-lg bg-black/30 border border-white/20 text-white placeholder:text-gray-600 focus:outline-none focus:border-cyan-500/50 font-mono text-sm"
+                      className="w-full px-3 py-2 rounded-lg bg-black/30 border border-white/20 text-white placeholder:text-gray-600 focus:outline-none focus:border-accent/50 font-mono text-sm"
                     />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -277,7 +282,7 @@ export default function MerchantRefundsPage() {
                         value={tokenAddress}
                         onChange={(e) => setTokenAddress(e.target.value)}
                         placeholder="0x..."
-                        className="w-full px-3 py-2 rounded-lg bg-black/30 border border-white/20 text-white placeholder:text-gray-600 focus:outline-none focus:border-cyan-500/50 font-mono text-sm"
+                        className="w-full px-3 py-2 rounded-lg bg-black/30 border border-white/20 text-white placeholder:text-gray-600 focus:outline-none focus:border-accent/50 font-mono text-sm"
                       />
                     </div>
                     <div>
@@ -287,7 +292,7 @@ export default function MerchantRefundsPage() {
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}
                         placeholder="1.0"
-                        className="w-full px-3 py-2 rounded-lg bg-black/30 border border-white/20 text-white placeholder:text-gray-600 focus:outline-none focus:border-cyan-500/50 text-sm"
+                        className="w-full px-3 py-2 rounded-lg bg-black/30 border border-white/20 text-white placeholder:text-gray-600 focus:outline-none focus:border-accent/50 text-sm"
                       />
                     </div>
                   </div>
@@ -298,7 +303,7 @@ export default function MerchantRefundsPage() {
                       value={orderId}
                       onChange={(e) => setOrderId(e.target.value)}
                       placeholder="The order this refund is for"
-                      className="w-full px-3 py-2 rounded-lg bg-black/30 border border-white/20 text-white placeholder:text-gray-600 focus:outline-none focus:border-cyan-500/50 text-sm"
+                      className="w-full px-3 py-2 rounded-lg bg-black/30 border border-white/20 text-white placeholder:text-gray-600 focus:outline-none focus:border-accent/50 text-sm"
                     />
                   </div>
 
@@ -312,7 +317,7 @@ export default function MerchantRefundsPage() {
                     <button
                       onClick={() => void handleStartRefund()}
                       disabled={isWritePending || !customer || !amount || !orderId}
-                      className="px-5 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg font-bold flex items-center gap-2 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-5 py-2 bg-gradient-to-r from-accent to-blue-500 text-white rounded-lg font-bold flex items-center gap-2 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isWritePending ? (
                         <>
@@ -336,11 +341,11 @@ export default function MerchantRefundsPage() {
                   </div>
                 </div>
               </GlassCard>
-            </motion.div>
+            </m.div>
           )}
 
           {actionMessage && (
-            <div className="mb-4 p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-xs text-cyan-200 break-all">
+            <div className="mb-4 p-3 rounded-lg bg-accent/10 border border-accent/30 text-xs text-accent break-all">
               {actionMessage}
             </div>
           )}
@@ -388,7 +393,7 @@ export default function MerchantRefundsPage() {
           {address && !isLoading && entries.length > 0 && (
             <div className="space-y-3">
               {entries.map((entry, idx) => (
-                <motion.div
+                <m.div
                   key={`${entry.orderId}-${entry.initiatedBlock}`}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -444,7 +449,7 @@ export default function MerchantRefundsPage() {
                       </div>
                     )}
                   </GlassCard>
-                </motion.div>
+                </m.div>
               ))}
             </div>
           )}
@@ -472,5 +477,6 @@ export default function MerchantRefundsPage() {
       </div>
       <Footer />
     </>
+    </LazyMotion>
   );
 }

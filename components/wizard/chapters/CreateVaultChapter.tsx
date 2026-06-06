@@ -5,6 +5,7 @@ import { useAccount } from 'wagmi';
 import { CheckCircle2, ShieldAlert, Wallet, Loader2 } from 'lucide-react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
+import Link from 'next/link';
 
 import { useVaultHub } from '@/hooks/useVaultHub';
 import { ChapterShell } from '../ChapterShell';
@@ -53,7 +54,7 @@ export function CreateVaultChapter({ onComplete }: CreateVaultChapterProps) {
     return (
       <ChapterShell
         chapter="createVault"
-        description="A CardBound vault holds your VFIDE non-custodially. Connect a wallet to continue."
+        description="A wallet is your digital keychain. Connect it to create a VFIDE vault with stronger safeguards than a standard wallet-only setup."
         onPrimary={() => {/* no-op until connected */}}
         primaryDisabled
         notice={{ tone: 'info', text: 'Connect your wallet to create a vault.' }}
@@ -61,7 +62,7 @@ export function CreateVaultChapter({ onComplete }: CreateVaultChapterProps) {
         <div className="flex flex-col items-center gap-3 py-4 text-center">
           <Wallet className="text-cyan-300" size={32} aria-hidden />
           <p className="text-sm text-white/70">
-            Your vault is owned by your wallet. We&apos;ll never custody your funds.
+            Your wallet belongs to you. VFIDE never takes custody of your assets.
           </p>
           <VfideConnectButton size="md" />
         </div>
@@ -173,10 +174,10 @@ export function CreateVaultChapter({ onComplete }: CreateVaultChapterProps) {
   return (
     <ChapterShell
       chapter="createVault"
-      description="A CardBound vault holds your VFIDE non-custodially. Creating one is a single transaction — your wallet signs and pays gas."
+      description="Meet your vault. It is where protection begins: additional controls, recovery support, guardian workflows, and long-term storage protections."
       onPrimary={handleCreate}
       isWorking={isCreatingVault}
-      primaryLabel={isCreatingVault ? 'Creating vault…' : 'Create my vault'}
+      primaryLabel={isCreatingVault ? 'Creating vault…' : 'Create My Vault'}
       notice={error ? { tone: 'error', text: error } : null}
     >
       <ul className="space-y-2 text-sm text-white/80">
@@ -186,13 +187,22 @@ export function CreateVaultChapter({ onComplete }: CreateVaultChapterProps) {
         </li>
         <li className="flex items-start gap-2">
           <ShieldAlert className="mt-0.5 flex-shrink-0 text-cyan-300" size={16} aria-hidden />
-          Calling <code className="rounded bg-black/30 px-1.5 py-0.5 text-xs">VaultHub.ensureVault()</code> is idempotent — running it again later is a no-op.
+          Safe to retry. If the network hiccups you can tap again — you will never end up with two vaults.
         </li>
         <li className="flex items-start gap-2">
           <ShieldAlert className="mt-0.5 flex-shrink-0 text-cyan-300" size={16} aria-hidden />
-          One transaction, paid by you. Your wallet will prompt for the signature.
+          It is one transaction. Your wallet will pop up to confirm a small network (gas) fee.
         </li>
       </ul>
+
+      <div className="mt-4 rounded-xl border border-amber-500/25 bg-amber-500/[0.06] p-3 text-xs text-amber-100/90">
+        <span className="font-semibold text-amber-200">First time?</span> You need a little
+        test VFIDE and gas to use the app. Grab both free on the{' '}
+        <Link href="/testnet" className="underline decoration-amber-400/50 underline-offset-2 hover:text-white">
+          Testnet Faucet
+        </Link>{' '}
+        page, then come back and create your vault.
+      </div>
     </ChapterShell>
   );
 }

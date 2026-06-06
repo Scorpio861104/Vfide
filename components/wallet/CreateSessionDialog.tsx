@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { type Address } from 'viem';
 import { AlertTriangle } from 'lucide-react';
 import { shortAddress as formatAddress } from '@/lib/format';
@@ -40,9 +40,9 @@ export function CreateSessionDialog({ isOpen, onClose, onSubmit, targetContracts
   if (!isOpen) return null;
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+    <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
-      <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+      <m.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
         className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-xl font-bold mb-4">Create Session Key</h2>
         <p className="text-sm text-gray-500 mb-6">
@@ -126,7 +126,7 @@ export function CreateSessionDialog({ isOpen, onClose, onSubmit, targetContracts
             </button>
           </div>
         </form>
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 }

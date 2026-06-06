@@ -1,6 +1,6 @@
 'use client'
 
-import { motion, useScroll, useTransform, useSpring } from 'framer-motion'
+import { m, useScroll, useTransform, useSpring } from 'framer-motion'
 import { ReactNode, useRef } from 'react'
 
 // =============================================================================
@@ -43,7 +43,7 @@ export function PageWrapper({
     >
       {/* Animated background grid */}
       {showGrid && (
-        <motion.div 
+        <m.div 
           style={{ y: springY }}
           className="absolute inset-0 grid-pattern opacity-30 pointer-events-none"
         />
@@ -52,16 +52,16 @@ export function PageWrapper({
       {/* Floating orbs */}
       {showOrbs && (
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <motion.div
+          <m.div
             animate={{ 
               x: [0, 100, 0], 
               y: [0, -50, 0],
               scale: [1, 1.2, 1] 
             }}
             transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-20 -left-20 w-96 h-96 bg-cyan-400/5 rounded-full blur-3xl"
+            className="absolute top-20 -left-20 w-96 h-96 bg-accent/5 rounded-full blur-3xl"
           />
-          <motion.div
+          <m.div
             animate={{ 
               x: [0, -80, 0], 
               y: [0, 60, 0],
@@ -70,7 +70,7 @@ export function PageWrapper({
             transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
             className="absolute bottom-40 -right-20 w-80 h-80 bg-emerald-500/5 rounded-full blur-3xl"
           />
-          <motion.div
+          <m.div
             animate={{ 
               x: [0, 60, 0], 
               y: [0, -40, 0],
@@ -79,7 +79,7 @@ export function PageWrapper({
             transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
             className="absolute top-1/2 left-1/3 w-64 h-64 bg-amber-400/6 rounded-full blur-3xl"
           />
-          <motion.div
+          <m.div
             animate={{ 
               x: [0, -40, 0], 
               y: [0, 30, 0],
@@ -115,15 +115,15 @@ interface PageHeaderProps {
 
 export function PageHeader({ 
   icon, 
-  iconGradient = 'from-cyan-400 to-cyan-600',
+  iconGradient = 'from-accent to-accent-dark',
   title, 
   subtitle,
   badge,
-  badgeColor = 'bg-cyan-400/20 text-cyan-400',
+  badgeColor = 'bg-accent/20 text-accent',
   children 
 }: PageHeaderProps) {
   return (
-    <motion.section 
+    <m.section 
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
@@ -133,19 +133,19 @@ export function PageHeader({
         <div className="text-center">
           {/* Icon */}
           {icon && (
-            <motion.div 
+            <m.div 
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-              className={`w-20 h-20 bg-gradient-to-br ${iconGradient} rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-cyan-400/20`}
+              className={`w-20 h-20 bg-gradient-to-br ${iconGradient} rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-accent/20`}
             >
               {icon}
-            </motion.div>
+            </m.div>
           )}
 
           {/* Badge */}
           {badge && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.3 }}
@@ -153,45 +153,45 @@ export function PageHeader({
             >
               <span className="w-2 h-2 rounded-full bg-current animate-pulse" />
               {badge}
-            </motion.div>
+            </m.div>
           )}
 
           {/* Title */}
-          <motion.h1 
+          <m.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
             className="text-4xl md:text-5xl lg:text-6xl font-[family-name:var(--font-display)] font-bold mb-4"
           >
             <span className="gradient-text">{title}</span>
-          </motion.h1>
+          </m.h1>
 
           {/* Subtitle */}
           {subtitle && (
-            <motion.p 
+            <m.p 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
               className="text-xl text-zinc-400 max-w-2xl mx-auto font-[family-name:var(--font-body)]"
             >
               {subtitle}
-            </motion.p>
+            </m.p>
           )}
 
           {/* Additional content */}
           {children && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
               className="mt-8"
             >
               {children}
-            </motion.div>
+            </m.div>
           )}
         </div>
       </div>
-    </motion.section>
+    </m.section>
   )
 }
 
@@ -210,11 +210,11 @@ interface StatItemProps {
 
 export function StatItem({ label, value, icon, trend, color = '#00F0FF', delay = 0 }: StatItemProps) {
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.5 }}
-      className="glass-card p-6 text-center group hover:border-cyan-400/30 transition-all duration-300"
+      className="glass-card p-6 text-center group hover:border-accent/30 transition-all duration-300"
     >
       {icon && (
         <div 
@@ -233,7 +233,7 @@ export function StatItem({ label, value, icon, trend, color = '#00F0FF', delay =
           {trend.isPositive ? '↑' : '↓'} {Math.abs(trend.value)}%
         </div>
       )}
-    </motion.div>
+    </m.div>
   )
 }
 
@@ -281,7 +281,7 @@ export function GlassCard({
   onClick
 }: GlassCardProps) {
   return (
-    <motion.div
+    <m.div
       whileHover={hover ? { y: -2, scale: 1.005 } : undefined}
       whileTap={onClick ? { scale: 0.98 } : undefined}
       onClick={onClick}
@@ -301,7 +301,7 @@ export function GlassCard({
       } : undefined}
     >
       {children}
-    </motion.div>
+    </m.div>
   )
 }
 
@@ -335,7 +335,7 @@ export function TabNavigation({
     return (
       <div className={`flex flex-wrap gap-3 ${className}`}>
         {tabs.map((tab) => (
-          <motion.button
+          <m.button
             key={tab.id}
             onClick={() => onChange(tab.id)}
             whileHover={{ scale: 1.02 }}
@@ -343,7 +343,7 @@ export function TabNavigation({
             className={`
               flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-300
               ${activeTab === tab.id 
-                ? 'bg-gradient-to-r from-cyan-400 to-cyan-600 text-black shadow-lg shadow-cyan-400/20' 
+                ? 'bg-gradient-to-r from-accent to-accent-dark text-black shadow-lg shadow-accent/20' 
                 : 'glass text-zinc-400 hover:text-zinc-100 hover:bg-white/10'
               }
             `}
@@ -353,12 +353,12 @@ export function TabNavigation({
             {tab.badge !== undefined && tab.badge > 0 && (
               <span className={`
                 px-2 py-0.5 text-xs rounded-full
-                ${activeTab === tab.id ? 'bg-black/20' : 'bg-cyan-400/20 text-cyan-400'}
+                ${activeTab === tab.id ? 'bg-black/20' : 'bg-accent/20 text-accent'}
               `}>
                 {tab.badge}
               </span>
             )}
-          </motion.button>
+          </m.button>
         ))}
       </div>
     )
@@ -374,20 +374,20 @@ export function TabNavigation({
               onClick={() => onChange(tab.id)}
               className={`
                 relative flex items-center gap-2 px-6 py-4 font-medium transition-colors
-                ${activeTab === tab.id ? 'text-cyan-400' : 'text-zinc-400 hover:text-zinc-100'}
+                ${activeTab === tab.id ? 'text-accent' : 'text-zinc-400 hover:text-zinc-100'}
               `}
             >
               {tab.icon}
               <span>{tab.label}</span>
               {tab.badge !== undefined && tab.badge > 0 && (
-                <span className="px-2 py-0.5 text-xs rounded-full bg-cyan-400/20 text-cyan-400">
+                <span className="px-2 py-0.5 text-xs rounded-full bg-accent/20 text-accent">
                   {tab.badge}
                 </span>
               )}
               {activeTab === tab.id && (
-                <motion.div
+                <m.div
                   layoutId="activeTabUnderline"
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-cyan-400 to-emerald-500"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-accent to-emerald-500"
                 />
               )}
             </button>
@@ -410,9 +410,9 @@ export function TabNavigation({
           `}
         >
           {activeTab === tab.id && (
-            <motion.div
+            <m.div
               layoutId="activeTabPill"
-              className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-emerald-500 rounded-lg"
+              className="absolute inset-0 bg-gradient-to-r from-accent to-emerald-500 rounded-lg"
               transition={{ type: "spring", stiffness: 400, damping: 30 }}
             />
           )}
@@ -477,7 +477,7 @@ interface EmptyStateProps {
 
 export function EmptyState({ icon, title, description, action }: EmptyStateProps) {
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       className="glass-card p-12 text-center"
@@ -488,16 +488,16 @@ export function EmptyState({ icon, title, description, action }: EmptyStateProps
       <h3 className="text-xl font-semibold text-zinc-100 mb-2">{title}</h3>
       <p className="text-zinc-400 mb-6 max-w-md mx-auto">{description}</p>
       {action && (
-        <motion.button
+        <m.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={action.onClick}
           className="btn-primary"
         >
           {action.label}
-        </motion.button>
+        </m.button>
       )}
-    </motion.div>
+    </m.div>
   )
 }
 
@@ -508,18 +508,18 @@ export function EmptyState({ icon, title, description, action }: EmptyStateProps
 export function PageLoading() {
   return (
     <div className="min-h-[60vh] flex items-center justify-center">
-      <motion.div
+      <m.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="text-center"
       >
-        <motion.div
+        <m.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="w-12 h-12 border-2 border-cyan-400/20 border-t-[#00F0FF] rounded-full mx-auto mb-4"
+          className="w-12 h-12 border-2 border-accent/20 border-t-[#00F0FF] rounded-full mx-auto mb-4"
         />
         <p className="text-zinc-400">Loading...</p>
-      </motion.div>
+      </m.div>
     </div>
   )
 }
@@ -548,7 +548,7 @@ interface FeatureCardProps {
 
 export function FeatureCard({ icon, title, description, color = '#00F0FF', delay = 0 }: FeatureCardProps) {
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay }}
@@ -563,7 +563,7 @@ export function FeatureCard({ icon, title, description, color = '#00F0FF', delay
       </div>
       <h3 className="text-lg font-semibold text-zinc-100 mb-2">{title}</h3>
       <p className="text-zinc-400 text-sm leading-relaxed">{description}</p>
-    </motion.div>
+    </m.div>
   )
 }
 
@@ -578,12 +578,12 @@ interface ActionBarProps {
 
 export function ActionBar({ children, className = '' }: ActionBarProps) {
   return (
-    <motion.div
+    <m.div
       initial={{ y: 100 }}
       animate={{ y: 0 }}
       className={`fixed bottom-0 left-0 right-0 p-4 glass border-t border-white/10 z-40 md:hidden ${className}`}
     >
       {children}
-    </motion.div>
+    </m.div>
   )
 }

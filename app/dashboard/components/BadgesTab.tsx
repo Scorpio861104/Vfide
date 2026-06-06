@@ -1,17 +1,31 @@
 'use client';
 
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { ChevronRight, Trophy } from 'lucide-react';
 
 import { BadgeGallery } from '@/components/badge/BadgeGallery';
 import { BadgeProgress } from '@/components/badge/BadgeProgress';
 import { useUserBadges } from '@/lib/vfide-hooks';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 import { GlassCard, containerVariants, itemVariants } from './shared';
 
+const BADGES_COPY = {
+  'en-US': {
+    title: 'Your Badges',
+    viewAll: 'View All',
+  },
+  'es-ES': {
+    title: 'Tus insignias',
+    viewAll: 'Ver todas',
+  },
+};
+
 export function BadgesTab({ address }: { address: `0x${string}` | undefined }) {
   const { badgeIds: _badgeIds, isLoading } = useUserBadges(address);
+  const { locale } = useLocale();
+  const copy = (BADGES_COPY as Record<string, typeof BADGES_COPY['en-US']>)[locale] ?? BADGES_COPY['en-US'];
 
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="show" className="space-y-6">
@@ -20,10 +34,10 @@ export function BadgesTab({ address }: { address: `0x${string}` | undefined }) {
           <div className="mb-6 flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-xl font-bold text-white">
               <Trophy className="text-amber-400" size={24} />
-              Your Badges
+              {copy.title}
             </h2>
             <Link href="/badges" className="inline-flex items-center gap-1 text-sm font-medium text-cyan-400 hover:text-cyan-300">
-              View All <ChevronRight size={14} />
+              {copy.viewAll} <ChevronRight size={14} />
             </Link>
           </div>
 

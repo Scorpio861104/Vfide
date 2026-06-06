@@ -19,13 +19,13 @@ export function OverviewTab() {
     {
       icon: Shield,
       title: 'Guardian Privileges',
-      description: 'Special access and voting power for trusted community members',
+      description: 'Community-nominated badge granting enhanced duty points and governance standing (BadgeRegistry: GUARDIAN)',
       color: '#A78BFA'
     },
     {
       icon: Zap,
       title: 'Fee Discounts',
-      description: 'Reduced burn fees (as low as 0.25%) for high-ProofScore merchants',
+      description: 'Reduced burn fees (as low as 0.25%) for high-ProofScore users',
       color: '#FF6B6B'
     },
     {
@@ -51,7 +51,7 @@ export function OverviewTab() {
       {/* Benefits Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {benefits.map((benefit, idx) => (
-          <div key={idx} className="bg-zinc-800 border border-zinc-700 rounded-xl p-6 hover:border-cyan-400/30 transition-colors">
+          <div key={idx} className="bg-zinc-800 border border-zinc-700 rounded-xl p-6 hover:border-accent/30 transition-colors">
             <benefit.icon size={32} style={{ color: benefit.color }} className="mb-4" />
             <h3 className="text-xl font-bold text-zinc-100 mb-2">{benefit.title}</h3>
             <p className="text-zinc-400 text-sm">{benefit.description}</p>
@@ -59,23 +59,23 @@ export function OverviewTab() {
         ))}
       </div>
 
-      {/* Quick Stats */}
+      {/* Protocol Facts — sourced directly from contracts */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6 text-center">
-          <div className="text-3xl font-bold text-cyan-400">5</div>
-          <div className="text-sm text-zinc-400">Membership Tiers</div>
+          <div className="text-3xl font-bold text-accent">7</div>
+          <div className="text-sm text-zinc-400">ProofScore Tiers</div>
         </div>
         <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6 text-center">
-          <div className="text-3xl font-bold text-green-400">12</div>
-          <div className="text-sm text-zinc-400">Reward Types</div>
+          <div className="text-3xl font-bold text-green-400">0%</div>
+          <div className="text-sm text-zinc-400">Merchant Fee</div>
         </div>
         <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6 text-center">
-          <div className="text-3xl font-bold text-yellow-400">1.2M</div>
-          <div className="text-sm text-zinc-400">VFIDE Distributed</div>
+          <div className="text-3xl font-bold text-yellow-400">0.25%</div>
+          <div className="text-sm text-zinc-400">Minimum Burn Fee</div>
         </div>
         <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6 text-center">
-          <div className="text-3xl font-bold text-purple-400">8,432</div>
-          <div className="text-sm text-zinc-400">Active Members</div>
+          <div className="text-3xl font-bold text-purple-400">200M</div>
+          <div className="text-sm text-zinc-400">Fixed Token Supply</div>
         </div>
       </div>
     </div>

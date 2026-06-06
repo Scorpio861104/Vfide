@@ -2,15 +2,20 @@
 
 export const dynamic = 'force-dynamic';
 
-import { motion } from 'framer-motion';
+import { m , LazyMotion, domAnimation } from 'framer-motion';
 import { Target } from 'lucide-react';
 import DailyQuestsPanel from '@/components/gamification/DailyQuestsPanel';
 import OnboardingChecklist from '@/components/gamification/OnboardingChecklist';
 import { Footer } from '@/components/layout/Footer';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function QuestsPage() {
+  const { locale } = useLocale();
+  void locale;
+
   return (
-    <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] pb-8 relative">
+    <LazyMotion features={domAnimation}>
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] pb-8 relative">
       {/* Ambient orbs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
@@ -22,7 +27,7 @@ export default function QuestsPage() {
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
           <div className="flex items-center gap-3 mb-3">
             <span className="badge-live"><span className="badge-live-dot" />Daily Challenges</span>
           </div>
@@ -32,7 +37,7 @@ export default function QuestsPage() {
             </span>
           </h1>
           <p className="text-white/50 text-lg">Complete governance challenges and earn participation XP</p>
-        </motion.div>
+        </m.div>
 
         <DailyQuestsPanel />
       </div>
@@ -40,5 +45,6 @@ export default function QuestsPage() {
       <OnboardingChecklist />
       <Footer />
     </div>
+    </LazyMotion>
   );
 }

@@ -1,0 +1,41 @@
+[
+  {
+    "type": "function",
+    "name": "deployManagers",
+    "inputs": [
+      {
+        "name": "vaultAddr",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "dailyLimit",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "pm",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "wq",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "im",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "am",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  }
+]

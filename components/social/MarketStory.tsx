@@ -16,7 +16,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Shield, ShoppingCart, MessageCircle, ChevronUp, ChevronDown, MapPin } from 'lucide-react';
 import { safeWindowOpen } from '@/lib/security/urlValidation';
 
@@ -80,7 +80,7 @@ export function MarketStory({ story, onBuy, onWhatsApp, onView, compact = false 
 
   if (compact) {
     return (
-      <motion.div
+      <m.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         className="w-32 shrink-0 cursor-pointer"
@@ -96,12 +96,12 @@ export function MarketStory({ story, onBuy, onWhatsApp, onView, compact = false 
             <div className="text-gray-400 text-[9px]">{story.products.length} items · {timeUntilExpiry(story.expiresAt)}</div>
           </div>
         </div>
-      </motion.div>
+      </m.div>
     );
   }
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       className="bg-white/3 border border-white/10 rounded-2xl overflow-hidden"
@@ -142,7 +142,7 @@ export function MarketStory({ story, onBuy, onWhatsApp, onView, compact = false 
 
         {/* Product count badge */}
         <button onClick={() => setShowProducts(!showProducts)}
-          className="absolute bottom-3 right-3 flex items-center gap-1 px-2.5 py-1.5 bg-cyan-500/80 backdrop-blur text-white rounded-full text-xs font-bold">
+          className="absolute bottom-3 right-3 flex items-center gap-1 px-2.5 py-1.5 bg-accent/80 backdrop-blur text-white rounded-full text-xs font-bold">
           <ShoppingCart size={12} />{story.products.length} items
           {showProducts ? <ChevronDown size={12} /> : <ChevronUp size={12} />}
         </button>
@@ -151,7 +151,7 @@ export function MarketStory({ story, onBuy, onWhatsApp, onView, compact = false 
       {/* Product list (expandable) */}
       <AnimatePresence>
         {showProducts && (
-          <motion.div
+          <m.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
@@ -162,7 +162,7 @@ export function MarketStory({ story, onBuy, onWhatsApp, onView, compact = false 
                 <div key={product.id}
                   className={`flex items-center justify-between p-2.5 rounded-xl border transition-all ${
                     selectedProduct === product.id
-                      ? 'bg-cyan-500/10 border-cyan-500/20'
+                      ? 'bg-accent/10 border-accent/20'
                       : 'bg-white/2 border-white/5'
                   }`}
                 >
@@ -178,10 +178,10 @@ export function MarketStory({ story, onBuy, onWhatsApp, onView, compact = false 
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-cyan-400 font-mono font-bold text-sm">{product.currency}{product.price}</span>
+                    <span className="text-accent font-mono font-bold text-sm">{product.currency}{product.price}</span>
                     {product.inStock && onBuy && (
                       <button onClick={() => { setSelectedProduct(product.id); onBuy(product.id); }}
-                        className="px-3 py-1.5 bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 rounded-lg text-xs font-bold">
+                        className="px-3 py-1.5 bg-accent/20 border border-accent/30 text-accent rounded-lg text-xs font-bold">
                         Buy
                       </button>
                     )}
@@ -197,7 +197,7 @@ export function MarketStory({ story, onBuy, onWhatsApp, onView, compact = false 
                 <MessageCircle size={14} />Share on WhatsApp
               </button>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 
@@ -208,11 +208,11 @@ export function MarketStory({ story, onBuy, onWhatsApp, onView, compact = false 
         <button onClick={handleWhatsApp} className="p-1.5 rounded-lg text-gray-500 hover:text-emerald-400 hover:bg-emerald-500/10" aria-label="Send via WhatsApp">
           <MessageCircle size={16} />
         </button>
-        <button onClick={() => setShowProducts(!showProducts)} className="p-1.5 rounded-lg text-gray-500 hover:text-cyan-400 hover:bg-cyan-500/10">
+        <button onClick={() => setShowProducts(!showProducts)} className="p-1.5 rounded-lg text-gray-500 hover:text-accent hover:bg-accent/10">
           <ShoppingCart size={16} />
         </button>
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 

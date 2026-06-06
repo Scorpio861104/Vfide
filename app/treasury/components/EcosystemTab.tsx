@@ -63,9 +63,9 @@ export function EcosystemTab({ isConnected }: { isConnected: boolean }) {
   return (
     <div className="space-y-8">
       {/* Ecosystem Overview */}
-      <div className="bg-gradient-to-br from-cyan-900/20 to-blue-900/20 border border-cyan-500/30 rounded-xl p-4 sm:p-6 md:p-8">
+      <div className="bg-gradient-to-br from-accent/10 to-blue-900/20 border border-accent/30 rounded-xl p-4 sm:p-6 md:p-8">
         <div className="flex items-center gap-4 mb-6">
-          <Users className="w-12 h-12 text-cyan-400" />
+          <Users className="w-12 h-12 text-accent" />
           <div>
             <h2 className="text-2xl font-bold text-zinc-100">Ecosystem Vault</h2>
             <p className="text-zinc-400">
@@ -86,7 +86,7 @@ export function EcosystemTab({ isConnected }: { isConnected: boolean }) {
                 value={formatVFIDECompact(totalInPools)}
                 label="In Pools"
                 sub={`${formatEther(totalInPools)} VFIDE`}
-                valueClass="text-cyan-400"
+                valueClass="text-accent"
               />
               <StatTile
                 value={formatVFIDECompact(ecosystemFlow.totalReceived)}
@@ -122,28 +122,28 @@ export function EcosystemTab({ isConnected }: { isConnected: boolean }) {
         ) : (
           <div className="space-y-4">
             <PoolBar
-              icon={<Users size={20} className="text-cyan-400" />}
+              icon={<Users size={20} className="text-accent" />}
               name="Council Salaries"
               amount={pools.councilPool}
               lifetimePaid={paidTotals.totalCouncilPaid}
               totalReference={totalInPools}
             />
             <PoolBar
-              icon={<Wallet size={20} className="text-cyan-400" />}
+              icon={<Wallet size={20} className="text-accent" />}
               name="Merchant Rewards"
               amount={pools.merchantPool}
               lifetimePaid={paidTotals.totalMerchantBonusesPaid}
               totalReference={totalInPools}
             />
             <PoolBar
-              icon={<TrendingUp size={20} className="text-cyan-400" />}
+              icon={<TrendingUp size={20} className="text-accent" />}
               name="Headhunter Bounties"
               amount={pools.headhunterPool}
               lifetimePaid={paidTotals.totalHeadhunterPaid}
               totalReference={totalInPools}
             />
             <PoolBar
-              icon={<Shield size={20} className="text-cyan-400" />}
+              icon={<Shield size={20} className="text-accent" />}
               name="Operations"
               amount={pools.operationsPool}
               lifetimePaid={paidTotals.totalExpensesPaid}
@@ -160,7 +160,7 @@ export function EcosystemTab({ isConnected }: { isConnected: boolean }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 bg-zinc-900 rounded-lg">
               <div className="text-zinc-400 text-sm mb-1">Merchant Rewards</div>
-              <div className="text-2xl font-bold text-cyan-400">0 VFIDE</div>
+              <div className="text-2xl font-bold text-accent">0 VFIDE</div>
               <button
                 disabled
                 title="Merchant rewards are earned by transacting through /merchant. Claim is available there once you have a balance."
@@ -171,7 +171,7 @@ export function EcosystemTab({ isConnected }: { isConnected: boolean }) {
             </div>
             <div className="p-4 bg-zinc-900 rounded-lg">
               <div className="text-zinc-400 text-sm mb-1">Headhunter Bounties</div>
-              <div className="text-2xl font-bold text-cyan-400">0 VFIDE</div>
+              <div className="text-2xl font-bold text-accent">0 VFIDE</div>
               <button
                 disabled
                 title="Headhunter bounties are earned by referring merchants through /headhunter. Claim is available there once you have a balance."
@@ -239,7 +239,7 @@ function PoolBar({
         </div>
         <div className="text-right">
           <div
-            className="text-cyan-400 font-bold tabular-nums"
+            className="text-accent font-bold tabular-nums"
             title={`${formatEther(amount)} VFIDE`}
           >
             {formatVFIDECompact(amount)}
@@ -254,7 +254,7 @@ function PoolBar({
       </div>
       <div className="w-full h-2 bg-zinc-700 rounded-full overflow-hidden">
         <div
-          className="h-full bg-gradient-to-r from-cyan-500 to-blue-500"
+          className="h-full bg-gradient-to-r from-accent to-blue-500"
           style={{ width: `${barWidth}%` }}
         />
       </div>

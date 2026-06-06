@@ -1,7 +1,9 @@
-'use client';
+'use client'
+
+import { getFeeRate } from '@/lib/format';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Shield, Zap, Vote, ShoppingCart, Star, TrendingUp, TrendingDown, Info } from 'lucide-react';
 
 // ── Tier + fee helpers (mirrors useProofScore fallback logic) ──────────────────
@@ -43,13 +45,6 @@ function getNextTier(score: number): SimTier | null {
   return null;
 }
 
-function getFee(score: number): number {
-  if (score >= 8000) return 0.25;
-  if (score >= 7000) return 1.0;
-  if (score >= 5000) return 2.5;
-  if (score >= 4000) return 3.5;
-  return 5.0;
-}
 
 // ── Boost / Risk tips ─────────────────────────────────────────────────────────
 
@@ -79,7 +74,7 @@ export function ProofScoreSimulator() {
 
   const tier     = getTier(score);
   const nextTier = getNextTier(score);
-  const fee      = getFee(score);
+  const fee      = getFeeRate(score);
   const progress = nextTier
     ? ((score - tier.min) / (nextTier.min - tier.min)) * 100
     : 100;
@@ -108,7 +103,7 @@ export function ProofScoreSimulator() {
             />
             <svg width={140} height={140} className="-rotate-90 absolute">
               <circle cx={70} cy={70} r={radius} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={10} />
-              <motion.circle
+              <m.circle
                 cx={70} cy={70} r={radius}
                 fill="none"
                 stroke={tier.color}
@@ -121,13 +116,13 @@ export function ProofScoreSimulator() {
               />
             </svg>
             <div className="relative text-center z-10">
-              <motion.div
+              <m.div
                 key={score}
                 className="text-3xl font-black"
                 style={{ color: tier.color }}
               >
                 {score.toLocaleString()}
-              </motion.div>
+              </m.div>
               <div className="text-[11px] font-semibold uppercase tracking-widest mt-0.5" style={{ color: tier.color, opacity: 0.75 }}>
                 {tier.icon} {tier.label}
               </div>
@@ -140,7 +135,7 @@ export function ProofScoreSimulator() {
             <div className="flex items-center gap-3">
               <span className="text-sm text-white/50">Transfer fee</span>
               <AnimatePresence mode="wait">
-                <motion.span
+                <m.span
                   key={fee}
                   initial={{ opacity: 0, y: -6 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -149,7 +144,7 @@ export function ProofScoreSimulator() {
                   style={{ color: tier.color }}
                 >
                   {fee.toFixed(2)}%
-                </motion.span>
+                </m.span>
               </AnimatePresence>
             </div>
 
@@ -180,7 +175,7 @@ export function ProofScoreSimulator() {
                   <span>{nextTier.label} at {nextTier.min.toLocaleString()}</span>
                 </div>
                 <div className="h-2 rounded-full bg-white/5 overflow-hidden">
-                  <motion.div
+                  <m.div
                     className="h-full rounded-full"
                     style={{ backgroundColor: tier.color }}
                     animate={{ width: `${Math.min(progress, 100)}%` }}
@@ -236,6 +231,7 @@ export function ProofScoreSimulator() {
               { label: 'Trusted', value: 5600 },
               { label: 'Council', value: 7000 },
               { label: 'Elite', value: 8000 },
+              { label: 'Perfect', value: 10000 },
             ].map(({ label, value }) => (
               <button
                 key={label}

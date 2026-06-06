@@ -6,7 +6,7 @@
 
 'use client';
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 
 interface HexagonPatternProps {
   className?: string;
@@ -60,7 +60,7 @@ export function HexagonPattern({
   const encodedSvg = encodeURIComponent(patternSvg);
 
   return (
-    <motion.div
+    <m.div
       className={`absolute inset-0 pointer-events-none ${className}`}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -71,7 +71,7 @@ export function HexagonPattern({
       }}
     >
       {animated && (
-        <motion.div
+        <m.div
           className="absolute inset-0"
           animate={{
             backgroundPosition: ["0% 0%", "100% 100%"],
@@ -87,7 +87,7 @@ export function HexagonPattern({
           }}
         />
       )}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -115,7 +115,7 @@ export function FloatingHexagon({
   const fillColor = colorMap[color];
   
   return (
-    <motion.svg
+    <m.svg
       width={size}
       height={size * 1.15}
       viewBox="0 0 100 115"
@@ -146,7 +146,7 @@ export function FloatingHexagon({
         fill={fillColor}
         opacity="0.1"
       />
-    </motion.svg>
+    </m.svg>
   );
 }
 
@@ -166,14 +166,14 @@ export function HexagonShield({
   className?: string;
 }) {
   return (
-    <motion.div
+    <m.div
       className={`relative ${className}`}
       initial={animated ? { opacity: 0, scale: 0.8 } : undefined}
       animate={animated ? { opacity: 1, scale: 1 } : undefined}
       transition={{ duration: 0.5 }}
     >
       {glowing && (
-        <motion.div
+        <m.div
           className="absolute inset-0 blur-2xl"
           animate={{
             opacity: [0.3, 0.6, 0.3],
@@ -216,7 +216,7 @@ export function HexagonShield({
         </defs>
         
         {/* Outer hexagon shield */}
-        <motion.path
+        <m.path
           d="M50 5 L90 25 V75 C90 95 70 110 50 115 C30 110 10 95 10 75 V25 L50 5Z"
           fill="url(#hex-shield-fill)"
           stroke="url(#hex-shield-gradient)"
@@ -228,7 +228,7 @@ export function HexagonShield({
         />
         
         {/* Inner hexagon */}
-        <motion.polygon
+        <m.polygon
           points="50,25 75,40 75,70 50,85 25,70 25,40"
           fill="none"
           stroke="url(#hex-shield-gradient)"
@@ -240,7 +240,7 @@ export function HexagonShield({
         />
         
         {/* Center check/trust mark */}
-        <motion.path
+        <m.path
           d="M35 55 L45 65 L65 45"
           fill="none"
           stroke="#00FFB2"
@@ -252,7 +252,7 @@ export function HexagonShield({
           transition={{ delay: 1, duration: 0.5, ease: "easeOut" }}
         />
       </svg>
-    </motion.div>
+    </m.div>
   );
 }
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import {Ownable, Pausable} from "./SharedInterfaces.sol";
+import "./SharedInterfaces.sol";
 
 /// @notice IERC20MetadataSR
 /// @title IERC20MetadataSR
@@ -27,14 +27,14 @@ contract StablecoinRegistry is Ownable, Pausable {
         uint8 decimals;
         string symbol;
     }
-
+    
     /// @notice stablecoins
     mapping(address => StablecoinInfo) public stablecoins;
     /// @notice stablecoinList
     address[] public stablecoinList;
     /// @notice stablecoinIndexPlusOne
     mapping(address => uint256) private stablecoinIndexPlusOne;
-
+    
     /// @notice StablecoinAdded
     /// @param token token
     /// @param decimals decimals
@@ -85,7 +85,7 @@ contract StablecoinRegistry is Ownable, Pausable {
     /// @param symbol symbol
     /// @param treasury treasury
     event ChangeCanceled(ChangeAction indexed action, address indexed token, bool allowed, uint8 decimals, string symbol, address treasury);
-
+    
     /// @notice SR_Zero
     error SR_Zero();
     /// @notice SR_AlreadyAdded
@@ -124,13 +124,7 @@ contract StablecoinRegistry is Ownable, Pausable {
     /// @notice CHANGE_DELAY
     uint64 public constant CHANGE_DELAY = 48 hours;
 
-    enum ChangeAction {
-        None,
-        AddStablecoin,
-        RemoveStablecoin,
-        SetAllowed,
-        SetTreasury
-    }
+    enum ChangeAction { None, AddStablecoin, RemoveStablecoin, SetAllowed, SetTreasury }
 
     struct PendingChange {
         ChangeAction action;
@@ -150,7 +144,7 @@ contract StablecoinRegistry is Ownable, Pausable {
         if (msg.sender != governance) revert SR_NotGovernance();
         _;
     }
-
+    
     /// @notice constructor
     constructor() {
         governance = msg.sender;
@@ -195,7 +189,7 @@ contract StablecoinRegistry is Ownable, Pausable {
         delete pendingGovernanceAt;
         emit GovernanceChangeCanceled(governance, queuedGovernance);
     }
-
+    
     /**
      * @notice Add a stablecoin to the registry
      * @param token Address of the stablecoin
@@ -212,7 +206,7 @@ contract StablecoinRegistry is Ownable, Pausable {
         if (reportedDecimals != decimals) revert SR_DecimalsMismatch();
         _queueChange(ChangeAction.AddStablecoin, token, true, decimals, symbol, address(0));
     }
-
+    
     /**
      * @notice Remove a stablecoin from the registry
      * @param token Address of the stablecoin to remove
@@ -221,7 +215,7 @@ contract StablecoinRegistry is Ownable, Pausable {
         if (!stablecoins[token].allowed) revert SR_NotFound();
         _queueChange(ChangeAction.RemoveStablecoin, token, false, 0, "", address(0));
     }
-
+    
     /**
      * @notice Enable/disable a stablecoin
      * @param token Address of the stablecoin
@@ -232,7 +226,7 @@ contract StablecoinRegistry is Ownable, Pausable {
         if (stablecoins[token].decimals == 0) revert SR_NotFound();
         _queueChange(ChangeAction.SetAllowed, token, allowed, 0, "", address(0));
     }
-
+    
     /**
      * @notice Check if a stablecoin is allowed
      * @param stable Address to check
@@ -243,7 +237,7 @@ contract StablecoinRegistry is Ownable, Pausable {
         // automatically reject tokens while the registry is in emergency-paused state.
         return !paused() && stablecoins[stable].allowed;
     }
-
+    
     /**
      * @notice Alias for isAllowed - implements IStablecoinRegistry interface
      * @param token Address to check
@@ -252,7 +246,7 @@ contract StablecoinRegistry is Ownable, Pausable {
     function isWhitelisted(address token) external view returns (bool) {
         return !paused() && stablecoins[token].allowed;
     }
-
+    
     /**
      * @notice Get decimals of a stablecoin
      * @param stable Address to check
@@ -261,7 +255,7 @@ contract StablecoinRegistry is Ownable, Pausable {
     function decimalsOf(address stable) external view returns (uint8) {
         return stablecoins[stable].decimals;
     }
-
+    
     /**
      * @notice Alias for decimalsOf - implements IStablecoinRegistry interface
      * @param token Address to check
@@ -270,10 +264,10 @@ contract StablecoinRegistry is Ownable, Pausable {
     function tokenDecimals(address token) external view returns (uint8) {
         return stablecoins[token].decimals;
     }
-
+    
     /// @notice Treasury address (for interface compatibility)
     address public treasury;
-
+    
     /// @notice Set treasury address (for interface compatibility)
     /// @param _treasury _treasury
     function setTreasury(address _treasury) external onlyGovernance {
@@ -291,7 +285,11 @@ contract StablecoinRegistry is Ownable, Pausable {
 
         if (pending.action == ChangeAction.AddStablecoin) {
             if (stablecoins[pending.token].allowed) revert SR_AlreadyAdded();
-            stablecoins[pending.token] = StablecoinInfo({allowed: true, decimals: pending.decimals, symbol: pending.symbol});
+            stablecoins[pending.token] = StablecoinInfo({
+                allowed: true,
+                decimals: pending.decimals,
+                symbol: pending.symbol
+            });
             stablecoinList.push(pending.token);
             stablecoinIndexPlusOne[pending.token] = stablecoinList.length;
             emit StablecoinAdded(pending.token, pending.decimals, pending.symbol);
@@ -331,22 +329,25 @@ contract StablecoinRegistry is Ownable, Pausable {
         delete pendingChange;
         emit ChangeCanceled(pending.action, pending.token, pending.allowed, pending.decimals, pending.symbol, pending.treasury);
     }
-
+    
     /**
      * @notice Get all registered stablecoins
      * @return addresses Array of stablecoin addresses
      * @return infos Array of stablecoin info
      */
-    function getAllStablecoins() external view returns (address[] memory addresses, StablecoinInfo[] memory infos) {
+    function getAllStablecoins() external view returns (
+        address[] memory addresses,
+        StablecoinInfo[] memory infos
+    ) {
         addresses = stablecoinList;
         uint256 _slLen = stablecoinList.length;
         infos = new StablecoinInfo[](_slLen);
-
+        
         for (uint256 i = 0; i < _slLen; ++i) {
             infos[i] = stablecoins[stablecoinList[i]];
         }
     }
-
+    
     /**
      * @notice Get count of allowed stablecoins
      * @return count count
@@ -361,13 +362,9 @@ contract StablecoinRegistry is Ownable, Pausable {
     }
 
     /// @notice pause
-    function pause() external onlyGovernance {
-        _pause();
-    }
+    function pause() external onlyGovernance { _pause(); }
     /// @notice unpause
-    function unpause() external onlyGovernance {
-        _unpause();
-    }
+    function unpause() external onlyGovernance { _unpause(); }
 
     /// @notice _queueChange
     /// @param action action
@@ -376,7 +373,14 @@ contract StablecoinRegistry is Ownable, Pausable {
     /// @param decimals decimals
     /// @param symbol symbol
     /// @param treasuryAddress treasuryAddress
-    function _queueChange(ChangeAction action, address token, bool allowed, uint8 decimals, string memory symbol, address treasuryAddress) internal {
+    function _queueChange(
+        ChangeAction action,
+        address token,
+        bool allowed,
+        uint8 decimals,
+        string memory symbol,
+        address treasuryAddress
+    ) internal {
         if (pendingChange.action != ChangeAction.None && pendingChange.executeAfter != 0) {
             revert SR_PendingExists();
         }

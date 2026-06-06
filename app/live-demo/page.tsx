@@ -10,20 +10,25 @@ export const dynamic = 'force-dynamic';
 
 
 import { Footer } from '@/components/layout/Footer'
+import Link from 'next/link'
 import { ProofScoreVisualizer } from '@/components/trust/ProofScoreVisualizer'
 import { LiveActivityFeed } from '@/components/trust/LiveActivityFeed'
 import { FeeSavingsCalculator } from '@/components/commerce/FeeSavingsCalculator'
 import { LiveSystemStats } from '@/components/stats/LiveSystemStats'
 import { TransactionNotification, useTransactionNotifications } from '@/components/wallet/TransactionNotification'
-import { motion } from 'framer-motion'
+import { m as motion } from 'framer-motion'
 import { useAccount } from 'wagmi'
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function LiveDemoPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address, isConnected } = useAccount()
   const { notification, showNotification, closeNotification } = useTransactionNotifications()
   
   // Demo transaction handler
-  const handleDemoTransaction = (type: 'transfer' | 'endorse' | 'vote') => {
+  const handleDemoTransaction = (type: 'transfer' | 'endorse' | 'vote' | 'payment') => {
     showNotification(
       'pending',
       'Transaction Pending',
@@ -170,6 +175,7 @@ export default function LiveDemoPage() {
                   Send VFIDE
                 </button>
                 <button
+                  onClick={() => handleDemoTransaction('payment')}
                   className="bg-gradient-to-r from-emerald-400 to-[#00CC6A] text-zinc-950 font-bold py-2 sm:py-3 px-2 sm:px-4 rounded-lg hover:scale-105 transition-transform text-xs sm:text-sm"
                 >
                   Pay Merchant
@@ -195,12 +201,18 @@ export default function LiveDemoPage() {
               Join thousands building trust-based commerce with non-custodial vaults and DAO governance.
             </p>
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 md:gap-4 justify-center items-center">
-              <button className="w-full sm:w-auto bg-gradient-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold py-2 sm:py-3 md:py-4 px-4 sm:px-6 md:px-8 rounded-xl hover:scale-105 transition-transform text-sm sm:text-base md:text-lg">
+              <Link
+                href="/vault"
+                className="w-full sm:w-auto bg-gradient-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold py-2 sm:py-3 md:py-4 px-4 sm:px-6 md:px-8 rounded-xl hover:scale-105 transition-transform text-sm sm:text-base md:text-lg text-center"
+              >
                 Create Your Vault
-              </button>
-              <button className="w-full sm:w-auto bg-zinc-950 border-2 border-cyan-400 text-cyan-400 font-bold py-2 sm:py-3 md:py-4 px-4 sm:px-6 md:px-8 rounded-xl hover:scale-105 transition-transform text-sm sm:text-base md:text-lg">
+              </Link>
+              <Link
+                href="/docs"
+                className="w-full sm:w-auto bg-zinc-950 border-2 border-cyan-400 text-cyan-400 font-bold py-2 sm:py-3 md:py-4 px-4 sm:px-6 md:px-8 rounded-xl hover:scale-105 transition-transform text-sm sm:text-base md:text-lg text-center"
+              >
                 Read Docs
-              </button>
+              </Link>
             </div>
           </div>
         </motion.div>

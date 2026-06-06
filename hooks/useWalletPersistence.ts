@@ -48,7 +48,7 @@ interface SessionData {
  */
 export function useWalletPersistence() {
   const { address, isConnected, connector, chain } = useAccount();
-  const { reconnect, connectors } = useReconnect();
+  const { reconnectAsync, connectors } = useReconnect();
   const { disconnect } = useDisconnect();
   const hasAttemptedReconnect = useRef(false);
   const heartbeatInterval = useRef<NodeJS.Timeout | null>(null);
@@ -223,8 +223,8 @@ export function useWalletPersistence() {
         setReconnectError('Reconnection timed out');
       }, RECONNECTION_TIMEOUT_MS);
       
-      // Cast reconnect to async function since wagmi types don't reflect the actual return type
-      const reconnectPromise = reconnect({ connectors: [lastConnector] }) as unknown as Promise<void>;
+      // Use reconnectAsync (promise variant). reconnect() is fire-and-forget.
+      const reconnectPromise = reconnectAsync({ connectors: [lastConnector] });
       
       void reconnectPromise
         .then(() => {
@@ -249,7 +249,7 @@ export function useWalletPersistence() {
       };
     }
     return undefined;
-  }, [isConnected, getSession, isSessionValid, connectors, reconnect]);
+  }, [isConnected, getSession, isSessionValid, connectors, reconnectAsync]);
 
   // Save session when connection state changes
   useEffect(() => {

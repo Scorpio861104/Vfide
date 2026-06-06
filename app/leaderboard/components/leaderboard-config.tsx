@@ -1,10 +1,10 @@
 import { Crown, Medal, ChevronUp, ChevronDown, Minus } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 
 /**
  * Tier color config aligned with the 7-tier ProofScore system per VFIDE Manual v1.0.
  * Tiers: Elite(≥8000) / Council(≥7000) / Trusted(≥5600) / Governance(≥5400)
- *        / Neutral(≥5000) / Low Trust(≥3500) / Risky(<3500)
+ *        / Neutral(≥5000) / Low Trust(≥4000) / Risky(<4000)
  */
 export const tierColors: Record<string, { gradient: string; text: string; glow: string; bg: string; border: string }> = {
   'ELITE':      { gradient: 'from-emerald-400 to-[#00CC6A]',   text: 'text-emerald-400',  glow: 'shadow-emerald-400/30',  bg: 'bg-emerald-400/20',  border: 'border-emerald-400/30' },
@@ -26,18 +26,18 @@ export function getRankIcon(rank: number) {
 export function getChangeIndicator(change: number) {
   if (change > 0) {
     return (
-      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="flex items-center gap-1 text-emerald-500 text-sm font-bold">
+      <m.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="flex items-center gap-1 text-emerald-500 text-sm font-bold">
         <ChevronUp size={16} strokeWidth={3} />
         <span>{change}</span>
-      </motion.div>
+      </m.div>
     );
   }
   if (change < 0) {
     return (
-      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="flex items-center gap-1 text-red-500 text-sm font-bold">
+      <m.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="flex items-center gap-1 text-red-500 text-sm font-bold">
         <ChevronDown size={16} strokeWidth={3} />
         <span>{Math.abs(change)}</span>
-      </motion.div>
+      </m.div>
     );
   }
   return <Minus className="w-4 h-4 text-zinc-500" />;

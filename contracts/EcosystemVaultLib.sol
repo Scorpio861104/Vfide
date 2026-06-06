@@ -34,7 +34,6 @@ library EcosystemVaultLib {
      * @notice Get merchant rank share based on rank position
      * @dev Rank 1-5: 500bps, 6-10: 300bps, 11-20: 200bps, 21-40: 100bps, 41-60: 50bps, 61-100: 25bps
      * @param rank rank
-     * @return _uint16 _uint16
      */
     function getMerchantRankShare(uint8 rank) public pure returns (uint16) {
         if (rank == 0 || rank > 100) return 0;
@@ -75,7 +74,13 @@ library EcosystemVaultLib {
     /// @param referralLevel3Points referralLevel3Points
     /// @param referralLevel4Points referralLevel4Points
     /// @return _uint8 _uint8
-    function getReferralWorkLevel(uint16 points, uint16 referralLevel1Points, uint16 referralLevel2Points, uint16 referralLevel3Points, uint16 referralLevel4Points) public pure returns (uint8) {
+    function getReferralWorkLevel(
+        uint16 points,
+        uint16 referralLevel1Points,
+        uint16 referralLevel2Points,
+        uint16 referralLevel3Points,
+        uint16 referralLevel4Points
+    ) public pure returns (uint8) {
         if (points >= referralLevel4Points) return 4;
         if (points >= referralLevel3Points) return 3;
         if (points >= referralLevel2Points) return 2;
@@ -90,7 +95,13 @@ library EcosystemVaultLib {
     /// @param referralLevel3Reward referralLevel3Reward
     /// @param referralLevel4Reward referralLevel4Reward
     /// @return _uint256 _uint256
-    function getReferralLevelReward(uint8 level, uint256 referralLevel1Reward, uint256 referralLevel2Reward, uint256 referralLevel3Reward, uint256 referralLevel4Reward) public pure returns (uint256) {
+    function getReferralLevelReward(
+        uint8 level,
+        uint256 referralLevel1Reward,
+        uint256 referralLevel2Reward,
+        uint256 referralLevel3Reward,
+        uint256 referralLevel4Reward
+    ) public pure returns (uint256) {
         if (level == 1) return referralLevel1Reward;
         if (level == 2) return referralLevel2Reward;
         if (level == 3) return referralLevel3Reward;
@@ -137,20 +148,17 @@ library EcosystemVaultLib {
     /// @return tier3Multiplier tier3Multiplier
     /// @return tier4Threshold tier4Threshold
     /// @return tier4Multiplier tier4Multiplier
-    function getMerchantTierMultipliers()
-        internal
-        pure
-        returns (
-            uint16 tier1Threshold,
-            uint16 tier1Multiplier,
-            uint16 tier2Threshold,
-            uint16 tier2Multiplier,
-            uint16 tier3Threshold,
-            uint16 tier3Multiplier,
-            uint16 tier4Threshold,
-            uint16 tier4Multiplier
-        )
-    {
-        return (TIER1_THRESHOLD, TIER1_MULTIPLIER, TIER2_THRESHOLD, TIER2_MULTIPLIER, TIER3_THRESHOLD, TIER3_MULTIPLIER, TIER4_THRESHOLD, TIER4_MULTIPLIER);
+    function getMerchantTierMultipliers() internal pure returns (
+        uint16 tier1Threshold, uint16 tier1Multiplier,
+        uint16 tier2Threshold, uint16 tier2Multiplier,
+        uint16 tier3Threshold, uint16 tier3Multiplier,
+        uint16 tier4Threshold, uint16 tier4Multiplier
+    ) {
+        return (
+            TIER1_THRESHOLD, TIER1_MULTIPLIER,
+            TIER2_THRESHOLD, TIER2_MULTIPLIER,
+            TIER3_THRESHOLD, TIER3_MULTIPLIER,
+            TIER4_THRESHOLD, TIER4_MULTIPLIER
+        );
     }
 }

@@ -14,11 +14,12 @@ import {
   Search,
   RefreshCw,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { Footer } from '@/components/layout/Footer';
 import RevenueSplitterABI from '@/lib/abis/RevenueSplitter.json';
 import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
 import { toast } from '@/lib/toast';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 /**
  * RevenueSplitter is deployed per-merchant (or per-org). There's no
@@ -29,12 +30,6 @@ import { toast } from '@/lib/toast';
  * The token to distribute is also user-provided since splitters can
  * hold any ERC20. Defaults to the configured VFIDE token for convenience.
  */
-
-const _SHORTCUTS: Array<{ label: string; address: Address | undefined }> = [
-  // CONTRACT_ADDRESSES.VFIDEToken is the most common token to distribute
-  // since most VFIDE merchants settle in VFIDE. Other shortcuts (USDC,
-  // USDT) would be added by per-chain config, not hardcoded here.
-];
 
 function shortAddr(a: string) {
   if (!a || a.length < 12) return a;
@@ -47,8 +42,14 @@ interface PayeeRow {
 }
 
 export default function SplitterPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [splitterInput, setSplitterInput] = useState('');
-  const [tokenInput, setTokenInput] = useState<string>(CONTRACT_ADDRESSES.VFIDEToken ?? '');
+  const defaultTokenInput = isConfiguredContractAddress(CONTRACT_ADDRESSES.VFIDEToken)
+    ? CONTRACT_ADDRESSES.VFIDEToken
+    : '';
+  const [tokenInput, setTokenInput] = useState<string>(defaultTokenInput);
   const [submitting, setSubmitting] = useState(false);
 
   const splitter: Address | null = isAddress(splitterInput)

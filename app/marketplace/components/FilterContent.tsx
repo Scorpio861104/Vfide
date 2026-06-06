@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { X } from 'lucide-react';
 
 type MarketplaceFilters = {
@@ -29,7 +29,7 @@ export function FilterContent({ filters, setFilters, onClose }: FilterContentPro
   };
 
   return (
-    <motion.aside
+    <m.aside
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
@@ -97,6 +97,6 @@ export function FilterContent({ filters, setFilters, onClose }: FilterContentPro
           </select>
         </div>
       </div>
-    </motion.aside>
+    </m.aside>
   );
 }

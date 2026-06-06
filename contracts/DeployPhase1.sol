@@ -22,7 +22,11 @@ contract Phase1Deployer {
     /// @param devMultisig devMultisig
     /// @param dao dao
     /// @param timelock timelock
-    function deployAll(address devMultisig, address dao, address timelock) external {
+    function deployAll(
+        address devMultisig,
+        address dao,
+        address timelock
+    ) external {
         if (deployed) revert DP1_AlreadyDeployed();
         if (devMultisig == address(0)) revert DP1_Zero();
         if (dao == address(0)) revert DP1_Zero();

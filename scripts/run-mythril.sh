@@ -86,9 +86,16 @@ analyze_contract() {
   local report_file="${REPORTS_DIR}/${contract_name}_${TIMESTAMP}.json"
   local report_md="${REPORTS_DIR}/${contract_name}_${TIMESTAMP}.md"
 
+  # Search recursively if not at top level (e.g. contracts/vault/X.sol)
   if [ ! -f "$sol_file" ]; then
-    log_warn "File not found: $sol_file — skipping"
-    return 1
+    local found_path
+    found_path=$(find "${CONTRACTS_DIR}" -name "${contract_name}.sol" -not -path "*/node_modules/*" 2>/dev/null | head -1)
+    if [ -n "$found_path" ]; then
+      sol_file="$found_path"
+    else
+      log_warn "File not found: ${contract_name}.sol — skipping"
+      return 0
+    fi
   fi
 
   log_info "Analyzing ${contract_name} (timeout: ${TIMEOUT}s, depth: ${MAX_DEPTH})..."
@@ -178,9 +185,9 @@ main() {
 
   for contract in "${contracts_to_analyze[@]}"; do
     if analyze_contract "$contract"; then
-      ((passed++))
+      passed=$((passed + 1))
     else
-      ((failed++))
+      failed=$((failed + 1))
     fi
   done
 

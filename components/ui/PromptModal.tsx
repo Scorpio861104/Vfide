@@ -26,7 +26,7 @@
  */
 
 import { useEffect, useRef, useState, useCallback, type ReactNode } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { LoadingButton } from './LoadingButton';
 
@@ -124,7 +124,7 @@ export function PromptModal({
       {isOpen && (
         <>
           {/* Backdrop */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -134,7 +134,7 @@ export function PromptModal({
           />
 
           {/* Modal */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -179,7 +179,7 @@ export function PromptModal({
                     maxLength={maxLength}
                     disabled={isLoading}
                     rows={4}
-                    className="w-full bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-cyan-400 resize-y disabled:opacity-60"
+                    className="w-full bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-accent resize-y disabled:opacity-60"
                   />
                 ) : (
                   <input
@@ -195,7 +195,7 @@ export function PromptModal({
                     placeholder={placeholder}
                     maxLength={maxLength}
                     disabled={isLoading}
-                    className="w-full bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-cyan-400 disabled:opacity-60"
+                    className="w-full bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-accent disabled:opacity-60"
                   />
                 )}
                 <div className="mt-1.5 flex items-center justify-between text-xs">
@@ -224,7 +224,7 @@ export function PromptModal({
                 </LoadingButton>
               </div>
             </div>
-          </motion.div>
+          </m.div>
         </>
       )}
     </AnimatePresence>

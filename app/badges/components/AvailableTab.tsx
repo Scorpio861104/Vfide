@@ -23,17 +23,19 @@ export function AvailableTab() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let _cancelled = false;
     fetch('/api/badges')
       .then((r) => r.json())
       .then((data) => setBadges(data.badges ?? []))
       .catch(() => setError('Failed to load available badges'))
       .finally(() => setLoading(false));
-  }, []);
+    return () => { _cancelled = true; };
+    }, []);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 size={24} className="text-cyan-400 animate-spin" />
+        <Loader2 size={24} className="text-accent animate-spin" />
       </div>
     );
   }

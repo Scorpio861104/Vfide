@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useAccount } from 'wagmi';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 import {
   ArrowLeft,
   Repeat,
@@ -16,6 +17,7 @@ import {
   Users,
 } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
+import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
 
 type PlanStatus = 'active' | 'paused' | 'archived';
 type Interval = 'weekly' | 'monthly' | 'quarterly' | 'yearly';
@@ -50,6 +52,9 @@ const INTERVAL_LABEL: Record<Interval, string> = {
 const ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
 
 export default function MerchantSubscriptionsPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address } = useAccount();
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [loading, setLoading] = useState(false);
@@ -118,7 +123,7 @@ export default function MerchantSubscriptionsPage() {
         <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         <section className="py-12">
           <div className="container mx-auto max-w-6xl px-4">
-            <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200">
+            <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-accent hover:text-accent">
               <ArrowLeft size={16} /> Back to Merchant Hub
             </Link>
 
@@ -132,7 +137,7 @@ export default function MerchantSubscriptionsPage() {
                   Charge customers on a schedule. Memberships, classes, monthly support plans — whatever your model is.
                 </p>
               </div>
-              <button onClick={() => setShowCreate(true)} disabled={!address} className="px-5 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90">
+              <button onClick={() => setShowCreate(true)} disabled={!address} className="px-5 py-3 bg-gradient-to-r from-accent to-blue-500 rounded-xl font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90">
                 <Plus size={18} /> New plan
               </button>
             </div>
@@ -254,7 +259,10 @@ function CreatePlanModal({ onClose, onCreated, onError }: { onClose: () => void;
   const [interval, setInterval] = useState<Interval>('monthly');
   const [trialDays, setTrialDays] = useState(0);
   const [maxSubs, setMaxSubs] = useState<number | ''>('');
-  const [token] = useState(process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS ?? '0x0000000000000000000000000000000000000000');
+  const configuredToken = isConfiguredContractAddress(CONTRACT_ADDRESSES.VFIDEToken)
+    ? CONTRACT_ADDRESSES.VFIDEToken
+    : '';
+  const [token] = useState(configuredToken);
   const [submitting, setSubmitting] = useState(false);
 
   const canSubmit = name.trim().length > 0 && amount > 0 && ADDRESS_REGEX.test(token) && !submitting;
@@ -302,13 +310,18 @@ function CreatePlanModal({ onClose, onCreated, onError }: { onClose: () => void;
         </div>
 
         <div className="space-y-4">
+          {!configuredToken && (
+            <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-200">
+              VFIDE token contract is not configured. Set NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS before creating subscription plans.
+            </div>
+          )}
           <label className="block">
             <span className="text-xs text-zinc-400 mb-1 block">Name *</span>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="VIP Monthly" className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none" />
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="VIP Monthly" className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none" />
           </label>
           <label className="block">
             <span className="text-xs text-zinc-400 mb-1 block">Description (optional)</span>
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none resize-none" />
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none resize-none" />
           </label>
           <div className="grid grid-cols-2 gap-3">
             <label className="block">
@@ -335,7 +348,7 @@ function CreatePlanModal({ onClose, onCreated, onError }: { onClose: () => void;
               <input type="number" min={1} step={1} value={maxSubs} onChange={(e) => setMaxSubs(e.target.value === '' ? '' : Number(e.target.value))} placeholder="Unlimited" className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm" />
             </label>
           </div>
-          <button onClick={submit} disabled={!canSubmit} className="w-full px-5 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
+          <button onClick={submit} disabled={!canSubmit} className="w-full px-5 py-3 bg-gradient-to-r from-accent to-blue-500 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
             {submitting ? 'Creating…' : 'Create plan'}
           </button>
         </div>

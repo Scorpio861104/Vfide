@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Award, TrendingDown, Sparkles, ExternalLink } from 'lucide-react';
 
 import { useProofScore } from '@/hooks/useProofScore';
+import { HIGH_TRUST_THRESHOLD, LOW_TRUST_THRESHOLD } from '@/lib/constants';
 import { ChapterShell } from '../ChapterShell';
 
 interface ProofScoreChapterProps {
@@ -34,10 +35,10 @@ export function ProofScoreChapter({ onComplete, onSkip }: ProofScoreChapterProps
   return (
     <ChapterShell
       chapter="proofScore"
-      description="ProofScore is your trust score on the protocol. The higher it is, the lower your fees and the more features open up — and you build it by transacting, paying back loans, and getting endorsements."
+      description="Building trust matters. ProofScore reflects responsible behavior across the ecosystem and can improve fees, participation, and merchant confidence."
       onPrimary={onComplete}
       onSkip={onSkip}
-      primaryLabel="Got it"
+      primaryLabel="Continue"
     >
       <div className="space-y-4">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -57,7 +58,7 @@ export function ProofScoreChapter({ onComplete, onSkip }: ProofScoreChapterProps
           />
           <Stat
             icon={Sparkles}
-            color="text-cyan-300"
+            color="text-accent"
             label="Score range"
             value="0–10,000"
             sub="5,000 is neutral"
@@ -71,7 +72,7 @@ export function ProofScoreChapter({ onComplete, onSkip }: ProofScoreChapterProps
               <span className="font-semibold text-emerald-300">≥ 8,000:</span> 0.25% burn fee
             </li>
             <li>
-              <span className="font-semibold text-cyan-300">5,000–7,999:</span> 2.5% sliding down with trust
+              <span className="font-semibold text-accent">{LOW_TRUST_THRESHOLD + 1}–{HIGH_TRUST_THRESHOLD - 1}:</span> sliding — up to 5% at the low end, as low as 0.25% approaching the top
             </li>
             <li>
               <span className="font-semibold text-amber-300">4,000–4,999:</span> Higher fee — build trust to bring it down
@@ -82,16 +83,16 @@ export function ProofScoreChapter({ onComplete, onSkip }: ProofScoreChapterProps
           </ul>
         </div>
 
-        <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/5 p-4 text-sm text-cyan-100">
+        <div className="rounded-xl border border-accent/30 bg-accent/5 p-4 text-sm text-accent">
           <p className="font-semibold text-white">Your first payment</p>
           <p className="mt-1 text-white/80">
-            Each completed payment, on-time loan repayment, and merchant endorsement nudges your
-            score up. Find a merchant, scan their QR or open their checkout link, and pay.
+            Positive participation improves your standing over time. Complete payments, build trusted
+            interactions, and use protocol features responsibly to strengthen your score.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <Link
               href="/marketplace"
-              className="inline-flex items-center gap-1 rounded-lg bg-cyan-500/20 px-3 py-1.5 text-xs font-semibold text-cyan-100 hover:bg-cyan-500/30"
+              className="inline-flex items-center gap-1 rounded-lg bg-accent/20 px-3 py-1.5 text-xs font-semibold text-accent hover:bg-accent/30"
             >
               Browse merchants <ExternalLink size={12} aria-hidden />
             </Link>

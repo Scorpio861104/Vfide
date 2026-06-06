@@ -3,7 +3,7 @@
 import { BookOpen, Shield, Download, Plug, Key, CheckCircle } from 'lucide-react';
 
 const LEDGER_STEPS = [
-  { icon: <Download size={16} className="text-cyan-400" />, title: 'Install Ledger Live', desc: 'Download Ledger Live from ledger.com/start. Initialize your device and write down your 24-word recovery phrase offline.' },
+  { icon: <Download size={16} className="text-accent" />, title: 'Install Ledger Live', desc: 'Download Ledger Live from ledger.com/start. Initialize your device and write down your 24-word recovery phrase offline.' },
   { icon: <Download size={16} className="text-purple-400" />, title: 'Install Ethereum App', desc: 'In Ledger Live, go to Manager → App Catalog. Search for Ethereum and install it on your device.' },
   { icon: <Plug size={16} className="text-green-400" />, title: 'Connect via USB', desc: 'Use the Connect tab on the left. Select Ledger, plug in your device, unlock it, and open the Ethereum app.' },
   { icon: <Key size={16} className="text-yellow-400" />, title: 'Derive Account', desc: 'VFIDE will request permission to read your accounts. Select the address you want to use and confirm.' },
@@ -11,7 +11,7 @@ const LEDGER_STEPS = [
 ];
 
 const TREZOR_STEPS = [
-  { icon: <Download size={16} className="text-cyan-400" />, title: 'Download Trezor Suite', desc: 'Get Trezor Suite from trezor.io/start. Set up your device and secure your seed phrase.' },
+  { icon: <Download size={16} className="text-accent" />, title: 'Download Trezor Suite', desc: 'Get Trezor Suite from trezor.io/start. Set up your device and secure your seed phrase.' },
   { icon: <Shield size={16} className="text-purple-400" />, title: 'Enable Bridge', desc: 'Trezor Bridge runs in the background to allow browser communication. Install it from Trezor Suite if prompted.' },
   { icon: <Plug size={16} className="text-green-400" />, title: 'Connect USB', desc: 'Plug in your Trezor and unlock it using your PIN. The device should show the home screen.' },
   { icon: <Key size={16} className="text-yellow-400" />, title: 'Connect in VFIDE', desc: 'Use the Connect tab, select Trezor, and follow the browser popup to grant access.' },
@@ -23,7 +23,7 @@ export function GuideTab() {
     <div className="space-y-6">
       <div className="bg-white/3 border border-white/10 rounded-2xl p-5">
         <div className="flex items-center gap-2 mb-4">
-          <BookOpen size={16} className="text-cyan-400" />
+          <BookOpen size={16} className="text-accent" />
           <h3 className="text-white font-semibold text-sm">Ledger Setup Guide</h3>
         </div>
         <div className="space-y-4">

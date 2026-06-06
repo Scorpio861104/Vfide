@@ -9,6 +9,7 @@ import { useLeaderboard, useUserRank } from '@/hooks/useLeaderboard';
 import { AllTab } from './components/AllTab';
 import { MonthTab } from './components/MonthTab';
 import { WeekTab } from './components/WeekTab';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 type TabId = 'all' | 'month' | 'week';
 
@@ -16,6 +17,9 @@ const TAB_LABELS: Record<TabId, string> = { all: 'All Time', month: 'This Month'
 const TAB_IDS: TabId[] = ['all', 'month', 'week'];
 
 export default function LeaderboardPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [activeTab, setActiveTab] = useState<TabId>('all');
   const { entries = [], totalParticipants = 0, refetch } = useLeaderboard();
   const { rank } = useUserRank();

@@ -2,7 +2,7 @@
  * Escrow Components - Reusable UI components for escrow functionality
  */
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { 
   Clock, CheckCircle2, AlertTriangle, 
   Scale, FileCheck, Calendar, DollarSign, 
@@ -66,7 +66,7 @@ export function EscrowCard({
   const config = stateConfig[state];
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ scale: 1.002, y: -2 }}
@@ -128,7 +128,7 @@ export function EscrowCard({
             {state === 'CREATED' && (
               <>
                 {onRelease && (
-                  <motion.button
+                  <m.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={onRelease}
@@ -138,11 +138,11 @@ export function EscrowCard({
                     <CheckCircle2 className="w-4 h-4" />
                     <span className="hidden sm:inline">Release Funds</span>
                     <span className="sm:hidden">Release</span>
-                  </motion.button>
+                  </m.button>
                 )}
                 
                 {onDispute && (
-                  <motion.button
+                  <m.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={onDispute}
@@ -152,7 +152,7 @@ export function EscrowCard({
                     <AlertTriangle className="w-4 h-4" />
                     <span className="hidden sm:inline">Raise Dispute</span>
                     <span className="sm:hidden">Dispute</span>
-                  </motion.button>
+                  </m.button>
                 )}
               </>
             )}
@@ -175,7 +175,7 @@ export function EscrowCard({
           </div>
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -195,9 +195,9 @@ export function EscrowStats({
       label: 'Total in Escrow', 
       value: `${totalInEscrow} VFIDE`, 
       icon: <DollarSign className="w-5 h-5" />, 
-      gradient: 'from-cyan-500/20 to-teal-500/10', 
-      border: 'border-cyan-500/20', 
-      text: 'text-cyan-400' 
+      gradient: 'from-accent/20 to-teal-500/10', 
+      border: 'border-accent/20', 
+      text: 'text-accent' 
     },
     { 
       label: 'Active Escrows', 
@@ -228,7 +228,7 @@ export function EscrowStats({
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
       {stats.map((stat, idx) => (
-        <motion.div
+        <m.div
           key={stat.label}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -241,7 +241,7 @@ export function EscrowStats({
           </div>
           <p className="text-lg sm:text-2xl font-bold text-white">{stat.value}</p>
           <p className="text-xs sm:text-sm text-gray-400">{stat.label}</p>
-        </motion.div>
+        </m.div>
       ))}
     </div>
   );
@@ -257,16 +257,16 @@ export function EmptyState({
   description: string; 
 }) {
   return (
-    <motion.div 
+    <m.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="text-center py-12 sm:py-16"
     >
-      <div className="p-4 rounded-2xl bg-gradient-to-br from-cyan-500/10 to-emerald-500/5 border border-cyan-500/20 inline-block mb-4">
+      <div className="p-4 rounded-2xl bg-gradient-to-br from-accent/10 to-emerald-500/5 border border-accent/20 inline-block mb-4">
         {icon}
       </div>
       <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">{title}</h3>
       <p className="text-sm sm:text-base text-gray-400">{description}</p>
-    </motion.div>
+    </m.div>
   );
 }

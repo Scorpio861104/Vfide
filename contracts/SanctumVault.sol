@@ -116,6 +116,16 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     uint64 public pendingDAOAt;
     /// @notice DAO_CHANGE_DELAY
     uint64 public constant DAO_CHANGE_DELAY = 48 hours;
+    /// @notice DISBURSEMENT_DELAY — minimum time between a disbursement proposal and its execution.
+    /// @dev Matches the VFIDE Manual v1.0 reference card: "SanctumVault disbursement delay = 1 day".
+    ///      Previously inlined as a magic number in executeDisbursement(); lifted to a named
+    ///      constant for ABI clarity and easier review against the public manual.
+    uint64 public constant DISBURSEMENT_DELAY = 1 days;
+    /// @notice PROPOSAL_EXPIRY — maximum age a disbursement proposal can have before it can no
+    ///         longer be executed. Forces stale proposals to be re-proposed with fresh approvals.
+    /// @dev Matches the VFIDE Manual v1.0 reference card: "SanctumVault proposal expiry = 90 days".
+    ///      Previously inlined as a magic number (SV-02); lifted to a named constant.
+    uint64 public constant PROPOSAL_EXPIRY = 90 days;
     /// @notice ledger
     IProofLedger public ledger;
     /// @notice seer
@@ -123,7 +133,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
 
     // ProofScore rewards for charitable actions
     /// @notice DONATION_REWARD
-    uint16 public constant DONATION_REWARD = 10; // +1.0 per donation
+    uint16 public constant DONATION_REWARD = 10;  // +1.0 per donation
     /// @notice MIN_REWARDABLE_DEPOSIT
     uint256 public constant MIN_REWARDABLE_DEPOSIT = 1_000_000; // Ignore dust donations (1 unit at 6 decimals)
     /// @notice lastDonationRewardDay
@@ -275,7 +285,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         emit LedgerSet(_ledger);
         _log("sanctum_ledger_set");
     }
-
+    
     /// @notice setSeer
     /// @param _seer _seer
     function setSeer(address _seer) external onlyDAO {
@@ -330,7 +340,11 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     /// @param charity charity
     /// @param name name
     /// @param category category
-    function approveCharity(address charity, string calldata name, string calldata category) external onlyDAO {
+    function approveCharity(
+        address charity,
+        string calldata name,
+        string calldata category
+    ) external onlyDAO {
         require(charity != address(0), "zero");
         require(!charities[charity].approved, "already approved");
 
@@ -481,7 +495,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
 
         d.approvals[msg.sender] = true;
         ++d.approvalCount;
-
+        
         emit DisbursementApproved(proposalId, msg.sender);
         _logEv(msg.sender, "disbursement_approval", proposalId, "");
     }
@@ -496,8 +510,8 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         require(d.proposedAt != 0, "not found");
         require(!d.executed && !d.rejected, "already finalized");
         require(d.approvalCount >= approvalsRequired, "insufficient approvals");
-        require(block.timestamp >= d.proposedAt + 1 days, "SANCT: 24h delay");
-        require(block.timestamp <= d.proposedAt + 90 days, "SANCT: proposal expired"); // SV-02
+        require(block.timestamp >= d.proposedAt + DISBURSEMENT_DELAY, "SANCT: 24h delay");
+        require(block.timestamp <= d.proposedAt + PROPOSAL_EXPIRY, "SANCT: proposal expired"); // SV-02
         require(charities[d.charity].approved, "SANCT: charity removed"); // SV-03
 
         // Check balance again
@@ -545,24 +559,18 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     /// @return executed executed
     /// @return rejected rejected
     /// @return approvalCount_ approvalCount_
-    function getDisbursement(
-        uint256 proposalId
-    )
-        external
-        view
-        returns (
-            address charity,
-            address token,
-            uint256 amount,
-            string memory campaign,
-            string memory documentation,
-            uint64 proposedAt,
-            uint64 executedAt,
-            bool executed,
-            bool rejected,
-            uint8 approvalCount_
-        )
-    {
+    function getDisbursement(uint256 proposalId) external view returns (
+        address charity,
+        address token,
+        uint256 amount,
+        string memory campaign,
+        string memory documentation,
+        uint64 proposedAt,
+        uint64 executedAt,
+        bool executed,
+        bool rejected,
+        uint8 approvalCount_
+    ) {
         Disbursement storage d = disbursements[proposalId];
         return (d.charity, d.token, d.amount, d.campaign, d.documentation, d.proposedAt, d.executedAt, d.executed, d.rejected, d.approvalCount);
     }
@@ -588,7 +596,12 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     /// @return name name
     /// @return category category
     /// @return approvedAt approvedAt
-    function getCharityInfo(address charity) external view returns (bool approved, string memory name, string memory category, uint64 approvedAt) {
+    function getCharityInfo(address charity) external view returns (
+        bool approved,
+        string memory name,
+        string memory category,
+        uint64 approvedAt
+    ) {
         CharityInfo storage c = charities[charity];
         return (c.approved, c.name, c.category, c.approvedAt);
     }

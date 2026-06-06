@@ -1,6 +1,6 @@
 'use client'
 
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { ReactNode, useEffect, useId, useRef } from 'react'
 import { X } from 'lucide-react'
 // A11Y FOLLOW-UP FIX: focus trap. The base Modal component is the
@@ -75,7 +75,7 @@ export function Modal({
       {isOpen && (
         <>
           {/* Backdrop */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -85,7 +85,7 @@ export function Modal({
 
           {/* Modal Container */}
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-            <motion.div
+            <m.div
               ref={dialogRef}
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -117,13 +117,13 @@ export function Modal({
                     )}
                   </div>
                   {showCloseButton && (
-                    <motion.button
+                    <m.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={onClose}
                       className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-zinc-100 transition-colors" aria-label="Close">
                       <X size={20} />
-                    </motion.button>
+                    </m.button>
                   )}
                 </div>
               )}
@@ -132,7 +132,7 @@ export function Modal({
               <div className="p-6">
                 {children}
               </div>
-            </motion.div>
+            </m.div>
           </div>
         </>
       )}
@@ -172,7 +172,7 @@ export function Button({
   type = 'button'
 }: ButtonProps) {
   const variants = {
-    primary: 'bg-gradient-to-r from-cyan-400 to-cyan-600 text-black hover:shadow-lg hover:shadow-cyan-400/25',
+    primary: 'bg-gradient-to-r from-accent to-accent-dark text-zinc-900 hover:shadow-lg hover:shadow-accent/25',
     secondary: 'bg-white/10 text-zinc-100 hover:bg-white/20 border border-white/10',
     ghost: 'bg-transparent text-zinc-400 hover:text-zinc-100 hover:bg-white/5',
     danger: 'bg-gradient-to-r from-red-500 to-[#CC3333] text-white hover:shadow-lg hover:shadow-red-500/25',
@@ -186,7 +186,7 @@ export function Button({
   }
 
   return (
-    <motion.button
+    <m.button
       type={type}
       onClick={onClick}
       disabled={disabled || loading}
@@ -203,7 +203,7 @@ export function Button({
       `}
     >
       {loading && (
-        <motion.span
+        <m.span
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
           className="w-4 h-4 border-2 border-current border-t-transparent rounded-full"
@@ -212,7 +212,7 @@ export function Button({
       {!loading && icon && iconPosition === 'left' && icon}
       {children}
       {!loading && icon && iconPosition === 'right' && icon}
-    </motion.button>
+    </m.button>
   )
 }
 
@@ -261,6 +261,7 @@ export function Input({
         <input
           type={type}
           value={value}
+          placeholder={_placeholder}
           onChange={(e) =>  onChange(e.target.value)}
          
           disabled={disabled}
@@ -268,7 +269,7 @@ export function Input({
             w-full px-4 py-3 ${icon ? 'pl-12' : ''}
             bg-white/5 border rounded-xl
             text-zinc-100 
-            focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/50
+            focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50
             transition-all duration-300
             ${error ? 'border-red-500' : 'border-white/10 hover:border-white/20'}
             ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
@@ -328,7 +329,7 @@ export function Select({
           w-full px-4 py-3
           bg-white/5 border border-white/10 rounded-xl
           text-zinc-100
-          focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/50
+          focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50
           transition-all duration-300
           hover:border-white/20
           ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
@@ -376,7 +377,7 @@ export function Badge({
     success: 'bg-emerald-500/20 text-emerald-500',
     warning: 'bg-amber-400/20 text-amber-400',
     danger: 'bg-red-500/20 text-red-500',
-    info: 'bg-cyan-400/20 text-cyan-400',
+    info: 'bg-accent/20 text-accent',
     premium: 'bg-gradient-to-r from-amber-400/20 to-orange-500/20 text-amber-400',
   }
 
@@ -479,7 +480,7 @@ export function ProgressBar({
         </div>
       )}
       <div className={`w-full bg-white/10 rounded-full overflow-hidden ${sizes[size]}`}>
-        <motion.div
+        <m.div
           initial={animated ? { width: 0 } : undefined}
           animate={{ width: `${percentage}%` }}
           transition={{ duration: 1, ease: "easeOut" }}
@@ -518,14 +519,14 @@ export function Alert({
   className = ''
 }: AlertProps) {
   const variants = {
-    info: 'bg-cyan-400/10 border-cyan-400/30 text-cyan-400',
+    info: 'bg-accent/10 border-accent/30 text-accent',
     success: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500',
     warning: 'bg-amber-400/10 border-amber-400/30 text-amber-400',
     danger: 'bg-red-500/10 border-red-500/30 text-red-500',
   }
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
@@ -549,7 +550,7 @@ export function Alert({
           </button>
         )}
       </div>
-    </motion.div>
+    </m.div>
   )
 }
 

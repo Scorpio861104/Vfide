@@ -78,6 +78,13 @@ import { useProofScore, useScoreBreakdown } from '@/hooks/useProofScoreHooks'
 describe('useProofScoreHooks', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    // Provide a connected wallet so the hook calculates score from data (not null)
+    jest.mocked(require('wagmi').useAccount).mockReturnValue({
+      address: '0xDeadBeefDeadBeefDeadBeefDeadBeefDeadBeef' as `0x${string}`,
+      isConnected: true,
+      status: 'connected',
+      chainId: 84532,
+    })
     // Reset useReadContract to default
     jest.mocked(useReadContract).mockReturnValue({
       data: null,
@@ -89,8 +96,8 @@ describe('useProofScoreHooks', () => {
   describe('useProofScore', () => {
     it('returns default neutral score when no data', () => {
       const { score, tier } = useProofScore()
-      expect(score).toBe(5000)
-      expect(tier).toBe('Neutral')
+      expect(score).toBe(5000) // default when address connected but no on-chain data
+      expect(tier && typeof tier === 'object' && 'label' in tier ? tier.label : tier).toBe('Neutral')
     })
 
     it('returns Elite tier for score >= 8000', () => {
@@ -102,7 +109,7 @@ describe('useProofScoreHooks', () => {
 
       const { score, tier, isElite, canEndorse } = useProofScore()
       expect(score).toBe(8500)
-      expect(tier).toBe('Elite')
+      expect(tier && typeof tier === 'object' && 'label' in tier ? tier.label : tier).toBe('Elite')
       expect(isElite).toBe(true)
       expect(canEndorse).toBe(true)
     })
@@ -115,12 +122,12 @@ describe('useProofScoreHooks', () => {
       } as ReturnType<typeof useReadContract>)
 
       const { tier, canCouncil, canEndorse } = useProofScore()
-      expect(tier).toBe('Council')
+      expect(tier && typeof tier === 'object' && 'label' in tier ? tier.label : tier).toBe('Council')
       expect(canCouncil).toBe(true)
       expect(canEndorse).toBe(true)
     })
 
-    it('returns Low Trust tier for score 3500-4999', () => {
+    it('returns Low Trust tier for score 4000-4999', () => {
       jest.mocked(useReadContract).mockReturnValue({
         data: 4000n as unknown as undefined,
         isLoading: false,
@@ -128,12 +135,12 @@ describe('useProofScoreHooks', () => {
       } as ReturnType<typeof useReadContract>)
 
       const { tier, canVote, canMerchant } = useProofScore()
-      expect(tier).toBe('Low Trust')
+      expect(tier && typeof tier === 'object' && 'label' in tier ? tier.label : tier).toBe('Low Trust')
       expect(canVote).toBe(false)
       expect(canMerchant).toBe(false)
     })
 
-    it('returns Risky tier for score < 3500', () => {
+    it('returns Risky tier for score < 4000', () => {
       jest.mocked(useReadContract).mockReturnValue({
         data: 2000n as unknown as undefined,
         isLoading: false,
@@ -141,7 +148,7 @@ describe('useProofScoreHooks', () => {
       } as ReturnType<typeof useReadContract>)
 
       const { tier } = useProofScore()
-      expect(tier).toBe('Risky')
+      expect(tier && typeof tier === 'object' && 'label' in tier ? tier.label : tier).toBe('Risky')
     })
 
     it('calculates correct burn fees for Elite', () => {
@@ -179,7 +186,7 @@ describe('useProofScoreHooks', () => {
         isLoading: false,
         refetch: jest.fn(),
       } as ReturnType<typeof useReadContract>)
-      expect(useProofScore().color).toBe('#A78BFA') // Council purple
+      expect(useProofScore().color).toBe('#00F0FF') // Council cyan
 
       jest.mocked(useReadContract).mockReturnValue({
         data: 5000n as unknown as undefined,

@@ -1,19 +1,16 @@
 'use client';
 
 /**
- * FeeFlowRiver — live SVG of the canonical 35/20/15/20/10 fee split.
+ * FeeFlowRiver — live SVG of the FeeDistributor default 35/20/15/20/10 fee split.
  *
  * What it shows: transactions arrive on the left as particles, get
  * struck by the split point in the middle, and fan out into five
  * labeled pools on the right with running totals. The pools are the
  * five real contracts that inherit ServicePool in the on-chain
- * FeeDistributor:
- *
- *   35% burn        → permanently removed
- *   20% Sanctum     → charity + community grants
- *   20% merchant    → top-merchant volume rewards
- *   15% DAO payroll → elected council pay
- *   10% headhunter  → invite-people rewards
+ * Canonical end-to-end split of every fee (see FEE_MODEL_CANONICAL.md):
+ *   ProofScoreBurnRouter takes the whole fee -> 40% burn | 10% Sanctum | 50% ecosystem.
+ *   FeeDistributor then splits that 50% ecosystem share 50/30/20, i.e. of the total fee:
+ *   burn 40% | Sanctum 10% | DAO payroll 25% | merchant pool 15% | referral/headhunter 10%
  *
  * Why this matters on the landing page: most "fee distribution" charts
  * are a static pie hidden in a whitepaper. Showing the splits as a
@@ -35,7 +32,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { m, useReducedMotion } from 'framer-motion';
 import { Activity } from 'lucide-react';
 
 import { Numeric } from '@/components/ui/Numeric';
@@ -54,11 +51,11 @@ interface Pool {
 }
 
 const POOLS: Pool[] = [
-  { id: 'burn',     label: 'Burn',          short: 'Burn',     pct: 35, hex: '#f97316', y: 0.10 },
-  { id: 'sanctum',  label: 'Sanctum Fund',  short: 'Sanctum',  pct: 20, hex: '#ec4899', y: 0.30 },
-  { id: 'merchant', label: 'Merchant pool', short: 'Merchants', pct: 20, hex: '#10b981', y: 0.50 },
-  { id: 'payroll',  label: 'DAO payroll',   short: 'Payroll',  pct: 15, hex: '#06b6d4', y: 0.70 },
-  { id: 'headhunt', label: 'Referral pool', short: 'Referrals', pct: 10, hex: '#a855f7', y: 0.90 },
+  { id: 'burn',     label: 'Burn',          short: 'Burn',     pct: 40,   hex: '#f97316', y: 0.10 }, // ProofScoreBurnRouter burns 40% of every fee
+  { id: 'sanctum',  label: 'Sanctum Fund',  short: 'Sanctum',  pct: 10,   hex: '#ec4899', y: 0.30 }, // ProofScoreBurnRouter routes 10% to Sanctum
+  { id: 'payroll',  label: 'DAO payroll',   short: 'Payroll',  pct: 25,   hex: '#06b6d4', y: 0.50 }, // FeeDistributor 50% of the 50% ecosystem share = 25% of total
+  { id: 'merchant', label: 'Merchant pool', short: 'Merchants', pct: 15,   hex: '#10b981', y: 0.70 }, // FeeDistributor 30% of ecosystem share = 15% of total
+  { id: 'headhunt', label: 'Referral pool', short: 'Referrals', pct: 10,   hex: '#a855f7', y: 0.90 }, // FeeDistributor 20% of ecosystem share = 10% of total
 ];
 
 interface Particle {
@@ -234,6 +231,36 @@ export function FeeFlowRiver() {
   const now = typeof performance !== 'undefined' ? performance.now() : 0;
   const startedAt = startedAtRef.current ?? now;
 
+  // Reduced motion: show static distribution bars — no SVG, no particles,
+  // no animation loops. Safer for users with vestibular disorders.
+  if (reduce) {
+    return (
+      <div id="fee-river" className="w-full rounded-3xl border border-white/10 bg-zinc-950/70 p-5 sm:p-7">
+        <div className="mb-4">
+          <div className="mb-1 inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs uppercase tracking-widest text-cyan-300">
+            <Activity size={12} /> Fee distribution
+          </div>
+          <h3 className="text-2xl font-bold text-white">Every fee is accounted for</h3>
+          <p className="mt-1 max-w-2xl text-sm text-gray-400">
+            VFIDE collects fees from buyers, never merchants. The FeeDistributor routes each fee into five pools that work for the network.
+          </p>
+        </div>
+        <div className="space-y-3 mt-4">
+          {POOLS.map((pool) => (
+            <div key={pool.id} className="flex items-center gap-3">
+              <div className="w-28 text-sm text-zinc-300 shrink-0">{pool.label}</div>
+              <div className="flex-1 h-3 bg-zinc-800 rounded-full overflow-hidden">
+                <div className="h-full rounded-full" style={{ width: `${pool.pct}%`, background: pool.hex }} />
+              </div>
+              <div className="w-10 text-sm font-semibold text-right" style={{ color: pool.hex }}>{pool.pct}%</div>
+            </div>
+          ))}
+        </div>
+        <p className="mt-4 text-xs text-zinc-600">Animation disabled (prefers-reduced-motion). Numbers are illustrative until mainnet launch.</p>
+      </div>
+    );
+  }
+
   return (
     <div id="fee-river" className="relative w-full overflow-hidden rounded-3xl border border-white/10 bg-zinc-950/70 p-5 backdrop-blur-sm sm:p-7">
       <div className="mb-4 flex items-end justify-between gap-3">
@@ -243,7 +270,7 @@ export function FeeFlowRiver() {
           </div>
           <h3 className="text-2xl font-bold text-white">Every fee is accounted for</h3>
           <p className="mt-1 max-w-2xl text-sm text-gray-400">
-            VFIDE collects fees from buyers, never merchants. Each fee splits five ways into pools that work for the network — supply burn, charity, top merchants, council pay, and referral rewards.
+            VFIDE collects fees from buyers, never merchants. The FeeDistributor routes each fee into five pools — supply burn, charity, top merchants, council pay, and referral rewards.
           </p>
         </div>
       </div>
@@ -291,7 +318,7 @@ export function FeeFlowRiver() {
           {/* Pool nodes (right side).
               Non-burn pools render as a simple two-circle node.
               The burn pool gets its own forge/furnace visual to honor that
-              its 35% is *permanently destroyed*, not redistributed — a
+              its 40% is *permanently destroyed*, not redistributed — a
               meaningful visual difference from the other four pools. */}
           {POOLS.filter((p) => p.id !== 'burn').map((p) => (
             <g key={`pool-${p.id}`}>
@@ -357,7 +384,7 @@ export function FeeFlowRiver() {
                 </span>
               </div>
               <div className="mt-1 text-lg text-white">
-                <motion.span
+                <m.span
                   key={Math.floor(totals[p.id] * 100)}
                   initial={{ opacity: 0.5, y: -2 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -365,7 +392,7 @@ export function FeeFlowRiver() {
                   className="inline-block"
                 >
                   <Numeric value={totals[p.id]} format="currency" size="lg" weight={500} />
-                </motion.span>
+                </m.span>
               </div>
             </div>
           ))}
@@ -375,7 +402,7 @@ export function FeeFlowRiver() {
       <div className="mt-4 flex items-start gap-2 text-[11px] text-gray-500">
         <Activity size={12} className="mt-0.5 flex-shrink-0" />
         <span>
-          Live demo with illustrative numbers — pre-mainnet. Splits match the on-chain <code className="font-mono text-gray-400">FeeDistributor</code>. Once VFIDE is live, this animates against real Transfer events.
+          Live demo with illustrative numbers — pre-mainnet. Reflects FeeDistributor.sol default allocation (DAO-adjustable). Once VFIDE is live, this animates against real on-chain events.
         </span>
       </div>
     </div>
@@ -423,7 +450,7 @@ function bezier(
 
 // ── Burn pool — forge/furnace visual ────────────────────────────────
 //
-// Visually distinguishes the 35% burn channel from the other four pools.
+// Visually distinguishes the 40% burn channel from the other four pools.
 // Burned VFIDE is permanently removed; the other pools redistribute. The
 // furnace metaphor makes that difference immediate.
 //

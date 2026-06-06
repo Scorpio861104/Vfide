@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, X } from 'lucide-react';
 import { ReactNode } from 'react';
 import { LoadingButton } from './LoadingButton';
@@ -30,8 +30,8 @@ const variantStyles = {
     button: 'primary' as const,
   },
   info: {
-    icon: <AlertTriangle className="text-cyan-400" size={32} />,
-    bg: 'bg-cyan-400/20 border-cyan-400',
+    icon: <AlertTriangle className="text-accent" size={32} />,
+    bg: 'bg-accent/20 border-accent',
     button: 'primary' as const,
   },
 };
@@ -70,14 +70,14 @@ export function ConfirmModal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-150 bg-black/60 backdrop-blur-md flex items-center justify-center p-4"
           onClick={onClose}
         >
-          <motion.div
+          <m.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
@@ -109,7 +109,7 @@ export function ConfirmModal({
               <button
                 onClick={onClose}
                 disabled={isLoading}
-                className="flex-1 px-4 py-2.5 bg-zinc-800 border border-zinc-700 text-zinc-100 rounded-lg hover:border-cyan-400 transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-2.5 bg-zinc-800 border border-zinc-700 text-zinc-100 rounded-lg hover:border-accent transition-colors disabled:opacity-50"
               >
                 {cancelText}
               </button>
@@ -122,8 +122,8 @@ export function ConfirmModal({
                 {confirmText}
               </LoadingButton>
             </div>
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       )}
     </AnimatePresence>
   );

@@ -3,8 +3,19 @@
 export const dynamic = 'force-dynamic';
 
 import { ComingSoonPage } from '@/components/feedback/ComingSoonPage';
+import { isFeatureEnabled } from '@/lib/features';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function AgentPage() {
+  const { locale } = useLocale();
+  void locale;
+
+  // SWITCH: when the backing contract/service for this feature ships, replace the
+  // ComingSoonPage below with the real implementation guarded by this flag:
+  //   if (isFeatureEnabled('agent')) return <RealAgentSurface />;
+  // The flag ('NEXT_PUBLIC_ENABLE_AGENT') is already wired in lib/features.ts.
+  void isFeatureEnabled;
+
   return (
     <ComingSoonPage
       title="Cash Agent Mode"

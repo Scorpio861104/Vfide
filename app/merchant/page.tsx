@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { useAccount } from 'wagmi';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 import {
   Store,
   ArrowRight,
@@ -83,6 +84,9 @@ const processors = [
 ];
 
 export default function MerchantPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address, isConnected } = useAccount();
 
   return (

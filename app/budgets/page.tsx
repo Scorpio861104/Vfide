@@ -6,17 +6,19 @@ import React, { useState, useCallback } from 'react';
 import { useFinancialIntelligence, Budget } from '@/lib/financialIntelligence';
 import { useAccount } from 'wagmi';
 import { toast } from '@/lib/toast';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m as motion, AnimatePresence } from 'framer-motion';
 import { PieChart, PlusCircle, Edit2, Trash2, BarChart3 } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
-import { ConfirmModal } from '@/components/ui/ConfirmModal';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function BudgetsPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address } = useAccount();
   const { budgets, spendingByCategory, setBudget, removeBudget, loading: _loading } = useFinancialIntelligence(address);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [pendingDelete, setPendingDelete] = useState<Budget | null>(null);
   const [newBudget, setNewBudget] = useState({
     category: '',
     limit: '',
@@ -49,15 +51,10 @@ export default function BudgetsPage() {
   }, []);
 
   const handleDelete = useCallback((budget: Budget) => {
-    setPendingDelete(budget);
-  }, []);
-
-  const confirmDelete = useCallback(() => {
-    if (!pendingDelete) return;
-    removeBudget(pendingDelete.id);
+    if (typeof window !== 'undefined' && !window.confirm(`Delete budget for ${budget.category}?`)) return;
+    removeBudget(budget.id);
     toast.success('Budget deleted');
-    setPendingDelete(null);
-  }, [pendingDelete, removeBudget]);
+  }, [removeBudget]);
 
   const getSpentAmount = (category: string) => {
     const cat = spendingByCategory.find(c => c.name === category);
@@ -238,17 +235,6 @@ export default function BudgetsPage() {
           </>
         )}
       </AnimatePresence>
-
-      <ConfirmModal
-        isOpen={pendingDelete !== null}
-        onClose={() => setPendingDelete(null)}
-        onConfirm={confirmDelete}
-        title="Delete budget?"
-        message={pendingDelete ? `Delete budget for ${pendingDelete.category}? This action cannot be undone.` : ''}
-        confirmText="Delete"
-        cancelText="Keep"
-        variant="danger"
-      />
 
       <Footer />
     </div>

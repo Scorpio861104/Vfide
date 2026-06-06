@@ -15,6 +15,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react';
 import {
   getUserLocale, setUserLocale, isRTL, getDirection, getDefaultCurrency,
+  LOCALE_STORAGE_KEY, LEGACY_LOCALE_STORAGE_KEY,
   formatCurrency as fmtCurrency,
   formatTokenWithFiat as fmtTokenFiat,
   formatNumber as fmtNumber,
@@ -41,7 +42,6 @@ interface LocaleContextValue {
 const LocaleContext = createContext<LocaleContextValue | null>(null);
 
 const CURRENCY_STORAGE_KEY = 'vfide.display-currency';
-const LOCALE_STORAGE_KEY = 'vfide.user-locale';
 
 export function LocaleProvider({ children }: { children: ReactNode }) {
   const [currentLocale, setCurrentLocale] = useState(getUserLocale);
@@ -54,10 +54,11 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
 
   // Sync locale preference
   useEffect(() => {
-    const stored = localStorage.getItem(LOCALE_STORAGE_KEY);
+    const stored = localStorage.getItem(LOCALE_STORAGE_KEY) || localStorage.getItem(LEGACY_LOCALE_STORAGE_KEY);
     if (stored) {
       setCurrentLocale(stored);
       setUserLocale(stored);
+      localStorage.setItem(LOCALE_STORAGE_KEY, stored);
     }
   }, []);
 
@@ -65,6 +66,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     setCurrentLocale(l);
     setUserLocale(l);
     localStorage.setItem(LOCALE_STORAGE_KEY, l);
+    localStorage.setItem(LEGACY_LOCALE_STORAGE_KEY, l);
     // Auto-update currency if user hasn't explicitly set one
     if (!localStorage.getItem(CURRENCY_STORAGE_KEY)) {
       const newCurrency = getDefaultCurrency(l);

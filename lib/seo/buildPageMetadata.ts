@@ -61,8 +61,8 @@ export function buildPageMetadata({
       url: path,
       title: `${title} — VFIDE`,
       description,
-      // Root layout provides the og-image.svg fallback; pages that want
-      // a custom image can override on a per-page basis if needed.
+      // Root layout provides the og-image.png fallback (1200×630 PNG — rendered by
+      // all major social platforms). Pages that want a custom image can override.
     },
     twitter: {
       card: 'summary_large_image',

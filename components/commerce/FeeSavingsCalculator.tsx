@@ -6,7 +6,7 @@
 'use client'
 
 import { useFeeCalculator, useProofScore } from '@/lib/vfide-hooks'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { useState } from 'react'
 import { safeParseFloat } from '@/lib/validation'
 
@@ -33,13 +33,13 @@ export function FeeSavingsCalculator() {
       
       {/* Amount Input */}
       <div className="relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-xl blur-xl opacity-20" />
-        <div className="relative bg-zinc-950/80 backdrop-blur-xl rounded-xl p-3 sm:p-4 md:p-6 border border-cyan-400/30">
+        <div className="absolute inset-0 bg-gradient-to-r from-accent to-blue-500 rounded-xl blur-xl opacity-20" />
+        <div className="relative bg-zinc-950/80 backdrop-blur-xl rounded-xl p-3 sm:p-4 md:p-6 border border-accent/30">
           <label className="block text-[10px] sm:text-xs md:text-sm text-zinc-100/70 mb-1 sm:mb-2">
             Payment Amount (USD)
           </label>
           <div className="flex items-center gap-1 sm:gap-2 md:gap-3">
-            <span className="text-xl sm:text-2xl md:text-3xl text-cyan-400">$</span>
+            <span className="text-xl sm:text-2xl md:text-3xl text-accent">$</span>
             <input
               type="number"
               value={amount}
@@ -56,7 +56,7 @@ export function FeeSavingsCalculator() {
       {/* Comparison Grid */}
       <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4">
         {/* Stripe/Traditional */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           className="relative group"
@@ -86,7 +86,7 @@ export function FeeSavingsCalculator() {
             {/* Animated bars showing fee proportion */}
             <div className="space-y-1 hidden sm:block">
               <div className="h-1.5 sm:h-2 bg-red-500/20 rounded-full overflow-hidden">
-                <motion.div
+                <m.div
                   className="h-full bg-red-500"
                   initial={{ width: 0 }}
                   animate={{ width: `${stripeFeePercent}%` }}
@@ -98,10 +98,10 @@ export function FeeSavingsCalculator() {
               </p>
             </div>
           </div>
-        </motion.div>
+        </m.div>
         
         {/* VFIDE */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           className="relative group"
@@ -144,8 +144,8 @@ export function FeeSavingsCalculator() {
             
             {/* Animated bars showing fee proportion */}
             <div className="space-y-1 hidden sm:block">
-              <div className="h-1.5 sm:h-2 bg-cyan-400/20 rounded-full overflow-hidden">
-                <motion.div
+              <div className="h-1.5 sm:h-2 bg-accent/20 rounded-full overflow-hidden">
+                <m.div
                   className="h-full"
                   style={{ backgroundColor: color }}
                   initial={{ width: 0 }}
@@ -158,16 +158,16 @@ export function FeeSavingsCalculator() {
               </p>
             </div>
           </div>
-        </motion.div>
+        </m.div>
       </div>
       
       {/* MASSIVE Savings Highlight */}
-      <motion.div
+      <m.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         className="relative"
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-xl blur-xl opacity-30" />
+        <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-accent rounded-xl blur-xl opacity-30" />
         <div className="relative bg-zinc-950/90 backdrop-blur-xl rounded-xl p-3 sm:p-4 md:p-6 lg:p-8 border-2 border-emerald-400/50 text-center space-y-1 sm:space-y-2">
           <div>
             <p className="text-[10px] sm:text-xs md:text-sm text-zinc-100/60 uppercase tracking-wider">
@@ -176,18 +176,18 @@ export function FeeSavingsCalculator() {
             <p className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-emerald-400">
               ${calculator.savings}
             </p>
-            <p className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl text-cyan-400">
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl text-accent">
               ({calculator.savingsPercent}% cheaper!)
             </p>
           </div>
           
           {/* Annual Savings Calculator */}
           {amountNum > 0 && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="pt-2 sm:pt-3 md:pt-4 mt-2 sm:mt-3 md:mt-4 border-t border-cyan-400/20"
+              className="pt-2 sm:pt-3 md:pt-4 mt-2 sm:mt-3 md:mt-4 border-t border-accent/20"
             >
               <p className="text-[10px] sm:text-xs text-zinc-100/50">
                 If you process ${amount} monthly:
@@ -195,14 +195,14 @@ export function FeeSavingsCalculator() {
               <p className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold text-emerald-400 mt-1 sm:mt-2">
                 ${(safeParseFloat(calculator.savings, 0) * 12).toFixed(2)}/year saved!
               </p>
-            </motion.div>
+            </m.div>
           )}
         </div>
-      </motion.div>
+      </m.div>
       
       {/* ProofScore Improvement Callout */}
-      {score < 8000 && (
-        <motion.div
+      {(score ?? 0) < 8000 && (
+        <m.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-amber-400/10 border border-amber-400/30 rounded-xl p-2 sm:p-3 md:p-4 text-center"
@@ -211,9 +211,9 @@ export function FeeSavingsCalculator() {
             <strong style={{ color }}>Earn higher ProofScore</strong> to save more!
           </p>
           <p className="text-[10px] sm:text-xs text-zinc-100/50 mt-0.5 sm:mt-1">
-            {tier === 'Neutral' ? 'Reach 8000 for 0.25% fees' : tier === 'High Trust' ? 'Almost there! Reach 8000 for lowest fees' : 'Build trust for 0.25% fees'}
+            {tier?.label === 'Elite' ? "You're at the lowest fee tier — 0.25%!" : tier?.label === 'Council' ? 'Almost there! Reach Elite (8000+) for 0.25% fees' : 'Build your ProofScore to reach 0.25% fees'}
           </p>
-        </motion.div>
+        </m.div>
       )}
     </div>
   )

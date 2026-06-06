@@ -46,7 +46,7 @@
  */
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, Shield, Clock, X, Loader2, AlertCircle } from 'lucide-react';
 import { useOwnerActiveClaim } from '@/hooks/useOwnerActiveClaim';
 import { useChallengeClaim } from '@/hooks/useChallengeClaim';
@@ -72,11 +72,6 @@ function formatTimeRemaining(seconds: bigint): string {
   const minutes = Math.floor(s / 60);
   if (minutes >= 2) return `${minutes} minutes`;
   return 'less than 1 minute';
-}
-
-function _shortAddr(addr: string): string {
-  if (!addr || addr.length < 10) return addr;
-  return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 }
 
 export function OwnerChallengeBanner() {
@@ -131,13 +126,14 @@ export function OwnerChallengeBanner() {
           We use z-[60] so this overlays the navigation chrome during a recovery
           claim. This is intentional: when the user's vault is being claimed,
           the warning is more important than navigation. */}
-      <motion.div
+      <m.div
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         className="fixed top-0 left-0 right-0 z-[60] w-full bg-gradient-to-r from-red-600 via-orange-600 to-red-600 border-b-2 border-red-400/50 shadow-lg shadow-red-500/20"
+        data-testid="challenge-banner-root"
       >
         {/* Animated warning stripe across the top for extra visibility */}
-        <motion.div
+        <m.div
           animate={{ backgroundPosition: ['0% 0%', '100% 0%'] }}
           transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
           className="h-1 w-full bg-[linear-gradient(90deg,transparent_0%,#fbbf24_50%,transparent_100%)] bg-[length:200%_100%]"
@@ -147,18 +143,18 @@ export function OwnerChallengeBanner() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
             {/* Icon + headline */}
             <div className="flex items-center gap-3 flex-shrink-0">
-              <motion.div
+              <m.div
                 animate={{ scale: [1, 1.1, 1] }}
                 transition={{ duration: 1.5, repeat: Infinity }}
                 className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center"
               >
                 <AlertTriangle className="h-6 w-6 text-white" />
-              </motion.div>
+              </m.div>
               <div>
                 <p className="text-white font-bold text-sm sm:text-base leading-tight">
                   Recovery claim active on your vault
                 </p>
-                <p className="text-white/80 text-xs sm:text-sm mt-0.5">
+                <p className="text-white/80 text-xs sm:text-sm mt-0.5" data-testid="challenge-status-text">
                   {isPending
                     ? `Guardians are voting (${claim.guardianApprovals}/${claim.guardianCountSnapshot} approved so far)`
                     : isApproved
@@ -174,48 +170,49 @@ export function OwnerChallengeBanner() {
             {/* Action area */}
             <div className="flex items-center gap-3 w-full sm:w-auto">
               {canChallenge && !submitted && (
-                <motion.button
+                <m.button
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
                   onClick={() => setShowChallengeModal(true)}
                   className="flex-1 sm:flex-initial px-5 py-2 bg-white text-red-700 font-bold rounded-lg shadow-md hover:shadow-lg transition-shadow flex items-center justify-center gap-2"
+                  data-testid="challenge-btn"
                 >
                   <Shield className="h-4 w-4" />
                   Challenge This
-                </motion.button>
+                </m.button>
               )}
               {submitted && (
-                <div className="text-white/90 text-sm font-semibold px-4 py-2 bg-white/10 rounded-lg">
+                <div className="text-white/90 text-sm font-semibold px-4 py-2 bg-white/10 rounded-lg" data-testid="challenge-submitted-badge">
                   Challenge submitted
                 </div>
               )}
               {!canChallenge && isPending && (
-                <div className="text-white/70 text-xs italic px-3 py-2">
+                <div className="text-white/70 text-xs italic px-3 py-2" data-testid="challenge-pending-notice">
                   Can challenge once guardians approve
                 </div>
               )}
             </div>
           </div>
         </div>
-      </motion.div>
+      </m.div>
 
       {/* Inline challenge modal */}
       <AnimatePresence>
         {showChallengeModal && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[60] flex items-center justify-center p-4"
             onClick={() => !isWritePending && setShowChallengeModal(false)}
           >
-            <motion.div
+            <m.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="absolute inset-0 bg-black/80 backdrop-blur-md"
             />
 
-            <motion.div
+            <m.div
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -303,6 +300,7 @@ export function OwnerChallengeBanner() {
                     rows={3}
                     maxLength={500}
                     disabled={isWritePending}
+                    data-testid="challenge-reason-input"
                     className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder:text-gray-600 focus:outline-none focus:border-red-500/50 transition-colors text-sm disabled:opacity-50 resize-none"
                   />
                 </div>
@@ -323,11 +321,12 @@ export function OwnerChallengeBanner() {
                 >
                   Cancel
                 </button>
-                <motion.button
+                <m.button
                   whileHover={{ scale: isWritePending ? 1 : 1.02 }}
                   whileTap={{ scale: isWritePending ? 1 : 0.98 }}
                   onClick={handleChallenge}
                   disabled={isWritePending}
+                  data-testid="challenge-confirm-btn"
                   className="px-6 py-2.5 bg-gradient-to-r from-red-500 to-orange-500 rounded-lg font-bold text-white flex items-center gap-2 shadow-lg shadow-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isWritePending ? (
@@ -341,10 +340,10 @@ export function OwnerChallengeBanner() {
                       Confirm Challenge
                     </>
                   )}
-                </motion.button>
+                </m.button>
               </div>
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         )}
       </AnimatePresence>
     </>

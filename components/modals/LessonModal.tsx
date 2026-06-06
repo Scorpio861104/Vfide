@@ -2,7 +2,7 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { X, Clock, CheckCircle, BookOpen } from "lucide-react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 
 export interface LessonContent {
   title: string;
@@ -37,7 +37,7 @@ export default function LessonModal({ isOpen, onClose, lesson }: LessonModalProp
               <DialogDescription className="text-zinc-400 text-base">
                 {lesson.description}
               </DialogDescription>
-              <div className="flex items-center gap-2 mt-3 text-cyan-400">
+              <div className="flex items-center gap-2 mt-3 text-accent">
                 <Clock className="w-4 h-4" />
                 <span className="text-sm font-medium">{lesson.duration}</span>
               </div>
@@ -53,7 +53,7 @@ export default function LessonModal({ isOpen, onClose, lesson }: LessonModalProp
         <div className="mt-6 space-y-6">
           {/* Lesson Sections */}
           {lesson.sections.map((section, idx) => (
-            <motion.div
+            <m.div
               key={idx}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -61,7 +61,7 @@ export default function LessonModal({ isOpen, onClose, lesson }: LessonModalProp
               className="bg-zinc-800 rounded-xl p-6 border border-zinc-700"
             >
               <div className="flex items-center gap-2 mb-3">
-                <BookOpen className="w-5 h-5 text-cyan-400" />
+                <BookOpen className="w-5 h-5 text-accent" />
                 <h3 className="text-lg font-bold text-zinc-100">{section.heading}</h3>
               </div>
               <p className="text-zinc-400 mb-4 leading-relaxed">{section.content}</p>
@@ -75,19 +75,19 @@ export default function LessonModal({ isOpen, onClose, lesson }: LessonModalProp
                   ))}
                 </ul>
               )}
-            </motion.div>
+            </m.div>
           ))}
 
           {/* Key Takeaways */}
-          <div className="bg-gradient-to-br from-cyan-400/10 to-emerald-400/10 rounded-xl p-6 border border-cyan-400/30">
-            <h3 className="text-lg font-bold text-cyan-400 mb-4 flex items-center gap-2">
+          <div className="bg-gradient-to-br from-accent/10 to-emerald-400/10 rounded-xl p-6 border border-accent/30">
+            <h3 className="text-lg font-bold text-accent mb-4 flex items-center gap-2">
               <CheckCircle className="w-5 h-5" />
               Key Takeaways
             </h3>
             <ul className="space-y-2">
               {lesson.keyTakeaways.map((takeaway, idx) => (
                 <li key={idx} className="flex items-start gap-2 text-zinc-100">
-                  <span className="text-cyan-400 font-bold mt-1">{idx + 1}.</span>
+                  <span className="text-accent font-bold mt-1">{idx + 1}.</span>
                   <span>{takeaway}</span>
                 </li>
               ))}
@@ -98,7 +98,7 @@ export default function LessonModal({ isOpen, onClose, lesson }: LessonModalProp
           <div className="flex justify-center pt-4">
             <button
               onClick={onClose}
-              className="px-8 py-3 bg-gradient-to-r from-cyan-400 to-emerald-400 text-zinc-900 font-bold rounded-xl hover:opacity-90 transition-opacity"
+              className="px-8 py-3 bg-gradient-to-r from-accent to-emerald-400 text-zinc-900 font-bold rounded-xl hover:opacity-90 transition-opacity"
             >
               Complete Lesson
             </button>

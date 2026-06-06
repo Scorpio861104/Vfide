@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import {
   Banknote,
   ChevronRight,
@@ -20,7 +20,7 @@ export type DashboardTabType = 'overview' | 'fee-simulator' | 'score-simulator' 
 export const containerVariants = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.1 } },
-} as const;
+};
 
 export const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -29,46 +29,33 @@ export const itemVariants = {
     y: 0,
     transition: { type: 'spring' as const, stiffness: 100 },
   },
+};
+
+const LOADOUT_COPY = {
+  'en-US': [
+    { icon: Shield, label: 'Vault Security', description: 'Self-custody vault controls', href: '/vault' },
+    { icon: Lock, label: 'Escrow', description: 'Dispute-safe settlements', href: '/escrow' },
+    { icon: Vote, label: 'DAO Hub', description: 'Proposals + dispute flow', href: '/governance?tab=dao' },
+    { icon: Sparkles, label: 'Flashloans P2P', description: 'Peer-powered credit pools', href: '/flashloans' },
+    { icon: Banknote, label: 'Social Pay', description: 'Merchant & QR commerce', href: '/merchant' },
+    { icon: Gift, label: 'Rewards', description: 'ProofScore boosters', href: '/rewards' },
+  ],
+  'es-ES': [
+    { icon: Shield, label: 'Seguridad del vault', description: 'Controles de autocustodia', href: '/vault' },
+    { icon: Lock, label: 'Escrow', description: 'Liquidaciones con protección de disputa', href: '/escrow' },
+    { icon: Vote, label: 'DAO Hub', description: 'Propuestas y flujo de disputas', href: '/governance?tab=dao' },
+    { icon: Sparkles, label: 'Flashloans P2P', description: 'Pools de crédito entre pares', href: '/flashloans' },
+    { icon: Banknote, label: 'Pago social', description: 'Comercio de merchant y QR', href: '/merchant' },
+    { icon: Gift, label: 'Recompensas', description: 'Impulsores de ProofScore', href: '/rewards' },
+  ],
 } as const;
 
-export const ecosystemLoadout = [
-  {
-    icon: Shield,
-    label: 'Vault Security',
-    description: 'Self-custody vault controls',
-    href: '/vault',
-  },
-  {
-    icon: Lock,
-    label: 'Escrow',
-    description: 'Dispute-safe settlements',
-    href: '/escrow',
-  },
-  {
-    icon: Vote,
-    label: 'DAO Hub',
-    description: 'Proposals + dispute flow',
-    href: '/governance?tab=dao', // NAV-7: /dao-hub redirects to governance
-  },
-  {
-    icon: Sparkles,
-    label: 'Flashloans P2P',
-    description: 'Peer-powered credit pools',
-    href: '/flashloans',
-  },
-  {
-    icon: Banknote,
-    label: 'Social Pay',
-    description: 'Merchant & QR commerce',
-    href: '/merchant',
-  },
-  {
-    icon: Gift,
-    label: 'Rewards',
-    description: 'ProofScore boosters',
-    href: '/rewards',
-  },
-] as const;
+export function getEcosystemLoadout(locale: string) {
+  if (locale.startsWith('es')) return LOADOUT_COPY['es-ES'];
+  return LOADOUT_COPY['en-US'];
+}
+
+export const ecosystemLoadout = LOADOUT_COPY['en-US'];
 
 export function GlassCard({
   children,
@@ -80,13 +67,13 @@ export function GlassCard({
   hover?: boolean;
 }) {
   return (
-    <motion.div
+    <m.div
       whileHover={hover ? { scale: 1.02, y: -4 } : {}}
       transition={{ type: 'spring', stiffness: 400 }}
       className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 ${hover ? 'ring-effect' : ''} ${className}`}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -108,7 +95,7 @@ export function StatCard({
   loading?: boolean;
 }) {
   const colorMap = {
-    cyan: { bg: 'bg-cyan-500/20', text: 'text-cyan-400', glow: 'shadow-cyan-500/20' },
+    cyan: { bg: 'bg-accent/20', text: 'text-accent', glow: 'shadow-accent/20' },
     green: { bg: 'bg-emerald-500/20', text: 'text-emerald-400', glow: 'shadow-emerald-500/20' },
     gold: { bg: 'bg-amber-500/20', text: 'text-amber-400', glow: 'shadow-amber-500/20' },
     purple: { bg: 'bg-purple-500/20', text: 'text-purple-400', glow: 'shadow-purple-500/20' },
@@ -161,12 +148,12 @@ export function QuickAction({
 
   return (
     <Link href={href}>
-      <motion.div
+      <m.div
         whileHover={{ scale: 1.05, y: -2 }}
         whileTap={{ scale: 0.98 }}
         className={`ring-effect flex flex-col items-center gap-3 rounded-2xl p-4 text-center font-semibold transition-all ${
           isPrimary
-            ? 'bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25'
+            ? 'bg-gradient-to-br from-accent to-blue-600 text-white shadow-lg shadow-accent/25'
             : 'border border-white/10 bg-white/5 text-white/80 hover:border-white/20 hover:bg-white/10 hover:text-white'
         }`}
       >
@@ -174,15 +161,16 @@ export function QuickAction({
           <Icon size={24} />
         </div>
         <span className="text-sm">{label}</span>
-      </motion.div>
+      </m.div>
     </Link>
   );
 }
 
-export function formatTimeAgo(timestamp: number): string {
+export function formatTimeAgo(timestamp: number, locale: string = 'en-US'): string {
   const seconds = Math.floor((Date.now() - timestamp) / 1000);
-  if (seconds < 60) return 'just now';
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-  return `${Math.floor(seconds / 86400)}d ago`;
+  const isSpanish = locale.startsWith('es');
+  if (seconds < 60) return isSpanish ? 'justo ahora' : 'just now';
+  if (seconds < 3600) return isSpanish ? `hace ${Math.floor(seconds / 60)} min` : `${Math.floor(seconds / 60)}m ago`;
+  if (seconds < 86400) return isSpanish ? `hace ${Math.floor(seconds / 3600)} h` : `${Math.floor(seconds / 3600)}h ago`;
+  return isSpanish ? `hace ${Math.floor(seconds / 86400)} d` : `${Math.floor(seconds / 86400)}d ago`;
 }

@@ -1293,7 +1293,8 @@ export default function AdminPanel() {
 
     // Validation
     if (params.maxTotalBps > 1000) {
-      setAdminValidationError('Max total BPS cannot exceed 1000 (10%).');
+      // UI safety guardrail: 10% (1000 bps). Contract hard ceiling is ALSO 10% (1000 bps) per ProofScoreBurnRouter:L674 require(_maxTotalBps <= 1000).
+      setAdminValidationError('Max total BPS cannot exceed 1000 (10%). This matches the contract hard ceiling (ProofScoreBurnRouter: require(_maxTotalBps <= 1000)).');
       return;
     }
     if (params.minTotalBps > params.maxTotalBps) {
@@ -2294,7 +2295,7 @@ export default function AdminPanel() {
                 <ul className="text-gray-300 mt-1 space-y-1">
                   <li>• 100 bps = 1%</li>
                   <li>• Min total must be less than or equal to max total</li>
-                  <li>• Max 1000 bps (10%) total fees</li>
+                  <li>• Max 1000 bps (10%) total fees (matches contract hard ceiling: ProofScoreBurnRouter L674)</li>
                   <li>• Leave blank to keep current on-chain values</li>
                 </ul>
               </div>

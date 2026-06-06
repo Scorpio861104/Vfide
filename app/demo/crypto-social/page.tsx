@@ -1,9 +1,10 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m as motion } from 'framer-motion';
 import { BarChart2, Play, RefreshCw, Star } from 'lucide-react';
 import { useState } from 'react';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 const Footer = dynamic(() => import('@/components/layout/Footer').then((m) => m.Footer), { ssr: false });
 const FeedTab = dynamic(() => import('./components/FeedTab').then((m) => m.FeedTab), { ssr: false });
@@ -21,6 +22,9 @@ const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
 ];
 
 export default function CryptoSocialDemo() {
+  const { locale } = useLocale();
+  void locale;
+
   const [activeTab, setActiveTab] = useState<TabId>('feed');
 
   return (

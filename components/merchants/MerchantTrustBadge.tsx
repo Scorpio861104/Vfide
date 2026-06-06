@@ -12,15 +12,7 @@ const TIER_COLORS: Record<ProofTier, string> = {
   'Elite':      'bg-amber-500/20 text-amber-400 border-amber-500/30',
 };
 
-function scoreToTier(score: number): ProofTier {
-  if (score >= 8000) return 'Elite';
-  if (score >= 7000) return 'Council';
-  if (score >= 6000) return 'Trusted';
-  if (score >= 5000) return 'Governance';
-  if (score >= 3000) return 'Neutral';
-  if (score >= 1000) return 'Low Trust';
-  return 'Risky';
-}
+function scoreToTier(score: number): ProofTier { return getTier(score).name as ProofTier; }
 
 interface MerchantTrustBadgeProps {
   score?: number;
@@ -75,4 +67,5 @@ export function MerchantTierFilter({ selected, onChange }: MerchantTierFilterPro
       })}
     </div>
   );
-}
+}import { getTier } from '@/lib/proofScore/tiers';
+

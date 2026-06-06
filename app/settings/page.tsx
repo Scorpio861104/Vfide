@@ -21,11 +21,12 @@ import type React from 'react';
  * /setup redirects here. /notifications redirects here.
  */
 
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m as motion } from 'framer-motion';
 import { Bell, Lock, Settings, Shield, User } from 'lucide-react';
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Footer } from '@/components/layout/Footer';
+import { TabTrigger } from '@/components/ui/TabTrigger';
 
 import { AccountTab }  from '@/app/setup/components/AccountTab';
 import { VaultTab }    from '@/app/setup/components/VaultTab';
@@ -33,6 +34,7 @@ import { SecurityTab } from '@/app/setup/components/SecurityTab';
 
 // Notifications tab — inline from /notifications page content
 import { NotificationsTabInline } from './components/NotificationsTabInline';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 type TabId = 'account' | 'vault' | 'security' | 'notifications';
 
@@ -47,6 +49,9 @@ const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
 const VALID_TABS = new Set<TabId>(['account', 'vault', 'security', 'notifications']);
 
 export default function SettingsPage() {
+  const { locale } = useLocale();
+  void locale;
+
   // UX-1: Read initial tab from URL search params so ?tab= links work correctly
   // and browser Back/Forward preserves the active tab context
   const searchParams = useSearchParams();
@@ -90,14 +95,12 @@ export default function SettingsPage() {
           {/* A11Y-1: role=tablist so AT announces this as a tab widget */}
           <div role="tablist" aria-label="Settings sections" className="flex gap-2 overflow-x-auto scrollbar-hide">
             {TABS.map(({ id, label, icon: Icon }) => (
-              <button key={id} onClick={() => setActiveTab(id)}
-                role="tab"
-                aria-selected={activeTab === id}
+              <TabTrigger key={id} active={activeTab === id} onClick={() => setActiveTab(id)}
                 aria-controls={`settings-panel-${id}`}
                 id={`settings-tab-${id}`}
                 className={activeTab === id ? 'tab-pill-active' : 'tab-pill-inactive'}>
                 <Icon size={14} />{label}
-              </button>
+              </TabTrigger>
             ))}
           </div>
         </div>

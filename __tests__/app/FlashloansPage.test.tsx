@@ -33,6 +33,7 @@ jest.mock('framer-motion', () => {
   });
   return {
     motion,
+    m: motion,
     AnimatePresence: ({ children }) => children,
     LayoutGroup: ({ children }) => children,
     LazyMotion: ({ children }) => children,
@@ -68,8 +69,8 @@ jest.mock('../../app/flashloans/components/BorrowTab', () => ({
   BorrowTab: () => <div>Borrow Tab Content</div>,
 }));
 
-jest.mock('../../app/flashloans/components/ActiveTab', () => ({
-  ActiveTab: () => <div>Active Loans Tab Content</div>,
+jest.mock('../../app/flashloans/components/LendersTab', () => ({
+  LendersTab: () => <div>Lenders Tab Content</div>,
 }));
 
 jest.mock('../../app/flashloans/components/HistoryTab', () => ({
@@ -89,8 +90,8 @@ describe('FlashLoansPage', () => {
   it('switches from Borrow to Active Loans and History tabs', () => {
     render(<FlashLoansPage />);
 
-    fireEvent.click(screen.getByRole('button', { name: /Active Loans/i }));
-    expect(screen.getByText('Active Loans Tab Content')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Lenders/i }));
+    expect(screen.getByText('Lenders Tab Content')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /History/i }));
     expect(screen.getByText('History Tab Content')).toBeInTheDocument();

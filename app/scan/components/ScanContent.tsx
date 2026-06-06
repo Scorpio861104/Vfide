@@ -162,11 +162,11 @@ export function ScanContent() {
 
         {/* Targeting reticle */}
         <div className="relative z-10 w-64 h-64 max-w-[70vw] max-h-[70vw]" aria-hidden="true">
-          <div className="absolute inset-0 border-2 border-cyan-400/80 rounded-2xl" />
-          <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-cyan-300 rounded-tl-2xl" />
-          <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-cyan-300 rounded-tr-2xl" />
-          <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-cyan-300 rounded-bl-2xl" />
-          <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-cyan-300 rounded-br-2xl" />
+          <div className="absolute inset-0 border-2 border-accent/80 rounded-2xl" />
+          <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-accent rounded-tl-2xl" />
+          <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-accent rounded-tr-2xl" />
+          <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-accent rounded-bl-2xl" />
+          <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-accent rounded-br-2xl" />
         </div>
 
         {/* Status overlays */}
@@ -216,7 +216,7 @@ export function ScanContent() {
               <p className="text-sm text-zinc-400">{state.message}</p>
               <button
                 onClick={() => void start()}
-                className="mt-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-400 rounded-lg text-sm font-medium"
+                className="mt-2 px-4 py-2 bg-accent hover:bg-accent-light rounded-lg text-sm font-medium"
               >
                 Try again
               </button>
@@ -237,7 +237,7 @@ export function ScanContent() {
               </code>
               <button
                 onClick={() => void start()}
-                className="mt-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-400 rounded-lg text-sm font-medium"
+                className="mt-2 px-4 py-2 bg-accent hover:bg-accent-light rounded-lg text-sm font-medium"
               >
                 Scan again
               </button>

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import {
   Search,
   Users,
@@ -52,14 +52,14 @@ export function GlobalUserSearch() {
           onChange={(e) =>  handleSearch(e.target.value)}
           aria-label="Search users by username or address"
           aria-describedby="search-results-count"
-          className="w-full pl-12 pr-4 py-3 bg-zinc-950 border border-zinc-700 rounded-xl text-zinc-100  focus:border-cyan-400 focus:outline-none"
+          className="w-full pl-12 pr-4 py-3 bg-zinc-950 border border-zinc-700 rounded-xl text-zinc-100  focus:border-accent focus:outline-none"
         />
       </div>
 
       {/* Results */}
       {searching ? (
         <div className="p-8 text-center" role="status" aria-live="polite">
-          <div className="w-12 h-12 border-4 border-cyan-400/30 border-t-[#00F0FF] rounded-full animate-spin mx-auto mb-3" aria-hidden="true" />
+          <div className="w-12 h-12 border-4 border-accent/30 border-t-[#00F0FF] rounded-full animate-spin mx-auto mb-3" aria-hidden="true" />
           <p className="text-zinc-500">Searching...</p>
         </div>
       ) : searchResults.length > 0 ? (
@@ -68,7 +68,7 @@ export function GlobalUserSearch() {
             Found {searchResults.length} user{searchResults.length !== 1 ? 's' : ''}
           </p>
           {searchResults.map((user) => (
-            <motion.div
+            <m.div
               key={user.address}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -76,7 +76,7 @@ export function GlobalUserSearch() {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-zinc-100 font-bold">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-accent to-violet-400 flex items-center justify-center text-zinc-100 font-bold">
                     {user.username ? user.username?.[0]?.toUpperCase() : user.address.slice(2, 4).toUpperCase()}
                   </div>
                   <div>
@@ -99,7 +99,7 @@ export function GlobalUserSearch() {
                 <div className="flex gap-2">
                   <button
                     disabled
-                    className="p-2 bg-cyan-400/10 text-cyan-400/40 border border-cyan-400/15 rounded-lg cursor-not-allowed"
+                    className="p-2 bg-accent/10 text-accent/40 border border-accent/15 rounded-lg cursor-not-allowed"
                     title="Friend requests require a /api/social/friend-requests endpoint that isn't built yet."
                   >
                     <UserPlus className="w-4 h-4" />
@@ -113,7 +113,7 @@ export function GlobalUserSearch() {
                   </button>
                 </div>
               </div>
-            </motion.div>
+            </m.div>
           ))}
         </div>
       ) : searchQuery.trim().length >= 2 ? (

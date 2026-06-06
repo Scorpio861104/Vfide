@@ -2,13 +2,14 @@
 
 import React from 'react';
 import dynamic from 'next/dynamic';
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { Wallet, TrendingUp, History, LayoutDashboard } from 'lucide-react';
 import { WalletButton as _WalletButton } from '@/components/crypto/WalletButton';
 import { useAccount, useBalance } from 'wagmi';
 import { formatUnits } from 'viem';
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { Footer } from '@/components/layout/Footer';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 const TransactionHistory = dynamic(
   () => import('@/components/crypto/TransactionHistory').then((mod) => mod.TransactionHistory),
@@ -16,6 +17,9 @@ const TransactionHistory = dynamic(
 );
 
 export default function CryptoDashboard() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address, isConnected } = useAccount();
   const { data: ethBalance } = useBalance({ address });
 

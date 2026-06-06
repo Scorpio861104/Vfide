@@ -9,7 +9,7 @@ export function RewardsTab({ isConnected: _isConnected = false }: { isConnected?
       color: 'border-emerald-500/40 bg-emerald-500/5',
       labelColor: 'text-emerald-400',
       title: 'Fee Discounts',
-      description: 'Earn up to 12% off transaction fees by leveling up through quests and daily activity.',
+      description: 'Complete quests to raise your ProofScore — a higher score means a lower buyer fee, all the way down to 0.25% at Elite tier.',
       cta: { label: 'Start Quests', href: '/quests' },
     },
     {
@@ -22,8 +22,8 @@ export function RewardsTab({ isConnected: _isConnected = false }: { isConnected?
     },
     {
       icon: '🔬',
-      color: 'border-cyan-500/40 bg-cyan-500/5',
-      labelColor: 'text-cyan-400',
+      color: 'border-accent/40 bg-accent/5',
+      labelColor: 'text-accent',
       title: 'Early Feature Access',
       description: 'Reach Level 10 to opt in to beta features and new platform capabilities before public release.',
       cta: { label: 'View Perks', href: '/achievements' },
@@ -33,7 +33,7 @@ export function RewardsTab({ isConnected: _isConnected = false }: { isConnected?
       color: 'border-amber-400/40 bg-amber-400/5',
       labelColor: 'text-amber-400',
       title: 'Headhunter Recognition',
-      description: 'Top 20 quarterly recruiters earn the Headhunter governance badge: +25% voting weight, proposal rights, and council eligibility.',
+      description: 'Qualifying recruiters earn the Headhunter governance badge (+35 duty points) — granting enhanced governance standing, proposal rights, and council eligibility. Awarded each quarter by the DAO.',
       cta: { label: 'Headhunter Program', href: '/headhunter' },
     },
     {
@@ -59,7 +59,7 @@ export function RewardsTab({ isConnected: _isConnected = false }: { isConnected?
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-zinc-100 mb-2">Available Rewards</h2>
         <p className="text-zinc-400 max-w-2xl mx-auto">
-          All rewards are <span className="text-cyan-400 font-semibold">platform utility benefits</span> earned 
+          All rewards are <span className="text-accent font-semibold">platform utility benefits</span> earned 
           through your own activity — not investment returns. Level up, streak up, and compete to unlock them.
         </p>
       </div>
@@ -72,7 +72,7 @@ export function RewardsTab({ isConnected: _isConnected = false }: { isConnected?
             <p className="text-zinc-400 text-sm mb-4">{cat.description}</p>
             <a
               href={cat.cta.href}
-              className="text-xs font-semibold text-cyan-400 hover:text-cyan-300 underline underline-offset-2 transition-colors"
+              className="text-xs font-semibold text-accent hover:text-accent underline underline-offset-2 transition-colors"
             >
               {cat.cta.label} →
             </a>

@@ -162,11 +162,8 @@ async function main() {
     vault.payExpense(expenseRecipientAddress, operationsAfterExpense + one, 'too_much')
   );
 
-  await (await vault.burnFunds(50n * one)).wait();
-  const burnTotal = await vault.totalBurned();
-  if (burnTotal !== 50n * one) {
-    throw new Error(`Expected totalBurned=50e18, got ${burnTotal}`);
-  }
+  // burnFunds() removed from EcosystemVault (soul commitment — no secondary burn pathway).
+  // Burn verification is handled via ProofScoreBurnRouter in the token-level invariant suite.
 
   await (await vault.configureAutoWorkPayout(true, 2n * one, 3n * one, one)).wait();
 
@@ -211,8 +208,8 @@ async function main() {
     (await vault.totalCouncilPaid()) +
     (await vault.totalMerchantBonusPaid()) +
     (await vault.totalHeadhunterPaid()) +
-    (await vault.totalExpensesPaid()) +
-    (await vault.totalBurned());
+    (await vault.totalExpensesPaid());
+    // totalBurned() removed — EcosystemVault is not a burn pathway (soul commitment).
   if (totalReceived < totalOut) {
     throw new Error('Vault health invariant violated: totalIn must be >= totalOut');
   }

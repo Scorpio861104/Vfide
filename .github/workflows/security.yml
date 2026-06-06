@@ -159,6 +159,13 @@ jobs:
       #     (a) add an inline `// slither-disable-...` with a justification, or
       #     (b) update slither.config.json `detectors_to_exclude` AND add an entry
       #         to SLITHER_TRIAGE_RATIONALE.md explaining why.
+      - name: Pin system solc to 0.8.30
+        run: |
+          pip install solc-select --quiet
+          solc-select install 0.8.30
+          solc-select use 0.8.30
+          solc --version
+
       - name: Run Slither
         uses: crytic/slither-action@v0.4.2
         id: slither

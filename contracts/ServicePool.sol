@@ -68,9 +68,9 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
     /// @notice periodStartTime
     uint256 public periodStartTime;
     /// @notice maxParticipants
-    uint256 public maxParticipants; // Cap per pool (e.g. 12 for DAO)
+    uint256 public maxParticipants;     // Cap per pool (e.g. 12 for DAO)
     /// @notice maxPayoutPerPeriod
-    uint256 public maxPayoutPerPeriod; // Safety cap
+    uint256 public maxPayoutPerPeriod;  // Safety cap
 
     // ═══════════════════════════════════════════════════════════
     // PER-PERIOD STATE
@@ -111,7 +111,7 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
     /// @notice totalPaidAllTime
     uint256 public totalPaidAllTime;
     /// @notice totalCommitted
-    uint256 public totalCommitted; // Tokens promised to finalized periods but not yet claimed
+    uint256 public totalCommitted;  // Tokens promised to finalized periods but not yet claimed
     /// @notice UNCLAIMED_SWEEP_DELAY
     uint256 public constant UNCLAIMED_SWEEP_DELAY = 180 days;
     /// @notice totalEarnedByWorker
@@ -130,20 +130,36 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
     /// @param participant participant
     /// @param addedScore addedScore
     /// @param newTotal newTotal
-    event ContributionRecorded(uint256 indexed period, address indexed participant, uint256 addedScore, uint256 newTotal);
+    event ContributionRecorded(
+        uint256 indexed period,
+        address indexed participant,
+        uint256 addedScore,
+        uint256 newTotal
+    );
     /// @notice PeriodFinalized
     /// @param period period
     /// @param participantCount participantCount
     /// @param totalScore totalScore
     /// @param poolAmount poolAmount
-    event PeriodFinalized(uint256 indexed period, uint256 participantCount, uint256 totalScore, uint256 poolAmount);
+    event PeriodFinalized(
+        uint256 indexed period,
+        uint256 participantCount,
+        uint256 totalScore,
+        uint256 poolAmount
+    );
     /// @notice PaymentClaimed
     /// @param period period
     /// @param participant participant
     /// @param amount amount
     /// @param participantScore participantScore
     /// @param totalScore totalScore
-    event PaymentClaimed(uint256 indexed period, address indexed participant, uint256 amount, uint256 participantScore, uint256 totalScore);
+    event PaymentClaimed(
+        uint256 indexed period,
+        address indexed participant,
+        uint256 amount,
+        uint256 participantScore,
+        uint256 totalScore
+    );
     /// @notice FundingReceived
     /// @param amount amount
     /// @param newBalance newBalance
@@ -240,7 +256,12 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
     /// @param _admin _admin
     /// @param _maxParticipants _maxParticipants
     /// @param _maxPayoutPerPeriod _maxPayoutPerPeriod
-    constructor(address _token, address _admin, uint256 _maxParticipants, uint256 _maxPayoutPerPeriod) {
+    constructor(
+        address _token,
+        address _admin,
+        uint256 _maxParticipants,
+        uint256 _maxPayoutPerPeriod
+    ) {
         if (_token == address(0) || _admin == address(0)) revert ZeroAddress();
 
         vfideToken = IERC20(_token);
@@ -385,9 +406,7 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
                 }
             }
 
-            unchecked {
-                ++i;
-            }
+            unchecked { ++i; }
         }
 
         if (totalPayment == 0) revert NothingToClaim();
@@ -402,7 +421,11 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
     /// @dev Keeps `totalCommitted` aligned with actual outstanding obligations.
     /// @param periods periods
     /// @param to to
-    function sweepUnclaimed(uint256[] calldata periods, address to) external onlyRole(DEFAULT_ADMIN_ROLE) nonReentrant {
+    function sweepUnclaimed(uint256[] calldata periods, address to)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+        nonReentrant
+    {
         if (to == address(0)) revert ZeroAddress();
         require(periods.length <= 100, "Batch too large");
 
@@ -425,9 +448,7 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
                 emit UnclaimedSwept(period, outstanding, to);
             }
 
-            unchecked {
-                ++i;
-            }
+            unchecked { ++i; }
         }
 
         if (totalSweep > 0) {
@@ -492,9 +513,7 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
         emit PauseCancelled();
     }
     /// @notice unpause
-    function unpause() external onlyRole(ADMIN_ROLE) {
-        _unpause();
-    }
+    function unpause() external onlyRole(ADMIN_ROLE) { _unpause(); }
 
     /// @notice emergencyWithdraw
     /// @param to to
@@ -537,7 +556,6 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
 
     /// @notice getParticipants
     /// @param period period
-    /// @return _arg _arg
     function getParticipants(uint256 period) external view returns (address[] memory) {
         return _participants[period];
     }

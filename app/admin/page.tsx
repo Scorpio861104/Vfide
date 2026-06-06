@@ -1,6 +1,7 @@
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import AdminDashboardClient from './AdminDashboardClient';
 import { Suspense } from 'react';
+import { DEFAULT_LOCALE } from '@/lib/i18n';
 
 /**
  * Server-side admin page guard (FE-5 fix)
@@ -51,6 +52,9 @@ function UnauthorizedUI() {
  * The client component (AdminDashboardClient) will perform wallet connection verification.
  */
 export default async function AdminPage() {
+  const locale = DEFAULT_LOCALE;
+  void locale;
+
   // Note: In the future, you can add server-side auth checks here
   // For now, the client component verifies wallet connection against on-chain owner
   

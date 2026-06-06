@@ -15,7 +15,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Star, Shield, Check, TrendingUp, Award, Flame, ThumbsUp } from 'lucide-react';
 import { VaultIdentityChip } from '@/components/identity/VaultIdentityChip';
 
@@ -55,7 +55,7 @@ function scoreWeight(score: number): 'high' | 'medium' | 'low' {
 
 const WEIGHT_STYLES = {
   high: { border: 'border-emerald-500/15', bg: 'bg-emerald-500/3', badge: 'text-emerald-400', size: 'text-sm' },
-  medium: { border: 'border-white/10', bg: 'bg-white/2', badge: 'text-cyan-400', size: 'text-sm' },
+  medium: { border: 'border-white/10', bg: 'bg-white/2', badge: 'text-accent', size: 'text-sm' },
   low: { border: 'border-white/5', bg: 'bg-white/1', badge: 'text-gray-500', size: 'text-xs' },
 };
 
@@ -64,7 +64,7 @@ export function MerchantReview({ review, onHelpful }: MerchantReviewProps) {
   const styles = WEIGHT_STYLES[weight];
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       className={`p-3 ${styles.bg} border ${styles.border} rounded-xl`}
@@ -102,7 +102,7 @@ export function MerchantReview({ review, onHelpful }: MerchantReviewProps) {
           <div className="flex items-center gap-3 mt-2 text-[10px] text-gray-600">
             <span>{new Date(review.timestamp).toLocaleDateString()}</span>
             {onHelpful && (
-              <button onClick={() => onHelpful(review.id)} className="flex items-center gap-0.5 hover:text-cyan-400 transition-colors">
+              <button onClick={() => onHelpful(review.id)} className="flex items-center gap-0.5 hover:text-accent transition-colors">
                 <ThumbsUp size={10} />{review.helpful > 0 ? review.helpful : ''} Helpful
               </button>
             )}
@@ -116,7 +116,7 @@ export function MerchantReview({ review, onHelpful }: MerchantReviewProps) {
           <Award size={10} />Highly trusted reviewer — ProofScore in top tier
         </div>
       )}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -205,42 +205,42 @@ export function CommunityBoard({ merchants, products, onMerchant, onProduct }: C
           <Flame size={14} className="text-amber-400" />Trending this week
         </h3>
         <div className="flex gap-1">
-          <button onClick={() => setTab('merchants')} className={`px-2.5 py-1 rounded-lg text-[10px] font-bold ${tab === 'merchants' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-500'}`}>Merchants</button>
-          <button onClick={() => setTab('products')} className={`px-2.5 py-1 rounded-lg text-[10px] font-bold ${tab === 'products' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-500'}`}>Products</button>
+          <button onClick={() => setTab('merchants')} className={`px-2.5 py-1 rounded-lg text-[10px] font-bold ${tab === 'merchants' ? 'bg-accent/20 text-accent' : 'text-gray-500'}`}>Merchants</button>
+          <button onClick={() => setTab('products')} className={`px-2.5 py-1 rounded-lg text-[10px] font-bold ${tab === 'products' ? 'bg-accent/20 text-accent' : 'text-gray-500'}`}>Products</button>
         </div>
       </div>
 
       {tab === 'merchants' && merchants.length > 0 && (
         <div className="space-y-2">
-          {merchants.slice(0, 5).map((m, rank) => {
-            const scoreColor = m.proofScore >= 8000 ? '#10B981' : m.proofScore >= 6500 ? '#06B6D4' : '#F59E0B';
+          {merchants.slice(0, 5).map((merch, rank) => {
+            const scoreColor = merch.proofScore >= 8000 ? '#10B981' : merch.proofScore >= 6500 ? '#06B6D4' : '#F59E0B';
             return (
-              <motion.button key={m.address}
+              <m.button key={merch.address}
                 initial={{ opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: rank * 0.05 }}
-                onClick={() => onMerchant?.(m.address)}
+                onClick={() => onMerchant?.(merch.address)}
                 className="w-full flex items-center gap-3 p-2.5 bg-white/2 border border-white/5 rounded-xl hover:bg-white/5 transition-all text-left"
               >
                 <span className="text-gray-600 text-xs font-bold w-4">#{rank + 1}</span>
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-xs"
                   style={{ background: `${scoreColor}20`, color: scoreColor }}>
-                  {m.name[0]}
+                  {merch.name[0]}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-white text-sm font-medium truncate">{m.name}</div>
+                  <div className="text-white text-sm font-medium truncate">{merch.name}</div>
                   <div className="flex items-center gap-2 text-[10px]">
-                    <span className="flex items-center gap-0.5" style={{ color: scoreColor }}><Shield size={8} />{m.proofScore}</span>
-                    <span className="text-gray-500">{m.sales7d} sales</span>
-                    {m.endorsements7d > 0 && <span className="text-purple-400">{m.endorsements7d} endorsements</span>}
+                    <span className="flex items-center gap-0.5" style={{ color: scoreColor }}><Shield size={8} />{merch.proofScore}</span>
+                    <span className="text-gray-500">{merch.sales7d} sales</span>
+                    {merch.endorsements7d > 0 && <span className="text-purple-400">{merch.endorsements7d} endorsements</span>}
                   </div>
                 </div>
-                {m.salesGrowth > 0 && (
+                {merch.salesGrowth > 0 && (
                   <span className="flex items-center gap-0.5 text-emerald-400 text-xs font-bold">
-                    <TrendingUp size={12} />+{m.salesGrowth}%
+                    <TrendingUp size={12} />+{merch.salesGrowth}%
                   </span>
                 )}
-              </motion.button>
+              </m.button>
             );
           })}
         </div>
@@ -249,7 +249,7 @@ export function CommunityBoard({ merchants, products, onMerchant, onProduct }: C
       {tab === 'products' && products.length > 0 && (
         <div className="space-y-2">
           {products.slice(0, 5).map((p, rank) => (
-            <motion.button key={p.id}
+            <m.button key={p.id}
               initial={{ opacity: 0, x: -8 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: rank * 0.05 }}
@@ -263,8 +263,8 @@ export function CommunityBoard({ merchants, products, onMerchant, onProduct }: C
                   <div className="text-gray-500 text-[10px]">by {p.merchant} · {p.purchases7d} bought this week</div>
                 </div>
               </div>
-              <span className="text-cyan-400 font-mono font-bold text-sm">{p.currency}{p.price}</span>
-            </motion.button>
+              <span className="text-accent font-mono font-bold text-sm">{p.currency}{p.price}</span>
+            </m.button>
           ))}
         </div>
       )}

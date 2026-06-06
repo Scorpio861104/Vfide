@@ -51,13 +51,13 @@ describe('RevenueSplitter', () => {
     it('rejects length mismatch between accounts and shares', async () => {
       const { ethers, alice, bob } = await basicSetup();
       const RS = await ethers.getContractFactory('RevenueSplitter');
-      await assert.rejects(RS.deploy([alice.address, bob.address], [10000]), /length mismatch/);
+      await assert.rejects(RS.deploy([alice.address, bob.address], [10000]), /RS_LengthMismatch/);
     });
 
     it('rejects empty payee list', async () => {
       const { ethers } = await basicSetup();
       const RS = await ethers.getContractFactory('RevenueSplitter');
-      await assert.rejects(RS.deploy([], []), /no payees/);
+      await assert.rejects(RS.deploy([], []), /RS_EmptyPayees/);
     });
 
     it('rejects zero address payee', async () => {
@@ -65,14 +65,14 @@ describe('RevenueSplitter', () => {
       const RS = await ethers.getContractFactory('RevenueSplitter');
       await assert.rejects(
         RS.deploy([alice.address, ethers.ZeroAddress], [5000, 5000]),
-        /zero address/
+        /RS_ZeroAddress/
       );
     });
 
     it('rejects zero-share payee', async () => {
       const { ethers, alice, bob } = await basicSetup();
       const RS = await ethers.getContractFactory('RevenueSplitter');
-      await assert.rejects(RS.deploy([alice.address, bob.address], [10000, 0]), /zero share/);
+      await assert.rejects(RS.deploy([alice.address, bob.address], [10000, 0]), /RS_ZeroShare/);
     });
 
     it('rejects total != 100% (10000 bps)', async () => {
@@ -98,12 +98,12 @@ describe('RevenueSplitter', () => {
   describe('distribute', () => {
     it('rejects zero-token address', async () => {
       const { ethers, rs } = await deployWithThreePayees();
-      await assert.rejects(rs.distribute(ethers.ZeroAddress), /zero token/);
+      await assert.rejects(rs.distribute(ethers.ZeroAddress), /RS_ZeroToken/);
     });
 
     it('rejects when balance is zero', async () => {
       const { rs, token } = await deployWithThreePayees();
-      await assert.rejects(rs.distribute(await token.getAddress()), /no funds/);
+      await assert.rejects(rs.distribute(await token.getAddress()), /RS_NoFunds/);
     });
 
     it('splits proportionally across payees', async () => {

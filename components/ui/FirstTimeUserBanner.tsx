@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Sparkles, X } from 'lucide-react';
 
 interface FirstTimeUserBannerProps {
@@ -43,15 +43,15 @@ export function FirstTimeUserBanner({
   return (
     <AnimatePresence>
       {!isDismissed && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
           className="relative mb-6"
         >
-          <div className="bg-gradient-to-r from-cyan-400/10 to-violet-400/10 border border-cyan-400/30 rounded-xl p-4 md:p-5">
+          <div className="bg-gradient-to-r from-accent/10 to-violet-400/10 border border-accent/30 rounded-xl p-4 md:p-5">
             <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent to-violet-400 flex items-center justify-center shrink-0">
                 <Sparkles className="w-5 h-5 text-zinc-950" />
               </div>
               
@@ -63,7 +63,7 @@ export function FirstTimeUserBanner({
                 {onAction && actionText && (
                   <button
                     onClick={onAction}
-                    className="mt-3 text-xs font-semibold text-cyan-400 hover:underline"
+                    className="mt-3 text-xs font-semibold text-accent hover:underline"
                   >
                     {actionText} →
                   </button>
@@ -79,7 +79,7 @@ export function FirstTimeUserBanner({
               </button>
             </div>
           </div>
-        </motion.div>
+        </m.div>
       )}
     </AnimatePresence>
   );

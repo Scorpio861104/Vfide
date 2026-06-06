@@ -1,28 +1,31 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import {IERC20, ReentrancyGuard, SafeERC20} from "./SharedInterfaces.sol";
+import "./SharedInterfaces.sol";
 
 /**
  * @title FraudRegistry
  * @notice Community-driven fraud reporting with protocol-wide consequences
  *
- * HOW IT WORKS:
- *   - Any user with ProofScore >= 5000 can file a fraud complaint against an address
- *   - Each address can only file ONE complaint per target (no spam)
- *   - At 3 complaints: address is flagged as "disputed"
- *     → All protocol services refuse them (lending, merchant, flash loans, governance)
- *     → All outgoing transfers enter a 30-day escrow (tokens held, released after 30 days)
- *   - The DAO can clear a flag if the complaints were false
- *   - The DAO can escalate to permanent ban
+ * HOW IT WORKS (non-custodial — the system never holds, delays, or seizes funds):
+ *   - Any user with ProofScore >= MIN_REPORTER_SCORE may file a fraud complaint against an address.
+ *   - One complaint per reporter per target per epoch (no spam); a false report that is dismissed
+ *     costs the reporter score, escalating for repeat offenders (the reporter bond).
+ *   - At COMPLAINTS_TO_FLAG complaints the target enters review and, if a jury is wired, a FraudJury
+ *     case opens.
+ *   - A flag is confirmed ONLY by a peer-jury supermajority (FraudJury). The DAO can soften (veto) a
+ *     case but can NEVER unilaterally confirm one.
+ *   - A confirmed flag's ONLY consequences are: a risk SIGNAL to counterparties (see riskLevel), a
+ *     Seer score penalty (→ higher fees), and a SERVICE ban (no merchant / pool rewards / endorsing).
+ *     Transfers are NEVER held, delayed, or seized — a user's funds always move.
+ *   - Signals + service-bans auto-expire after SIGNAL_TTL (decay / forgiveness). Permanent bans are
+ *     exempt. A flagged party can redeem by making a victim whole (registerRestitution →
+ *     confirmRestitution), which clears the flag.
  *
  * WHAT THIS IS NOT:
- *   - This does NOT freeze funds. Escrowed transfers still complete after 30 days.
- *   - This does NOT seize tokens. The flagged user keeps everything in their vault.
- *   - This does NOT give anyone custody. It's a protocol rule applied equally.
- *
- * ANALOGY: A store puts a "30-day hold" on checks from customers with fraud complaints.
- *          The money is still the customer's. It just clears slowly.
+ *   - It does NOT freeze, hold, delay, or escrow funds. (The former 30-day hold has been removed.)
+ *   - It does NOT seize tokens. The flagged user keeps everything in their vault.
+ *   - It does NOT give anyone custody, and no single authority (the DAO included) can confirm a flag.
  * @author Vfide
  */
 
@@ -73,6 +76,15 @@ interface IVFIDEToken_SystemExempt {
     function systemExempt(address account) external view returns (bool);
 }
 
+/// @notice IFraudJury_FR — peer-jury adjudication module (step 3 reform).
+/// @dev Punishment may only follow a jury CONFIRMATION; the DAO can soften (veto) but never confirm.
+interface IFraudJury_FR {
+    /// @notice Open a fresh jury cycle for a target (called at the complaint threshold).
+    function openCase(address target) external;
+    /// @notice True only when a peer jury has upheld the accusation.
+    function isConfirmed(address target) external view returns (bool);
+}
+
 /// @notice FR_Zero
 error FR_Zero();
 /// @notice FR_AlreadyComplained
@@ -85,36 +97,33 @@ error FR_NotDAO();
 error FR_NotFlagged();
 /// @notice FR_SelfComplaint
 error FR_SelfComplaint();
-/// @notice FR_EscrowNotReady
-error FR_EscrowNotReady();
-/// @notice FR_EscrowAlreadyProcessed
-error FR_EscrowAlreadyProcessed();
-/// @notice FR_EscrowInvalidIndex
-error FR_EscrowInvalidIndex();
+/// @notice FR_NoRestitution
+error FR_NoRestitution();
+/// @notice FR_NotVictim
+error FR_NotVictim();
 /// @notice FR_ReviewActive
 error FR_ReviewActive();
 /// @notice FR_InvalidTarget
 error FR_InvalidTarget();
-/// @notice FR_EscrowRecipientMismatch
-error FR_EscrowRecipientMismatch();
 
 /// @notice FraudRegistry
 /// @title FraudRegistry
 /// @author Vfide
 contract FraudRegistry is ReentrancyGuard {
+
     // ── Configuration ────────────────────────────────────────
     /// @notice COMPLAINTS_TO_FLAG
     uint8 public constant COMPLAINTS_TO_FLAG = 3;
-    /// @notice ESCROW_DURATION
-    uint256 public constant ESCROW_DURATION = 30 days;
-    /// @notice ESCROW_RESCUE_DELAY
-    uint256 public constant ESCROW_RESCUE_DELAY = 90 days;
+    /// @notice SIGNAL_TTL — a confirmed fraud signal + service-ban auto-expires this long after
+    ///         confirmation (decay / forgiveness, so there is no permanent reputational death).
+    ///         Permanent bans are exempt. After expiry anyone may call expireFlag() to clear storage.
+    uint256 public constant SIGNAL_TTL = 90 days;
     /// @notice PENDING_REVIEW_APPEAL_WINDOW
     uint256 public constant PENDING_REVIEW_APPEAL_WINDOW = 48 hours;
     /// @notice H-4 FIX: Timelock for permanent ban — gives subject time to appeal before irreversible action
     uint256 public constant PERMANENT_BAN_DELAY = 7 days;
     /// @notice MIN_REPORTER_SCORE
-    uint16 public constant MIN_REPORTER_SCORE = 5000;
+    uint16 public constant MIN_REPORTER_SCORE = 6000;
     /// @notice COMPLAINT_REPORTER_PENALTY
     uint16 public constant COMPLAINT_REPORTER_PENALTY = 50; // Filing false complaints costs score
 
@@ -126,6 +135,8 @@ contract FraudRegistry is ReentrancyGuard {
     IERC20 public immutable vfideToken; // Token contract reference for escrow releases
     /// @notice vaultHub
     IVaultHub_FR public vaultHub;
+    /// @notice fraudJury — peer-jury module. When set, confirmFraud requires a jury confirmation.
+    IFraudJury_FR public fraudJury;
 
     // H-4 FIX: Timelocked dao/vaultHub rotation
     /// @notice pendingDAO_FR
@@ -145,11 +156,6 @@ contract FraudRegistry is ReentrancyGuard {
     /// @notice SystemExemptCheckFailed
     /// @param fraudRegistry fraudRegistry
     event SystemExemptCheckFailed(address indexed fraudRegistry);
-    /// @notice EscrowReleaseTargetResolved
-    /// @param escrowIndex escrowIndex
-    /// @param originalTarget originalTarget
-    /// @param resolvedTarget resolvedTarget
-    event EscrowReleaseTargetResolved(uint256 indexed escrowIndex, address indexed originalTarget, address indexed resolvedTarget);
 
     struct Complaint {
         address reporter;
@@ -175,50 +181,29 @@ contract FraudRegistry is ReentrancyGuard {
 
     // ── Fraud flags ──────────────────────────────────────────
     /// @notice isPendingReview
-    mapping(address => bool) public isPendingReview; // 3+ complaints → awaiting DAO review
+    mapping(address => bool) public isPendingReview;   // 3+ complaints → awaiting DAO review
     /// @notice isFlagged
-    mapping(address => bool) public isFlagged; // DAO confirmed fraud → service ban + escrow
+    mapping(address => bool) public isFlagged;         // DAO confirmed fraud → service ban + escrow
     /// @notice isPermanentlyBanned
     mapping(address => bool) public isPermanentlyBanned; // DAO escalation
     /// @notice flaggedAt
     mapping(address => uint64) public flaggedAt;
+    /// @notice Restitution claim a flagged party registers when seeking redemption.
+    struct Restitution { address victim; bytes32 proofHash; uint64 at; }
+    /// @notice target => pending restitution claim (cleared on confirmation).
+    mapping(address => Restitution) public restitution;
     /// @notice pendingReviewAt
-    mapping(address => uint64) public pendingReviewAt; // When review was triggered
+    mapping(address => uint64) public pendingReviewAt;  // When review was triggered
     /// @notice dismissedComplaintPenaltyCursor
     mapping(address => uint256) public dismissedComplaintPenaltyCursor; // Number of dismissed complaints already penalized
-    // N-H1 FIX: Chunked escrow-refund state used after clearFlag to avoid unbounded loops.
-    /// @notice clearFlagEscrowCursor
-    mapping(address => uint256) public clearFlagEscrowCursor;
-    /// @notice clearFlagEscrowRefundPending
-    mapping(address => bool) public clearFlagEscrowRefundPending;
+    /// @notice priorDismissals — count of this reporter's complaints previously dismissed as false.
+    /// @dev Reporter bond: each prior dismissed false complaint escalates the score slash applied
+    ///      to this reporter on the next dismissal (50, 100, 150, ...). Honest reporting stays free.
+    mapping(address => uint32) public priorDismissals;
     // H-4 FIX: Pending permanent ban state (7-day timelock)
     /// @notice pendingPermanentBanAt
     mapping(address => uint64) public pendingPermanentBanAt; // 0 = no pending ban
 
-    // ── Transfer escrow for flagged addresses ────────────────
-    struct EscrowedTransfer {
-        address from;
-        address to;
-        uint256 amount;
-        uint64 releaseAt;
-        bool released;
-        bool cancelled; // Only if flag is cleared before release
-        address recipientOwner;
-    }
-
-    /// @notice escrowedTransfers
-    EscrowedTransfer[] public escrowedTransfers;
-    /// @notice userEscrowIndices
-    mapping(address => uint256[]) public userEscrowIndices; // from → escrow indices
-    // M5g FIX: track active (not released, not cancelled) escrow count per user separately from
-    // the historical array length. Without this, after 500 lifetime escrows the user is permanently
-    // DoS'd from new transfers even after all earlier escrows have released. Cap is now applied to
-    // active count, not lifetime array length.
-    /// @notice userActiveEscrowCount
-    mapping(address => uint256) public userActiveEscrowCount;
-    // H-3 FIX: Running total of tokens committed in active (unreleased/uncancelled) escrows
-    /// @notice totalActiveEscrowed
-    uint256 public totalActiveEscrowed;
 
     // ── Events ───────────────────────────────────────────────
     /// @notice ComplaintFiled
@@ -254,34 +239,6 @@ contract FraudRegistry is ReentrancyGuard {
     /// @notice PermanentBanCancelled
     /// @param target target
     event PermanentBanCancelled(address indexed target);
-    /// @notice TransferEscrowed
-    /// @param escrowIndex escrowIndex
-    /// @param from from
-    /// @param to to
-    /// @param amount amount
-    /// @param releaseAt releaseAt
-    event TransferEscrowed(uint256 indexed escrowIndex, address indexed from, address indexed to, uint256 amount, uint64 releaseAt);
-    /// @notice EscrowReleased
-    /// @param escrowIndex escrowIndex
-    /// @param to to
-    /// @param amount amount
-    event EscrowReleased(uint256 indexed escrowIndex, address indexed to, uint256 amount);
-    /// @notice EscrowRescued
-    /// @param escrowIndex escrowIndex
-    /// @param recipient recipient
-    /// @param amount amount
-    event EscrowRescued(uint256 indexed escrowIndex, address indexed recipient, uint256 amount);
-    /// @notice EscrowCancelledOnClear
-    /// @param escrowIndex escrowIndex
-    /// @param from from
-    /// @param amount amount
-    event EscrowCancelledOnClear(uint256 indexed escrowIndex, address indexed from, uint256 amount);
-    /// @notice ClearFlagEscrowRefundProgress
-    /// @param target target
-    /// @param processed processed
-    /// @param nextCursor nextCursor
-    /// @param complete complete
-    event ClearFlagEscrowRefundProgress(address indexed target, uint256 processed, uint256 nextCursor, bool complete);
     /// @notice DAOSet
     /// @param oldDAO oldDAO
     /// @param newDAO newDAO
@@ -356,7 +313,11 @@ contract FraudRegistry is ReentrancyGuard {
         // Cap complaints array to prevent unbounded growth
         require(complaints[target].length < 100, "FR: complaint limit");
 
-        complaints[target].push(Complaint({reporter: msg.sender, reason: reason, timestamp: uint64(block.timestamp)}));
+        complaints[target].push(Complaint({
+            reporter: msg.sender,
+            reason: reason,
+            timestamp: uint64(block.timestamp)
+        }));
         ++complaintCount[target];
 
         emit ComplaintFiled(target, msg.sender, reason, complaintCount[target]);
@@ -368,6 +329,11 @@ contract FraudRegistry is ReentrancyGuard {
             isPendingReview[target] = true;
             pendingReviewAt[target] = uint64(block.timestamp);
             emit PendingDAOReview(target, complaintCount[target]);
+            // Open a peer-jury cycle (if wired). Wrapped so a jury hiccup can never block the
+            // ability to file a complaint.
+            if (address(fraudJury) != address(0)) {
+                try fraudJury.openCase(target) {} catch {}
+            }
         }
     }
 
@@ -375,118 +341,20 @@ contract FraudRegistry is ReentrancyGuard {
     //  ESCROW FOR FLAGGED TRANSFERS
     // ═══════════════════════════════════════════════════════════
 
-    /// @notice Called by VFIDEToken._transfer when sender is flagged
-    /// @dev Tokens are held in the FraudRegistry contract for 30 days, then released to recipient
-    /// @param from Sender (flagged address)
-    /// @param to Intended recipient
-    /// @param amount Token amount
-    /// @return escrowIndex Index of the escrowed transfer
-    function escrowTransfer(address from, address to, uint256 amount) external nonReentrant returns (uint256 escrowIndex) {
-        // Only callable by the VFIDE token contract
-        // The token sends tokens HERE instead of to the recipient
-        // After 30 days, anyone can call releaseEscrow to deliver them
-        require(msg.sender == address(vfideToken), "FR: only token");
-
-        address recipientOwner = to;
-        if (address(vaultHub) != address(0)) {
-            try vaultHub.isVault(to) returns (bool isVaultAddr) {
-                if (isVaultAddr) {
-                    try vaultHub.ownerOfVault(to) returns (address owner) {
-                        if (owner != address(0)) recipientOwner = owner;
-                    } catch {}
-                }
-            } catch {}
-        }
-
-        uint64 releaseAt = uint64(block.timestamp) + uint64(ESCROW_DURATION);
-
-        escrowIndex = escrowedTransfers.length;
-        escrowedTransfers.push(EscrowedTransfer({from: from, to: to, amount: amount, releaseAt: releaseAt, released: false, cancelled: false, recipientOwner: recipientOwner}));
-
-        // M5g FIX: cap on ACTIVE escrows per user, not lifetime array length.
-        // Prevents permanent user DoS after 500 historical escrows have released.
-        require(userActiveEscrowCount[from] < 500, "FR: escrow limit");
-        userEscrowIndices[from].push(escrowIndex);
-        ++userActiveEscrowCount[from];
-        // H-3 FIX: Track total actively escrowed tokens for O(1) excess calculation
-        totalActiveEscrowed += amount;
-
-        emit TransferEscrowed(escrowIndex, from, to, amount, releaseAt);
+    /// @notice DEPRECATED / NON-CUSTODIAL: fund holds removed — this reverts. Retained as an
+    ///         ABI-compatibility stub only. The token now delivers every transfer directly.
+    function escrowTransfer(address, address, uint256) external pure returns (uint256) {
+        // NON-CUSTODIAL: fund holds are removed. The system never withholds, delays, or seizes a
+        // user's funds. This entry point is retained ONLY as a reverting stub for ABI compatibility
+        // during migration; the token now delivers every transfer directly. Fraud is handled by
+        // risk signal + Seer score penalty + service-ban — never by escrowing transfers.
+        revert("FR: fund holds removed - non-custodial");
     }
 
-    /// @notice Release an escrowed transfer after 30 days. Anyone can call.
-    /// @param escrowIndex Index of the escrowed transfer
-    function releaseEscrow(uint256 escrowIndex) external nonReentrant {
-        if (escrowIndex >= escrowedTransfers.length) revert FR_EscrowInvalidIndex();
+    // releaseEscrow / rescueStuckEscrow removed — no escrow is ever created (fund holds removed),
+    // so the release/rescue lifecycle and its storage no longer exist. Non-custodial by construction.
 
-        EscrowedTransfer storage e = escrowedTransfers[escrowIndex];
-        if (e.released || e.cancelled) revert FR_EscrowAlreadyProcessed();
-        if (block.timestamp < e.releaseAt) revert FR_EscrowNotReady();
 
-        e.released = true;
-        // H-3 FIX: Decrement active escrow counter before transfer
-        totalActiveEscrowed -= e.amount;
-        // M5g FIX: decrement per-user active count so the user can keep transacting after release
-        if (userActiveEscrowCount[e.from] > 0) {
-            --userActiveEscrowCount[e.from];
-        }
-
-        // Resolve against the snapshot owner captured at escrow time.
-        address releaseTarget = e.to;
-        if (e.recipientOwner != address(0) && address(vaultHub) != address(0)) {
-            try vaultHub.vaultOf(e.recipientOwner) returns (address currentVault) {
-                if (currentVault != address(0)) {
-                    releaseTarget = currentVault;
-                }
-            } catch {}
-        }
-
-        // F-11/N-H4 FIX: Check systemExempt for full-amount delivery, but do not permanently lock
-        // release if exemption is removed. Emit warning and continue transfer so escrow is not stuck forever.
-        try IVFIDEToken_SystemExempt(address(vfideToken)).systemExempt(address(this)) returns (bool exempt) {
-            if (!exempt) {
-                emit SystemExemptCheckFailed(address(this));
-            }
-        } catch {
-            // If systemExempt query fails, emit warning but continue (fallback for older token versions)
-            emit SystemExemptCheckFailed(address(this));
-        }
-
-        // Transfer tokens from this contract to the intended recipient
-        // FraudRegistry must be systemExempt on VFIDEToken so this transfer
-        // skips fees and fraud checks (preventing infinite recursion)
-        SafeERC20.safeTransfer(vfideToken, releaseTarget, e.amount);
-
-        if (releaseTarget != e.to) {
-            emit EscrowReleaseTargetResolved(escrowIndex, e.to, releaseTarget);
-        }
-        emit EscrowReleased(escrowIndex, releaseTarget, e.amount);
-    }
-
-    /// @notice rescueStuckEscrow
-    /// @param escrowIndex escrowIndex
-    /// @param recipient recipient
-    function rescueStuckEscrow(uint256 escrowIndex, address recipient) external onlyDAO nonReentrant {
-        // #374 hardening: only allow rescue back to original sender.
-        // Keep recipient arg for ABI compatibility with existing integrations.
-        if (recipient == address(0)) revert FR_Zero();
-        if (escrowIndex >= escrowedTransfers.length) revert FR_EscrowInvalidIndex();
-
-        EscrowedTransfer storage e = escrowedTransfers[escrowIndex];
-        if (e.released || e.cancelled) revert FR_EscrowAlreadyProcessed();
-        require(block.timestamp >= e.releaseAt + ESCROW_RESCUE_DELAY, "FR: rescue timelock active");
-        if (recipient != e.from) revert FR_EscrowRecipientMismatch();
-
-        e.cancelled = true;
-        totalActiveEscrowed -= e.amount;
-        // M5g FIX: decrement per-user active count on rescue/cancel
-        if (userActiveEscrowCount[e.from] > 0) {
-            --userActiveEscrowCount[e.from];
-        }
-        SafeERC20.safeTransfer(vfideToken, e.from, e.amount);
-
-        emit EscrowRescued(escrowIndex, e.from, e.amount);
-    }
 
     // ═══════════════════════════════════════════════════════════
     //  SERVICE BAN CHECK — Called by all protocol services
@@ -495,18 +363,40 @@ contract FraudRegistry is ReentrancyGuard {
     /// @notice Check if an address is banned from protocol services
     /// @param user Address to check
     /// @return banned True if flagged or permanently banned
-    function isServiceBanned(address user) external view returns (bool) {
-        return isFlagged[user] || isPermanentlyBanned[user];
+    /// @notice Risk tiers surfaced to counterparties (the frontend risk card) and integrators.
+    /// @dev NON-CUSTODIAL: this is an advisory SIGNAL only — it never holds, delays, or seizes
+    ///      funds. It is the information that replaced the removed 30-day escrow hold.
+    enum RiskLevel { None, Reported, UnderReview, Confirmed }
+
+    /// @notice Advisory fraud-risk level for `user` (None/Reported/UnderReview/Confirmed).
+    /// @dev Consumed by the payment-time risk card; never gates a transfer.
+    function riskLevel(address user) external view returns (RiskLevel) {
+        if (_flagActive(user) || isPermanentlyBanned[user]) return RiskLevel.Confirmed;
+        if (isPendingReview[user]) return RiskLevel.UnderReview;
+        if (complaintCount[user] > 0) return RiskLevel.Reported;
+        return RiskLevel.None;
     }
 
-    /// @notice Check if transfers from this address require escrow
-    /// @param user Address to check
-    /// @return required True if flagged (3+ complaints) or permanently banned
-    /// @dev H-3 FIX: Permanently banned users must also have escrow applied.
-    ///      Previously `isPermanentlyBanned` silently removed the escrow restriction,
-    ///      meaning the most severely sanctioned users had the fewest transfer restrictions.
-    function requiresEscrow(address user) external view returns (bool) {
-        return isFlagged[user] || isPermanentlyBanned[user];
+    /// @notice A confirmed flag is "active" only within SIGNAL_TTL of confirmation; afterward the
+    ///         signal and service-ban decay automatically. Anyone may then call expireFlag() to clear
+    ///         storage. Permanent bans do NOT decay (callers OR them in separately).
+    function _flagActive(address user) internal view returns (bool) {
+        return isFlagged[user] && block.timestamp <= flaggedAt[user] + SIGNAL_TTL;
+    }
+
+    function isServiceBanned(address user) external view returns (bool) {
+        return _flagActive(user) || isPermanentlyBanned[user];
+    }
+
+    /// @notice NON-CUSTODIAL: always returns false. No transfer ever requires a hold/escrow.
+    ///         Fraud is handled by risk signal + Seer score + service-ban, never by withholding funds.
+    /// @return required Always false.
+    function requiresEscrow(address) external pure returns (bool) {
+        // NON-CUSTODIAL: the system never holds, delays, or seizes funds. Fraud is handled by
+        // risk signal (see riskLevel/getFraudStatus) + Seer score penalty + service-ban, never by
+        // escrowing transfers. Returns false unconditionally so neither the token transfer path nor
+        // the bridge ever withholds a user's funds.
+        return false;
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -521,7 +411,18 @@ contract FraudRegistry is ReentrancyGuard {
     function confirmFraud(address target) external onlyDAO nonReentrant {
         require(isPendingReview[target], "FR: not pending review");
         require(!isFlagged[target], "FR: already flagged");
-        require(block.timestamp >= pendingReviewAt[target] + PENDING_REVIEW_APPEAL_WINDOW, "FR: appeal window not elapsed");
+        // NON-CUSTODIAL FAIRNESS: when a peer jury is wired, a flag may ONLY follow a jury
+        // CONFIRMATION — the DAO cannot unilaterally confirm fraud (it may only soften, via
+        // FraudJury.daoVeto). When no jury is wired yet, fall back to the 48h appeal window so
+        // existing/pre-jury deployments keep working unchanged.
+        if (address(fraudJury) != address(0)) {
+            require(fraudJury.isConfirmed(target), "FR: jury has not confirmed");
+        } else {
+            require(
+                block.timestamp >= pendingReviewAt[target] + PENDING_REVIEW_APPEAL_WINDOW,
+                "FR: appeal window not elapsed"
+            );
+        }
 
         isPendingReview[target] = false;
         pendingReviewAt[target] = 0;
@@ -600,11 +501,18 @@ contract FraudRegistry is ReentrancyGuard {
         uint256 newCursor = cursor;
 
         for (uint256 i = cursor; i < stop; ++i) {
-            try seer.punish(filed[i].reporter, COMPLAINT_REPORTER_PENALTY, "false_complaint_dismissed") {
+            address reporter = filed[i].reporter;
+            // Reporter bond: the slash escalates with each prior false complaint by this reporter
+            // (50, 100, 150, ...), capped at uint16 max. One honest mistake is cheap; serial false
+            // reporting becomes expensive — skin-in-the-game without any token deposit.
+            uint256 escalated = uint256(COMPLAINT_REPORTER_PENALTY) * (uint256(priorDismissals[reporter]) + 1);
+            uint16 penalty = escalated > type(uint16).max ? type(uint16).max : uint16(escalated);
+            try seer.punish(reporter, penalty, "false_complaint_dismissed") {
+                unchecked { ++priorDismissals[reporter]; }
                 ++processed;
                 newCursor = i + 1;
             } catch (bytes memory reason) {
-                emit DismissedComplaintPenaltyFailed(target, filed[i].reporter, reason);
+                emit DismissedComplaintPenaltyFailed(target, reporter, reason);
                 break;
             }
         }
@@ -619,73 +527,74 @@ contract FraudRegistry is ReentrancyGuard {
     ///      Does NOT retroactively release pending escrows — those complete on schedule.
     function clearFlag(address target) external onlyDAO nonReentrant {
         if (!isFlagged[target]) revert FR_NotFlagged();
+        _clearFlag(target);
+    }
+
+    /// @notice Internal flag-clear shared by DAO clearFlag, redemption, and signal expiry.
+    /// @dev Resets complaint state (N-H2) and bumps the epoch so a cleared subject is not instantly
+    ///      re-flaggable from stale history. Emits FlagCleared(target, caller) on every clear path.
+    function _clearFlag(address target) internal {
         isFlagged[target] = false;
         flaggedAt[target] = 0;
-
-        // N-H2 FIX: Reset complaint state so a cleared subject is not immediately re-flaggable
-        // with a single new complaint due to stale counters/history.
         isPendingReview[target] = false;
         pendingReviewAt[target] = 0;
         complaintCount[target] = 0;
         delete complaints[target];
         dismissedComplaintPenaltyCursor[target] = 0;
         ++complaintEpoch[target];
-
-        // N-H1 FIX: Escrow refunds are processed in bounded chunks via
-        // processClearFlagEscrowRefunds() to prevent clearFlag gas exhaustion.
-        clearFlagEscrowCursor[target] = 0;
-        clearFlagEscrowRefundPending[target] = true;
-
         emit FlagCleared(target, msg.sender);
     }
 
-    // slither-disable-next-line reentrancy-no-eth  // function has nonReentrant guard; SafeERC20.safeTransfer reverts atomically on failure
-    /// @notice Process refund cancellation for escrows linked to a target whose flag was cleared.
-    /// @dev N-H1 FIX: Bounded chunk processing to avoid unbounded clearFlag loops.
-    /// @param target Address whose flag was cleared.
-    /// @param maxCount Max escrow entries to scan in this call (0 => default 25).
-    /// @return processed processed
-    function processClearFlagEscrowRefunds(address target, uint256 maxCount) external nonReentrant returns (uint256 processed) {
-        require(clearFlagEscrowRefundPending[target], "FR: no pending clear-refunds");
+    /// @notice Emitted when a confirmed signal is cleared because its SIGNAL_TTL elapsed.
+    event FlagExpired(address indexed target);
+    /// @notice Emitted when a flagged party registers a restitution claim toward redemption.
+    event RestitutionRegistered(address indexed target, address indexed victim, bytes32 proofHash);
+    /// @notice Emitted when redemption is confirmed (by the victim or the DAO) and the flag is cleared.
+    event RedemptionConfirmed(address indexed target, address indexed by);
 
-        uint256[] storage userIndices = userEscrowIndices[target];
-        uint256 cursor = clearFlagEscrowCursor[target];
-        uint256 len = userIndices.length;
-        if (cursor >= len) {
-            clearFlagEscrowRefundPending[target] = false;
-            emit ClearFlagEscrowRefundProgress(target, 0, cursor, true);
-            return 0;
-        }
-
-        uint256 limit = maxCount == 0 ? 25 : maxCount;
-        uint256 stop = cursor + limit;
-        if (stop > len) stop = len;
-
-        for (uint256 i = cursor; i < stop; ++i) {
-            uint256 escrowIndex = userIndices[i];
-            if (escrowIndex >= escrowedTransfers.length) continue;
-
-            EscrowedTransfer storage e = escrowedTransfers[escrowIndex];
-            if (!e.released && !e.cancelled) {
-                e.cancelled = true;
-                totalActiveEscrowed -= e.amount;
-                // M5g FIX: decrement per-user active count on clear-flag refund cancel
-                if (userActiveEscrowCount[e.from] > 0) {
-                    --userActiveEscrowCount[e.from];
-                }
-                SafeERC20.safeTransfer(vfideToken, e.from, e.amount);
-                emit EscrowCancelledOnClear(escrowIndex, e.from, e.amount);
-                ++processed;
-            }
-        }
-
-        clearFlagEscrowCursor[target] = stop;
-        bool complete = stop >= len;
-        if (complete) {
-            clearFlagEscrowRefundPending[target] = false;
-        }
-        emit ClearFlagEscrowRefundProgress(target, processed, stop, complete);
+    /// @notice Permissionlessly clear a confirmed flag whose SIGNAL_TTL has elapsed (decay / forgiveness).
+    /// @dev Anyone may call once expired. Permanent bans are unaffected (use the ban functions).
+    function expireFlag(address target) external {
+        if (!isFlagged[target]) revert FR_NotFlagged();
+        require(block.timestamp > flaggedAt[target] + SIGNAL_TTL, "FR: signal not expired");
+        _clearFlag(target);
+        emit FlagExpired(target);
     }
+
+    /// @notice A flagged party registers that they have made a victim whole (off-chain proof pointer).
+    /// @dev NON-CUSTODIAL: redemption is a path back, never a fund operation. The named victim — or the
+    ///      DAO backstop — must confirm before the flag clears. Seer should grant the Redemption badge
+    ///      and let the score recover via decay in response to RedemptionConfirmed (not done here, as
+    ///      this contract only ever lowers scores via punish, never raises them).
+    function registerRestitution(address victim, bytes32 proofHash) external {
+        if (victim == address(0)) revert FR_Zero();
+        if (!isFlagged[msg.sender]) revert FR_NotFlagged();
+        restitution[msg.sender] = Restitution({victim: victim, proofHash: proofHash, at: uint64(block.timestamp)});
+        emit RestitutionRegistered(msg.sender, victim, proofHash);
+    }
+
+    /// @notice The named victim attests they were made whole; clears the flag (redemption).
+    function confirmRestitution(address target) external nonReentrant {
+        Restitution memory r = restitution[target];
+        if (r.victim == address(0)) revert FR_NoRestitution();
+        if (msg.sender != r.victim) revert FR_NotVictim();
+        if (!isFlagged[target]) revert FR_NotFlagged();
+        delete restitution[target];
+        _clearFlag(target);
+        emit RedemptionConfirmed(target, msg.sender);
+    }
+
+    /// @notice DAO backstop: confirm redemption (e.g. victim unresponsive; DAO verified proof off-chain).
+    function daoConfirmRestitution(address target) external onlyDAO nonReentrant {
+        if (!isFlagged[target]) revert FR_NotFlagged();
+        delete restitution[target];
+        _clearFlag(target);
+        emit RedemptionConfirmed(target, msg.sender);
+    }
+
+    // processClearFlagEscrowRefunds removed — there are no escrows to refund (fund holds removed).
+
+
 
     /// @notice Schedule a permanent ban with a 7-day timelock (H-4 FIX).
     /// @param target Address to permanently ban.
@@ -753,6 +662,18 @@ contract FraudRegistry is ReentrancyGuard {
         emit DAOChangeCancelled();
     }
 
+    /// @notice Emitted when the peer-jury module is wired or unwired.
+    event FraudJurySet(address indexed fraudJury);
+
+    /// @notice Wire (or unwire) the peer-jury module. Once set, confirmFraud requires a jury
+    ///         CONFIRMATION; the DAO can no longer unilaterally confirm fraud (only soften, via
+    ///         FraudJury.daoVeto). Setting address(0) reverts to the 48h appeal-window path.
+    /// @dev NOTE (pre-mainnet): adopt the timelocked setter pattern (like setVaultHub) before mainnet.
+    function setFraudJury(address _fraudJury) external onlyDAO {
+        fraudJury = IFraudJury_FR(_fraudJury);
+        emit FraudJurySet(_fraudJury);
+    }
+
     /// @notice Propose a new VaultHub address (takes effect after 48h)
     /// @param _vaultHub _vaultHub
     function setVaultHub(address _vaultHub) external onlyDAO {
@@ -790,7 +711,11 @@ contract FraudRegistry is ReentrancyGuard {
     /// @return reporters reporters
     /// @return reasons reasons
     /// @return timestamps timestamps
-    function getComplaints(address target) external view returns (address[] memory reporters, string[] memory reasons, uint64[] memory timestamps) {
+    function getComplaints(address target) external view returns (
+        address[] memory reporters,
+        string[] memory reasons,
+        uint64[] memory timestamps
+    ) {
         Complaint[] storage c = complaints[target];
         uint256 len = c.length;
         reporters = new address[](len);
@@ -804,92 +729,10 @@ contract FraudRegistry is ReentrancyGuard {
         }
     }
 
-    /// @notice Get pending escrowed transfers for an address
-    /// @param user user
-    /// @return indices indices
-    /// @return recipients recipients
-    /// @return amounts amounts
-    /// @return releaseAts releaseAts
-    function getPendingEscrows(address user) external view returns (uint256[] memory indices, address[] memory recipients, uint256[] memory amounts, uint64[] memory releaseAts) {
-        uint256[] storage userIndices = userEscrowIndices[user];
-        uint256 pendingCount = 0;
-        uint256 _len = userIndices.length;
+    // getPendingEscrows / getPendingEscrowsPaginated removed — no escrows exist (fund holds removed).
+    // Counterparty risk is exposed via riskLevel()/getFraudStatus(); there is nothing held to enumerate.
 
-        for (uint256 i = 0; i < _len; ++i) {
-            EscrowedTransfer storage e = escrowedTransfers[userIndices[i]];
-            if (!e.released && !e.cancelled) {
-                ++pendingCount;
-            }
-        }
 
-        indices = new uint256[](pendingCount);
-        recipients = new address[](pendingCount);
-        amounts = new uint256[](pendingCount);
-        releaseAts = new uint64[](pendingCount);
-
-        uint256 idx = 0;
-        for (uint256 i = 0; i < _len; ++i) {
-            EscrowedTransfer storage e = escrowedTransfers[userIndices[i]];
-            if (!e.released && !e.cancelled) {
-                indices[idx] = userIndices[i];
-                recipients[idx] = e.to;
-                amounts[idx] = e.amount;
-                releaseAts[idx] = e.releaseAt;
-                ++idx;
-            }
-        }
-    }
-
-    /// @notice Get pending escrowed transfers with bounded pagination.
-    /// @param user Address to inspect.
-    /// @param offset Cursor in userEscrowIndices[user].
-    /// @param limit Max entries to scan from the cursor (0 => default 25).
-    /// @return indices Matching escrow indices.
-    /// @return recipients Escrow recipients.
-    /// @return amounts Escrow amounts.
-    /// @return releaseAts Escrow unlock timestamps.
-    /// @return nextOffset Cursor for the next page.
-    function getPendingEscrowsPaginated(
-        address user,
-        uint256 offset,
-        uint256 limit
-    ) external view returns (uint256[] memory indices, address[] memory recipients, uint256[] memory amounts, uint64[] memory releaseAts, uint256 nextOffset) {
-        uint256[] storage userIndices = userEscrowIndices[user];
-        uint256 len = userIndices.length;
-        if (offset >= len) {
-            return (new uint256[](0), new address[](0), new uint256[](0), new uint64[](0), offset);
-        }
-
-        uint256 span = limit == 0 ? 25 : limit;
-        uint256 stop = offset + span;
-        if (stop > len) stop = len;
-
-        uint256 pendingCount = 0;
-        for (uint256 i = offset; i < stop; ++i) {
-            EscrowedTransfer storage e = escrowedTransfers[userIndices[i]];
-            if (!e.released && !e.cancelled) ++pendingCount;
-        }
-
-        indices = new uint256[](pendingCount);
-        recipients = new address[](pendingCount);
-        amounts = new uint256[](pendingCount);
-        releaseAts = new uint64[](pendingCount);
-
-        uint256 idx = 0;
-        for (uint256 i = offset; i < stop; ++i) {
-            uint256 escrowIndex = userIndices[i];
-            EscrowedTransfer storage e = escrowedTransfers[escrowIndex];
-            if (!e.released && !e.cancelled) {
-                indices[idx] = escrowIndex;
-                recipients[idx] = e.to;
-                amounts[idx] = e.amount;
-                releaseAts[idx] = e.releaseAt;
-                ++idx;
-            }
-        }
-
-        nextOffset = stop;
-    }
 
     /// @notice Get fraud status summary for an address
     /// @param user user
@@ -899,22 +742,20 @@ contract FraudRegistry is ReentrancyGuard {
     /// @return permanentlyBanned permanentlyBanned
     /// @return flagTimestamp flagTimestamp
     /// @return pendingEscrowCount pendingEscrowCount
-    function getFraudStatus(address user) external view returns (uint8 totalComplaints, bool pendingReview, bool flagged, bool permanentlyBanned, uint64 flagTimestamp, uint256 pendingEscrowCount) {
+    function getFraudStatus(address user) external view returns (
+        uint8 totalComplaints,
+        bool pendingReview,
+        bool flagged,
+        bool permanentlyBanned,
+        uint64 flagTimestamp,
+        uint256 pendingEscrowCount
+    ) {
         totalComplaints = complaintCount[user];
         pendingReview = isPendingReview[user];
         flagged = isFlagged[user];
         permanentlyBanned = isPermanentlyBanned[user];
         flagTimestamp = flaggedAt[user];
-
-        // Count pending escrows
-        uint256[] storage userIndices = userEscrowIndices[user];
-        uint256 _lenUI = userIndices.length;
-        for (uint256 i = 0; i < _lenUI; ++i) {
-            EscrowedTransfer storage e = escrowedTransfers[userIndices[i]];
-            if (!e.released && !e.cancelled) {
-                ++pendingEscrowCount;
-            }
-        }
+        pendingEscrowCount = 0; // fund holds removed; retained in the tuple (always 0) for ABI parity.
     }
 
     // ── H-7 FIX: DAO rescue for unrecorded token balance ──────────
@@ -931,12 +772,10 @@ contract FraudRegistry is ReentrancyGuard {
     function rescueExcessTokens(address to) external onlyDAO nonReentrant {
         if (to == address(0)) revert FR_Zero();
 
-        // H-3 FIX: Use O(1) counter instead of O(n) loop over all escrows
-        uint256 escrowed = totalActiveEscrowed;
-
+        // No escrow is ever held (fund holds removed), so the entire token balance is rescuable excess.
         uint256 balance = vfideToken.balanceOf(address(this));
-        require(balance > escrowed, "FR: no excess");
-        uint256 excess = balance - escrowed;
+        require(balance > 0, "FR: no excess");
+        uint256 excess = balance;
 
         SafeERC20.safeTransfer(vfideToken, to, excess);
         emit TokensRescued(to, excess);

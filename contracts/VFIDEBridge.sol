@@ -182,7 +182,14 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     /// @param amount amount
     /// @param fee fee
     /// @param txId txId
-    event BridgeSent(address indexed sender, uint32 indexed dstChainId, address indexed receiver, uint256 amount, uint256 fee, bytes32 txId);
+    event BridgeSent(
+        address indexed sender,
+        uint32 indexed dstChainId,
+        address indexed receiver,
+        uint256 amount,
+        uint256 fee,
+        bytes32 txId
+    );
     /// @notice BridgeFeeRecorded
     /// @param txId txId
     /// @param bridgeFee bridgeFee
@@ -194,7 +201,12 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     /// @param srcChainId srcChainId
     /// @param amount amount
     /// @param txId txId
-    event BridgeReceived(address indexed receiver, uint32 indexed srcChainId, uint256 amount, bytes32 txId);
+    event BridgeReceived(
+        address indexed receiver,
+        uint32 indexed srcChainId,
+        uint256 amount,
+        bytes32 txId
+    );
     /// @notice DeliveryConfirmationSkipped
     /// @param dstChainId dstChainId
     /// @param txId txId
@@ -264,11 +276,11 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     event BridgeFeeScheduled(uint256 pendingFee, uint64 effectiveAt);
     /// @notice BridgeFeeCancelled
     event BridgeFeeCancelled();
-    /// @notice BridgeRefunded
-    /// @param sender sender
-    /// @param txId txId
-    /// @param amount amount
-    event BridgeRefunded(address indexed sender, bytes32 indexed txId, uint256 amount);
+        /// @notice BridgeRefunded
+        /// @param sender sender
+        /// @param txId txId
+        /// @param amount amount
+        event BridgeRefunded(address indexed sender, bytes32 indexed txId, uint256 amount);
     /// @notice BridgeRefundWindowOpened
     /// @param txId txId
     /// @param refundableAfter refundableAfter
@@ -292,15 +304,15 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     /// @param sender sender
     /// @param amount amount
     event StaleBridgeRefundFinalized(bytes32 indexed txId, address indexed sender, uint256 amount);
-    /// F-25 FIX: Refund window — if destination bridge fails to execute, sender can claim refund after 7 days
-    /// @notice BRIDGE_REFUND_DELAY
-    uint256 public constant BRIDGE_REFUND_DELAY = 7 days;
-    /// @notice STALE_BRIDGE_REFUND_DELAY
-    uint256 public constant STALE_BRIDGE_REFUND_DELAY = 30 days;
-    /// @notice BRIDGE_REFUND_CLAIM_GRACE
-    uint256 public constant BRIDGE_REFUND_CLAIM_GRACE = 7 days;
-    /// @notice bridgeRefundableAfter
-    mapping(bytes32 => uint256) public bridgeRefundableAfter; // txId => timestamp after which refund is claimable
+        /// F-25 FIX: Refund window — if destination bridge fails to execute, sender can claim refund after 7 days
+        /// @notice BRIDGE_REFUND_DELAY
+        uint256 public constant BRIDGE_REFUND_DELAY = 7 days;
+        /// @notice STALE_BRIDGE_REFUND_DELAY
+        uint256 public constant STALE_BRIDGE_REFUND_DELAY = 30 days;
+        /// @notice BRIDGE_REFUND_CLAIM_GRACE
+        uint256 public constant BRIDGE_REFUND_CLAIM_GRACE = 7 days;
+        /// @notice bridgeRefundableAfter
+        mapping(bytes32 => uint256) public bridgeRefundableAfter; // txId => timestamp after which refund is claimable
 
     /// H-1 FIX: Timelocked VFIDE emergency recovery — allows owner to rescue locked VFIDE after 30 days
     /// @notice VFIDE_RECOVERY_DELAY
@@ -310,7 +322,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     /// @notice pendingVFIDERecoveryAmount
     uint256 public pendingVFIDERecoveryAmount;
     /// @notice pendingVFIDERecoveryAt
-    uint64 public pendingVFIDERecoveryAt;
+    uint64  public pendingVFIDERecoveryAt;
     /// @notice VFIDERecoveryScheduled
     /// @param to to
     /// @param amount amount
@@ -573,19 +585,17 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         // Release tokens to receiver from destination bridge liquidity.
         uint256 bridgeBalance = vfideToken.balanceOf(address(this));
         uint256 availableLiquidity_ = bridgeBalance > pendingOutboundAmount ? bridgeBalance - pendingOutboundAmount : 0;
+        require(availableLiquidity_ >= amount, "VFIDEBridge: insufficient available liquidity"); // H-06: inbound liquidity >= requested amount
         if (availableLiquidity_ < amount) {
             _sendBridgeFailureNotification(_origin.srcEid, _guid);
             emit BridgeDeliveryFailed(_guid, _origin.srcEid, "insufficient destination liquidity");
             return;
         }
 
-        // Defense in depth: avoid releasing bridged funds directly to addresses
-        // currently flagged for escrow by the token's fraud controls.
-        if (_receiverRequiresEscrow(receiver)) {
-            _sendBridgeFailureNotification(_origin.srcEid, _guid);
-            emit BridgeDeliveryFailed(_guid, _origin.srcEid, "receiver requires escrow");
-            return;
-        }
+        // NON-CUSTODIAL: bridged funds are ALWAYS delivered to the receiver. The former
+        // "reject delivery if receiver is flagged" branch was a fund-withholding (freeze) path
+        // and is removed. Fraud is handled by risk signal + score + service-ban, never by
+        // withholding a user's incoming funds. (_receiverRequiresEscrow now always returns false.)
 
         // Update statistics
         userStats[receiver].totalReceived += amount;
@@ -1223,7 +1233,12 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     /// @param payload payload
     /// @param options options
     /// @param nativeFee nativeFee
-    function __sendDeliveryConfirmation(uint32 _dstChainId, bytes calldata payload, bytes calldata options, uint256 nativeFee) external {
+    function __sendDeliveryConfirmation(
+        uint32 _dstChainId,
+        bytes calldata payload,
+        bytes calldata options,
+        uint256 nativeFee
+    ) external {
         require(msg.sender == address(this), "VFIDEBridge: self only");
         _lzSend(_dstChainId, payload, options, MessagingFee(nativeFee, 0), payable(address(this)));
     }
@@ -1273,6 +1288,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     /// @param payload payload
     /// @return messageType messageType
     function _decodeMessageType(bytes calldata payload) internal pure returns (uint16 messageType) {
+        // audit-ok(assembly): Reviewed: idiomatic low-level pattern (extcodesize/extcodehash/create2 or vendored audited code) — must not be modified
         assembly {
             messageType := and(calldataload(payload.offset), 0xffff)
         }

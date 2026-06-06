@@ -1,5 +1,5 @@
 'use client';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Calendar, Crown, TrendingUp } from 'lucide-react';
 import { SampleDataBanner } from '@/components/ui/SampleDataBanner';
 
@@ -65,9 +65,9 @@ export function MembersTab() {
 
   return (
     <div className="space-y-8">
-      <SampleDataBanner label="Council members are listed here when CouncilElection ships in a future release. The entries below are illustrative placeholders — no council elections have occurred at V1." />
+      <SampleDataBanner label="Council members appear here once the community elects a council — CouncilElection ships in V1 and is awaiting an election, not a future release. No election has been held yet; the entries below are illustrative." />
       {/* Members List */}
-      <motion.div 
+      <m.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-6"
@@ -80,7 +80,7 @@ export function MembersTab() {
         </h3>
         <div className="space-y-4">
           {members.map((member, idx) => (
-            <motion.div 
+            <m.div 
               key={idx}
               whileHover={{ scale: 1.005, x: 4 }}
               className={`flex flex-col md:flex-row md:items-center justify-between p-4 rounded-xl ${
@@ -108,7 +108,7 @@ export function MembersTab() {
                     ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
                     : member.role === 'Open'
                     ? 'bg-white/5 text-gray-400 border-white/10'
-                    : 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30'
+                    : 'bg-accent/20 text-accent border-accent/30'
                 }`}>
                   {member.role}
                 </span>
@@ -124,21 +124,21 @@ export function MembersTab() {
                   </>
                 )}
               </div>
-            </motion.div>
+            </m.div>
           ))}
         </div>
-      </motion.div>
+      </m.div>
 
       {/* Daily Score Check */}
-      <motion.div 
+      <m.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
         className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-6"
       >
         <div className="flex items-center gap-4 mb-4">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 border border-cyan-500/20">
-            <TrendingUp className="text-cyan-400" size={20} />
+          <div className="p-2 rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/20">
+            <TrendingUp className="text-accent" size={20} />
           </div>
           <div>
             <h3 className="text-xl font-bold text-white">Daily Score Verification</h3>
@@ -156,10 +156,10 @@ export function MembersTab() {
           </div>
           <div className="flex items-center justify-between">
             <span className="text-gray-400">Minimum Required Score</span>
-            <span className="text-cyan-400 font-semibold">7000 (70%)</span>
+            <span className="text-accent font-semibold">7000 (70%)</span>
           </div>
         </div>
-      </motion.div>
+      </m.div>
     </div>
   );
 }

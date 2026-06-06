@@ -1,12 +1,14 @@
 'use client';
 
 import { Footer } from '@/components/layout/Footer';
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { m as motion, useScroll, useTransform } from 'framer-motion';
+import { ArrowRight, ChevronRight, CheckCircle2, Wallet, TrendingDown, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { FeeSavingsCalculator } from '@/components/fees';
 import { OnboardingPathChooser, useOnboarding } from '@/components/onboarding';
 import { useRef } from 'react';
+import { useLocale } from '@/lib/locale/LocaleProvider';
+import { HOME_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
 
 import { LiveProofScoreHero } from './components/LiveProofScoreHero';
 import { FeeFlowRiver } from './components/FeeFlowRiver';
@@ -14,18 +16,6 @@ import { MonumentBackdrop } from './components/MonumentBackdrop';
 import { FeatureCard } from './components/FeatureCard';
 import { StatItem } from './components/StatItem';
 import { Step } from './components/Step';
-
-/* ── Marquee items ─────────────────────────────────────────── */
-const PROTOCOL_METRICS = [
-  { label: 'Merchant Fees', value: '0%', icon: '💸' },
-  { label: 'Max ProofScore', value: '10,000', icon: '🏆' },
-  { label: 'Burn Rate', value: '40%', icon: '🔥' },
-  { label: 'Sanctum Fund', value: '10%', icon: '🛡️' },
-  { label: 'Avg Settlement', value: '<3s', icon: '⚡' },
-  { label: 'Guardian Nodes', value: '3-of-5', icon: '🔐' },
-  { label: 'ProofScore Tiers', value: '7 Tiers', icon: '🎯' },
-  { label: 'Self-Custody', value: '100%', icon: '🗝️' },
-];
 
 /* ── Feature data ──────────────────────────────────────────── */
 const FEATURES = [
@@ -73,23 +63,28 @@ const FEATURES = [
   },
 ];
 
-const TRUST_POINTS = [
-  'Non-custodial: your keys, your coins',
-  'Open-source contracts on Base',
-  'Guardian multi-sig recovery',
-  'On-chain audit trail for every tx',
-];
-
 export default function Home() {
   const { state } = useOnboarding();
+  const { locale } = useLocale();
+  const copy = pickLocaleCopy(HOME_TRANSLATIONS, locale);
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
   const heroY = useTransform(scrollYProgress, [0, 1], ['0%', '15%']);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
+  const protocolMetrics = [
+    { label: copy.merchantFeesLabel, value: '0%', icon: '💸' },
+    { label: copy.maxProofScoreLabel, value: '10,000', icon: '🏆' },
+    { label: copy.burnRateLabel, value: '40%', icon: '🔥' },
+    { label: copy.sanctumFundLabel, value: '10%', icon: '🛡️' },
+    { label: 'Avg Settlement', value: '<3s', icon: '⚡' },
+    { label: 'Guardian Nodes', value: '3-of-5', icon: '🔐' },
+    { label: 'ProofScore Tiers', value: '7 Tiers', icon: '🎯' },
+    { label: 'Self-Custody', value: '100%', icon: '🗝️' },
+  ];
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 relative overflow-hidden">
+      <div className="ui-page-shell min-h-screen relative overflow-hidden">
 
         {/* ════════════════════════════════════════
             HERO SECTION — Cinematic
@@ -109,7 +104,7 @@ export default function Home() {
 
           <motion.div
             style={{ y: heroY, opacity: heroOpacity }}
-            className="container mx-auto px-4 max-w-6xl relative"
+            className="ui-container-breathing relative"
           >
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
               {/* Text column */}
@@ -126,40 +121,39 @@ export default function Home() {
                   transition={{ duration: 0.5, delay: 0.1 }}
                   className="badge-live mb-6 w-fit"
                 >
-                  Trust-Scored Payments · Now on Base
+                  {copy.liveBadge}
                 </motion.div>
 
                 <h1 className="text-5xl sm:text-6xl md:text-7xl font-black text-white mb-6 leading-[1.02] tracking-tight">
-                  Keep what you{' '}
+                  {copy.heroPrefix}{' '}
                   <span className="gradient-text-hero">
-                    earn
+                    {copy.heroAccent}
                   </span>
                 </h1>
 
                 <p className="text-lg sm:text-xl text-zinc-400 mb-8 max-w-md leading-relaxed">
-                  Zero merchant fees. Guardian-protected self-custody. Reputation that pays you back.
-                  Built for everyone the platforms forgot.
+                  {copy.heroDescription}
                 </p>
 
                 {/* CTA buttons */}
-                <div className="flex flex-wrap gap-3 mb-8">
+                <div className="flex flex-col gap-3 mb-8 sm:flex-row sm:flex-wrap">
                   <Link
                     href="/merchant/setup"
                     className="btn-premium btn-premium-primary text-sm"
                   >
-                    Start selling <ArrowRight size={16} />
+                    {copy.primaryCta} <ArrowRight size={16} />
                   </Link>
                   <Link
                     href="/marketplace"
                     className="btn-premium btn-premium-ghost text-sm"
                   >
-                    Browse marketplace
+                    {copy.secondaryCta}
                   </Link>
                 </div>
 
                 {/* Trust points */}
                 <div className="space-y-2">
-                  {TRUST_POINTS.map((point, i) => (
+                  {copy.trustPoints.map((point, i) => (
                     <motion.div
                       key={point}
                       initial={{ opacity: 0, x: -15 }}
@@ -181,11 +175,11 @@ export default function Home() {
                 transition={{ duration: 0.8, delay: 0.25 }}
                 className="lg:col-span-7"
               >
-                <div className="glass-card-premium p-1">
+                <div className="glass-card-premium ui-card-sheen p-1">
                   <LiveProofScoreHero />
                 </div>
                 <p className="mt-3 text-center text-xs text-zinc-500">
-                  Try the slider — drag your trust score and watch the fee curve respond in real time.
+                  {copy.sliderHint}
                 </p>
               </motion.div>
             </div>
@@ -195,13 +189,62 @@ export default function Home() {
           <div className="hero-glow-bottom" aria-hidden="true" />
         </section>
 
+        {/*
+            WHAT IS VFIDE — plain-language explainer (before any mechanism)
+         */}
+        <section className="py-16 sm:py-20 border-b border-white/5 bg-zinc-950/40 relative">
+          <div className="container mx-auto px-4 max-w-5xl relative">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="mb-12 text-center"
+            >
+              <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">
+                {copy.whatKicker}
+              </p>
+              <h2 className="text-3xl sm:text-4xl font-bold text-white">
+                {copy.whatTitlePrefix}{' '}
+                <span className="gradient-text-cyan-blue">{copy.whatTitleAccent}</span>
+              </h2>
+            </motion.div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              {copy.whatItems.map((item, i) => {
+                const Icon = [Wallet, TrendingDown, Lock][i] ?? Wallet;
+                const accent = ['#00F0FF', '#FFD700', '#00FF88'][i] ?? '#00F0FF';
+                return (
+                  <motion.div
+                    key={item.label}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: i * 0.1 }}
+                    className="glass-card-premium p-6"
+                  >
+                    <div
+                      className="w-11 h-11 rounded-xl flex items-center justify-center mb-4"
+                      style={{ backgroundColor: `${accent}1a`, border: `1px solid ${accent}33` }}
+                    >
+                      <Icon size={20} style={{ color: accent }} />
+                    </div>
+                    <h3 className="text-lg font-semibold text-white mb-2">{item.label}</h3>
+                    <p className="text-sm text-zinc-400 leading-relaxed">{item.body}</p>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
         {/* ════════════════════════════════════════
             PROTOCOL METRICS MARQUEE
         ════════════════════════════════════════ */}
-        <section className="py-5 border-y border-white/5 bg-zinc-950/80 backdrop-blur-sm overflow-hidden">
+        <section className="ui-hairline-top py-5 border-y border-white/5 bg-zinc-950/80 backdrop-blur-sm overflow-hidden">
           <div className="marquee-wrapper">
             <div className="marquee-track">
-              {[...PROTOCOL_METRICS, ...PROTOCOL_METRICS].map((m, i) => (
+              {[...protocolMetrics, ...protocolMetrics].map((m, i) => (
                 <div key={i} className="metric-chip mx-3">
                   <span>{m.icon}</span>
                   <span className="metric-chip-value">{m.value}</span>
@@ -226,7 +269,7 @@ export default function Home() {
         ════════════════════════════════════════ */}
         <section className="relative isolate py-20 sm:py-28 overflow-hidden">
           <MonumentBackdrop variant="full" />
-          <div className="container mx-auto px-4 max-w-6xl relative">
+          <div className="ui-container-breathing relative">
             <FeeFlowRiver />
           </div>
         </section>
@@ -243,19 +286,19 @@ export default function Home() {
               transition={{ duration: 0.6 }}
               className="mb-12 text-center"
             >
-              <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Protocol stats</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">{copy.statsKicker}</p>
               <h2 className="text-3xl sm:text-4xl font-bold text-white">
-                Numbers that{' '}
-                <span className="gradient-text-cyan-blue">matter</span>
+                {copy.statsTitlePrefix}{' '}
+                <span className="gradient-text-cyan-blue">{copy.statsTitleAccent}</span>
               </h2>
             </motion.div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {[
-                { value: 0,     label: 'Merchant Fees',  suffix: '%',   color: 'cyan'    },
-                { value: 10000, label: 'Max ProofScore', suffix: '',    color: 'amber'   },
-                { value: 40,    label: 'Burn Rate',      suffix: '%',   color: 'emerald' },
-                { value: 10,    label: 'Sanctum Fund',   suffix: '%',   color: 'pink'    },
+                { value: 0,     label: copy.merchantFeesLabel,  suffix: '%',   color: 'cyan'    },
+                { value: 10000, label: copy.maxProofScoreLabel, suffix: '',    color: 'amber'   },
+                { value: 40,    label: copy.burnRateLabel,      suffix: '%',   color: 'emerald' },
+                { value: 10,    label: copy.sanctumFundLabel,   suffix: '%',   color: 'pink'    },
               ].map((stat, i) => (
                 <motion.div
                   key={stat.label}
@@ -285,7 +328,7 @@ export default function Home() {
             <div className="mesh-orb-cyan" style={{ width: '50%', height: '50%', top: '10%', right: '-10%' }} />
           </div>
 
-          <div className="container mx-auto px-4 max-w-6xl relative">
+          <div className="ui-container-breathing relative">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -293,20 +336,25 @@ export default function Home() {
               transition={{ duration: 0.6 }}
               className="mb-14 text-center"
             >
-              <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-3">Core primitives</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-3">What you get</p>
               <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
                 Everything you need.{' '}
                 <span className="gradient-text-purple-cyan">Nothing you don&apos;t.</span>
               </h2>
               <p className="text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-                Three primitives that compose into a complete financial layer: a vault you control,
-                a reputation engine that rewards honesty, and a fee model that funds the network.
+                Three things working together: a wallet only you control, a reputation that
+                earns you lower fees the more you trade, and zero fees for sellers.
               </p>
             </motion.div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {FEATURES.map((feature) => (
-                <FeatureCard key={feature.title} {...feature} />
+              {FEATURES.map((feature, i) => (
+                <FeatureCard
+                  key={feature.title}
+                  {...feature}
+                  title={copy.features[i]?.title ?? feature.title}
+                  description={copy.features[i]?.description ?? feature.description}
+                />
               ))}
             </div>
           </div>
@@ -324,10 +372,10 @@ export default function Home() {
               transition={{ duration: 0.6 }}
               className="mb-12 text-center"
             >
-              <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Savings calculator</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">{copy.calcKicker}</p>
               <h2 className="text-3xl sm:text-4xl font-bold text-white">
-                See how much you{' '}
-                <span className="text-glow-cyan">save</span>
+                {copy.calcTitlePrefix}{' '}
+                <span className="text-glow-cyan">{copy.calcTitleAccent}</span>
               </h2>
             </motion.div>
             <FeeSavingsCalculator />
@@ -346,17 +394,17 @@ export default function Home() {
               transition={{ duration: 0.6 }}
               className="mb-14 text-center"
             >
-              <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Quick start</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">{copy.stepsKicker}</p>
               <h2 className="text-3xl sm:text-4xl font-bold text-white">
-                Get started in{' '}
-                <span className="gradient-text-cyan-blue">60 seconds</span>
+                {copy.stepsTitlePrefix}{' '}
+                <span className="gradient-text-cyan-blue">{copy.stepsTitleAccent}</span>
               </h2>
             </motion.div>
 
             <div className="space-y-5">
-              <Step number={1} title="Create your account"  description="Connect your wallet — that's it. No email, no KYC for basic use, no approval wait."  time="10 sec" index={0} />
-              <Step number={2} title="Set up your store"    description="Name, category, add one product. One shareable payment link. You are live."             time="30 sec" index={1} />
-              <Step number={3} title="Share your link"      description="Send via WhatsApp, Instagram, Discord, anywhere. Customers pay with any stablecoin."     time="20 sec" index={2} />
+              <Step number={1} title={copy.steps[0].title} description={copy.steps[0].description}  time="10 sec" index={0} />
+              <Step number={2} title={copy.steps[1].title} description={copy.steps[1].description}             time="30 sec" index={1} />
+              <Step number={3} title={copy.steps[2].title} description={copy.steps[2].description}     time="20 sec" index={2} />
             </div>
           </div>
         </section>
@@ -374,32 +422,32 @@ export default function Home() {
               className="cta-gradient-bg p-12 text-center"
             >
               <div className="badge-live mb-6 w-fit mx-auto">
-                Zero fees. Open source. Self-custody.
+                {copy.ctaBadge}
               </div>
               <h2 className="text-4xl sm:text-5xl font-black text-white mb-5 leading-tight tracking-tight">
-                Ready to own your{' '}
-                <span className="gradient-text-hero">payments?</span>
+                {copy.ctaTitlePrefix}{' '}
+                <span className="gradient-text-hero">{copy.ctaTitleAccent}</span>
               </h2>
               <p className="text-zinc-400 text-lg mb-10 max-w-2xl mx-auto">
-                Join thousands building the future of decentralized commerce.
-                Your ProofScore starts now.
+                Set up your store in about a minute and start accepting payments — no bank,
+                no gatekeeper. Your ProofScore begins with your first transaction.
               </p>
               <div className="flex flex-wrap items-center justify-center gap-4">
                 <Link
                   href="/merchant/setup"
                   className="btn-premium btn-premium-primary"
                 >
-                  Launch your store <ArrowRight size={18} />
+                  {copy.ctaPrimary} <ArrowRight size={18} />
                 </Link>
                 <Link
                   href="/dashboard"
                   className="btn-premium btn-premium-ghost"
                 >
-                  View dashboard <ChevronRight size={16} />
+                  {copy.ctaSecondary} <ChevronRight size={16} />
                 </Link>
               </div>
               <p className="mt-8 text-xs text-zinc-500">
-                No credit card. No bank account. Just your wallet.
+                {copy.ctaFootnote}
               </p>
             </motion.div>
           </div>

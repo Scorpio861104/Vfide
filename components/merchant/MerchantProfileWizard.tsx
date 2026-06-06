@@ -18,7 +18,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { useAccount } from 'wagmi';
 import { ArrowLeft, ArrowRight, Check, Store, Upload, X, AlertCircle, ExternalLink } from 'lucide-react';
 import { useMerchantProfile, type ProfileSubmitInput } from '@/hooks/useMerchantProfile';
@@ -224,7 +224,7 @@ export function MerchantProfileWizard({
                   isComplete
                     ? 'bg-emerald-500 text-white'
                     : isCurrent
-                    ? 'bg-cyan-500 text-white'
+                    ? 'bg-accent text-white'
                     : 'bg-white/10 text-gray-500'
                 }`}
               >
@@ -243,11 +243,11 @@ export function MerchantProfileWizard({
       <AnimatePresence mode="wait">
         {/* ─── Step 1: Basics ───────────────────────────────────────── */}
         {step === 'basics' && (
-          <motion.div key="basics" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
+          <m.div key="basics" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
             <GlassCard hover={false} className="p-6 md:p-8">
               <div className="mb-6">
                 <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                  <Store className="text-cyan-400" size={24} />
+                  <Store className="text-accent" size={24} />
                   {introTitle ?? (isEditing ? 'Edit your business profile' : 'Tell customers who you are')}
                 </h2>
                 <p className="mt-1 text-gray-400">
@@ -324,12 +324,12 @@ export function MerchantProfileWizard({
                 </button>
               </div>
             </GlassCard>
-          </motion.div>
+          </m.div>
         )}
 
         {/* ─── Step 2: Identity ─────────────────────────────────────── */}
         {step === 'identity' && (
-          <motion.div key="identity" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
+          <m.div key="identity" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
             <GlassCard hover={false} className="p-6 md:p-8">
               <div className="mb-6">
                 <h2 className="text-2xl font-bold text-white">Visual identity</h2>
@@ -432,7 +432,7 @@ export function MerchantProfileWizard({
                       <button
                         onClick={addLink}
                         type="button"
-                        className="rounded-xl border border-dashed border-white/10 bg-white/5 backdrop-blur-sm px-3 py-2 text-sm text-gray-400 hover:border-cyan-500/30 hover:text-cyan-300 hover:bg-cyan-500/5 transition-colors"
+                        className="rounded-xl border border-dashed border-white/10 bg-white/5 backdrop-blur-sm px-3 py-2 text-sm text-gray-400 hover:border-accent/30 hover:text-accent hover:bg-accent/5 transition-colors"
                       >
                         + Add link
                       </button>
@@ -460,12 +460,12 @@ export function MerchantProfileWizard({
                 </button>
               </div>
             </GlassCard>
-          </motion.div>
+          </m.div>
         )}
 
         {/* ─── Step 3: Review + Privacy + Submit ─────────────────────── */}
         {step === 'review' && (
-          <motion.div key="review" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
+          <m.div key="review" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
             <GlassCard hover={false} className="p-6 md:p-8">
               <div className="mb-6">
                 <h2 className="text-2xl font-bold text-white">Review &amp; publish</h2>
@@ -498,7 +498,7 @@ export function MerchantProfileWizard({
                   <div className="flex-1 min-w-0">
                     <div className="text-lg font-bold text-white">{nameTrimmed || '—'}</div>
                     {category && (
-                      <div className="text-xs text-cyan-300 capitalize">{category}</div>
+                      <div className="text-xs text-accent capitalize">{category}</div>
                     )}
                     {bio && <p className="mt-1 text-sm text-gray-300">{bio}</p>}
                     {links.filter((l) => l.url).length > 0 && (
@@ -508,7 +508,7 @@ export function MerchantProfileWizard({
                           .map((l, i) => (
                             <span
                               key={i}
-                              className="inline-flex items-center gap-1 rounded-md bg-white/10 backdrop-blur-sm px-2 py-1 text-xs text-cyan-300 border border-white/10"
+                              className="inline-flex items-center gap-1 rounded-md bg-white/10 backdrop-blur-sm px-2 py-1 text-xs text-accent border border-white/10"
                             >
                               <ExternalLink size={10} /> {l.label || l.url}
                             </span>
@@ -542,7 +542,7 @@ export function MerchantProfileWizard({
                     type="checkbox"
                     checked={acknowledgedPrivacy}
                     onChange={(e) => setAcknowledgedPrivacy(e.target.checked)}
-                    className="mt-1 h-4 w-4 cursor-pointer accent-cyan-500"
+                    className="mt-1 h-4 w-4 cursor-pointer accent-accent"
                   />
                   <span className="text-sm text-gray-100">
                     I understand my business identity will be publicly visible.
@@ -552,7 +552,7 @@ export function MerchantProfileWizard({
 
               {/* In-flight + error — glassmorphic status panels */}
               {hookStep !== 'idle' && !error && (
-                <div className="mb-4 rounded-xl border border-cyan-500/30 bg-cyan-500/10 backdrop-blur-md px-4 py-3 text-sm text-cyan-200">
+                <div className="mb-4 rounded-xl border border-accent/30 bg-accent/10 backdrop-blur-md px-4 py-3 text-sm text-accent">
                   {hookStep === 'uploading-avatar' && 'Uploading avatar…'}
                   {hookStep === 'storing-profile' && 'Saving profile…'}
                   {hookStep === 'awaiting-signature' && 'Please confirm the transaction in your wallet.'}
@@ -576,7 +576,7 @@ export function MerchantProfileWizard({
                 <button
                   onClick={handleSubmit}
                   disabled={!canSubmit}
-                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 backdrop-blur-sm px-6 py-2.5 font-semibold text-white shadow-lg shadow-emerald-500/30 transition-all hover:shadow-emerald-500/50 hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-accent backdrop-blur-sm px-6 py-2.5 font-semibold text-white shadow-lg shadow-emerald-500/30 transition-all hover:shadow-emerald-500/50 hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
                 >
                   <Check size={16} />
                   {isSubmitting
@@ -587,7 +587,7 @@ export function MerchantProfileWizard({
                 </button>
               </div>
             </GlassCard>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

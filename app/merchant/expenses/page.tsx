@@ -8,6 +8,7 @@ import { ArrowLeft, ReceiptText, TrendingDown, TrendingUp, Wallet } from 'lucide
 import { useAccount } from 'wagmi';
 import { Footer } from '@/components/layout/Footer';
 import { BusinessBooks, type BookTransaction } from '@/components/bookkeeping/BusinessBooks';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 interface ExpenseRecord {
   id: number;
@@ -51,6 +52,9 @@ function formatMoney(value: number, currency = 'USD') {
 }
 
 export default function MerchantExpensesPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address } = useAccount();
   const [expenses, setExpenses] = useState<ExpenseRecord[]>([]);
   const [revenueSeries, setRevenueSeries] = useState<RevenuePoint[]>([]);
@@ -164,7 +168,7 @@ export default function MerchantExpensesPage() {
         <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         <section className="py-16">
           <div className="container mx-auto max-w-6xl px-4">
-            <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200">
+            <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-accent hover:text-accent">
               <ArrowLeft size={16} /> Back to Merchant Hub
             </Link>
 
@@ -209,14 +213,14 @@ export default function MerchantExpensesPage() {
                   </div>
                   <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                     <div className="mb-1 text-xs text-gray-400">Net Profit</div>
-                    <div className={`text-2xl font-bold ${summary.netProfit >= 0 ? 'text-cyan-400' : 'text-red-400'}`}>
+                    <div className={`text-2xl font-bold ${summary.netProfit >= 0 ? 'text-accent' : 'text-red-400'}`}>
                       {formatMoney(summary.netProfit)}
                     </div>
                     <div className="mt-1 text-xs text-gray-500">Revenue minus expenses</div>
                   </div>
-                  <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-4">
+                  <div className="rounded-2xl border border-accent/20 bg-accent/5 p-4">
                     <div className="mb-1 text-xs text-gray-400">Profit Margin</div>
-                    <div className="text-2xl font-bold text-cyan-400">{summary.margin.toFixed(1)}%</div>
+                    <div className="text-2xl font-bold text-accent">{summary.margin.toFixed(1)}%</div>
                     <div className="mt-1 text-xs text-gray-500">Current period view</div>
                   </div>
                 </div>
@@ -225,7 +229,7 @@ export default function MerchantExpensesPage() {
                   <div className="space-y-6">
                     <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
                       <div className="mb-4 flex items-center gap-2 text-lg font-bold text-white">
-                        <ReceiptText size={18} className="text-cyan-400" /> Business books
+                        <ReceiptText size={18} className="text-accent" /> Business books
                       </div>
                       <BusinessBooks transactions={transactions} onAddExpense={handleAddExpense} />
                     </div>

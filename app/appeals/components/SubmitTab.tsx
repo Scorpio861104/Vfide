@@ -65,7 +65,7 @@ export function SubmitTab() {
         <p className="text-gray-400 text-sm mb-6">Your appeal has been received. The SEER committee will review it within 3–5 business days.</p>
         <button
           onClick={() => setSuccess(false)}
-          className="px-4 py-2 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 text-sm font-semibold transition-colors"
+          className="px-4 py-2 rounded-lg bg-accent/20 hover:bg-accent/30 text-accent text-sm font-semibold transition-colors"
         >
           Submit Another
         </button>
@@ -77,14 +77,14 @@ export function SubmitTab() {
     <div className="space-y-6">
       <div className="bg-white/3 border border-white/10 rounded-2xl p-6">
         <div className="flex items-center gap-2 mb-5">
-          <FileText size={16} className="text-cyan-400" />
+          <FileText size={16} className="text-accent" />
           <h3 className="text-white font-semibold">Submit an Appeal</h3>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="text-xs text-gray-400 mb-1.5 block">Category</label>
             <select
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500/50"
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-accent/50"
               value={form.category}
               onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
             >
@@ -97,7 +97,7 @@ export function SubmitTab() {
             <label className="text-xs text-gray-400 mb-1.5 block">Subject</label>
             <input
               required
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white  focus:outline-none focus:border-cyan-500/50"
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white  focus:outline-none focus:border-accent/50"
              
               value={form.subject}
               onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))}
@@ -106,7 +106,7 @@ export function SubmitTab() {
           <div>
             <label className="text-xs text-gray-400 mb-1.5 block">Transaction Hash <span className="text-gray-600">(optional)</span></label>
             <input
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white  font-mono focus:outline-none focus:border-cyan-500/50"
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white  font-mono focus:outline-none focus:border-accent/50"
              
               value={form.txHash}
               onChange={(e) => setForm((f) => ({ ...f, txHash: e.target.value }))}
@@ -117,7 +117,7 @@ export function SubmitTab() {
             <textarea
               required
               rows={5}
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white  focus:outline-none focus:border-cyan-500/50 resize-none"
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white  focus:outline-none focus:border-accent/50 resize-none"
              
               value={form.details}
               onChange={(e) => setForm((f) => ({ ...f, details: e.target.value }))}
@@ -133,7 +133,7 @@ export function SubmitTab() {
           <button
             type="submit"
             disabled={submitting}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 text-sm font-semibold transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent/20 hover:bg-accent/30 text-accent text-sm font-semibold transition-colors disabled:opacity-50"
           >
             {submitting ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
             {submitting ? 'Submitting…' : 'Submit Appeal'}

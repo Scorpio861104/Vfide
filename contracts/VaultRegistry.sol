@@ -1,23 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import {Ownable, ReentrancyGuard} from "./SharedInterfaces.sol";
-import {IVaultInfrastructure} from "./interfaces/IVaultInfrastructure.sol";
+import "./SharedInterfaces.sol";
+import "./interfaces/IVaultInfrastructure.sol";
 
 /**
  * @title VaultRegistry
  * @notice Searchable vault registry enabling vault recovery when wallet is lost
  * @dev This solves the critical UX problem: How does a user find their vault if they've lost their wallet?
- *
+ * 
  * Traditional crypto: Lost wallet = Lost forever
  * VFide: Lost wallet → Search vault → Verify identity → Recover
- *
+ * 
  * Search Methods:
  * 1. Recovery ID (hashed email/phone/username) - User remembers their identifier
  * 2. Badge fingerprint - Match unique badge combination
  * 3. Guardian lookup - Guardian can help locate vault
  * 4. Partial address match - User remembers part of old wallet address
- *
+ * 
  * Privacy: All identifiers are stored as keccak256 hashes, never plaintext
  * @author Vfide
  */
@@ -25,7 +25,6 @@ import {IVaultInfrastructure} from "./interfaces/IVaultInfrastructure.sol";
 interface IBadgeManager {
     /// @notice getUserBadges
     /// @param user user
-    /// @return _arg _arg
     function getUserBadges(address user) external view returns (uint256[] memory);
 }
 
@@ -54,17 +53,18 @@ interface IVaultGuardianQuery {
 /// @title VaultRegistry
 /// @author Vfide
 contract VaultRegistry is Ownable, ReentrancyGuard {
+    
     // ═══════════════════════════════════════════════════════════════════════════════
     // STORAGE
     // ═══════════════════════════════════════════════════════════════════════════════
-
+    
     /// @notice vaultHub
     IVaultInfrastructure public vaultHub;
     /// @notice badgeManager
     IBadgeManager public badgeManager;
     /// @notice proofScoreManager
     IProofScoreManager public proofScoreManager;
-
+    
     // Recovery identifiers (all hashed for privacy)
     // recoveryIdHash => primary vault address (backward compatibility)
     /// @notice vaultByRecoveryId
@@ -77,11 +77,11 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     // slither-disable-next-line uninitialized-state
     /// @notice vaultsByRecoveryId
     mapping(bytes32 => address[]) public vaultsByRecoveryId;
-
+    
     // Vault => recovery ID hash (for verification)
     /// @notice recoveryIdOfVault
     mapping(address => bytes32) public recoveryIdOfVault;
-
+    
     // Email hash => vault (optional, if user wants email recovery)
     /// @notice vaultByEmailHash
     mapping(bytes32 => address) public vaultByEmailHash;
@@ -90,7 +90,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     // slither-disable-next-line uninitialized-state
     /// @notice vaultsByEmailHash
     mapping(bytes32 => address[]) public vaultsByEmailHash;
-
+    
     // Phone hash => vault (optional, if user wants phone recovery)
     /// @notice vaultByPhoneHash
     mapping(bytes32 => address) public vaultByPhoneHash;
@@ -99,25 +99,25 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     // slither-disable-next-line uninitialized-state
     /// @notice vaultsByPhoneHash
     mapping(bytes32 => address[]) public vaultsByPhoneHash;
-
+    
     // Username hash => vault (human-readable identifier)
     /// @notice vaultByUsernameHash
     mapping(bytes32 => address) public vaultByUsernameHash;
-
+    
     // Username hash => taken (prevent duplicates)
     /// @notice usernameTaken
     mapping(bytes32 => bool) public usernameTaken;
-
+    
     // Badge fingerprint => vault (unique badge combination identifier)
     /// @notice vaultByBadgeFingerprint
     mapping(bytes32 => address) public vaultByBadgeFingerprint;
-
+    
     // Guardian address => list of vaults they guard
     /// @notice vaultsGuardedBy
     mapping(address => address[]) public vaultsGuardedBy;
     /// @notice _isGuardianOf
     mapping(address => mapping(address => bool)) private _isGuardianOf;
-
+    
     // Vault metadata for search results
     struct VaultInfo {
         address vault;
@@ -130,7 +130,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
         bool hasRecoveryId;
         bool isRecoverable;
     }
-
+    
     // Tracking
     /// @notice allVaults
     address[] public allVaults;
@@ -142,11 +142,11 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     mapping(address => uint256) public vaultLastActiveAt;
     /// @notice guardianCountOfVault
     mapping(address => uint256) public guardianCountOfVault;
-
+    
     // ═══════════════════════════════════════════════════════════════════════════════
     // EVENTS
     // ═══════════════════════════════════════════════════════════════════════════════
-
+    
     /// @notice VaultRegistered
     /// @param vault vault
     /// @param owner owner
@@ -200,11 +200,11 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     /// @notice ProofScoreManagerSet
     /// @param newProofScoreManager newProofScoreManager
     event ProofScoreManagerSet(address indexed newProofScoreManager);
-
+    
     // ═══════════════════════════════════════════════════════════════════════════════
     // ERRORS
     // ═══════════════════════════════════════════════════════════════════════════════
-
+    
     /// @notice NotVaultOwner
     error NotVaultOwner();
     /// @notice InvalidVault
@@ -230,11 +230,11 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
 
     /// @notice pendingVaultHubChange
     PendingVaultHubChange public pendingVaultHubChange;
-
+    
     // ═══════════════════════════════════════════════════════════════════════════════
     // CONSTRUCTOR
     // ═══════════════════════════════════════════════════════════════════════════════
-
+    
     /// @notice constructor
     /// @param _vaultHub _vaultHub
     /// @param _badgeManager _badgeManager
@@ -245,11 +245,11 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
         badgeManager = IBadgeManager(_badgeManager);
         proofScoreManager = IProofScoreManager(_proofScoreManager);
     }
-
+    
     // ═══════════════════════════════════════════════════════════════════════════════
     // MODIFIERS
     // ═══════════════════════════════════════════════════════════════════════════════
-
+    
     /// @notice onlyVaultOwner
     /// @param vault vault
     modifier onlyVaultOwner(address vault) {
@@ -257,18 +257,18 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
         if (vaultOwnerAddr != msg.sender) revert NotVaultOwner();
         _;
     }
-
+    
     /// @notice validVault
     /// @param vault vault
     modifier validVault(address vault) {
         if (!vaultHub.isVault(vault)) revert InvalidVault();
         _;
     }
-
+    
     // ═══════════════════════════════════════════════════════════════════════════════
     // REGISTRATION (Called when vault is created or user sets up recovery)
     // ═══════════════════════════════════════════════════════════════════════════════
-
+    
     /**
      * @notice Register a vault in the searchable registry
      * @dev Called automatically when vault is created, or manually by user
@@ -277,28 +277,31 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     function registerVault(address vault) external validVault(vault) {
         address vaultOwnerAddr = vaultHub.ownerOfVault(vault);
         require(msg.sender == vaultOwnerAddr || msg.sender == address(vaultHub), "not authorized");
-
+        
         if (vaultCreatedAt[vault] < 1) {
             vaultIndex[vault] = allVaults.length;
             require(allVaults.length < 100000, "VR: vault cap"); // I-11
             allVaults.push(vault);
             vaultCreatedAt[vault] = block.timestamp;
         }
-
+        
         vaultLastActiveAt[vault] = block.timestamp;
-
+        
         emit VaultRegistered(vault, owner, block.timestamp);
     }
-
+    
     /// @notice Set recovery ID for a vault.
     /// @dev H-19/H-20 FIX: Accepts a pre-computed salted hash instead of plaintext.
     ///      Client must hash as: keccak256(abi.encode(block.chainid, vaultRegistry address, recoveryId))
     ///      This prevents plaintext calldata exposure and rainbow-table attacks.
     /// @param vault   The vault address
     /// @param saltedHash  keccak256(abi.encode(chainId, address(this), recoveryId))
-    function setRecoveryId(address vault, bytes32 saltedHash) external onlyVaultOwner(vault) validVault(vault) {
+    function setRecoveryId(
+        address vault,
+        bytes32 saltedHash
+    ) external onlyVaultOwner(vault) validVault(vault) {
         bytes32 hashedId = saltedHash;
-
+        
         // Clear old recovery ID if exists
         bytes32 oldId = recoveryIdOfVault[vault];
         if (oldId != bytes32(0) && oldId != hashedId) {
@@ -307,17 +310,20 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
 
         _addRecoveryVault(hashedId, vault);
         recoveryIdOfVault[vault] = hashedId;
-
+        
         emit RecoveryIdSet(vault, hashedId);
     }
-
+    
     /**
      * @notice Set email hash for recovery lookup
      * @dev Email is hashed client-side before sending to preserve privacy
-     * @param vault The vault address
+     * @param vault The vault address  
      * @param emailHash keccak256(lowercase(email))
      */
-    function setEmailRecovery(address vault, bytes32 emailHash) external onlyVaultOwner(vault) validVault(vault) {
+    function setEmailRecovery(
+        address vault,
+        bytes32 emailHash
+    ) external onlyVaultOwner(vault) validVault(vault) {
         // N-H18 FIX: Always scope recovery identifiers before storage to prevent unsalted hash reuse.
         bytes32 scopedEmailHash = _scopeIdentifierHash(emailHash);
         // Clear old email if exists
@@ -328,16 +334,19 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
 
         _addEmailVault(scopedEmailHash, vault);
         _setStoredEmailHash(vault, scopedEmailHash);
-
+        
         emit EmailRecoverySet(vault, scopedEmailHash);
     }
-
+    
     /**
      * @notice Set phone hash for recovery lookup
      * @param vault The vault address
      * @param phoneHash keccak256(normalized phone number with country code)
      */
-    function setPhoneRecovery(address vault, bytes32 phoneHash) external onlyVaultOwner(vault) validVault(vault) {
+    function setPhoneRecovery(
+        address vault,
+        bytes32 phoneHash
+    ) external onlyVaultOwner(vault) validVault(vault) {
         // N-H18 FIX: Always scope recovery identifiers before storage to prevent unsalted hash reuse.
         bytes32 scopedPhoneHash = _scopeIdentifierHash(phoneHash);
         bytes32 oldPhone = _phoneHashStorage[vault];
@@ -349,40 +358,46 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
         _phoneHashStorage[vault] = scopedPhoneHash;
         emit PhoneRecoverySet(vault, scopedPhoneHash);
     }
-
+    
     /// @notice Set username for a vault.
     /// @dev H-19/H-20 FIX: Accepts a pre-computed salted hash instead of plaintext.
     ///      Client must hash as: keccak256(abi.encode(block.chainid, vaultRegistry address, username.toLowerCase()))
     ///      This prevents plaintext calldata exposure and rainbow-table attacks.
     /// @param vault        The vault address
     /// @param saltedHash   keccak256(abi.encode(chainId, address(this), toLowerCase(username)))
-    function setUsername(address vault, bytes32 saltedHash) external onlyVaultOwner(vault) validVault(vault) {
+    function setUsername(
+        address vault,
+        bytes32 saltedHash
+    ) external onlyVaultOwner(vault) validVault(vault) {
         bytes32 hashedUsername = saltedHash;
-
+        
         if (usernameTaken[hashedUsername] && vaultByUsernameHash[hashedUsername] != vault) {
             revert UsernameAlreadyTaken();
         }
-
+        
         bytes32 oldUsername = _usernameHashStorage[vault];
         if (oldUsername != bytes32(0) && oldUsername != hashedUsername) {
             delete vaultByUsernameHash[oldUsername];
             usernameTaken[oldUsername] = false;
         }
-
+        
         vaultByUsernameHash[hashedUsername] = vault;
         usernameTaken[hashedUsername] = true;
         _usernameHashStorage[vault] = hashedUsername;
-
+        
         emit UsernameSet(vault, hashedUsername);
     }
-
+    
     /**
      * @notice Register a guardian relationship for lookup
      * @dev Called when vault owner adds a guardian
      * @param vault vault
      * @param guardian guardian
      */
-    function registerGuardian(address vault, address guardian) external onlyVaultOwner(vault) validVault(vault) {
+    function registerGuardian(
+        address vault,
+        address guardian
+    ) external onlyVaultOwner(vault) validVault(vault) {
         // H-21 FIX: Verify the guardian is recognized on the vault contract to prevent
         //           registering arbitrary addresses as guardians.
         require(IVaultGuardianQuery(vault).isGuardian(guardian), "VR: guardian not set on vault");
@@ -395,19 +410,22 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
             emit GuardianRegistered(vault, guardian);
         }
     }
-
+    
     /**
      * @notice Remove guardian from registry
      * @param vault vault
      * @param guardian guardian
      */
-    function removeGuardian(address vault, address guardian) external onlyVaultOwner(vault) validVault(vault) {
+    function removeGuardian(
+        address vault,
+        address guardian
+    ) external onlyVaultOwner(vault) validVault(vault) {
         if (_isGuardianOf[guardian][vault]) {
             _isGuardianOf[guardian][vault] = false;
             if (guardianCountOfVault[vault] > 0) {
                 --guardianCountOfVault[vault];
             }
-
+            
             // Remove from array (swap and pop)
             address[] storage guardedVaults = vaultsGuardedBy[guardian];
             for (uint256 i = 0; i < guardedVaults.length; ++i) {
@@ -417,11 +435,11 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
                     break;
                 }
             }
-
+            
             emit GuardianRemoved(vault, guardian);
         }
     }
-
+    
     /**
      * @notice Update badge fingerprint for vault
      * @dev Called periodically or when badges change to enable badge-based lookup
@@ -429,10 +447,10 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
      */
     function updateBadgeFingerprint(address vault) external validVault(vault) {
         address vaultOwnerAddr = vaultHub.ownerOfVault(vault);
-
+        
         if (address(badgeManager) != address(0)) {
             uint256[] memory badges = badgeManager.getUserBadges(vaultOwnerAddr);
-
+            
             if (badges.length > 0) {
                 // Create unique fingerprint from badge IDs
                 bytes32 fingerprint = keccak256(abi.encodePacked(badges));
@@ -441,7 +459,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
             }
         }
     }
-
+    
     /**
      * @notice Update vault activity timestamp
      * @dev Restricted to vault owner, vault contract itself, vaultHub, or registry owner
@@ -451,15 +469,21 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     function updateActivity(address vault) external {
         if (!vaultHub.isVault(vault)) return;
         address vaultOwner = vaultHub.ownerOfVault(vault);
-        require(msg.sender == vaultOwner || msg.sender == vault || msg.sender == address(vaultHub) || msg.sender == owner, "VR: not authorized");
+        require(
+            msg.sender == vaultOwner ||
+            msg.sender == vault ||
+            msg.sender == address(vaultHub) ||
+            msg.sender == owner,
+            "VR: not authorized"
+        );
         vaultLastActiveAt[vault] = block.timestamp;
         emit VaultActivityUpdated(vault, block.timestamp);
     }
-
+    
     // ═══════════════════════════════════════════════════════════════════════════════
     // SEARCH FUNCTIONS
     // ═══════════════════════════════════════════════════════════════════════════════
-
+    
     /**
      * @notice Search vault by recovery ID
      * @dev H-48 FIX: Uses a scoped hash to avoid raw unsalted identifiers.
@@ -483,7 +507,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
         bytes32 hashedId = _deriveScopedHash(recoveryId);
         return vaultsByRecoveryId[hashedId];
     }
-
+    
     /**
      * @notice Search vault by email hash
      * @dev H-48 FIX: emailHash should be a scoped hash:
@@ -506,7 +530,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
         if (vaults.length > 0) return vaults;
         return vaultsByEmailHash[_scopeIdentifierHash(emailHash)];
     }
-
+    
     /**
      * @notice Search vault by phone hash
      * @dev H-48 FIX: phoneHash should be a scoped hash:
@@ -536,7 +560,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     function _scopeIdentifierHash(bytes32 rawHash) internal view returns (bytes32) {
         return keccak256(abi.encode(block.chainid, address(this), rawHash));
     }
-
+    
     /**
      * @notice Search vault by username
      * @dev H-48 FIX: Uses scoped hash derivation:
@@ -548,7 +572,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
         bytes32 hashedUsername = _deriveScopedHash(_toLower(username));
         return vaultByUsernameHash[hashedUsername];
     }
-
+    
     /**
      * @notice Get all vaults a guardian is protecting
      * @param guardian The guardian address
@@ -557,7 +581,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     function searchByGuardian(address guardian) external view returns (address[] memory vaults) {
         return vaultsGuardedBy[guardian];
     }
-
+    
     /**
      * @notice Search vault by badge fingerprint
      * @param badgeIds Array of badge IDs the user remembers having
@@ -567,7 +591,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
         bytes32 fingerprint = keccak256(abi.encodePacked(badgeIds));
         return vaultByBadgeFingerprint[fingerprint];
     }
-
+    
     /**
      * @notice Search vault by full old wallet address
      * @dev User may have their old address saved in email confirmations, browser history, etc.
@@ -581,7 +605,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
             info = getVaultInfo(vault);
         }
     }
-
+    
     /**
      * @notice Search vault by vault address directly
      * @dev User may have their vault address saved from transaction history
@@ -593,15 +617,24 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
             info = getVaultInfo(vaultAddress);
         }
     }
-
+    
     /**
      * @notice Search vaults created in a time range
      * @dev Helps users who remember approximately when they created their vault
+     * @param startTime Unix timestamp for range start
+     * @param endTime Unix timestamp for range end
+     * @param limit Maximum results to return
      * @return matches Array of matching vault info
+     * @param offset Start index into allVaults for pagination (0 = beginning).
+     *               Call again with returned nextOffset to continue scanning.
+     * @return nextOffset Next pagination offset; equals total length when scan is complete.
      */
-    /// @param offset Start index into allVaults for pagination (0 = beginning).
-    ///               Call again with returned nextOffset to continue scanning.
-    function searchByCreationTime(uint256 startTime, uint256 endTime, uint256 limit, uint256 offset) external view returns (VaultInfo[] memory matches, uint256 nextOffset) {
+    function searchByCreationTime(
+        uint256 startTime,
+        uint256 endTime,
+        uint256 limit,
+        uint256 offset
+    ) external view returns (VaultInfo[] memory matches, uint256 nextOffset) {
         require(startTime < endTime, "invalid range");
         require(limit > 0 && limit <= 50, "limit 1-50");
 
@@ -631,22 +664,22 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
         // nextOffset == total signals caller that the full range has been scanned
         nextOffset = lastChecked < total ? lastChecked : total;
     }
-
+    
     /**
      * @notice Get vault by index (for pagination/browsing)
      * @dev Allows users to browse vaults if they remember approximate creation order
      * @param index The vault index
      * @return vault The vault address
+     * @return info Vault information
      */
     function getVaultByIndex(uint256 index) external view returns (address vault, VaultInfo memory info) {
         require(index < allVaults.length, "index out of bounds");
         vault = allVaults[index];
         info = getVaultInfo(vault);
     }
-
+    
     /**
      * @notice Get total number of registered vaults
-     * @return _uint256 _uint256
      */
     function getTotalVaults() external view returns (uint256) {
         return allVaults.length;
@@ -655,10 +688,17 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     /**
      * @notice Search vaults by partial old wallet address
      * @dev For users who remember part of their old address
+     * @param addressPrefix First bytes of the address they remember (e.g., "0x1234")
+     * @param limit Maximum results to return
      * @return matches Array of matching vault info
+     * @param offset Start index into allVaults for pagination (0 = beginning).
+     * @return nextOffset Next pagination offset; equals total length when scan is complete.
      */
-    /// @param offset Start index into allVaults for pagination (0 = beginning).
-    function searchByAddressPrefix(bytes4 addressPrefix, uint256 limit, uint256 offset) external view returns (VaultInfo[] memory matches, uint256 nextOffset) {
+    function searchByAddressPrefix(
+        bytes4 addressPrefix,
+        uint256 limit,
+        uint256 offset
+    ) external view returns (VaultInfo[] memory matches, uint256 nextOffset) {
         require(limit > 0 && limit <= 50, "limit 1-50");
 
         uint256 total = allVaults.length;
@@ -685,34 +725,35 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
         }
         nextOffset = lastChecked < total ? lastChecked : total;
     }
-
+    
     // ═══════════════════════════════════════════════════════════════════════════════
     // VIEW FUNCTIONS
     // ═══════════════════════════════════════════════════════════════════════════════
-
+    
     /**
      * @notice Get detailed vault info for search results
      * @param vault vault
+     * @return info info
      */
     function getVaultInfo(address vault) public view returns (VaultInfo memory info) {
         if (!vaultHub.isVault(vault)) revert InvalidVault();
-
+        
         address vaultOwnerAddr = vaultHub.ownerOfVault(vault);
-
+        
         uint256 proofScore = 0;
         if (address(proofScoreManager) != address(0)) {
             try proofScoreManager.getProofScore(vaultOwnerAddr) returns (uint256 score) {
                 proofScore = score;
             } catch {}
         }
-
+        
         uint256 badgeCount = 0;
         if (address(badgeManager) != address(0)) {
             try badgeManager.getUserBadges(vaultOwnerAddr) returns (uint256[] memory badges) {
                 badgeCount = badges.length;
             } catch {}
         }
-
+        
         info = VaultInfo({
             vault: vault,
             originalOwner: vaultOwnerAddr,
@@ -725,28 +766,25 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
             isRecoverable: recoveryIdOfVault[vault] != bytes32(0) || _hasGuardians(vault)
         });
     }
-
+    
     /**
      * @notice Check if vault has recovery options set up
      * @param vault vault
-     * @return _bool _bool
      */
     function isRecoverable(address vault) external view returns (bool) {
         return recoveryIdOfVault[vault] != bytes32(0) || _hasGuardians(vault);
     }
-
+    
     /**
      * @notice Get total registered vaults
-     * @return _uint256 _uint256
      */
     function totalVaults() external view returns (uint256) {
         return allVaults.length;
     }
-
+    
     /**
      * @notice Check if a recovery ID is available
      * @param recoveryId recoveryId
-     * @return _bool _bool
      */
     function isRecoveryIdAvailable(string calldata recoveryId) external view returns (bool) {
         bytes32 hashedId = _deriveScopedHash(recoveryId);
@@ -890,11 +928,10 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
             vaultByPhoneHash[phoneHash] = matches[0];
         }
     }
-
+    
     /**
      * @notice Check if a username is available
      * @param username username
-     * @return _bool _bool
      */
     function isUsernameAvailable(string calldata username) external view returns (bool) {
         bytes32 hashedUsername = _deriveScopedHash(_toLower(username));
@@ -907,11 +944,11 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     function deriveScopedHash(string calldata value) external view returns (bytes32) {
         return _deriveScopedHash(value);
     }
-
+    
     // ═══════════════════════════════════════════════════════════════════════════════
     // ADMIN FUNCTIONS
     // ═══════════════════════════════════════════════════════════════════════════════
-
+    
     /// @notice setVaultHub
     /// @param _vaultHub _vaultHub
     function setVaultHub(address _vaultHub) external onlyOwner {
@@ -920,7 +957,10 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
         PendingVaultHubChange memory pending = pendingVaultHubChange;
         if (pending.executeAfter != 0) revert ModuleChangePending();
 
-        pendingVaultHubChange = PendingVaultHubChange({vaultHub: _vaultHub, executeAfter: block.timestamp + MODULE_CHANGE_DELAY});
+        pendingVaultHubChange = PendingVaultHubChange({
+            vaultHub: _vaultHub,
+            executeAfter: block.timestamp + MODULE_CHANGE_DELAY
+        });
         emit VaultHubChangeQueued(_vaultHub, block.timestamp + MODULE_CHANGE_DELAY);
     }
 
@@ -943,39 +983,39 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
         delete pendingVaultHubChange;
         emit VaultHubChangeCancelled(pending.vaultHub);
     }
-
+    
     /// @notice setBadgeManager
     /// @param _badgeManager _badgeManager
     function setBadgeManager(address _badgeManager) external onlyOwner {
         badgeManager = IBadgeManager(_badgeManager);
         emit BadgeManagerSet(_badgeManager);
     }
-
+    
     /// @notice setProofScoreManager
     /// @param _proofScoreManager _proofScoreManager
     function setProofScoreManager(address _proofScoreManager) external onlyOwner {
         proofScoreManager = IProofScoreManager(_proofScoreManager);
         emit ProofScoreManagerSet(_proofScoreManager);
     }
-
+    
     // ═══════════════════════════════════════════════════════════════════════════════
     // INTERNAL HELPERS
     // ═══════════════════════════════════════════════════════════════════════════════
-
+    
     /// @notice _hasGuardians
     /// @param vault vault
     /// @return _bool _bool
     function _hasGuardians(address vault) internal view returns (bool) {
         return guardianCountOfVault[vault] > 0;
     }
-
+    
     /// @notice _toLower
     /// @param str str
     /// @return _string _string
     function _toLower(string memory str) internal pure returns (string memory) {
         bytes memory bStr = bytes(str);
         bytes memory bLower = new bytes(bStr.length);
-
+        
         for (uint256 i = 0; i < bStr.length; ++i) {
             if (uint8(bStr[i]) >= 65 && uint8(bStr[i]) <= 90) {
                 bLower[i] = bytes1(uint8(bStr[i]) + 32);
@@ -983,7 +1023,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
                 bLower[i] = bStr[i];
             }
         }
-
+        
         return string(bLower);
     }
 
@@ -993,7 +1033,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     function _deriveScopedHash(string memory value) internal view returns (bytes32) {
         return keccak256(abi.encode(block.chainid, address(this), value));
     }
-
+    
     // Email hash storage (using a slot mapping pattern)
     /// @notice _emailHashStorage
     mapping(address => bytes32) private _emailHashStorage;
@@ -1001,14 +1041,14 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     mapping(address => bytes32) private _phoneHashStorage;
     /// @notice _usernameHashStorage
     mapping(address => bytes32) private _usernameHashStorage;
-
+    
     /// @notice _getStoredEmailHash
     /// @param vault vault
     /// @return _bytes32 _bytes32
     function _getStoredEmailHash(address vault) internal view returns (bytes32) {
         return _emailHashStorage[vault];
     }
-
+    
     /// @notice _setStoredEmailHash
     /// @param vault vault
     /// @param emailHash emailHash

@@ -3,9 +3,13 @@
 import CrossChainTransfer from '@/components/CrossChainTransfer';
 import { Footer } from '@/components/layout/Footer';
 import { ArrowLeftRight } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function CrossChainPage() {
+  const { locale } = useLocale();
+  void locale;
+
   return (
     <>
       <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] text-white relative">

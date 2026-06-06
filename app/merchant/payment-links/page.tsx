@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAccount } from 'wagmi';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 import {
   ArrowLeft,
   Link2,
@@ -20,6 +21,7 @@ import {
 } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
+import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
 
 type LinkStatus = 'active' | 'paused' | 'archived' | 'exhausted';
 
@@ -50,6 +52,9 @@ const STATUS_BADGE: Record<LinkStatus, string> = {
 const ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
 
 export default function MerchantPaymentLinksPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address } = useAccount();
   const [links, setLinks] = useState<PaymentLink[]>([]);
   const [loading, setLoading] = useState(false);
@@ -133,7 +138,7 @@ export default function MerchantPaymentLinksPage() {
         <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         <section className="py-12">
           <div className="container mx-auto max-w-6xl px-4">
-            <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200">
+            <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-accent hover:text-accent">
               <ArrowLeft size={16} /> Back to Merchant Hub
             </Link>
 
@@ -147,7 +152,7 @@ export default function MerchantPaymentLinksPage() {
                   Generate a URL for a specific product, service, or open amount. Share by text, email, DM, or paste into a bio.
                 </p>
               </div>
-              <button onClick={() => setShowCreate(true)} disabled={!address} className="px-5 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90">
+              <button onClick={() => setShowCreate(true)} disabled={!address} className="px-5 py-3 bg-gradient-to-r from-accent to-blue-500 rounded-xl font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90">
                 <Plus size={18} /> New link
               </button>
             </div>
@@ -245,7 +250,7 @@ function PaymentLinkRow({ link, copied, onCopy, onPause, onResume, onArchive, on
         <div className="mt-2 font-mono text-xs text-zinc-500 break-all">{fullUrl}</div>
       </div>
       <div className="flex gap-2 flex-wrap">
-        <button onClick={onCopy} className="text-xs px-3 py-1.5 border border-cyan-500/30 bg-cyan-500/10 text-cyan-300 rounded hover:bg-cyan-500/20 inline-flex items-center gap-1">
+        <button onClick={onCopy} className="text-xs px-3 py-1.5 border border-accent/30 bg-accent/10 text-accent rounded hover:bg-accent/20 inline-flex items-center gap-1">
           {copied ? <Check size={12} /> : <Copy size={12} />}
           {copied ? 'Copied' : 'Copy'}
         </button>
@@ -293,7 +298,10 @@ function CreateLinkModal({ onClose, onCreated, onError }: { onClose: () => void;
   const [maxUses, setMaxUses] = useState<number | ''>('');
   const [expiresDate, setExpiresDate] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [token] = useState(process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS ?? '0x0000000000000000000000000000000000000000');
+  const configuredToken = isConfiguredContractAddress(CONTRACT_ADDRESSES.VFIDEToken)
+    ? CONTRACT_ADDRESSES.VFIDEToken
+    : '';
+  const [token] = useState(configuredToken);
 
   const canSubmit =
     title.trim().length > 0 &&
@@ -346,22 +354,27 @@ function CreateLinkModal({ onClose, onCreated, onError }: { onClose: () => void;
         </div>
 
         <div className="space-y-4">
+          {!configuredToken && (
+            <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-200">
+              VFIDE token contract is not configured. Set NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS before creating payment links.
+            </div>
+          )}
           <label className="block">
             <span className="text-xs text-zinc-400 mb-1 block">Title *</span>
-            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Saturday haircut deposit" className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none" />
+            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Saturday haircut deposit" className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none" />
           </label>
           <label className="block">
             <span className="text-xs text-zinc-400 mb-1 block">Description (optional)</span>
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none resize-none" />
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none resize-none" />
           </label>
 
           <div>
             <span className="text-xs text-zinc-400 mb-2 block">Amount</span>
             <div className="flex gap-2 mb-2">
-              <button onClick={() => setAmountMode('fixed')} className={`flex-1 px-3 py-2 text-sm rounded-lg border ${amountMode === 'fixed' ? 'border-cyan-500 bg-cyan-500/10' : 'border-white/10 bg-zinc-900'}`}>
+              <button onClick={() => setAmountMode('fixed')} className={`flex-1 px-3 py-2 text-sm rounded-lg border ${amountMode === 'fixed' ? 'border-accent bg-accent/10' : 'border-white/10 bg-zinc-900'}`}>
                 Fixed
               </button>
-              <button onClick={() => setAmountMode('open')} className={`flex-1 px-3 py-2 text-sm rounded-lg border ${amountMode === 'open' ? 'border-cyan-500 bg-cyan-500/10' : 'border-white/10 bg-zinc-900'}`}>
+              <button onClick={() => setAmountMode('open')} className={`flex-1 px-3 py-2 text-sm rounded-lg border ${amountMode === 'open' ? 'border-accent bg-accent/10' : 'border-white/10 bg-zinc-900'}`}>
                 Customer enters
               </button>
             </div>
@@ -376,7 +389,7 @@ function CreateLinkModal({ onClose, onCreated, onError }: { onClose: () => void;
           </div>
 
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={singleUse} onChange={(e) => setSingleUse(e.target.checked)} className="accent-cyan-500" />
+            <input type="checkbox" checked={singleUse} onChange={(e) => setSingleUse(e.target.checked)} className="accent-accent" />
             <span>Single-use (link expires after first successful payment)</span>
           </label>
 
@@ -392,7 +405,7 @@ function CreateLinkModal({ onClose, onCreated, onError }: { onClose: () => void;
             <input type="date" value={expiresDate} onChange={(e) => setExpiresDate(e.target.value)} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm" />
           </label>
 
-          <button onClick={submit} disabled={!canSubmit} className="w-full px-5 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
+          <button onClick={submit} disabled={!canSubmit} className="w-full px-5 py-3 bg-gradient-to-r from-accent to-blue-500 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
             {submitting ? 'Creating…' : 'Create link'}
           </button>
         </div>

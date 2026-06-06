@@ -47,14 +47,14 @@ const buttonVariants = cva(
     'inline-flex items-center justify-center gap-2',
     'rounded-lg font-semibold whitespace-nowrap',
     'transition-colors duration-150',
-    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950',
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950',
     'active:scale-[0.98]',
     'disabled:pointer-events-none disabled:opacity-50',
   ].join(' '),
   {
     variants: {
       variant: {
-        primary: 'bg-cyan-500 text-zinc-900 hover:bg-cyan-400',
+        primary: 'bg-accent text-zinc-900 hover:bg-accent-light',
         secondary: 'bg-zinc-800 text-zinc-100 hover:bg-zinc-700 border border-zinc-700',
         outline: 'border border-zinc-600 bg-transparent text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100',
         ghost: 'bg-transparent text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-100',

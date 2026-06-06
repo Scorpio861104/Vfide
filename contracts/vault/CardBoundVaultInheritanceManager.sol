@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import {IERC20} from "../SharedInterfaces.sol";
+import "../SharedInterfaces.sol";
 
 /// @notice ICardBoundVaultInheritanceAccess
 /// @title ICardBoundVaultInheritanceAccess
@@ -291,7 +291,11 @@ contract CardBoundVaultInheritanceManager {
     /// @param actor actor
     /// @param heirGuardians heirGuardians
     /// @param heirCommitments heirCommitments
-    function proposeInheritanceConfig(address actor, address[] calldata heirGuardians, bytes32[] calldata heirCommitments) external onlyVault {
+    function proposeInheritanceConfig(
+        address actor,
+        address[] calldata heirGuardians,
+        bytes32[] calldata heirCommitments
+    ) external onlyVault {
         _requireAdmin(actor);
         if (inheritanceStateValue != STATE_NORMAL) {
             revert INH_WrongState(inheritanceStateValue, STATE_NORMAL);
@@ -579,7 +583,17 @@ contract CardBoundVaultInheritanceManager {
         uint256 nonce = inheritanceClaimNonce;
         if (revealedByNonce[nonce][actor]) revert INH_AlreadyRevealed();
 
-        bytes32 expected = keccak256(abi.encode(INHERITANCE_COMMITMENT_DOMAIN, block.chainid, vault, claimConfigVersion, actor, basisPoints, heirSecret));
+        bytes32 expected = keccak256(
+            abi.encode(
+                INHERITANCE_COMMITMENT_DOMAIN,
+                block.chainid,
+                vault,
+                claimConfigVersion,
+                actor,
+                basisPoints,
+                heirSecret
+            )
+        );
         if (expected == bytes32(0) || heirCommitmentByGuardian[actor] != expected) {
             revert INH_InvalidSecret();
         }
@@ -663,7 +677,11 @@ contract CardBoundVaultInheritanceManager {
     /// @return amount amount
     /// @return finalBasisPoints finalBasisPoints
     /// @return completed completed
-    function consumeHeirPayout(address actor) external onlyVault returns (uint256 amount, uint256 finalBasisPoints, bool completed) {
+    function consumeHeirPayout(address actor)
+        external
+        onlyVault
+        returns (uint256 amount, uint256 finalBasisPoints, bool completed)
+    {
         _rolloverToClaimWindowIfNeeded();
         if (!distributionFinalized) revert INH_DistributionNotFinalized();
         if (inheritanceStateValue != STATE_CLAIM_WINDOW && inheritanceStateValue != STATE_MEMORIAL) {
@@ -739,7 +757,12 @@ contract CardBoundVaultInheritanceManager {
     /// @return finalBps Final basis points after redistribution (0 until finalizeInheritanceDistribution).
     /// @return payoutAmount Final payout amount in vfideToken units (0 until finalized).
     /// @return readyToWithdraw True iff distribution is finalized and the heir hasn't withdrawn yet.
-    function getHeirClaimStatus(address heir) external view returns (uint256 revealedBps, uint256 finalBps, uint256 payoutAmount, bool readyToWithdraw) {
+    function getHeirClaimStatus(address heir) external view returns (
+        uint256 revealedBps,
+        uint256 finalBps,
+        uint256 payoutAmount,
+        bool readyToWithdraw
+    ) {
         uint256 nonce = inheritanceClaimNonce;
         revealedBps = revealedBasisPointsByNonce[nonce][heir];
         finalBps = finalBasisPointsByNonce[nonce][heir];
@@ -750,7 +773,6 @@ contract CardBoundVaultInheritanceManager {
     /// @notice Returns all addresses that revealed during the current claim window.
     /// @dev Used by the memorial page to display "who claimed" once inheritance settles.
     ///      Bounded by MAX_HEIRS so the array is always small.
-    /// @return _arg _arg
     function getRevealersOfActiveClaim() external view returns (address[] memory) {
         return revealersByNonce[inheritanceClaimNonce];
     }

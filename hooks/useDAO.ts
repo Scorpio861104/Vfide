@@ -399,15 +399,19 @@ export function useDAO() {
     [writeContractAsync, daoAddress]
   );
 
-  /** Dispute a flag on a voter's history (challenges a reputation event). */
+  /**
+   * File a dispute against a user's Seer score decision, with a human-readable
+   * reason. Emits DisputeFlagged for DAO review (the DAO can override Seer).
+   * Caller must meet the governance ProofScore eligibility threshold.
+   */
   const disputeFlag = useCallback(
-    async (voter: Address, flagIndex: bigint) => {
+    async (user: Address, reason: string) => {
       assertReady();
       return writeContractAsync({
         address: daoAddress as Address,
         abi: DAOABI,
         functionName: 'disputeFlag',
-        args: [voter, flagIndex],
+        args: [user, reason],
       });
     },
     [writeContractAsync, daoAddress]

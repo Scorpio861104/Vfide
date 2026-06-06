@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import {
   HelpCircle,
   X,
@@ -135,7 +135,7 @@ export function HelpCenter() {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-40 w-12 h-12 rounded-full bg-cyan-600 hover:bg-cyan-500 flex items-center justify-center shadow-lg transition-colors"
+        className="fixed bottom-6 right-6 z-40 w-12 h-12 rounded-full bg-accent hover:bg-accent-light flex items-center justify-center shadow-lg transition-colors"
         aria-label="Open Help Center"
       >
         <HelpCircle size={20} />
@@ -143,7 +143,7 @@ export function HelpCenter() {
 
       <AnimatePresence>
         {isOpen && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, x: 320 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 320 }}
@@ -151,7 +151,7 @@ export function HelpCenter() {
           >
             <div className="flex items-center justify-between p-4 border-b border-gray-700">
               <div className="flex items-center gap-2">
-                <Book size={16} className="text-cyan-400" />
+                <Book size={16} className="text-accent" />
                 <span className="font-bold text-white">Help Center</span>
               </div>
               <button
@@ -186,7 +186,7 @@ export function HelpCenter() {
 
                   <AnimatePresence>
                     {expandedId === topic.id && (
-                      <motion.div
+                      <m.div
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
@@ -200,19 +200,19 @@ export function HelpCenter() {
                             >
                               <ArrowRight
                                 size={12}
-                                className="mt-0.5 flex-shrink-0 text-cyan-500"
+                                className="mt-0.5 flex-shrink-0 text-accent"
                               />
                               {line}
                             </li>
                           ))}
                         </ul>
-                      </motion.div>
+                      </m.div>
                     )}
                   </AnimatePresence>
                 </div>
               ))}
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </>

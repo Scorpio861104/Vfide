@@ -154,7 +154,7 @@ export default function MerchantWholesalePage() {
   const storageKey = `${STORAGE_PREFIX}${address?.toLowerCase() || 'guest'}`;
 
   useEffect(() => {
-    setLocalGroupBuys(normalizeGroupBuys(JSON.parse(safeLocalStorage.getItem(storageKey) || '[]')));
+    try { setLocalGroupBuys(normalizeGroupBuys(JSON.parse(safeLocalStorage.getItem(storageKey) || '[]'))); } catch { setLocalGroupBuys([]); }
   }, [storageKey]);
 
   useEffect(() => {
@@ -336,16 +336,16 @@ export default function MerchantWholesalePage() {
         </div>
         <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         <div className="container mx-auto max-w-4xl px-4 pb-16">
-          <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200">
+          <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-accent hover:text-accent">
             <ArrowLeft size={16} /> Back to Merchant Hub
           </Link>
 
           <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
               <div className="badge-live mb-3">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> B2B Wholesale
+              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" /> B2B Wholesale
             </div>
-            <h1 className="flex items-center gap-3 text-3xl font-black tracking-tight"><Package className="text-cyan-400" /> Wholesale & group buying</h1>
+            <h1 className="flex items-center gap-3 text-3xl font-black tracking-tight"><Package className="text-accent" /> Wholesale & group buying</h1>
               <p className="mt-2 text-gray-400">Use the live wholesale catalog to pool merchant orders and unlock better tier pricing.</p>
             </div>
             <button
@@ -429,7 +429,7 @@ export default function MerchantWholesalePage() {
                             type="button"
                             onClick={() => void handlePlaceOrder()}
                             disabled={submittingOrder}
-                            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+                            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-accent to-blue-600 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
                           >
                             <ShoppingCart size={16} /> {submittingOrder ? 'Sending…' : 'Place order'}
                           </button>

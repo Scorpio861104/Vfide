@@ -56,6 +56,17 @@ const OZ_BASE_FUNCTIONS: Record<string, string[]> = {
   IERC165: ['supportsInterface'],
 };
 
+/**
+ * SATELLITE_CONTRACTS — delegatecall facets whose public/external functions
+ * belong to the ABI of the parent contract but live in a separate .sol file
+ * (not connected via `is` inheritance). The test walker will also index
+ * these files when checking the parent.
+ */
+const SATELLITE_CONTRACTS: Record<string, string[]> = {
+  CardBoundVault: ['CardBoundVaultAdminFacet'],
+  EcosystemVault: ['EcosystemVaultAdminFacet'],
+};
+
 function loadABI(abiName: string): string[] {
   const filePath = path.join(__dirname, '..', 'lib', 'abis', `${abiName}.json`);
   if (!fs.existsSync(filePath)) return [];
@@ -203,6 +214,14 @@ function loadSolFunctions(contractName: string): string[] {
 
   const start = resolveFile(contractName);
   if (start) collectFromFile(start);
+
+  // Also walk delegatecall satellite contracts whose functions surface in this ABI.
+  const satellites = SATELLITE_CONTRACTS[contractName] ?? [];
+  for (const sat of satellites) {
+    const satFile = resolveFile(sat);
+    if (satFile) collectFromFile(satFile);
+  }
+
   return Array.from(fns);
 }
 
@@ -356,7 +375,7 @@ const FILE_TO_ABIS: Record<string, string[]> = {
   'hooks/usePayment.ts': ['VFIDEToken', 'BurnRouter', 'UserVault'],
   'hooks/usePayroll.ts': ['PayrollManager'],
   'hooks/useVFIDEBalance.ts': ['VFIDEToken'],
-  'hooks/useProofScore.ts': ['Seer', 'ProofScoreBurnRouter'],
+  'hooks/useProofScore.ts': ['Seer', 'ProofScoreBurnRouter', 'SeerSocial'],
   'hooks/useProofScoreHooks.ts': ['Seer', 'SeerSocial'],
   'hooks/useDAOHooks.ts': ['DAO'],
   'hooks/useMerchantHooks.ts': ['MerchantPortal', 'VaultHub', 'CardBoundVault'],
@@ -530,6 +549,8 @@ describeIfEnabled('Layer 5: Every ABI has a corresponding Solidity source', () =
   const KNOWN_EXTERNAL = new Set([
     'ERC20.json',
     'AggregatorV3Interface.json',
+    // Deploy scripts live in scripts/ not contracts/ — exempt from Layer 5.
+    'DeployPhase3Peripherals.json',
     // Synthetic merged ABI: VFIDECommerce.json combines MerchantRegistry +
     // VFIDECommerce + CommerceEscrow function ABIs. Produced by the
     // post-build merge step (see scripts/deploy-full.ts:554) — no single

@@ -16,17 +16,19 @@ export function OverviewTab() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let _cancelled = false;
     fetch('/api/proposals?limit=100')
       .then((r) => r.json())
       .then((data) => setProposals(data.proposals ?? []))
       .catch(() => setError('Failed to load overview'))
       .finally(() => setLoading(false));
-  }, []);
+    return () => { _cancelled = true; };
+    }, []);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 size={24} className="text-cyan-400 animate-spin" />
+        <Loader2 size={24} className="text-accent animate-spin" />
       </div>
     );
   }
@@ -47,7 +49,7 @@ export function OverviewTab() {
   const totalVotesAgainst = proposals.reduce((s, p) => s + (p.votes_against ?? 0), 0);
 
   const stats = [
-    { label: 'Total Proposals', value: total, color: 'text-cyan-400' },
+    { label: 'Total Proposals', value: total, color: 'text-accent' },
     { label: 'Active', value: active, color: 'text-green-400' },
     { label: 'Passed', value: passed, color: 'text-blue-400' },
     { label: 'Failed', value: failed, color: 'text-red-400' },

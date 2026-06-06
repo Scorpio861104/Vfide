@@ -3,7 +3,7 @@
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { useState } from 'react';
 import { useAccount, usePublicClient, useReadContract, useReadContracts, useSignMessage, useWriteContract } from 'wagmi';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Shield, Users, UserMinus, CheckCircle2, FileText, AlertTriangle, Crown, UserPlus } from 'lucide-react';
 import { useVaultHub } from '@/hooks/useVaultHub';
 import { useVaultRecovery } from '@/hooks/useVaultRecovery';
@@ -402,27 +402,27 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
 
   if (!isConnected) {
     return (
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-16">
-        <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }}>
+      <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-16">
+        <m.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }}>
           <Users className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-        </motion.div>
+        </m.div>
         <h2 className="text-2xl font-bold text-white mb-4">Connect Wallet</h2>
         <p className="text-gray-400">Connect your wallet to manage your guardians</p>
         <div className="mt-6 flex justify-center">
           <VfideConnectButton size="md" />
         </div>
-      </motion.div>
+      </m.div>
     );
   }
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 max-w-4xl mx-auto">
+    <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 max-w-4xl mx-auto">
       {!hasVault && !isLoadingVault && (
         <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-6">
           <h3 className="text-xl font-bold text-amber-400 mb-2">Create Vault First</h3>
           <p className="text-gray-300 mb-4">Guardian management is tied to your vault contract.</p>
           <button onClick={() => void withNotice(() => createVault(), 'Vault creation submitted.', 'Failed to create vault')} disabled={isCreatingVault}
-            className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold disabled:opacity-50">
+            className="px-4 py-2 bg-gradient-to-r from-accent to-blue-500 text-white rounded-xl font-bold disabled:opacity-50">
             {isCreatingVault ? 'Creating Vault...' : 'Create Vault'}
           </button>
         </div>
@@ -476,7 +476,7 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
                 <button
                   onClick={() => void handleCompleteGuardianSetup()}
                   disabled={!canCompleteGuardianSetup || isGuardianSetupPending}
-                  className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold px-4 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-gradient-to-r from-accent to-blue-500 text-white rounded-xl font-bold px-4 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isGuardianSetupPending ? 'Finalizing...' : 'Complete Guardian Setup'}
                 </button>
@@ -492,7 +492,7 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
       )}
 
       {guardianSetupComplete && hasPendingGuardianChange && (
-        <div className="rounded-2xl p-6 border border-cyan-500/30 bg-cyan-500/10">
+        <div className="rounded-2xl p-6 border border-accent/30 bg-accent/10">
           <h3 className="text-lg font-bold text-white mb-2">Pending Guardian Change</h3>
           <p className="text-sm text-gray-200 mb-3">
             {pendingGuardianActive ? 'Add guardian' : 'Remove guardian'} {pendingGuardianAddress}. This proposal can be applied after the 24-hour timelock expires or cancelled before then.
@@ -515,7 +515,7 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
             <button
               onClick={() => void handleApplyGuardianChange()}
               disabled={isGuardianSetupPending}
-              className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold px-4 py-3 disabled:opacity-50"
+              className="bg-gradient-to-r from-accent to-blue-500 text-white rounded-xl font-bold px-4 py-3 disabled:opacity-50"
             >
               Apply Guardian Change
             </button>
@@ -579,17 +579,17 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
       {/* Guardian Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total Guardians', value: guardianList.length, sub: 'Max recommended: 5', icon: Users, iconColor: 'text-cyan-400', textColor: 'text-cyan-400', gradient: 'from-cyan-500/20 to-blue-500/20' },
+          { label: 'Total Guardians', value: guardianList.length, sub: 'Max recommended: 5', icon: Users, iconColor: 'text-accent', textColor: 'text-accent', gradient: 'from-accent/20 to-blue-500/20' },
           { label: 'Trustees', value: trusteeCount, sub: 'Can initiate recovery', icon: Crown, iconColor: 'text-purple-400', textColor: 'text-purple-400', gradient: 'from-purple-500/20 to-pink-500/20' },
           { label: 'Mature Guardians', value: 'On-chain', sub: 'Checked at vote-time', icon: CheckCircle2, iconColor: 'text-green-400', textColor: 'text-green-400', gradient: 'from-green-500/20 to-emerald-500/20' },
           { label: 'Recovery Threshold', value: `${recoveryThreshold}/${guardianList.length || 1}`, sub: 'Approvals needed', icon: Shield, iconColor: 'text-yellow-400', textColor: 'text-yellow-400', gradient: 'from-yellow-500/20 to-amber-500/20' },
         ].map((stat, i) => (
-          <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
+          <m.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
             whileHover={{ scale: 1.02, y: -2 }} className={`relative overflow-hidden bg-gradient-to-br ${stat.gradient} backdrop-blur-xl border border-white/10 rounded-2xl p-6`}>
             <div className="flex items-center justify-between mb-2"><span className="text-gray-400 text-sm">{stat.label}</span><stat.icon className={stat.iconColor} size={20} /></div>
             <div className={`text-3xl font-bold ${stat.textColor}`}>{stat.value}</div>
             <div className="text-gray-500 text-xs">{stat.sub}</div>
-          </motion.div>
+          </m.div>
         ))}
       </div>
 
@@ -598,7 +598,7 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
         onAdd={() => void handleAddGuardian()} isWritePending={isWritePending || isGuardianSetupPending} hasVault={hasVault} />
 
       {/* Guardian List */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+      <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
         className="bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
         <h3 className="text-xl font-bold text-white mb-4">Your Guardians</h3>
         {guardianList.length === 0 ? (
@@ -611,11 +611,11 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
             {guardianList.map((guardian, index) => {
               const isTrustee = trusteeByAddress[(guardian as string).toLowerCase()] ?? false;
               return (
-              <motion.div key={guardian} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} whileHover={{ scale: 1.01 }}
+              <m.div key={guardian} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} whileHover={{ scale: 1.01 }}
                 className="p-4 bg-black/20 border border-white/10 rounded-xl">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
-                    <div className="p-2 rounded-full bg-cyan-500/20"><Users className="text-cyan-400" size={20} /></div>
+                    <div className="p-2 rounded-full bg-accent/20"><Users className="text-accent" size={20} /></div>
                     <div>
                       <div className="text-white font-bold flex items-center gap-2">
                         Guardian {index + 1}
@@ -635,12 +635,12 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+                    <m.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
                       onClick={() => void handleIssueAttestation(guardian as `0x${string}`)} disabled={!isOwner || !hasVault}
-                      className="p-2 border border-cyan-500/50 text-cyan-300 rounded-lg hover:bg-cyan-500/10 transition-colors disabled:opacity-50"
-                      title="Issue owner-signed guardian attestation"><FileText size={18} /></motion.button>
+                      className="p-2 border border-accent/50 text-accent rounded-lg hover:bg-accent/10 transition-colors disabled:opacity-50"
+                      title="Issue owner-signed guardian attestation"><FileText size={18} /></m.button>
                     {/* R-8 trustee promote/demote: toggle role with timelock */}
-                    <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+                    <m.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
                       onClick={() => void handleProposeTrusteeChange(guardian as `0x${string}`, !isTrustee)}
                       disabled={isGuardianSetupPending || !isOwner || !hasVault || hasPendingTrusteeChange}
                       className={`p-2 border rounded-lg transition-colors disabled:opacity-50 ${
@@ -650,19 +650,19 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
                       }`}
                       title={isTrustee ? 'Propose demotion from trustee (24h timelock)' : 'Propose promotion to trustee (24h timelock)'}>
                       {isTrustee ? <Crown size={18} /> : <UserPlus size={18} />}
-                    </motion.button>
-                    <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+                    </m.button>
+                    <m.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
                       onClick={() => void handleRemoveGuardian(guardian as `0x${string}`)}
                       disabled={isWritePending || !hasVault}
-                      className="p-2 border border-red-500/50 text-red-400 rounded-lg hover:bg-red-500/10 transition-colors"><UserMinus size={18} /></motion.button>
+                      className="p-2 border border-red-500/50 text-red-400 rounded-lg hover:bg-red-500/10 transition-colors"><UserMinus size={18} /></m.button>
                   </div>
                 </div>
-              </motion.div>
+              </m.div>
               );
             })}
           </div>
         )}
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 }

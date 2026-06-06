@@ -2,17 +2,22 @@
 
 export const dynamic = 'force-dynamic';
 
-import { motion } from 'framer-motion';
+import { m , LazyMotion, domAnimation } from 'framer-motion';
 import { Footer } from '@/components/layout/Footer';
 import { MerchantAnalytics } from '@/components/analytics/MerchantAnalytics';
 import { useAccount } from 'wagmi';
 import { BarChart3 } from 'lucide-react';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function MerchantAnalyticsPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address } = useAccount();
 
   return (
-    <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] pb-8 relative">
+    <LazyMotion features={domAnimation}>
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] pb-8 relative">
       {/* Ambient orbs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
@@ -23,17 +28,17 @@ export default function MerchantAnalyticsPage() {
       </div>
 
       <div className="relative container mx-auto max-w-6xl px-4">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <div className="flex items-center gap-3 mb-3">
             <span className="badge-live"><span className="badge-live-dot" />Merchant Intelligence</span>
           </div>
           <h1 className="text-4xl font-bold mb-2">
-            <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-violet-400 bg-clip-text text-transparent flex items-center gap-3">
-              <BarChart3 size={32} className="text-cyan-400" />Merchant Analytics
+            <span className="bg-gradient-to-r from-accent via-blue-400 to-violet-400 bg-clip-text text-transparent flex items-center gap-3">
+              <BarChart3 size={32} className="text-accent" />Merchant Analytics
             </span>
           </h1>
           <p className="text-white/50">Revenue, order flow, and product performance for your storefront.</p>
-        </motion.div>
+        </m.div>
 
         {address ? (
           <MerchantAnalytics merchantAddress={address} />
@@ -47,5 +52,6 @@ export default function MerchantAnalyticsPage() {
 
       <Footer />
     </div>
+    </LazyMotion>
   );
 }

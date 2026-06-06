@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { PagePerformance, ApiPerformance } from '@/config/performance-dashboard';
 import { Activity, Zap } from 'lucide-react';
 
@@ -38,16 +38,16 @@ export function PageMetricsDisplay({
 
   if (isLoading) {
     return (
-      <motion.div className="space-y-6">
+      <m.div className="space-y-6">
         {[...Array(3)].map((_, i) => (
           <div key={i} className="bg-slate-900 rounded-lg border border-slate-800 p-6 h-32 animate-pulse" />
         ))}
-      </motion.div>
+      </m.div>
     );
   }
 
   return (
-    <motion.div
+    <m.div
       className="space-y-6"
       variants={containerVariants}
       initial="hidden"
@@ -55,12 +55,12 @@ export function PageMetricsDisplay({
     >
       {/* Page Metrics */}
       {pageMetrics && (
-        <motion.div
+        <m.div
           variants={itemVariants}
           className="bg-slate-900/50 border border-slate-800 rounded-lg p-6"
         >
           <div className="flex items-center gap-2 mb-6">
-            <Activity className="w-5 h-5 text-cyan-400" />
+            <Activity className="w-5 h-5 text-accent" />
             <h3 className="text-lg font-semibold text-white">Page Performance</h3>
           </div>
 
@@ -115,12 +115,12 @@ export function PageMetricsDisplay({
               <p className="text-xs text-slate-500 mt-1">Average time on page</p>
             </div>
           </div>
-        </motion.div>
+        </m.div>
       )}
 
       {/* API Metrics */}
       {apiMetrics.length > 0 && (
-        <motion.div
+        <m.div
           variants={itemVariants}
           className="bg-slate-900/50 border border-slate-800 rounded-lg p-6"
         >
@@ -131,7 +131,7 @@ export function PageMetricsDisplay({
 
           <div className="space-y-3">
             {apiMetrics.slice(0, 5).map((api, idx) => (
-              <motion.div
+              <m.div
                 key={idx}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -177,11 +177,11 @@ export function PageMetricsDisplay({
                     </p>
                   </div>
                 </div>
-              </motion.div>
+              </m.div>
             ))}
           </div>
-        </motion.div>
+        </m.div>
       )}
-    </motion.div>
+    </m.div>
   );
 }

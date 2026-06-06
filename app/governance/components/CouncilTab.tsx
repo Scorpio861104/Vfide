@@ -17,19 +17,42 @@
 
 import Link from 'next/link';
 import { Users, ArrowRight, Info, Vote, ShieldCheck, Scale } from 'lucide-react';
+import { CONTRACT_ADDRESSES } from '@/lib/contracts';
+import { MultiSigConsole } from './MultiSigConsole';
 
 export function CouncilTab() {
+  // The protocol-governance multi-sig (AdminMultiSig) IS live at V1 — show its real console when
+  // its address is configured. The ELECTED council layer (CouncilElection/CouncilSalary) is still
+  // deferred, so the honest "coming soon" notice below remains for that.
+  const multiSigConfigured = !!CONTRACT_ADDRESSES.AdminMultiSig;
+
   return (
     <section className="py-8">
       <div className="container mx-auto px-3 sm:px-4 max-w-3xl space-y-6">
-        <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-2xl p-6">
+        {multiSigConfigured && (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <ShieldCheck size={18} className="text-emerald-400" />
+              <h2 className="text-2xl font-bold text-zinc-100">Protocol Guardian Approval</h2>
+            </div>
+            <p className="text-zinc-400 text-sm">
+              The council approves CONFIG / CRITICAL / EMERGENCY protocol actions via M-of-N approvals
+              (Guardian Approval) with timelocked execution and a community veto window. Live on-chain
+              state:
+            </p>
+            <MultiSigConsole />
+          </div>
+        )}
+
+        <div className="bg-accent/5 border border-accent/20 rounded-2xl p-6">
           <div className="flex items-start gap-3">
-            <Users size={20} className="text-cyan-400 shrink-0 mt-1" />
+            <Users size={20} className="text-accent shrink-0 mt-1" />
             <div className="flex-1">
-              <h2 className="text-2xl font-bold text-zinc-100 mb-2">Council governance — coming soon</h2>
+              <h2 className="text-2xl font-bold text-zinc-100 mb-2">Elected council — coming soon</h2>
               <p className="text-zinc-400 text-sm leading-relaxed">
-                The VFIDE Council is a future-release governance layer that adds elected representatives
-                to handle proposal review and emergency response. It is{' '}
+                Beyond protocol Guardian Approval, the VFIDE Council is a future-release layer that adds{' '}
+                <span className="text-zinc-300">elected representatives</span> for proposal review and
+                emergency response. The elected-council layer is{' '}
                 <span className="text-zinc-300">not active at V1 launch</span>.
               </p>
             </div>
@@ -38,7 +61,7 @@ export function CouncilTab() {
 
         <div className="bg-zinc-800 border border-zinc-700 rounded-2xl p-6 space-y-4">
           <h3 className="text-lg font-semibold text-zinc-100 flex items-center gap-2">
-            <Vote size={16} className="text-cyan-400" />
+            <Vote size={16} className="text-accent" />
             How governance works at V1
           </h3>
           <div className="space-y-3 text-sm text-zinc-300">
@@ -54,11 +77,11 @@ export function CouncilTab() {
             </ul>
             <p className="pt-2">
               See the{' '}
-              <Link href="/governance" className="text-cyan-400 hover:underline font-semibold">
+              <Link href="/governance" className="text-accent hover:underline font-semibold">
                 Proposals tab
               </Link>{' '}
               for currently active proposals, or the{' '}
-              <Link href="/governance" className="text-cyan-400 hover:underline font-semibold">
+              <Link href="/governance" className="text-accent hover:underline font-semibold">
                 Create tab
               </Link>{' '}
               to submit a new one.
@@ -101,7 +124,7 @@ export function CouncilTab() {
           </p>
           <Link
             href="/governance"
-            className="text-cyan-400 hover:underline text-sm inline-flex items-center gap-1"
+            className="text-accent hover:underline text-sm inline-flex items-center gap-1"
           >
             View active proposals <ArrowRight size={12} />
           </Link>

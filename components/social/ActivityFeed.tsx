@@ -2,7 +2,7 @@
 
 import { logger } from '@/lib/logger';
 import React, { useState, useEffect, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import {
   Activity,
   MessageCircle,
@@ -99,7 +99,7 @@ export function ActivityFeed({ userAddress }: ActivityFeedProps) {
   const renderActivityRow = (activity: ActivityItem, padded = false) => {
     const color = getColor(activity.type);
     const content = (
-      <motion.div
+      <m.div
         key={activity.id}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -137,7 +137,7 @@ export function ActivityFeed({ userAddress }: ActivityFeedProps) {
             </div>
           </div>
         </div>
-      </motion.div>
+      </m.div>
     );
 
     return padded ? <div className="h-full pb-2">{content}</div> : content;
@@ -158,7 +158,7 @@ export function ActivityFeed({ userAddress }: ActivityFeedProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Activity className="w-5 h-5 text-cyan-400" />
+          <Activity className="w-5 h-5 text-accent" />
           <h3 className="font-bold text-zinc-100">Activity Feed</h3>
         </div>
         <div className="flex items-center gap-2">
@@ -177,7 +177,7 @@ export function ActivityFeed({ userAddress }: ActivityFeedProps) {
             onClick={() => setFilter(option.value)}
             className={`px-4 py-2 rounded-lg font-semibold text-sm whitespace-nowrap transition-all ${
               filter === option.value
-                ? 'bg-cyan-400 text-zinc-950'
+                ? 'bg-accent text-zinc-950'
                 : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
             }`}
           >
@@ -196,7 +196,7 @@ export function ActivityFeed({ userAddress }: ActivityFeedProps) {
         <div className="space-y-3">
           {usePerformanceMode ? (
             <>
-              <div className="rounded-lg border border-cyan-400/30 bg-cyan-400/5 px-3 py-2 text-sm text-cyan-100">
+              <div className="rounded-lg border border-accent/30 bg-accent/5 px-3 py-2 text-sm text-accent">
                 Performance mode active — long activity feeds are virtualized for smoother scrolling.
               </div>
               <VirtualizedList
@@ -219,7 +219,7 @@ export function ActivityFeed({ userAddress }: ActivityFeedProps) {
               <button
                 type="button"
                 onClick={() => setShowFullFeed((prev) => !prev)}
-                className="text-sm text-cyan-400 hover:underline"
+                className="text-sm text-accent hover:underline"
               >
                 {usePerformanceMode ? 'Show full feed' : 'Use performance mode'}
               </button>

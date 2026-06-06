@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { 
   Activity, 
   Cpu, 
@@ -333,7 +333,7 @@ export function PerformancePanel({
   const fidStatus = getMetricStatus(metrics.fid, { good: 100, poor: 300 });
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       className={`fixed ${positionClasses[position]} z-50`}
@@ -345,7 +345,7 @@ export function PerformancePanel({
           className="w-full px-4 py-3 flex items-center justify-between hover:bg-zinc-800/50 transition-colors"
         >
           <div className="flex items-center gap-2">
-            <Activity className="w-4 h-4 text-cyan-400" />
+            <Activity className="w-4 h-4 text-accent" />
             <span className="text-sm font-bold text-white">Performance</span>
           </div>
           <div className="flex items-center gap-2">
@@ -363,7 +363,7 @@ export function PerformancePanel({
         {/* Expanded Content */}
         <AnimatePresence>
           {!isCollapsed && (
-            <motion.div
+            <m.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
@@ -485,11 +485,11 @@ export function PerformancePanel({
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -518,7 +518,7 @@ export function MemoryUsage() {
   return (
     <div className="flex items-center gap-2">
       <div className="w-16 h-2 bg-zinc-800 rounded-full overflow-hidden">
-        <motion.div
+        <m.div
           className={`h-full ${
             status === 'good' ? 'bg-green-500' :
             status === 'moderate' ? 'bg-yellow-500' :

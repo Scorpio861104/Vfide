@@ -12,6 +12,7 @@ import { CharitiesTab } from "./components/CharitiesTab";
 import { DisbursementsTab } from "./components/DisbursementsTab";
 import { DonateTab } from "./components/DonateTab";
 import { HistoryTab } from "./components/HistoryTab";
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 const tabs = [
   { id: 'overview', label: 'Overview', icon: Heart },
@@ -24,6 +25,9 @@ const tabs = [
 type TabId = typeof tabs[number]['id'];
 
 export default function SanctumPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const { isConnected } = useAccount();
 
@@ -48,7 +52,7 @@ export default function SanctumPage() {
             </h1>
             <Heart className="text-pink-400" size={32} aria-hidden="true" />
           </div>
-          <p className="text-white/60 mb-8">20% of all protocol fees fund verified charitable causes</p>
+          <p className="text-white/60 mb-8">10% of all protocol fees fund verified charitable causes</p>
 
           <div className="sticky top-7 md:top-[5.25rem] z-30 backdrop-blur-xl bg-zinc-950/80 flex gap-2 mb-8 overflow-x-auto pb-2 border-b border-white/5">
             {tabs.map(tab => (

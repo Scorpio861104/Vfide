@@ -111,7 +111,7 @@ export function VaultQueueSection({
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               <div>
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                  <Clock3 className="text-cyan-400" size={22} />
+                  <Clock3 className="text-accent" size={22} />
                   Queued Withdrawals
                 </h2>
                 <p className="text-sm text-white/60 mt-2">
@@ -155,7 +155,7 @@ export function VaultQueueSection({
                     value={spendLimitPerTransfer}
                     onChange={(event) => setSpendLimitPerTransfer(event.target.value)}
                     placeholder="Per-transfer VFIDE"
-                    className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500/50"
+                    className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white focus:outline-none focus:border-accent/50"
                   />
                   <input
                     type="number"
@@ -163,14 +163,14 @@ export function VaultQueueSection({
                     value={spendLimitPerDay}
                     onChange={(event) => setSpendLimitPerDay(event.target.value)}
                     placeholder="Daily VFIDE"
-                    className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500/50"
+                    className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white focus:outline-none focus:border-accent/50"
                   />
                 </div>
                 <button
                   type="button"
                   onClick={() => onSetSpendLimits()}
                   disabled={isUpdatingSpendLimits || !spendLimitPerTransfer || !spendLimitPerDay}
-                  className="mt-3 inline-flex items-center justify-center rounded-xl bg-cyan-500/20 px-4 py-2 text-sm font-medium text-cyan-200 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="mt-3 inline-flex items-center justify-center rounded-xl bg-accent/20 px-4 py-2 text-sm font-medium text-accent disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isUpdatingSpendLimits ? 'Updating Spend Limits...' : 'Update Spend Limits'}
                 </button>
@@ -192,7 +192,7 @@ export function VaultQueueSection({
                     value={largeTransferThresholdInput}
                     onChange={(event) => setLargeTransferThresholdInput(event.target.value)}
                     placeholder="Queue threshold VFIDE"
-                    className="flex-1 rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500/50"
+                    className="flex-1 rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white focus:outline-none focus:border-accent/50"
                   />
                   <button
                     type="button"
@@ -225,7 +225,7 @@ export function VaultQueueSection({
                       <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
                         <div className="space-y-2">
                           <div className="flex flex-wrap items-center gap-2 text-sm">
-                            <span className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2 py-1 text-cyan-300">
+                            <span className="rounded-full border border-accent/30 bg-accent/10 px-2 py-1 text-accent">
                               Queue #{item.index.toString()}
                             </span>
                             <span className={`rounded-full px-2 py-1 ${isReady ? 'bg-emerald-500/15 text-emerald-300' : 'bg-amber-500/15 text-amber-300'}`}>

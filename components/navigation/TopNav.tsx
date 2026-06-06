@@ -35,6 +35,7 @@ import { NotificationBell } from '@/lib/notifications';
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { MoreSheet } from './MoreSheet';
 import { ProofScoreCrystal } from '@/components/identity/ProofScoreCrystal';
+import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
 
 // T2-2: "Shop" renamed → "Marketplace" and points to /marketplace (buyer view).
 // Merchant sellers reach their portal via More → Merchant group.
@@ -48,16 +49,16 @@ const MAIN_SECTIONS = [
 const SECTION_MATCH: Record<string, string[]> = {
   home:        ['/dashboard', '/'],
   marketplace: ['/marketplace', '/merchants', '/store', '/product', '/checkout'],
-  pay:         ['/pay', '/remittance', '/lending', '/crypto', '/escrow', '/flashloans', '/buy'],
+  pay:         ['/pay', '/remittance', '/wallet', '/vault', '/lending', '/crypto', '/escrow', '/flashloans', '/buy'],
   social:      ['/feed', '/stories', '/social', '/endorsements', '/headhunter', '/social-hub', '/social-payments', '/social-messaging'],
 };
 
 const MORE_MATCH = [
-  '/me', '/profile', '/vault', '/settings', '/badges', '/achievements',
+  '/me', '/profile', '/settings', '/badges', '/achievements',
   '/guardians', '/governance', '/dao-hub', '/council', '/elections',
   '/disputes', '/sanctum', '/rewards', '/leaderboard', '/quests',
   '/proofscore', '/security-center', '/notifications', '/treasury',
-  '/multisig', '/time-locks', '/vesting', '/appeals', '/insights',
+  '/time-locks', '/vesting', '/appeals', '/insights',
   '/taxes', '/budgets', '/performance', '/reporting', '/price-alerts',
   '/explorer', '/paper-wallet', '/hardware-wallet', '/enterprise',
   '/token-launch', '/payroll', '/cross-chain', '/stealth', '/benefits',
@@ -67,6 +68,15 @@ const MORE_MATCH = [
   '/merchant', '/pos',
   // NAV-1: streaming & subscriptions belong to More, not Pay, on desktop
   '/streaming', '/subscriptions',
+  // NAV-MATCH: finance/vault-adjacent routes not covered above
+  // NAV-MATCH: governance routes not covered above
+  '/fraud',
+  // NAV-MATCH: pay-adjacent utilities in More
+  '/splitter', '/scan',
+  // NAV-MATCH: account/setup routes
+  '/onboarding',
+  // NAV-MATCH: seer routes (Tools group)
+  '/seer-service', '/seer-academy',
 ];
 
 export function TopNav() {
@@ -117,9 +127,10 @@ export function TopNav() {
                 key={s.id}
                 href={s.href}
                 onClick={() => setMoreOpen(false)}
-                className={`topnav-active-pill relative flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-sm font-medium transition-all duration-200 ${
+                aria-current={isActive ? 'page' : undefined}
+                className={`topnav-active-pill relative flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 ${
                   isActive
-                    ? 'bg-cyan-500/12 text-cyan-400'
+                    ? 'bg-accent/10 text-accent'
                     : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-100'
                 }`}
               >
@@ -145,9 +156,10 @@ export function TopNav() {
             onClick={() => setMoreOpen((v) => !v)}
             aria-haspopup="dialog"
             aria-expanded={moreOpen}
-            className={`relative flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-sm font-medium transition-all duration-200 ${
+            aria-label="Open all VFIDE destinations"
+            className={`relative flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 ${
               activeSection === 'more'
-                ? 'bg-cyan-500/12 text-cyan-400'
+                ? 'bg-accent/10 text-accent'
                 : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-100'
             }`}
           >
@@ -160,11 +172,13 @@ export function TopNav() {
         <div className="ml-auto flex items-center gap-2">
           {/* Search */}
           <button
+            type="button"
             onClick={() => {
               const event = new KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true });
               document.dispatchEvent(event);
             }}
-            className="hidden lg:flex items-center gap-2 rounded-lg border border-white/8 bg-white/4 px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-100 hover:bg-white/8 transition-all"
+            className="hidden lg:flex items-center gap-2 rounded-lg border border-white/8 bg-white/4 px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-100 hover:bg-white/8 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+            aria-label="Open global search"
           >
             <Search size={13} />
             <span>Search</span>
@@ -176,14 +190,15 @@ export function TopNav() {
           {isConnected && (
             <Link
               href="/proofscore"
-              className="hidden lg:flex items-center rounded-lg border border-white/8 bg-white/4 px-2.5 py-1 hover:bg-white/8 hover:border-cyan-500/20 transition-all"
+              className="hidden lg:flex items-center rounded-lg border border-white/8 bg-white/4 px-2.5 py-1 hover:bg-white/8 hover:border-accent/20 transition-all"
               title="ProofScore"
             >
               <ProofScoreCrystal size={28} showScore />
             </Link>
           )}
 
-          <VfideConnectButton size="sm" />
+          <LanguageSwitcher className="hidden sm:inline-flex" />
+              <VfideConnectButton size="sm" />
         </div>
       </nav>
 

@@ -85,7 +85,7 @@ describe('Mainnet readiness contract fixes', { concurrency: 1, timeout: 120000 }
   describe('MerchantPortal', () => {
     it('rejects configured stablecoin settlement when live decimals drift', async () => {
       const { ethers } = await getConnection();
-      const [dao, customer, merchant, feeSink] = await ethers.getSigners();
+      const [dao, customer, merchant] = await ethers.getSigners();
 
       const VaultHubFactory = await ethers.getContractFactory(
         'test/contracts/helpers/Stubs.sol:VaultHubStub'
@@ -126,8 +126,7 @@ describe('Mainnet readiness contract fixes', { concurrency: 1, timeout: 120000 }
         dao.address,
         await vaultHub.getAddress(),
         await seer.getAddress(),
-        await securityHub.getAddress(),
-        feeSink.address
+        await securityHub.getAddress()
       );
       await portal.waitForDeployment();
 

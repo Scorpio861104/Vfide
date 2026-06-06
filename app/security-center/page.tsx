@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import React, { useState } from 'react';
 import { Footer } from '@/components/layout/Footer';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m as motion, AnimatePresence } from 'framer-motion';
 import { BiometricSetup } from '@/components/security/BiometricSetup';
 import { SecurityLogsDashboard } from '@/components/security/SecurityLogsDashboard';
 import { ThreatDetectionPanel } from '@/components/security/ThreatDetectionPanel';
@@ -12,6 +12,8 @@ import { useBiometricAuth } from '@/hooks/useBiometricAuth';
 import { useSecurityLogs } from '@/hooks/useSecurityLogs';
 import { useThreatDetection } from '@/hooks/useThreatDetection';
 import { Shield, Fingerprint, FileText, AlertTriangle, LayoutDashboard, ChevronRight, Search, Lock } from 'lucide-react';
+import { useLocale } from '@/lib/locale/LocaleProvider';
+import { TabTrigger } from '@/components/ui/TabTrigger';
 
 type TabView = 'overview' | 'biometric' | 'logs' | 'threats';
 
@@ -23,6 +25,9 @@ const TABS = [
 ];
 
 export default function SecurityCenterPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [activeTab, setActiveTab] = useState<TabView>('overview');
   const biometric = useBiometricAuth();
   const logs = useSecurityLogs();
@@ -83,10 +88,9 @@ export default function SecurityCenterPage() {
               {TABS.map(tab => {
                 const isActive = activeTab === tab.id;
                 return (
-                  <button
+                  <TabTrigger
                     key={tab.id}
-                    role="tab"
-                    aria-selected={isActive}
+                    active={isActive}
                     aria-controls={`tabpanel-${tab.id}`}
                     onClick={() => setActiveTab(tab.id)}
                     className={`flex items-center gap-1.5 px-4 py-2 rounded-xl font-semibold text-sm whitespace-nowrap transition-all duration-200 ${
@@ -95,7 +99,7 @@ export default function SecurityCenterPage() {
                   >
                     <tab.icon size={15} />
                     <span className="hidden sm:inline">{tab.label}</span>
-                  </button>
+                  </TabTrigger>
                 );
               })}
             </div>

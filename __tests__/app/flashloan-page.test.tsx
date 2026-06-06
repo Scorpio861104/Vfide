@@ -44,6 +44,7 @@ jest.mock('framer-motion', () => {
   });
   return {
     motion,
+    m: motion,
     AnimatePresence: ({ children }) => children,
     LayoutGroup: ({ children }) => children,
     LazyMotion: ({ children }) => children,
@@ -75,8 +76,8 @@ jest.mock('../../app/flashloans/components/BorrowTab', () => ({
   BorrowTab: () => <div>Borrow tab content</div>,
 }));
 
-jest.mock('../../app/flashloans/components/ActiveTab', () => ({
-  ActiveTab: () => <div>Active tab content</div>,
+jest.mock('../../app/flashloans/components/LendersTab', () => ({
+  LendersTab: () => <div>Lenders tab content</div>,
 }));
 
 jest.mock('../../app/flashloans/components/HistoryTab', () => ({
@@ -94,16 +95,16 @@ describe('Flashloan page pathways', () => {
     expect(screen.getByRole('heading', { name: /Flash Loans/i })).toBeTruthy();
     expect(screen.getByText(/Zero-collateral instant loans/i)).toBeTruthy();
     expect(screen.getByRole('button', { name: /^Borrow$/i })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /^Active Loans$/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Lenders$/i })).toBeTruthy();
     expect(screen.getByRole('button', { name: /^History$/i })).toBeTruthy();
     expect(screen.getByText(/Borrow tab content/i)).toBeTruthy();
   });
 
-  it('switches to active loans tab', () => {
+  it('switches to lenders tab', () => {
     renderFlashloanPage();
 
-    fireEvent.click(screen.getByRole('button', { name: /^Active Loans$/i }));
-    expect(screen.getByText(/Active tab content/i)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /^Lenders$/i }));
+    expect(screen.getByText(/Lenders tab content/i)).toBeTruthy();
   });
 
   it('switches to history tab', () => {

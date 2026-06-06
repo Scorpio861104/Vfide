@@ -1,17 +1,23 @@
 /**
- * Feature Flags — Simple Record<string, boolean> gating
- * 
- * Usage:
- *   import { features } from '@/lib/features';
- *   if (!features.flashloans) return <ComingSoon feature="Flash Loans" />;
- * 
- * For mainnet launch: set incomplete features to false.
- * Post-launch: flip to true as each ships.
- * 
- * No external service needed. Just edit this file.
+ * Feature Flags — single source of truth.
+ *
+ * Each flag has a STATIC default (the shipped baseline) that can be OVERRIDDEN at runtime by a
+ * matching `NEXT_PUBLIC_ENABLE_<FLAG>` environment variable. This gives you both:
+ *   • a sensible default checked into the repo (edit here for the permanent baseline), AND
+ *   • a "flip the switch when ready" env override per deployment — set the env var to 'true'
+ *     to enable a feature without a code change/redeploy (NEXT_PUBLIC_* vars are inlined at build
+ *     so they resolve on server + client).
+ *
+ * Usage (unchanged for existing callers):
+ *   import { features, isFeatureEnabled } from '@/lib/features';
+ *   if (!features.streaming) return <ComingSoon feature="Streaming Payments" />;
+ *   if (isFeatureEnabled('lending')) { ... }
+ *
+ * Precedence: env var 'true' → enabled. env var 'false' → disabled. env unset → static default.
  */
 
-export const features = {
+// Static defaults (the shipped baseline). Edit here to change the permanent default.
+const STATIC_DEFAULTS = {
   // ── Ready for mainnet ─────────────────────────────────────────────────────
   vault: true,
   guardians: true,
@@ -23,7 +29,7 @@ export const features = {
   proofScore: true,
   feeDistributor: true,
 
-  // ── In progress — hide from users ─────────────────────────────────────────
+  // ── In progress — hide from users (flip via env when their backing ships) ──
   socialFeed: false,
   socialMessaging: false,
   socialPayments: false,
@@ -51,6 +57,8 @@ export const features = {
   whatsappReceipts: false,
   csvExport: false,
   analytics: false,
+  lending: false,
+  reporting: false,
 
   // ── Theme/cosmetic ────────────────────────────────────────────────────────
   themeManager: false,
@@ -58,11 +66,68 @@ export const features = {
   pieMenu: false,
 } as const;
 
-export type FeatureKey = keyof typeof features;
+export type FeatureKey = keyof typeof STATIC_DEFAULTS;
 
 /**
- * Check if a feature is enabled. Type-safe.
+ * Per-flag env override. NEXT_PUBLIC_* must be referenced as static literals for Next's build-time
+ * inlining, so we map each key explicitly here rather than building the env key dynamically.
+ * A flag is enabled if its env var is exactly 'true', disabled if exactly 'false', else the static
+ * default applies.
  */
+const ENV_OVERRIDE: Partial<Record<FeatureKey, string | undefined>> = {
+  lending: process.env.NEXT_PUBLIC_ENABLE_LENDING,
+  timeLocks: process.env.NEXT_PUBLIC_ENABLE_TIME_LOCKS,
+  multisig: process.env.NEXT_PUBLIC_ENABLE_MULTISIG,
+  reporting: process.env.NEXT_PUBLIC_ENABLE_REPORTING,
+  streaming: process.env.NEXT_PUBLIC_ENABLE_STREAMING,
+  agent: process.env.NEXT_PUBLIC_ENABLE_AGENT,
+  escrow: process.env.NEXT_PUBLIC_ENABLE_ESCROW,
+  subscriptions: process.env.NEXT_PUBLIC_ENABLE_SUBSCRIPTIONS,
+  flashloans: process.env.NEXT_PUBLIC_ENABLE_FLASHLOANS,
+  bridge: process.env.NEXT_PUBLIC_ENABLE_BRIDGE,
+  // Every remaining flag is also env-overridable so ANY feature can be activated
+  // by configuration at deploy time — no code edit to STATIC_DEFAULTS required.
+  // (Each NEXT_PUBLIC_* must be a static literal for Next build-time inlining.)
+  socialFeed: process.env.NEXT_PUBLIC_ENABLE_SOCIAL_FEED,
+  socialMessaging: process.env.NEXT_PUBLIC_ENABLE_SOCIAL_MESSAGING,
+  socialPayments: process.env.NEXT_PUBLIC_ENABLE_SOCIAL_PAYMENTS,
+  stories: process.env.NEXT_PUBLIC_ENABLE_STORIES,
+  endorsements: process.env.NEXT_PUBLIC_ENABLE_ENDORSEMENTS,
+  marketplace: process.env.NEXT_PUBLIC_ENABLE_MARKETPLACE,
+  storefront: process.env.NEXT_PUBLIC_ENABLE_STOREFRONT,
+  offlinePOS: process.env.NEXT_PUBLIC_ENABLE_OFFLINE_POS,
+  budgets: process.env.NEXT_PUBLIC_ENABLE_BUDGETS,
+  taxes: process.env.NEXT_PUBLIC_ENABLE_TAXES,
+  stealthAddresses: process.env.NEXT_PUBLIC_ENABLE_STEALTH_ADDRESSES,
+  paperWallet: process.env.NEXT_PUBLIC_ENABLE_PAPER_WALLET,
+  hardwareWallet: process.env.NEXT_PUBLIC_ENABLE_HARDWARE_WALLET,
+  seerService: process.env.NEXT_PUBLIC_ENABLE_SEER_SERVICE,
+  seerAcademy: process.env.NEXT_PUBLIC_ENABLE_SEER_ACADEMY,
+  flashloan: process.env.NEXT_PUBLIC_ENABLE_FLASHLOAN,
+  whatsappReceipts: process.env.NEXT_PUBLIC_ENABLE_WHATSAPP_RECEIPTS,
+  csvExport: process.env.NEXT_PUBLIC_ENABLE_CSV_EXPORT,
+  analytics: process.env.NEXT_PUBLIC_ENABLE_ANALYTICS,
+  themeManager: process.env.NEXT_PUBLIC_ENABLE_THEME_MANAGER,
+  themeShowcase: process.env.NEXT_PUBLIC_ENABLE_THEME_SHOWCASE,
+  pieMenu: process.env.NEXT_PUBLIC_ENABLE_PIE_MENU,
+};
+
+function resolveFlag(key: FeatureKey): boolean {
+  const override = ENV_OVERRIDE[key];
+  if (override === 'true') return true;
+  if (override === 'false') return false;
+  return STATIC_DEFAULTS[key];
+}
+
+/**
+ * Resolved feature map (env-overridden). Same `features.x` API as before — existing callers are
+ * unaffected; flags listed in ENV_OVERRIDE additionally respect their env var.
+ */
+export const features: Record<FeatureKey, boolean> = Object.fromEntries(
+  (Object.keys(STATIC_DEFAULTS) as FeatureKey[]).map((k) => [k, resolveFlag(k)])
+) as Record<FeatureKey, boolean>;
+
+/** Check if a feature is enabled. Type-safe. (Unchanged signature.) */
 export function isFeatureEnabled(key: FeatureKey): boolean {
   return features[key];
 }

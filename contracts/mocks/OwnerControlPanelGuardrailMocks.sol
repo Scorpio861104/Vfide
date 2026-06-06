@@ -62,53 +62,35 @@ contract MockVFIDETokenForOwnerControlPanel {
 
     /// @notice maxTransferAmount
     /// @return _uint256 _uint256
-    function maxTransferAmount() external pure returns (uint256) {
-        return 0;
-    }
+    function maxTransferAmount() external pure returns (uint256) { return 0; }
     /// @notice maxWalletBalance
     /// @return _uint256 _uint256
-    function maxWalletBalance() external pure returns (uint256) {
-        return 0;
-    }
+    function maxWalletBalance() external pure returns (uint256) { return 0; }
     /// @notice dailyTransferLimit
     /// @return _uint256 _uint256
-    function dailyTransferLimit() external pure returns (uint256) {
-        return 0;
-    }
+    function dailyTransferLimit() external pure returns (uint256) { return 0; }
     /// @notice transferCooldown
     /// @return _uint256 _uint256
-    function transferCooldown() external pure returns (uint256) {
-        return 0;
-    }
+    function transferCooldown() external pure returns (uint256) { return 0; }
     /// @notice whaleLimitExempt
     /// @return _bool _bool
-    function whaleLimitExempt(address) external pure returns (bool) {
-        return false;
-    }
+    function whaleLimitExempt(address) external pure returns (bool) { return false; }
     /// @notice remainingDailyLimit
     /// @return _uint256 _uint256
-    function remainingDailyLimit(address) external pure returns (uint256) {
-        return 0;
-    }
+    function remainingDailyLimit(address) external pure returns (uint256) { return 0; }
     /// @notice cooldownRemaining
     /// @return _uint256 _uint256
-    function cooldownRemaining(address) external pure returns (uint256) {
-        return 0;
-    }
+    function cooldownRemaining(address) external pure returns (uint256) { return 0; }
     /// @notice setFeePolicy
     function setFeePolicy(uint16, uint16) external {}
     /// @notice feePolicy
     /// @return _uint16 _uint16
     /// @return _uint16 _uint16
-    function feePolicy() external pure returns (uint16, uint16) {
-        return (0, 0);
-    }
+    function feePolicy() external pure returns (uint16, uint16) { return (0, 0); }
     /// @notice previewTransferFee
     /// @return _uint256 _uint256
     /// @return _uint256 _uint256
-    function previewTransferFee(address, uint256) external pure returns (uint256, uint256) {
-        return (0, 0);
-    }
+    function previewTransferFee(address, uint256) external pure returns (uint256, uint256) { return (0, 0); }
 }
 
 /// @notice MockEcosystemVaultAdminForOwnerControlPanel
@@ -150,7 +132,12 @@ contract MockEcosystemVaultAdminForOwnerControlPanel {
     /// @param merchantTxReward merchantTxReward
     /// @param merchantReferralReward merchantReferralReward
     /// @param userReferralReward userReferralReward
-    function configureAutoWorkPayout(bool enabled, uint256 merchantTxReward, uint256 merchantReferralReward, uint256 userReferralReward) external {
+    function configureAutoWorkPayout(
+        bool enabled,
+        uint256 merchantTxReward,
+        uint256 merchantReferralReward,
+        uint256 userReferralReward
+    ) external {
         autoWorkEnabled = enabled;
         autoMerchantTx = merchantTxReward;
         autoMerchantReferral = merchantReferralReward;
@@ -164,43 +151,27 @@ contract MockEcosystemVaultAdminForOwnerControlPanel {
 
     /// @notice autoSwapEnabled
     /// @return _bool _bool
-    function autoSwapEnabled() external view returns (bool) {
-        return autoswapEnabled;
-    }
+    function autoSwapEnabled() external view returns (bool) { return autoswapEnabled; }
     /// @notice swapRouter
     /// @return _address _address
-    function swapRouter() external view returns (address) {
-        return router;
-    }
+    function swapRouter() external view returns (address) { return router; }
     /// @notice preferredStablecoin
     /// @return _address _address
-    function preferredStablecoin() external view returns (address) {
-        return stablecoin;
-    }
+    function preferredStablecoin() external view returns (address) { return stablecoin; }
     /// @notice maxSlippageBps
     /// @return _uint16 _uint16
-    function maxSlippageBps() external view returns (uint16) {
-        return slippageBps;
-    }
+    function maxSlippageBps() external view returns (uint16) { return slippageBps; }
 
     /// @notice autoWorkPayoutEnabled
     /// @return _bool _bool
-    function autoWorkPayoutEnabled() external view returns (bool) {
-        return autoWorkEnabled;
-    }
+    function autoWorkPayoutEnabled() external view returns (bool) { return autoWorkEnabled; }
     /// @notice autoMerchantTxReward
     /// @return _uint256 _uint256
-    function autoMerchantTxReward() external view returns (uint256) {
-        return autoMerchantTx;
-    }
+    function autoMerchantTxReward() external view returns (uint256) { return autoMerchantTx; }
     /// @notice autoMerchantReferralReward
     /// @return _uint256 _uint256
-    function autoMerchantReferralReward() external view returns (uint256) {
-        return autoMerchantReferral;
-    }
+    function autoMerchantReferralReward() external view returns (uint256) { return autoMerchantReferral; }
     /// @notice autoUserReferralReward
     /// @return _uint256 _uint256
-    function autoUserReferralReward() external view returns (uint256) {
-        return autoUserReferral;
-    }
+    function autoUserReferralReward() external view returns (uint256) { return autoUserReferral; }
 }

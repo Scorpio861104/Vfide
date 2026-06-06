@@ -25,6 +25,13 @@
  */
 
 import { useVaultHub } from '@/hooks/useVaultHub';
+
+// Mirror VaultRecoveryClaim.sol line 108:
+//   uint64 public constant FINALIZATION_GRACE_PERIOD = 1 days;
+// The contract allows a challenge up to challengeEndsAt + FINALIZATION_GRACE_PERIOD,
+// but the on-chain challengeTimeRemaining() view only counts down to challengeEndsAt.
+// We add the grace period here so the UI stays accurate.
+const FINALIZATION_GRACE_PERIOD = 86400n; // 1 day in seconds
 import { useRecoveryClaim, RecoveryClaimStatus, type RecoveryClaimData } from '@/hooks/useRecoveryClaim';
 
 export interface OwnerActiveClaimResult {
@@ -46,21 +53,37 @@ export function useOwnerActiveClaim(): OwnerActiveClaimResult {
   const { vaultAddress, hasVault } = useVaultHub();
   const recovery = useRecoveryClaim({ targetVault: hasVault ? vaultAddress : undefined });
 
-  // The contract considers a claim "challengeable" only in GuardianApproved
-  // state — Pending claims are still gathering votes, and Approved/Executed/
-  // Rejected/Expired claims are past the point where a challenge can fire.
+  // The contract allows challenge when status is NOT (None, Executed, Rejected, Expired).
+  // This means Pending(1), GuardianApproved(2), and Approved(4) are all challengeable,
+  // as long as challengeEndsAt has not passed (+ FINALIZATION_GRACE_PERIOD).
+  //
+  // Note: challengeEndsAt is set at claim CREATION time, so a Pending claim already
+  // has a running challenge window — the owner can veto before guardians even vote.
   //
   // Per the contract (VaultRecoveryClaim.sol challengeClaim):
-  //   - status must be ClaimStatus.GuardianApproved
-  //   - block.timestamp must be < claim.challengeEndsAt
+  //   - status must not be None/Executed/Rejected/Expired
+  //   - block.timestamp must be <= claim.challengeEndsAt + FINALIZATION_GRACE_PERIOD
+  //   - caller must be the original owner
   //
   // We compute the local boolean defensively. The contract has the final
   // say; if our prediction here is wrong, the button click will fail with
   // a contract revert and the UI will surface that error.
+  const CHALLENGEABLE_STATUSES = new Set([
+    RecoveryClaimStatus.Pending,
+    RecoveryClaimStatus.GuardianApproved,
+    RecoveryClaimStatus.Approved,
+  ]);
+  // Effective remaining time = on-chain countdown + grace period the contract also allows.
+  // This ensures the "Veto" button remains visible during the 1-day finalization grace window.
+  const effectiveChallengeTimeRemaining =
+    recovery.challengeTimeRemaining > 0n
+      ? recovery.challengeTimeRemaining + FINALIZATION_GRACE_PERIOD
+      : FINALIZATION_GRACE_PERIOD;
+
   const canChallenge =
     !!recovery.claim &&
-    recovery.claim.status === RecoveryClaimStatus.GuardianApproved &&
-    recovery.challengeTimeRemaining > 0n;
+    CHALLENGEABLE_STATUSES.has(recovery.claim.status) &&
+    effectiveChallengeTimeRemaining > 0n;
 
   return {
     hasActiveClaim: recovery.hasClaim && !!recovery.claim,
@@ -68,6 +91,6 @@ export function useOwnerActiveClaim(): OwnerActiveClaimResult {
     claimId: recovery.claimId,
     claim: recovery.claim,
     canChallenge,
-    challengeTimeRemaining: recovery.challengeTimeRemaining,
+    challengeTimeRemaining: effectiveChallengeTimeRemaining,
   };
 }

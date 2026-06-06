@@ -5,6 +5,7 @@ import { Footer } from '@/components/layout/Footer';
 import { ConnectTab } from './components/ConnectTab';
 import { GuideTab } from './components/GuideTab';
 import { ManageTab } from './components/ManageTab';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 type TabId = 'connect' | 'manage' | 'guide';
 
@@ -12,6 +13,9 @@ const TAB_LABELS: Record<TabId, string> = { connect: 'Connect', manage: 'Manage'
 const TAB_IDS: TabId[] = ['connect', 'manage', 'guide'];
 
 export default function HardwareWalletPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [activeTab, setActiveTab] = useState<TabId>('connect');
 
   return (

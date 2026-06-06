@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { ArrowRight, Heart, MessageCircle, Share2, Shield, ShoppingCart, Store, Zap } from 'lucide-react';
 import Link from 'next/link';
 import { type ShoppablePostProps, formatTimeAgo } from './social-commerce-types';
@@ -48,14 +48,14 @@ export function ShoppablePost({ product, postedBy, timestamp, caption, likes = 0
   const discountPct = hasDiscount ? Math.round((1 - parseFloat(product.price) / parseFloat(product.compareAtPrice!)) * 100) : 0;
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className={`bg-white/3 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden ${className}`}
     >
       {/* Post header */}
       <div className="px-4 py-3 flex items-center gap-3">
-        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-500/30 to-blue-500/30 flex items-center justify-center text-xs font-bold text-cyan-400">
+        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-accent/30 to-blue-500/30 flex items-center justify-center text-xs font-bold text-accent">
           {postedBy.name[0]?.toUpperCase() || '?'}
         </div>
         <div className="flex-1 min-w-0">
@@ -76,7 +76,7 @@ export function ShoppablePost({ product, postedBy, timestamp, caption, likes = 0
 
       {/* Product card */}
       <Link href={`/store/${product.merchantSlug}`}>
-        <div className="mx-4 mb-3 bg-white/3 border border-white/10 rounded-xl overflow-hidden hover:border-cyan-500/30 transition-colors cursor-pointer">
+        <div className="mx-4 mb-3 bg-white/3 border border-white/10 rounded-xl overflow-hidden hover:border-accent/30 transition-colors cursor-pointer">
           {product.imageUrl && (
             <div className="relative h-48 bg-white/5">
               <Image src={product.imageUrl} alt={product.name} className="w-full h-full object-cover"  width={48} height={48} />
@@ -105,7 +105,7 @@ export function ShoppablePost({ product, postedBy, timestamp, caption, likes = 0
                 </div>
               </div>
               <div className="text-right flex-shrink-0">
-                <div className="text-cyan-400 font-mono font-bold text-lg">${parseFloat(product.price).toFixed(2)}</div>
+                <div className="text-accent font-mono font-bold text-lg">${parseFloat(product.price).toFixed(2)}</div>
                 {hasDiscount && (
                   <div className="text-xs text-gray-500 line-through">${parseFloat(product.compareAtPrice!).toFixed(2)}</div>
                 )}
@@ -113,7 +113,7 @@ export function ShoppablePost({ product, postedBy, timestamp, caption, likes = 0
             </div>
             <div className="mt-3 flex items-center justify-between">
               <span className="text-xs text-gray-500 capitalize">{product.productType || 'physical'}</span>
-              <span className="text-xs text-cyan-400 flex items-center gap-1">
+              <span className="text-xs text-accent flex items-center gap-1">
                 View in store <ArrowRight size={12} />
               </span>
             </div>
@@ -139,18 +139,18 @@ export function ShoppablePost({ product, postedBy, timestamp, caption, likes = 0
           onClick={handleShare}
           aria-label="Share product"
           title="Share product"
-          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-cyan-400 transition-colors"
+          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-accent transition-colors"
         >
           <Share2 size={16} />
         </button>
         <Link
           href={`/store/${product.merchantSlug}`}
-          className="ml-auto flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs font-bold rounded-lg hover:scale-[1.02] transition-transform"
+          className="ml-auto flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-accent to-blue-500 text-white text-xs font-bold rounded-lg hover:scale-[1.02] transition-transform"
         >
           <ShoppingCart size={12} /> Buy now
         </Link>
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 

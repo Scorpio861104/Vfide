@@ -24,12 +24,15 @@
  *      identity for free.
  */
 
+import { getTier } from '@/lib/proofScore/tiers';
+
 // ─── tier color mapping ──────────────────────────────────────────────────────
 
 /**
  * Tier color hex codes for ProofScore tiers. Match `hooks/useProtocolPulse.ts`
  * and the values in `lib/constants.ts`. Single source of truth — do not
- * inline these colors in components; import them.
+ * inline these colors in components; import { getTier } from '@/lib/proofScore/tiers';
+import them.
  */
 export const TIER_HEX = {
   risky:      '#f97316',
@@ -47,29 +50,13 @@ export type TierKey = keyof typeof TIER_HEX;
  * Resolve a tier hex from a ProofScore (0–10000 scale).
  * Mirrors `tierForScore()` in `hooks/useProtocolPulse.ts`.
  */
-export function tierForScore(score: number): string {
-  if (score >= 8000) return TIER_HEX.elite;
-  if (score >= 7000) return TIER_HEX.council;
-  if (score >= 5600) return TIER_HEX.trusted;
-  if (score >= 5400) return TIER_HEX.governance;
-  if (score >= 5000) return TIER_HEX.neutral;
-  if (score >= 3500) return TIER_HEX.low;
-  return TIER_HEX.risky;
-}
+export function tierForScore(score: number): string { return getTier(score).name; }
 
 /**
  * Resolve a tier label (lower-case key) from a ProofScore.
  * Used by components that need to render a tier name alongside the color.
  */
-export function tierKeyForScore(score: number): TierKey {
-  if (score >= 8000) return 'elite';
-  if (score >= 7000) return 'council';
-  if (score >= 5600) return 'trusted';
-  if (score >= 5400) return 'governance';
-  if (score >= 5000) return 'neutral';
-  if (score >= 3500) return 'low';
-  return 'risky';
-}
+export function tierKeyForScore(score: number): string { return getTier(score).hex; }
 
 /**
  * Tier-name labels for display. Capitalized for UI.

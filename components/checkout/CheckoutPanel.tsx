@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Multi-Currency Checkout
  * 
@@ -18,7 +20,7 @@
 import { useState, useMemo } from 'react';
 import Image from 'next/image';
 import { useAccount } from 'wagmi';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Wallet, Shield, Check, Loader2, Info } from 'lucide-react';
 import { useLocale } from '@/lib/locale/LocaleProvider';
 import { usePayMerchant } from '@/lib/vfide-hooks';
@@ -68,13 +70,13 @@ export function CheckoutPanel({
   merchantAddress,
   merchantName,
   merchantProofScore,
-  buyerFeeBps = 100,  // Default 1% for new users
+  buyerFeeBps = 382,  // Default 3.82% neutral rate (ProofScoreBurnRouter score=5000; range 25–500 bps)
   tokenPrice,
   onComplete,
   onCancel,
 }: CheckoutPanelProps) {
   const { address, isConnected } = useAccount();
-  const { formatCurrency, displayCurrency: _displayCurrency } = useLocale();
+  const { formatCurrency } = useLocale();
   const [selectedToken, setSelectedToken] = useState<string>('VFIDE');
   const [isProcessing, setIsProcessing] = useState(false);
   const [step, setStep] = useState<'review' | 'paying' | 'complete'>('review');
@@ -157,17 +159,17 @@ export function CheckoutPanel({
       <AnimatePresence mode="wait">
         {/* ── Review Step ──────────────────────────────────────────────── */}
         {step === 'review' && (
-          <motion.div key="review" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, x: -20 }}>
+          <m.div key="review" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, x: -20 }}>
             {/* Merchant header */}
             <div className="flex items-center gap-3 mb-6 p-4 bg-white/3 border border-white/10 rounded-xl">
-              <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center text-cyan-400 font-bold">
+              <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center text-accent font-bold">
                 {merchantName[0]?.toUpperCase()}
               </div>
               <div className="flex-1">
                 <div className="text-white font-bold">{merchantName}</div>
                 {merchantProofScore !== undefined && (
                   <div className="text-xs text-gray-500 flex items-center gap-1">
-                    <Shield size={10} className="text-cyan-400" />
+                    <Shield size={10} className="text-accent" />
                     ProofScore {merchantProofScore.toLocaleString()}
                   </div>
                 )}
@@ -209,7 +211,7 @@ export function CheckoutPanel({
               </div>
               <div className="border-t border-white/10 pt-2 flex justify-between">
                 <span className="text-white font-bold">Total</span>
-                <span className="text-cyan-400 font-bold text-lg">{formatCurrency(total)}</span>
+                <span className="text-accent font-bold text-lg">{formatCurrency(total)}</span>
               </div>
               <div className="text-xs text-emerald-400 text-right">
                 Merchant fee: {formatCurrency(0)} (saved {formatCurrency(feeSavedVsSquare)} vs Square)
@@ -254,7 +256,7 @@ export function CheckoutPanel({
             <button
               onClick={handlePay}
               disabled={!isConnected || isPaying || isProcessing || !hasValidTokenQuote}
-              className="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold text-lg disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full py-4 bg-gradient-to-r from-accent to-blue-600 text-white rounded-xl font-bold text-lg disabled:opacity-50 flex items-center justify-center gap-2"
             >
               <Wallet size={22} />
               Pay {formatCurrency(total)}
@@ -265,31 +267,31 @@ export function CheckoutPanel({
                 Cancel
               </button>
             )}
-          </motion.div>
+          </m.div>
         )}
 
         {/* ── Paying Step ─────────────────────────────────────────────── */}
         {step === 'paying' && (
-          <motion.div key="paying" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+          <m.div key="paying" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             className="text-center py-12">
-            <Loader2 size={48} className="text-cyan-400 animate-spin mx-auto mb-6" />
+            <Loader2 size={48} className="text-accent animate-spin mx-auto mb-6" />
             <h3 className="text-xl font-bold text-white mb-2">Processing payment...</h3>
             <p className="text-gray-400">Confirm the transaction in your wallet</p>
-          </motion.div>
+          </m.div>
         )}
 
         {/* ── Complete Step ────────────────────────────────────────────── */}
         {step === 'complete' && (
-          <motion.div key="complete" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+          <m.div key="complete" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
             className="text-center py-8">
-            <motion.div
+            <m.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: 'spring', stiffness: 200, delay: 0.1 }}
               className="w-20 h-20 mx-auto mb-6 rounded-full bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center"
             >
               <Check size={40} className="text-emerald-400" />
-            </motion.div>
+            </m.div>
             <h3 className="text-2xl font-bold text-white mb-2">Payment complete</h3>
             <p className="text-gray-400 mb-6">{formatCurrency(total)} paid to {merchantName}</p>
             {txHash && (
@@ -300,7 +302,7 @@ export function CheckoutPanel({
             <div className="text-sm text-emerald-400 mb-6">
               You saved {formatCurrency(feeSavedVsSquare)} in fees vs traditional payment
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

@@ -8,7 +8,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { usePrefersReducedMotion } from '@/lib/ux/uxUtils';
 
 // ==================== TYPES ====================
@@ -116,7 +116,7 @@ export function ProgressLoader({
         </div>
       )}
       <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
-        <motion.div
+        <m.div
           initial={{ width: 0 }}
           animate={{ width: `${clampedProgress}%` }}
           transition={{ duration: 0.3, ease: 'easeOut' }}
@@ -160,7 +160,7 @@ export function ContentLoader({
     <div className={className}>
       <AnimatePresence mode="wait">
         {showContent ? (
-          <motion.div
+          <m.div
             key="content"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -168,9 +168,9 @@ export function ContentLoader({
             transition={{ duration: 0.2 }}
           >
             {children}
-          </motion.div>
+          </m.div>
         ) : (
-          <motion.div
+          <m.div
             key="skeleton"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -178,7 +178,7 @@ export function ContentLoader({
             transition={{ duration: 0.2 }}
           >
             {skeleton || <DefaultSkeleton />}
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>
@@ -220,7 +220,7 @@ export function PulseLoader({
   return (
     <div className={`flex items-center ${gaps[size]} ${className}`} role="status" aria-label="Loading">
       {Array.from({ length: count }).map((_, i) => (
-        <motion.div
+        <m.div
           key={i}
           className={`${sizes[size]} rounded-full`}
           style={{ backgroundColor: color }}
@@ -251,7 +251,7 @@ export function LoadingOverlay({
   return (
     <AnimatePresence>
       {isLoading && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -265,7 +265,7 @@ export function LoadingOverlay({
             <LoadingSpinner size="lg" />
             <p className="text-gray-300 text-sm">{message}</p>
           </div>
-        </motion.div>
+        </m.div>
       )}
     </AnimatePresence>
   );
@@ -377,12 +377,12 @@ export function TransactionLoader({ status }: { status: 'pending' | 'confirming'
   return (
     <div className="flex flex-col items-center gap-4 p-6">
       {status === 'confirmed' ? (
-        <motion.div
+        <m.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center"
         >
-          <motion.svg
+          <m.svg
             initial={{ pathLength: 0 }}
             animate={{ pathLength: 1 }}
             transition={{ duration: 0.5 }}
@@ -394,23 +394,23 @@ export function TransactionLoader({ status }: { status: 'pending' | 'confirming'
             strokeLinecap="round"
             strokeLinejoin="round"
           >
-            <motion.path d="M5 13l4 4L19 7" />
-          </motion.svg>
-        </motion.div>
+            <m.path d="M5 13l4 4L19 7" />
+          </m.svg>
+        </m.div>
       ) : status === 'failed' ? (
-        <motion.div
+        <m.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center"
         >
           <span className="text-2xl">✕</span>
-        </motion.div>
+        </m.div>
       ) : (
         <div className="relative w-16 h-16">
-          <motion.div
+          <m.div
             className="absolute inset-0 rounded-full border-4 border-gray-700"
           />
-          <motion.div
+          <m.div
             className="absolute inset-0 rounded-full border-4 border-transparent"
             style={{ borderTopColor: colors[status] }}
             animate={{ rotate: 360 }}

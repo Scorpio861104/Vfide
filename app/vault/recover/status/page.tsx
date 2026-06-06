@@ -36,6 +36,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { usePublicClient } from 'wagmi';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 import {
   ArrowLeft,
   Clock,
@@ -52,6 +53,7 @@ import {
 import { Footer } from '@/components/layout/Footer';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useRecoveryClaim, RecoveryClaimStatus } from '@/hooks/useRecoveryClaim';
+import { useChallengeClaim } from '@/hooks/useChallengeClaim';
 import { CONTRACT_ADDRESSES } from '@/lib/contracts';
 import { VaultRegistryABI } from '@/lib/abis';
 
@@ -92,6 +94,9 @@ function formatStatus(status: RecoveryClaimStatus): { label: string; color: stri
 }
 
 export default function RecoveryStatusPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const searchParams = useSearchParams();
   const publicClient = usePublicClient();
 
@@ -268,6 +273,19 @@ function RecoveryStatusBody({
     isWritePending,
     refetchClaim,
   } = useRecoveryClaim({ targetVault: vaultAddress });
+  const [showChallengeForm, setShowChallengeForm] = useState(false);
+  const [challengeReason, setChallengeReason] = useState('');
+  const [challengeError, setChallengeError] = useState<string | null>(null);
+  const [challengeSuccess, setChallengeSuccess] = useState(false);
+  const {
+    isOriginalOwner,
+    challenge,
+    isWritePending: isChallengePending,
+    writeError: challengeWriteError,
+  } = useChallengeClaim({
+    claimId,
+    originalOwner: claim?.originalOwner as `0x${string}` | undefined,
+  });
 
   const handleFinalize = async () => {
     setFinalizeError(null);
@@ -281,6 +299,26 @@ function RecoveryStatusBody({
     } catch (e: any) {
       const msg = e?.shortMessage || e?.details || e?.message || 'Finalize failed';
       setFinalizeError(msg);
+    }
+  };
+
+  const handleChallenge = async () => {
+    const reason = challengeReason.trim();
+    if (!reason) return;
+
+    setChallengeError(null);
+    try {
+      const hash = await challenge(reason);
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash });
+      }
+      setChallengeSuccess(true);
+      setShowChallengeForm(false);
+      setChallengeReason('');
+      await refetchClaim();
+    } catch (e: any) {
+      const msg = e?.shortMessage || e?.details || e?.message || 'Challenge failed';
+      setChallengeError(msg);
     }
   };
 
@@ -314,6 +352,14 @@ function RecoveryStatusBody({
     RecoveryClaimStatus.Expired,
     RecoveryClaimStatus.Executed,
   ].includes(claimStatus);
+  const canOwnerChallenge =
+    isOriginalOwner &&
+    [
+      RecoveryClaimStatus.Pending,
+      RecoveryClaimStatus.GuardianApproved,
+      RecoveryClaimStatus.Approved,
+    ].includes(claimStatus);
+  const challengeIdSuffix = claimStatus === RecoveryClaimStatus.Pending ? '-pending' : '';
 
   return (
     <div className="space-y-5">
@@ -368,6 +414,92 @@ function RecoveryStatusBody({
           )}
         </div>
       </GlassCard>
+
+      {canOwnerChallenge && !challengeSuccess && (
+        <GlassCard hover={false} className="p-6 border border-red-500/30">
+          <h3 className="text-lg font-bold text-red-300 mb-2 flex items-center gap-2">
+            <Shield size={20} />
+            Veto suspicious recovery
+          </h3>
+          <p className="text-sm text-gray-300 mb-5">
+            You are connected with the original owner wallet. If this recovery was not
+            authorized, challenge it now to stop the claim and protect this vault.
+          </p>
+          {(challengeError || challengeWriteError) && (
+            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 mb-4">
+              <p className="text-xs text-red-300">
+                {challengeError || challengeWriteError?.message || 'Challenge failed'}
+              </p>
+            </div>
+          )}
+          {!showChallengeForm ? (
+            <button
+              data-testid={`veto-open-btn${challengeIdSuffix}`}
+              onClick={() => setShowChallengeForm(true)}
+              disabled={isChallengePending}
+              className="px-5 py-3 bg-gradient-to-r from-red-500 to-rose-500 text-white rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <XCircle className="h-4 w-4" />
+              Veto this recovery
+            </button>
+          ) : (
+            <div className="space-y-4">
+              <label className="block text-sm font-semibold text-white" htmlFor={`challenge-reason${challengeIdSuffix}`}>
+                Why are you challenging this recovery?
+              </label>
+              <textarea
+                id={`challenge-reason${challengeIdSuffix}`}
+                data-testid={`challenge-reason-input${challengeIdSuffix}`}
+                value={challengeReason}
+                onChange={(e) => setChallengeReason(e.target.value)}
+                rows={3}
+                placeholder="Example: I still control this wallet and did not authorize recovery."
+                className="w-full px-4 py-3 rounded-lg bg-black/30 border border-white/20 text-white placeholder:text-gray-600 focus:outline-none focus:border-red-500/50"
+              />
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  data-testid={`challenge-submit-btn${challengeIdSuffix}`}
+                  onClick={() => void handleChallenge()}
+                  disabled={!challengeReason.trim() || isChallengePending}
+                  className="px-5 py-2.5 bg-gradient-to-r from-red-500 to-rose-500 text-white rounded-lg font-bold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isChallengePending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Challenging…
+                    </>
+                  ) : (
+                    'Submit veto'
+                  )}
+                </button>
+                <button
+                  data-testid="challenge-cancel-btn"
+                  onClick={() => {
+                    setShowChallengeForm(false);
+                    setChallengeReason('');
+                    setChallengeError(null);
+                  }}
+                  className="px-5 py-2.5 bg-white/10 text-white rounded-lg hover:bg-white/20"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </GlassCard>
+      )}
+
+      {challengeSuccess && (
+        <GlassCard hover={false} className="p-6 border border-emerald-500/30" data-testid="challenge-success">
+          <h3 className="text-lg font-bold text-emerald-300 mb-2 flex items-center gap-2">
+            <CheckCircle2 size={20} />
+            Recovery veto submitted
+          </h3>
+          <p className="text-sm text-gray-300">
+            Your challenge transaction was confirmed. This recovery claim has been stopped.
+          </p>
+        </GlassCard>
+      )}
 
       {/* Action card */}
       {claimStatus === RecoveryClaimStatus.Approved && !finalizeSuccess && (
@@ -460,7 +592,7 @@ function RecoveryStatusBody({
 
       {/* Terminal failure states */}
       {claimStatus === RecoveryClaimStatus.Challenged && (
-        <GlassCard hover={false} className="p-6 border border-red-500/30">
+        <GlassCard hover={false} className="p-6 border border-red-500/30" data-testid="recovery-terminal-notice">
           <h3 className="text-lg font-bold text-red-300 mb-2 flex items-center gap-2">
             <XCircle size={20} />
             Claim was challenged
@@ -478,15 +610,15 @@ function RecoveryStatusBody({
       )}
 
       {claimStatus === RecoveryClaimStatus.Rejected && (
-        <GlassCard hover={false} className="p-6 border border-red-500/30">
+        <GlassCard hover={false} className="p-6 border border-red-500/30" data-testid="recovery-terminal-notice">
           <h3 className="text-lg font-bold text-red-300 mb-2 flex items-center gap-2">
             <XCircle size={20} />
-            Claim was rejected
+            Claim was challenged or rejected
           </h3>
           <p className="text-sm text-gray-300">
-            Guardians voted against this recovery. The most common reasons are that they
-            couldn&apos;t verify the claimant&apos;s identity, the reason given didn&apos;t match what they
-            knew about the situation, or they suspected the claim was fraudulent.
+            This recovery was stopped before completion. The original wallet may have
+            challenged the claim, or guardians may have rejected it because they could not
+            verify the claimant&apos;s identity or suspected fraud.
           </p>
         </GlassCard>
       )}
@@ -498,7 +630,7 @@ function RecoveryStatusBody({
             Claim expired
           </h3>
           <p className="text-sm text-gray-300">
-            This claim never reached enough guardian approvals before the 90-day expiry window
+            This claim never reached enough guardian approvals before the 30-day expiry window
             closed. The vault is free to accept a new claim. If you still need to recover this
             vault, start a fresh recovery claim and make sure your guardians know to vote.
           </p>

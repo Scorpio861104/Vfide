@@ -28,7 +28,7 @@ export const dynamic = 'force-dynamic';
 
 import { useAccount } from 'wagmi';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { m , LazyMotion, domAnimation } from 'framer-motion';
 import {
   User,
   Shield,
@@ -55,6 +55,7 @@ import { HubSection, type HubLink } from '@/components/navigation/HubGrid';
 import { Numeric } from '@/components/ui/Numeric';
 import { ProofScoreRing } from '@/components/ui/ProofScoreRing';
 import { useProofScore } from '@/hooks/useProofScore';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 // ── Section groupings ──────────────────────────────────────────────
 
@@ -69,7 +70,7 @@ const IDENTITY: HubLink[] = [
 const MONEY: HubLink[] = [
   { href: '/vault',             icon: Wallet,    label: 'Vault',          description: 'Your non-custodial vault — balance, queue, spend limits.' },
   { href: '/merchant/payouts',  icon: Briefcase, label: 'Earnings',       description: 'Confirmed revenue and cash-out, for merchants.' },
-  { href: '/rewards',           icon: Gift,      label: 'Rewards',        description: 'Pool earnings from merchant + referral programs.' },
+  { href: '/rewards',           icon: Gift,      label: 'Rewards',        description: 'Stablecoin service fee distributions for verified merchant and referral work.' },
   { href: '/sanctum',           icon: Heart,     label: 'Sanctum',        description: 'Charity allocations and grants funded by protocol fees.' },
 ];
 
@@ -93,18 +94,22 @@ const GOVERNANCE: HubLink[] = [
 ];
 
 const ENGAGEMENT: HubLink[] = [
-  { href: '/quests', icon: Target, label: 'Quests', description: 'Time-bound objectives that earn ProofScore and tokens.' },
+  { href: '/quests', icon: Target, label: 'Quests', description: 'Time-bound objectives that build ProofScore through verified on-chain activity.' },
 ];
 
 // ── Page ────────────────────────────────────────────────────────────
 
 export default function MeHubPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address, isConnected } = useAccount();
   const { score, tierName, burnFee, isLoading } = useProofScore();
 
   if (!isConnected) {
     return (
-      <>
+      <LazyMotion features={domAnimation}>
+        <>
         <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] text-white relative">
           <div className="pointer-events-none absolute inset-0 overflow-hidden">
             <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
@@ -114,12 +119,12 @@ export default function MeHubPage() {
           </div>
           <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
           <div className="relative container mx-auto max-w-3xl px-4 py-20 text-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-sm text-cyan-300 mb-6">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+            <div className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-sm text-accent mb-6">
+              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
               Account Hub
             </div>
             <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-6">
-              <User size={28} className="text-cyan-300" />
+              <User size={28} className="text-accent" />
             </div>
             <h1 className="mb-3 text-4xl font-black text-white tracking-tight">Your VFIDE</h1>
             <p className="mb-8 max-w-md mx-auto text-gray-400 text-lg">
@@ -132,6 +137,7 @@ export default function MeHubPage() {
         </div>
         <Footer />
       </>
+      </LazyMotion>
     );
   }
 
@@ -152,7 +158,7 @@ export default function MeHubPage() {
         <div className="relative container mx-auto max-w-5xl px-4 pb-16">
 
           {/* Header: tier badge + name + ProofScore snapshot */}
-          <motion.header
+          <m.header
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
@@ -163,7 +169,7 @@ export default function MeHubPage() {
                 <User size={12} /> Account Hub
               </div>
               <h1 className="text-4xl font-black sm:text-5xl tracking-tight">
-                <span className="bg-gradient-to-r from-white to-cyan-300 bg-clip-text text-transparent">Your VFIDE</span>
+                <span className="bg-gradient-to-r from-white to-accent-light bg-clip-text text-transparent">Your VFIDE</span>
               </h1>
               {address && (
                 <div className="mt-2 font-mono text-sm text-gray-500">
@@ -177,7 +183,7 @@ export default function MeHubPage() {
               {isLoading ? (
                 <div className="h-14 w-14 animate-pulse rounded-full bg-white/5" />
               ) : (
-                <ProofScoreRing score={score} size="md" />
+                <ProofScoreRing score={score ?? 0} size="md" />
               )}
               <div>
                 <div className="text-[11px] uppercase tracking-widest text-gray-500">ProofScore</div>
@@ -185,10 +191,10 @@ export default function MeHubPage() {
                   {isLoading ? (
                     <span className="font-numeric text-2xl text-gray-600">—</span>
                   ) : (
-                    <Numeric value={score} format="score" size="2xl" weight={700} className="text-white" />
+                    <Numeric value={score ?? 0} format="score" size="2xl" weight={700} className="text-white" />
                   )}
                   {!isLoading && (
-                    <span className="text-sm text-cyan-300">{tierName}</span>
+                    <span className="text-sm text-accent">{tierName}</span>
                   )}
                 </div>
                 <div className="mt-0.5 text-[11px] text-gray-500">
@@ -197,7 +203,7 @@ export default function MeHubPage() {
                     <span className="font-numeric text-gray-600">—</span>
                   ) : (
                     <Numeric
-                      value={burnFee}
+                      value={burnFee ?? 0}
                       format="percent"
                       size="xs"
                       weight={600}
@@ -208,7 +214,7 @@ export default function MeHubPage() {
                 </div>
               </div>
             </div>
-          </motion.header>
+          </m.header>
 
           {/* Discoverable map of everything under "Me" */}
           <div className="space-y-10">
@@ -221,9 +227,9 @@ export default function MeHubPage() {
 
           {/* Quick "what to do next" suggestion based on score tier */}
           {!isLoading && (
-            <div className="mt-12 glass-card-premium border-cyan-500/20 bg-cyan-500/5 p-5">
-              <div className="mb-2 text-xs uppercase tracking-widest text-cyan-300">Next step</div>
-              <NextStep score={score} />
+            <div className="mt-12 glass-card-premium border-accent/20 bg-accent/5 p-5">
+              <div className="mb-2 text-xs uppercase tracking-widest text-accent">Next step</div>
+              <NextStep score={score ?? 0} />
             </div>
           )}
         </div>
@@ -242,7 +248,7 @@ function NextStep({ score }: { score: number }) {
     return (
       <p className="text-gray-300">
         Build your trust score by completing a few payments and{' '}
-        <Link href="/quests" className="text-cyan-300 hover:text-cyan-200">
+        <Link href="/quests" className="text-accent hover:text-accent">
           taking on a quest <ArrowRight size={12} className="inline" />
         </Link>
         . Most new users cross into Neutral after their first 5\u201310 confirmed transactions.
@@ -253,7 +259,7 @@ function NextStep({ score }: { score: number }) {
     return (
       <p className="text-gray-300">
         Almost at Governance tier. A few more confirmed payments unlocks the ability to{' '}
-        <Link href="/governance" className="text-cyan-300 hover:text-cyan-200">
+        <Link href="/governance" className="text-accent hover:text-accent">
           vote on proposals <ArrowRight size={12} className="inline" />
         </Link>
         .
@@ -264,7 +270,7 @@ function NextStep({ score }: { score: number }) {
     return (
       <p className="text-gray-300">
         You can vote now — try{' '}
-        <Link href="/governance" className="text-cyan-300 hover:text-cyan-200">
+        <Link href="/governance" className="text-accent hover:text-accent">
           the active proposals <ArrowRight size={12} className="inline" />
         </Link>
         . At 5,600 you also unlock merchant registration.
@@ -275,11 +281,11 @@ function NextStep({ score }: { score: number }) {
     return (
       <p className="text-gray-300">
         You&apos;re a Trusted user. Consider{' '}
-        <Link href="/merchant/setup" className="text-cyan-300 hover:text-cyan-200">
+        <Link href="/merchant/setup" className="text-accent hover:text-accent">
           opening a store <ArrowRight size={12} className="inline" />
         </Link>{' '}
-        or earning more through{' '}
-        <Link href="/quests" className="text-cyan-300 hover:text-cyan-200">
+        or building a higher ProofScore through{' '}
+        <Link href="/quests" className="text-accent hover:text-accent">
           quests <ArrowRight size={12} className="inline" />
         </Link>
         .
@@ -291,7 +297,7 @@ function NextStep({ score }: { score: number }) {
       <p className="text-gray-300">
         Council-eligible. If you&apos;re active in the community, watch{' '}
         {/* NAV-5: /elections now redirects to /governance?tab=elections */}
-        <Link href="/governance?tab=elections" className="text-cyan-300 hover:text-cyan-200">
+        <Link href="/governance?tab=elections" className="text-accent hover:text-accent">
           upcoming elections <ArrowRight size={12} className="inline" />
         </Link>{' '}
         for a chance to stand for council.
@@ -301,7 +307,7 @@ function NextStep({ score }: { score: number }) {
   return (
     <p className="text-gray-300">
       Elite tier. You can{' '}
-      <Link href="/profile" className="text-cyan-300 hover:text-cyan-200">
+      <Link href="/profile" className="text-accent hover:text-accent">
         endorse other users <ArrowRight size={12} className="inline" />
       </Link>{' '}
       to help them build trust, and you&apos;re paying the minimum 0.25% fee on every payment.

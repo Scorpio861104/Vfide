@@ -17,10 +17,32 @@
  */
 
 import { useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { Sliders, AlertCircle } from 'lucide-react';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 import { GlassCard, containerVariants, itemVariants } from './shared';
+
+const SCORE_SIM_COPY = {
+  'en-US': {
+    title: 'Score Projection',
+    subtitle: 'Estimate where your ProofScore could land over the next few months. Projections are based on the Seer contract\'s real on-chain bounds, not invented per-action point values.',
+    activityLabel: 'Activity level',
+    monthsLabel: 'Months ahead',
+    todayLabel: 'Today',
+    trajectoryLabel: 'Trajectory',
+    nowLabel: 'now',
+  },
+  'es-ES': {
+    title: 'Proyección de score',
+    subtitle: 'Estima dónde puede quedar tu ProofScore en los próximos meses. Las proyecciones usan límites reales on-chain del contrato Seer.',
+    activityLabel: 'Nivel de actividad',
+    monthsLabel: 'Meses hacia adelante',
+    todayLabel: 'Hoy',
+    trajectoryLabel: 'Trayectoria',
+    nowLabel: 'ahora',
+  },
+};
 
 // Real Seer contract constants (see contracts/Seer.sol)
 const MAX_SINGLE_REWARD = 100;         // max delta per operator call
@@ -53,14 +75,20 @@ const ACTIVITY_LABELS: Record<ActivityLevel, string> = {
 
 function project(currentScore: number, monthlyGain: number, months: number): number {
   let score = currentScore;
+  // Decay is INACTIVITY-triggered in the Seer contract: it only applies to users
+  // with no activity, and only after a 90-day (~3 month) grace (decayStartDays = 90).
+  // An active user (monthlyGain > 0) keeps resetting that clock, so they never decay.
+  const isInactive = monthlyGain === 0;
   for (let i = 0; i < months; i++) {
     // Apply gain
     score += monthlyGain;
-    // Apply decay toward NEUTRAL
-    if (score > NEUTRAL) {
-      score = Math.max(NEUTRAL, score - DECAY_PER_MONTH);
-    } else if (score < NEUTRAL) {
-      score = Math.min(NEUTRAL, score + DECAY_PER_MONTH);
+    // Apply decay toward NEUTRAL only for inactive users, after the grace window.
+    if (isInactive && i >= 3) {
+      if (score > NEUTRAL) {
+        score = Math.max(NEUTRAL, score - DECAY_PER_MONTH);
+      } else if (score < NEUTRAL) {
+        score = Math.min(NEUTRAL, score + DECAY_PER_MONTH);
+      }
     }
     score = Math.max(0, Math.min(MAX_SCORE, score));
   }
@@ -77,6 +105,8 @@ function getTier(score: number): { name: string; color: string } {
 export function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
   const [activity, setActivity] = useState<ActivityLevel>('moderate');
   const [months, setMonths] = useState(6);
+  const { locale } = useLocale();
+  const copy = (SCORE_SIM_COPY as Record<string, typeof SCORE_SIM_COPY['en-US']>)[locale] ?? SCORE_SIM_COPY['en-US'];
 
   const monthlyGain = PROJECTED_MONTHLY_GAIN[activity];
 
@@ -98,11 +128,10 @@ export function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
         <GlassCard className="p-8" hover={false}>
           <h2 className="mb-2 flex items-center gap-3 text-2xl font-bold text-white">
             <Sliders className="text-cyan-400" size={28} />
-            Score Projection
+            {copy.title}
           </h2>
           <p className="mb-6 text-white/60">
-            Estimate where your ProofScore could land over the next few months. Projections are based on
-            the Seer contract&apos;s real on-chain bounds, not invented per-action point values.
+            {copy.subtitle}
           </p>
 
           <div className="mb-6 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 flex items-start gap-3">
@@ -119,7 +148,7 @@ export function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
 
           <div className="space-y-6">
             <div>
-              <label className="mb-2 block text-sm font-medium text-white/80">Activity level</label>
+              <label className="mb-2 block text-sm font-medium text-white/80">{copy.activityLabel}</label>
               <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
                 {(Object.keys(PROJECTED_MONTHLY_GAIN) as ActivityLevel[]).map((level) => (
                   <button
@@ -140,7 +169,7 @@ export function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
 
             <div>
               <label className="mb-2 block text-sm font-medium text-white/80">
-                Months ahead: <span className="text-cyan-300">{months}</span>
+                {copy.monthsLabel}: <span className="text-cyan-300">{months}</span>
               </label>
               <input
                 type="range"
@@ -158,7 +187,7 @@ export function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                <div className="text-xs uppercase tracking-wide text-white/50 mb-1">Today</div>
+                <div className="text-xs uppercase tracking-wide text-white/50 mb-1">{copy.todayLabel}</div>
                 <div className="text-3xl font-bold" style={{ color: currentTier.color }}>
                   {currentScore.toLocaleString()}
                 </div>
@@ -175,7 +204,7 @@ export function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
 
             {/* Simple sparkline showing the projection */}
             <div className="rounded-xl border border-white/10 bg-white/3 p-4">
-              <div className="text-xs uppercase tracking-wide text-white/50 mb-3">Trajectory</div>
+              <div className="text-xs uppercase tracking-wide text-white/50 mb-3">{copy.trajectoryLabel}</div>
               <div className="flex items-end gap-1 h-32">
                 {projection.map((p, i) => {
                   const height = (p.score / MAX_SCORE) * 100;
@@ -195,7 +224,7 @@ export function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
                 })}
               </div>
               <div className="flex justify-between text-xs text-white/40 mt-2">
-                <span>now</span>
+                <span>{copy.nowLabel}</span>
                 <span>month {months}</span>
               </div>
             </div>

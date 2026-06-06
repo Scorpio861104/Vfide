@@ -2,9 +2,9 @@
 pragma solidity 0.8.30;
 
 // ProofLedger (and the TRUST_NotDAO / TRUST_Zero errors) live in ProofLedger.sol.
-import {TRUST_NotDAO, TRUST_Zero, ProofLedger} from "./ProofLedger.sol";
-import {ScoringConstants} from "./lib/ScoringConstants.sol";
-import {ReentrancyGuard} from "./SharedInterfaces.sol";
+import "./ProofLedger.sol";
+import "./lib/ScoringConstants.sol";
+import "./SharedInterfaces.sol";
 
 /// ────────────────────────── Interfaces
 /// @notice IVaultHub_Trust
@@ -105,11 +105,7 @@ interface IScoreSource {
 /// @author Vfide
 
 contract Seer is ReentrancyGuard {
-    enum PolicyClass {
-        Critical,
-        Important,
-        Operational
-    }
+    enum PolicyClass { Critical, Important, Operational }
 
     /// @notice LedgerSet
     /// @param ledger ledger
@@ -216,11 +212,11 @@ contract Seer is ReentrancyGuard {
     ProofLedger public ledger;
     /// @notice vaultHub
     IVaultHub_Trust public vaultHub;
-
+    
     // Reference to SeerSocial extension for endorsement bonus calculation
     /// @notice seerSocial
     address public seerSocial;
-
+    
     // Reference to SeerAutonomous for automatic enforcement cascading
     /// @notice seerAutonomous
     address public seerAutonomous;
@@ -257,7 +253,7 @@ contract Seer is ReentrancyGuard {
 
     /// @notice _deltaInProgress
     mapping(address => bool) private _deltaInProgress;
-
+    
     // Badge system for VFIDEBadgeNFT integration
     /// @notice hasBadge
     mapping(address => mapping(bytes32 => bool)) public hasBadge;
@@ -299,27 +295,27 @@ contract Seer is ReentrancyGuard {
     /// @notice BADGE_HEADHUNTER
     bytes32 private constant BADGE_HEADHUNTER = 0x2dc8346db034c7eff3ea2652cae6a78f72280626c9d475257c4476e92e18e9df;
     /// @notice BADGE_DAILY_CHAMPION
-    bytes32 private constant BADGE_DAILY_CHAMPION = 0xd33d23312f0938ef21668aa46fd5bd7b72db718fcdd7e30d1e9db0ea46420720;
+    bytes32 private constant BADGE_DAILY_CHAMPION        = 0xd33d23312f0938ef21668aa46fd5bd7b72db718fcdd7e30d1e9db0ea46420720;
     /// @notice BADGE_PEACEMAKER
-    bytes32 private constant BADGE_PEACEMAKER = 0xacf4336c61c8a8031abec411f918f29aa8a8d0d7d07ae250391d186289fb4999;
+    bytes32 private constant BADGE_PEACEMAKER            = 0xacf4336c61c8a8031abec411f918f29aa8a8d0d7d07ae250391d186289fb4999;
     /// @notice BADGE_MENTOR
-    bytes32 private constant BADGE_MENTOR = 0x4ad701a62eb4bddf2c4f992ebf56952b66972847c21daeab6931b6b4aa89a4eb;
+    bytes32 private constant BADGE_MENTOR                = 0x4ad701a62eb4bddf2c4f992ebf56952b66972847c21daeab6931b6b4aa89a4eb;
     /// @notice BADGE_INSTANT_SETTLEMENT
-    bytes32 private constant BADGE_INSTANT_SETTLEMENT = 0xe2a717c0595726a19d429ba65a7be318c309e2bbfbe0d178266ba0266404b280;
+    bytes32 private constant BADGE_INSTANT_SETTLEMENT    = 0xe2a717c0595726a19d429ba65a7be318c309e2bbfbe0d178266ba0266404b280;
     /// @notice BADGE_ZERO_DISPUTE
-    bytes32 private constant BADGE_ZERO_DISPUTE = 0x8cd7ae4080d5a7057c8858e5c9e0a698fbc88b319a304fbaaae0f5c2be242349;
+    bytes32 private constant BADGE_ZERO_DISPUTE          = 0x8cd7ae4080d5a7057c8858e5c9e0a698fbc88b319a304fbaaae0f5c2be242349;
     /// @notice BADGE_REDEMPTION
-    bytes32 private constant BADGE_REDEMPTION = 0xf55c3c85690d0abf93de8c24ececede3ee62e529020683594957b8e0c109ace1;
+    bytes32 private constant BADGE_REDEMPTION            = 0xf55c3c85690d0abf93de8c24ececede3ee62e529020683594957b8e0c109ace1;
     /// @notice BADGE_CENTURY_ENDORSER
-    bytes32 private constant BADGE_CENTURY_ENDORSER = 0x66071085b8de5ddfb56be1bbf93230fbaa1b5a4a7ed21f7ca2ec8b760127b082;
+    bytes32 private constant BADGE_CENTURY_ENDORSER      = 0x66071085b8de5ddfb56be1bbf93230fbaa1b5a4a7ed21f7ca2ec8b760127b082;
     /// @notice BADGE_WHALE_SLAYER
-    bytes32 private constant BADGE_WHALE_SLAYER = 0x27b035d29cbd235e68f8e722fb80b6f9a31122fb2c3bce79340725e804fc9992;
+    bytes32 private constant BADGE_WHALE_SLAYER          = 0x27b035d29cbd235e68f8e722fb80b6f9a31122fb2c3bce79340725e804fc9992;
     /// @notice BADGE_DIVERSIFICATION_MASTER
     bytes32 private constant BADGE_DIVERSIFICATION_MASTER = 0x7c3d6722688d7e04217fd02beb9ee0abaf5dd8c4c65c6ad4846a80aae94ca27d;
     /// @notice BADGE_BUG_BOUNTY
-    bytes32 private constant BADGE_BUG_BOUNTY = 0x5c96081090ee4a64cc21b4a34b2247212174b7b9afec075a3d09fd229b01e550;
+    bytes32 private constant BADGE_BUG_BOUNTY            = 0x5c96081090ee4a64cc21b4a34b2247212174b7b9afec075a3d09fd229b01e550;
     /// @notice BADGE_TRANSLATOR
-    bytes32 private constant BADGE_TRANSLATOR = 0x372cedd1d27b066a923b896eea7904ca9ef57e79d18aa00ae08d276de72c77b1;
+    bytes32 private constant BADGE_TRANSLATOR            = 0x372cedd1d27b066a923b896eea7904ca9ef57e79d18aa00ae08d276de72c77b1;
 
     // ═══════════════════════════════════════════════════════════════════════
     // ═══════════════════════════════════════════════════════════════════════
@@ -327,11 +323,11 @@ contract Seer is ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     // All endorsement/mentorship state and operations are handled by the
     // SeerSocial contract. Use seerSocial address to interact directly.
-
+    
     // ═══════════════════════════════════════════════════════════════════════
     // OPERATOR SYSTEM - Allows authorized contracts to call reward/punish
     // ═══════════════════════════════════════════════════════════════════════
-
+    
     /// @notice operators
     mapping(address => bool) public operators;
     /// @notice operatorAddedAt
@@ -340,7 +336,7 @@ contract Seer is ReentrancyGuard {
     uint64 public constant OPERATOR_WARMUP = 24 hours;
     /// @notice paused
     bool public paused;
-
+    
     // C-2 FIX: Rate limiting for operators to prevent score inflation attacks
     /// @notice lastOperatorRewardTime
     mapping(address => mapping(address => uint64)) public lastOperatorRewardTime;
@@ -363,85 +359,85 @@ contract Seer is ReentrancyGuard {
     /// @notice maxDailyOperatorPunish
     uint16 public maxDailyOperatorPunish = 200; // Max 2% score reduction per day per operator-subject pair
 
-    // F-15 FIX: Cross-operator per-subject daily cap to prevent coordinated operator abuse
-    /// @notice subjectGlobalRewardResetTime
-    mapping(address => uint64) public subjectGlobalRewardResetTime;
-    /// @notice subjectGlobalRewardTotal
-    mapping(address => uint32) public subjectGlobalRewardTotal;
-    /// @notice subjectGlobalPunishResetTime
-    mapping(address => uint64) public subjectGlobalPunishResetTime;
-    /// @notice subjectGlobalPunishTotal
-    mapping(address => uint32) public subjectGlobalPunishTotal;
-    /// @notice maxDailySubjectDelta
-    uint32 public maxDailySubjectDelta = 300; // Max 3% per day from ALL operators combined
-    /// F-16 FIX: Limit the maximum score delta any single DAO setScore() call can make
-    // H-5 FIX: Reduced from 2000 (20%) to 500 (5%) to limit DAO manipulation velocity
-    /// @notice maxDAOScoreChange
-    uint16 public constant maxDAOScoreChange = 500; // Max 5% change per call
-
-    // S-04 FIX: Rate limit DAO score changes to prevent rapid cascading manipulation
-    // H-5 FIX: Increased cooldown from 1 hour to 4 hours
-    /// @notice lastDAOScoreChange
-    mapping(address => uint64) public lastDAOScoreChange;
-    /// @notice DAO_SCORE_COOLDOWN
-    uint64 public constant DAO_SCORE_COOLDOWN = 4 hours;
-
+        // F-15 FIX: Cross-operator per-subject daily cap to prevent coordinated operator abuse
+        /// @notice subjectGlobalRewardResetTime
+        mapping(address => uint64) public subjectGlobalRewardResetTime;
+        /// @notice subjectGlobalRewardTotal
+        mapping(address => uint32) public subjectGlobalRewardTotal;
+        /// @notice subjectGlobalPunishResetTime
+        mapping(address => uint64) public subjectGlobalPunishResetTime;
+        /// @notice subjectGlobalPunishTotal
+        mapping(address => uint32) public subjectGlobalPunishTotal;
+        /// @notice maxDailySubjectDelta
+        uint32 public maxDailySubjectDelta = 300; // Max 3% per day from ALL operators combined
+        /// F-16 FIX: Limit the maximum score delta any single DAO setScore() call can make
+        // H-5 FIX: Reduced from 2000 (20%) to 500 (5%) to limit DAO manipulation velocity
+        /// @notice maxDAOScoreChange
+        uint16 public constant maxDAOScoreChange = 500; // Max 5% change per call
+        
+        // S-04 FIX: Rate limit DAO score changes to prevent rapid cascading manipulation
+        // H-5 FIX: Increased cooldown from 1 hour to 4 hours
+        /// @notice lastDAOScoreChange
+        mapping(address => uint64) public lastDAOScoreChange;
+        /// @notice DAO_SCORE_COOLDOWN
+        uint64 public constant DAO_SCORE_COOLDOWN = 4 hours;
+    
     // ═══════════════════════════════════════════════════════════════════════
     // SCORE HISTORY - Track score changes for analytics and dispute resolution
     // ═══════════════════════════════════════════════════════════════════════
-
+    
     struct ScoreChange {
         uint16 oldScore;
         uint16 newScore;
         uint64 timestamp;
-        bytes32 reasonHash; // keccak256 of reason string for gas efficiency
+        bytes32 reasonHash;  // keccak256 of reason string for gas efficiency
     }
-
+    
     /// @notice scoreHistory
     mapping(address => ScoreChange[50]) public scoreHistory;
     /// @notice scoreHistoryHead
-    mapping(address => uint8) public scoreHistoryHead; // S-05 FIX: circular buffer write pointer
+    mapping(address => uint8) public scoreHistoryHead;   // S-05 FIX: circular buffer write pointer
     /// @notice scoreHistoryCount
-    mapping(address => uint8) public scoreHistoryCount; // S-05 FIX: number of valid entries (0..50)
+    mapping(address => uint8) public scoreHistoryCount;  // S-05 FIX: number of valid entries (0..50)
     /// @notice lastActivity
-    mapping(address => uint64) public lastActivity; // For decay tracking
+    mapping(address => uint64) public lastActivity;  // For decay tracking
     /// @notice MAX_HISTORY_PER_USER
-    uint8 public constant MAX_HISTORY_PER_USER = 50; // Cap history storage (fixed-size circular buffer)
-
+    uint8 public constant MAX_HISTORY_PER_USER = 50;  // Cap history storage (fixed-size circular buffer)
+    
     // ═══════════════════════════════════════════════════════════════════════
     // SCORE DECAY - Inactive users slowly drift toward neutral
     // ═══════════════════════════════════════════════════════════════════════
-
+    
     /// @notice decayEnabled
-    bool public decayEnabled = true; // Enabled by default per Seer Constitution §2-3: penalties must decay
+    bool public decayEnabled = true;  // Enabled by default per Seer Constitution §2-3: penalties must decay
     /// @notice decayStartDays
-    uint64 public decayStartDays = 90; // Days of inactivity before decay starts
+    uint64 public decayStartDays = 90;  // Days of inactivity before decay starts
     /// @notice decayPerMonth
-    uint16 public decayPerMonth = 100; // Score points lost per month toward neutral
-
+    uint16 public decayPerMonth = 100;  // Score points lost per month toward neutral
+    
     // ═══════════════════════════════════════════════════════════════════════
     // DECENTRALIZED SCORE SOURCES - On-chain metrics contribute to ProofScore
     // ═══════════════════════════════════════════════════════════════════════
-
+    
     struct ScoreSourceInfo {
         address source;
         string name;
-        uint8 weight; // Weight out of 100
+        uint8 weight;   // Weight out of 100
         bool active;
     }
-
+    
     /// @notice scoreSources
     ScoreSourceInfo[] public scoreSources;
     /// @notice scoreSourceIndex
     mapping(address => uint256) public scoreSourceIndex; // source => index+1 (0 = not registered)
-
+    
     // How much weight DAO-set scores vs on-chain calculated scores have
     // daoWeight + onChainWeight should = 100
     // Default: 100% DAO (backwards compatible), DAO can increase on-chain weight over time
     /// @notice daoScoreWeight
-    uint8 public daoScoreWeight = 100; // 100% from DAO-set/automated scores
+    uint8 public daoScoreWeight = 100;     // 100% from DAO-set/automated scores
     /// @notice onChainScoreWeight
-    uint8 public onChainScoreWeight = 0; // 0% from external on-chain sources (enable via DAO)
+    uint8 public onChainScoreWeight = 0;   // 0% from external on-chain sources (enable via DAO)
 
     /// @notice Minimum on-chain weight that must be maintained once active score sources are registered.
     /// @dev Prevents a captured DAO from silently reclaiming 100% score authority after community
@@ -454,17 +450,17 @@ contract Seer is ReentrancyGuard {
     /// @notice MAX_SCORE
     uint16 public constant MAX_SCORE = 10000;
     /// @notice NEUTRAL
-    uint16 public constant NEUTRAL = 5000;
+    uint16 public constant NEUTRAL   = 5000;
 
     // WHITEPAPER: Low Trust ≤40% (4000), High Trust ≥80% (8000)
     /// @notice lowTrustThreshold
-    uint16 public lowTrustThreshold = 4000; // ≤4000 → max fees (40%)
+    uint16 public lowTrustThreshold   = 4000;   // ≤4000 → max fees (40%)
     /// @notice highTrustThreshold
-    uint16 public highTrustThreshold = 8000; // ≥8000 → min fees (80%)
+    uint16 public highTrustThreshold  = 8000;   // ≥8000 → min fees (80%)
     /// @notice minForGovernance
-    uint16 public minForGovernance = ScoringConstants.MIN_GOVERNANCE; // voting/standing (54%)
+    uint16 public minForGovernance    = ScoringConstants.MIN_GOVERNANCE;   // voting/standing (54%)
     /// @notice minForMerchant
-    uint16 public minForMerchant = 5600; // to remain listed (56%)
+    uint16 public minForMerchant      = 5600;   // to remain listed (56%)
 
     /// @notice onlyDAO
     modifier onlyDAO() {
@@ -476,7 +472,7 @@ contract Seer is ReentrancyGuard {
     function _checkDAO() internal view {
         if (msg.sender != dao) revert TRUST_NotDAO();
     }
-
+    
     /// @notice onlyOperator
     modifier onlyOperator() {
         if (msg.sender != dao) {
@@ -488,7 +484,7 @@ contract Seer is ReentrancyGuard {
         }
         _;
     }
-
+    
     /// @notice onlyNotPaused
     modifier onlyNotPaused() {
         if (paused) revert TRUST_Paused();
@@ -516,7 +512,7 @@ contract Seer is ReentrancyGuard {
         emit LedgerSet(_ledger);
         emit HubSet(_hub);
     }
-
+    
     /**
      * @notice Set the SeerSocial extension contract for endorsement calculations
      * @param _seerSocial The SeerSocial contract address
@@ -526,7 +522,7 @@ contract Seer is ReentrancyGuard {
         seerSocial = _seerSocial;
         emit SeerSocialSet(_seerSocial);
     }
-
+    
     /**
      * @notice Set the SeerAutonomous contract for automatic enforcement
      * @param _seerAutonomous The SeerAutonomous contract address
@@ -554,7 +550,7 @@ contract Seer is ReentrancyGuard {
         policyGuard = _policyGuard;
         emit PolicyGuardSet(oldGuard, _policyGuard);
     }
-
+    
     /**
      * @notice Transfer DAO control to a new address (for DAO migration)
      * @param newDAO The new DAO address
@@ -568,7 +564,7 @@ contract Seer is ReentrancyGuard {
 
     /// @notice applyDAOChange
     function applyDAOChange() external onlyDAO nonReentrant {
-        if (pendingDAOAt == 0 || block.timestamp < pendingDAOAt) revert TRUST_InvalidState();
+           if (pendingDAOAt == 0 || block.timestamp < pendingDAOAt) revert TRUST_InvalidState();
         address oldDAO = dao;
         dao = pendingDAO;
         delete pendingDAO;
@@ -584,7 +580,7 @@ contract Seer is ReentrancyGuard {
         delete pendingDAOAt;
         emit DAOChangeCancelled();
     }
-
+    
     /**
      * @notice Set operator status for an address (allows calling reward/punish)
      * @param operator The address to authorize/deauthorize
@@ -601,7 +597,7 @@ contract Seer is ReentrancyGuard {
         emit OperatorSet(operator, authorized);
         _logSystem();
     }
-
+    
     /**
      * @notice Emergency pause/unpause score modifications
      * @param _paused True to pause, false to unpause
@@ -611,7 +607,7 @@ contract Seer is ReentrancyGuard {
         emit Paused(_paused);
         _logSystem();
     }
-
+    
     /**
      * @notice Configure score decay parameters
      * @param enabled Whether decay is enabled
@@ -642,19 +638,19 @@ contract Seer is ReentrancyGuard {
         if (high > 9500) revert TRUST_Bounds(); // At most 95%
         if (minGov < 3000) revert TRUST_Bounds(); // At least 30%
         if (minMerch < 3000) revert TRUST_Bounds(); // At least 30%
-        lowTrustThreshold = low;
+        lowTrustThreshold  = low;
         highTrustThreshold = high;
-        minForGovernance = minGov;
-        minForMerchant = minMerch;
+        minForGovernance   = minGov;
+        minForMerchant     = minMerch;
         emit ThresholdsSet(low, high, minGov, minMerch);
         _logSystem();
         _consumePolicyChange(SEL_SET_THRESHOLDS, PolicyClass.Critical);
     }
-
+    
     // ═══════════════════════════════════════════════════════════════════════
     //                    DECENTRALIZED SCORE SOURCE MANAGEMENT
     // ═══════════════════════════════════════════════════════════════════════
-
+    
     /// @notice MAX_SCORE_SOURCES
     uint256 public constant MAX_SCORE_SOURCES = 50; // I-11: Cap to prevent gas amplification in transfer path
 
@@ -681,14 +677,19 @@ contract Seer is ReentrancyGuard {
         if (scoreSourceIndex[source] != 0) revert TRUST_AlreadySet();
         if (scoreSources.length >= MAX_SCORE_SOURCES) revert TRUST_Limit();
         if (_activeScoreSourceWeight() + weight > 100) revert TRUST_Bounds();
-
-        scoreSources.push(ScoreSourceInfo({source: source, name: name, weight: weight, active: true}));
+        
+        scoreSources.push(ScoreSourceInfo({
+            source: source,
+            name: name,
+            weight: weight,
+            active: true
+        }));
         scoreSourceIndex[source] = scoreSources.length; // 1-indexed
-
+        
         emit ScoreSourceAdded(source, name, weight);
         _logSystem();
     }
-
+    
     /**
      * @notice Remove an on-chain score source
      * @param source source
@@ -710,7 +711,7 @@ contract Seer is ReentrancyGuard {
         emit ScoreSourceRemoved(source);
         _logSystem();
     }
-
+    
     /**
      * @notice Set the balance between DAO-set and on-chain scores
      * @param daoWeight Weight for DAO-set scores (0-100)
@@ -724,11 +725,9 @@ contract Seer is ReentrancyGuard {
         // Count active score sources to determine if the floor applies.
         uint256 activeSources = 0;
         uint256 _ssLen2 = scoreSources.length;
-        for (uint256 i = 0; i < _ssLen2; ) {
+        for (uint256 i = 0; i < _ssLen2;) {
             if (scoreSources[i].active) ++activeSources;
-            unchecked {
-                ++i;
-            }
+            unchecked { ++i; }
         }
         if (activeSources > 0 && onChainWeight < MIN_ONCHAIN_WEIGHT_WITH_SOURCES) revert TRUST_Bounds();
         daoScoreWeight = daoWeight;
@@ -874,7 +873,12 @@ contract Seer is ReentrancyGuard {
 
         uint8 head = scoreHistoryHead[subject];
         uint16 currentScore = getScore(subject);
-        ScoreChange memory oldest = ScoreChange({oldScore: currentScore, newScore: currentScore, timestamp: 0, reasonHash: bytes32(0)});
+        ScoreChange memory oldest = ScoreChange({
+            oldScore: currentScore,
+            newScore: currentScore,
+            timestamp: 0,
+            reasonHash: bytes32(0)
+        });
 
         for (uint8 i = 0; i < count; ++i) {
             uint8 idx = uint8((uint256(head) + MAX_HISTORY_PER_USER - 1 - i) % MAX_HISTORY_PER_USER);
@@ -892,7 +896,7 @@ contract Seer is ReentrancyGuard {
         // If oldest.oldScore is above NEUTRAL, cap at NEUTRAL; if below, return the lower value.
         return oldest.oldScore < NEUTRAL ? oldest.oldScore : NEUTRAL;
     }
-
+    
     /**
      * @notice Calculate score from on-chain sources only
      */
@@ -902,15 +906,15 @@ contract Seer is ReentrancyGuard {
     /// @return _uint16 _uint16
     function calculateOnChainScore(address subject) public view returns (uint16) {
         if (subject == address(0)) return NEUTRAL;
-
+        
         uint256 totalWeight = 0;
         uint256 weightedScore = 0;
-
+        
         // Aggregate from registered sources
         uint256 _ssLen3 = scoreSources.length;
         for (uint256 i = 0; i < _ssLen3; ++i) {
             if (!scoreSources[i].active) continue;
-
+            
             uint8 sourceWeight = scoreSources[i].weight;
             // slither-disable-next-line unused-return  // 2nd tuple element (confidence) intentionally ignored
             try IScoreSource(scoreSources[i].source).getScoreContribution(subject) returns (uint16 score, uint8) {
@@ -924,7 +928,7 @@ contract Seer is ReentrancyGuard {
                 // Source failed, skip it
             }
         }
-
+        
         // Add automated score as a source
         uint16 automatedScore = calculateAutomatedScore(subject);
         if (totalWeight > 100) {
@@ -935,13 +939,13 @@ contract Seer is ReentrancyGuard {
             weightedScore += uint256(automatedScore) * automatedWeight;
             totalWeight += automatedWeight;
         }
-
+        
         if (totalWeight == 0) return NEUTRAL;
-
+        
         uint256 finalScore = weightedScore / totalWeight;
         if (finalScore > MAX_SCORE) finalScore = MAX_SCORE;
         if (finalScore < MIN_SCORE) finalScore = MIN_SCORE;
-
+        
         return uint16(finalScore);
     }
 
@@ -952,9 +956,9 @@ contract Seer is ReentrancyGuard {
     /// @return _uint16 _uint16
     function calculateAutomatedScore(address subject) public view returns (uint16) {
         if (subject == address(0)) return NEUTRAL;
-
+        
         uint256 score = NEUTRAL;
-
+        
         // Vault existence bonus (+500, 10x scale)
         if (address(vaultHub) != address(0)) {
             address vault = vaultHub.vaultOf(subject);
@@ -962,22 +966,22 @@ contract Seer is ReentrancyGuard {
                 score += 500;
             }
         }
-
+        
         // Badge bonuses - badges grant ProofScore boosts
         // These are additive and create a visible reputation ladder
         score += _calculateBadgeBonus(subject);
 
         // Social endorsements - time-limited boosts that decay automatically
         score += _calculateEndorsementBonus(subject);
-
+        
         // Clamp to valid range
         if (score > MAX_SCORE) score = MAX_SCORE;
-
+        
         // forge-lint: disable-next-line(unsafe-typecast)
         // Safe: score is clamped to MAX_SCORE (10000) which fits in uint16
         return uint16(score);
     }
-
+    
     /**
      * @notice Calculate ProofScore bonus from active badges
      * @param subject The user address
@@ -985,68 +989,29 @@ contract Seer is ReentrancyGuard {
      */
     function _calculateBadgeBonus(address subject) internal view returns (uint256 bonus) {
         bytes32[28] memory ids;
-        ids[0] = BADGE_PIONEER;
-        ids[1] = BADGE_FOUNDING_MEMBER;
-        ids[2] = BADGE_EARLY_TESTER;
-        ids[3] = BADGE_ACTIVE_TRADER;
-        ids[4] = BADGE_GOVERNANCE_VOTER;
-        ids[5] = BADGE_POWER_USER;
-        ids[6] = BADGE_TRUSTED_ENDORSER;
-        ids[7] = BADGE_COMMUNITY_BUILDER;
-        ids[8] = BADGE_VERIFIED_MERCHANT;
-        ids[9] = BADGE_ELITE_MERCHANT;
-        ids[10] = BADGE_ELITE_ACHIEVER;
-        ids[11] = BADGE_FRAUD_HUNTER;
-        ids[12] = BADGE_GUARDIAN;
-        ids[13] = BADGE_CLEAN_RECORD;
-        ids[14] = BADGE_CONTRIBUTOR;
-        ids[15] = BADGE_EDUCATOR;
-        ids[16] = BADGE_HEADHUNTER;
-        ids[17] = BADGE_DAILY_CHAMPION;
-        ids[18] = BADGE_PEACEMAKER;
-        ids[19] = BADGE_MENTOR;
-        ids[20] = BADGE_INSTANT_SETTLEMENT;
-        ids[21] = BADGE_ZERO_DISPUTE;
-        ids[22] = BADGE_REDEMPTION;
-        ids[23] = BADGE_CENTURY_ENDORSER;
-        ids[24] = BADGE_WHALE_SLAYER;
-        ids[25] = BADGE_DIVERSIFICATION_MASTER;
-        ids[26] = BADGE_BUG_BOUNTY;
-        ids[27] = BADGE_TRANSLATOR;
+        ids[0]  = BADGE_PIONEER;              ids[1]  = BADGE_FOUNDING_MEMBER;
+        ids[2]  = BADGE_EARLY_TESTER;         ids[3]  = BADGE_ACTIVE_TRADER;
+        ids[4]  = BADGE_GOVERNANCE_VOTER;     ids[5]  = BADGE_POWER_USER;
+        ids[6]  = BADGE_TRUSTED_ENDORSER;     ids[7]  = BADGE_COMMUNITY_BUILDER;
+        ids[8]  = BADGE_VERIFIED_MERCHANT;    ids[9]  = BADGE_ELITE_MERCHANT;
+        ids[10] = BADGE_ELITE_ACHIEVER;       ids[11] = BADGE_FRAUD_HUNTER;
+        ids[12] = BADGE_GUARDIAN;             ids[13] = BADGE_CLEAN_RECORD;
+        ids[14] = BADGE_CONTRIBUTOR;          ids[15] = BADGE_EDUCATOR;
+        ids[16] = BADGE_HEADHUNTER;           ids[17] = BADGE_DAILY_CHAMPION;
+        ids[18] = BADGE_PEACEMAKER;           ids[19] = BADGE_MENTOR;
+        ids[20] = BADGE_INSTANT_SETTLEMENT;   ids[21] = BADGE_ZERO_DISPUTE;
+        ids[22] = BADGE_REDEMPTION;           ids[23] = BADGE_CENTURY_ENDORSER;
+        ids[24] = BADGE_WHALE_SLAYER;         ids[25] = BADGE_DIVERSIFICATION_MASTER;
+        ids[26] = BADGE_BUG_BOUNTY;           ids[27] = BADGE_TRANSLATOR;
         uint16[28] memory pts;
-        pts[0] = 30;
-        pts[1] = 50;
-        pts[2] = 25;
-        pts[3] = 20;
-        pts[4] = 25;
-        pts[5] = 40;
-        pts[6] = 30;
-        pts[7] = 35;
-        pts[8] = 40;
-        pts[9] = 60;
-        pts[10] = 50;
-        pts[11] = 50;
-        pts[12] = 40;
-        pts[13] = 20;
-        pts[14] = 40;
-        pts[15] = 30;
-        pts[16] = 35;
-        pts[17] = 15;
-        pts[18] = 25;
-        pts[19] = 30;
-        pts[20] = 20;
-        pts[21] = 25;
-        pts[22] = 30;
-        pts[23] = 35;
-        pts[24] = 25;
-        pts[25] = 30;
-        pts[26] = 50;
-        pts[27] = 25;
-        for (uint256 i = 0; i < 28; ) {
+        pts[0]=30;  pts[1]=50;  pts[2]=25;  pts[3]=20;  pts[4]=25;  pts[5]=40;
+        pts[6]=30;  pts[7]=35;  pts[8]=40;  pts[9]=60;  pts[10]=50; pts[11]=50;
+        pts[12]=40; pts[13]=20; pts[14]=40; pts[15]=30; pts[16]=35; pts[17]=15;
+        pts[18]=25; pts[19]=30; pts[20]=20; pts[21]=25; pts[22]=30; pts[23]=35;
+        pts[24]=25; pts[25]=30; pts[26]=50; pts[27]=25;
+        for (uint256 i = 0; i < 28;) {
             if (_checkActiveBadge(subject, ids[i])) bonus += pts[i];
-            unchecked {
-                ++i;
-            }
+            unchecked { ++i; }
         }
     }
 
@@ -1063,7 +1028,7 @@ contract Seer is ReentrancyGuard {
             return 0;
         }
     }
-
+    
     /**
      * @notice Check if badge is active (exists and not expired)
      * @param subject The user address
@@ -1105,6 +1070,7 @@ contract Seer is ReentrancyGuard {
         _logEv(subject, newScore, reason);
     }
 
+
     /// Light-weight behavior hooks (can be called by authorized modules).
     /// @notice reward
     /// @param subject subject
@@ -1113,8 +1079,9 @@ contract Seer is ReentrancyGuard {
     function reward(address subject, uint16 delta, string calldata reason) external onlyOperator onlyNotPaused nonReentrant {
         // C-2 FIX: Rate limit operator rewards to prevent score inflation
         if (delta > maxSingleReward) revert TRUST_Bounds();
-
-        if (operatorGlobalDailyResetTime[msg.sender] == 0 || block.timestamp >= uint256(operatorGlobalDailyResetTime[msg.sender]) + 1 days) {
+        
+        if (operatorGlobalDailyResetTime[msg.sender] == 0 ||
+            block.timestamp >= uint256(operatorGlobalDailyResetTime[msg.sender]) + 1 days) {
             operatorGlobalDailyResetTime[msg.sender] = uint64(block.timestamp);
             operatorGlobalDailyTotal[msg.sender] = 0;
         }
@@ -1127,13 +1094,14 @@ contract Seer is ReentrancyGuard {
             lastOperatorRewardTime[msg.sender][subject] = uint64(block.timestamp);
             dailyOperatorRewardTotal[msg.sender][subject] = 0;
         }
-
+        
         // Check daily limit per subject
         if (dailyOperatorRewardTotal[msg.sender][subject] + delta > maxDailyOperatorReward) revert TRUST_Limit();
-
+        
         dailyOperatorRewardTotal[msg.sender][subject] += delta;
         // F-15 FIX: Cross-operator per-subject daily reward cap
-        if (subjectGlobalRewardResetTime[subject] == 0 || block.timestamp >= uint256(subjectGlobalRewardResetTime[subject]) + 1 days) {
+        if (subjectGlobalRewardResetTime[subject] == 0 ||
+            block.timestamp >= uint256(subjectGlobalRewardResetTime[subject]) + 1 days) {
             subjectGlobalRewardResetTime[subject] = uint64(block.timestamp);
             subjectGlobalRewardTotal[subject] = 0;
         }
@@ -1149,8 +1117,9 @@ contract Seer is ReentrancyGuard {
     function punish(address subject, uint16 delta, string calldata reason) external onlyOperator onlyNotPaused nonReentrant {
         // C-2 FIX: Rate limit punishments too
         if (delta > maxSingleReward) revert TRUST_Bounds();
-
-        if (operatorGlobalDailyResetTime[msg.sender] == 0 || block.timestamp >= uint256(operatorGlobalDailyResetTime[msg.sender]) + 1 days) {
+        
+        if (operatorGlobalDailyResetTime[msg.sender] == 0 ||
+            block.timestamp >= uint256(operatorGlobalDailyResetTime[msg.sender]) + 1 days) {
             operatorGlobalDailyResetTime[msg.sender] = uint64(block.timestamp);
             operatorGlobalDailyTotal[msg.sender] = 0;
         }
@@ -1163,12 +1132,13 @@ contract Seer is ReentrancyGuard {
             lastOperatorPunishTime[msg.sender][subject] = uint64(block.timestamp);
             dailyOperatorPunishTotal[msg.sender][subject] = 0;
         }
-
+        
         if (dailyOperatorPunishTotal[msg.sender][subject] + delta > maxDailyOperatorPunish) revert TRUST_Limit();
-
+        
         dailyOperatorPunishTotal[msg.sender][subject] += delta;
         // F-15 FIX: Cross-operator per-subject daily punish cap
-        if (subjectGlobalPunishResetTime[subject] == 0 || block.timestamp >= uint256(subjectGlobalPunishResetTime[subject]) + 1 days) {
+        if (subjectGlobalPunishResetTime[subject] == 0 ||
+            block.timestamp >= uint256(subjectGlobalPunishResetTime[subject]) + 1 days) {
             subjectGlobalPunishResetTime[subject] = uint64(block.timestamp);
             subjectGlobalPunishTotal[subject] = 0;
         }
@@ -1176,7 +1146,7 @@ contract Seer is ReentrancyGuard {
         subjectGlobalPunishTotal[subject] += delta;
         _delta(subject, -int256(uint256(delta)), reason, 502);
     }
-
+    
     /// @notice DAO can set operator rate limits
     /// @param _maxSingle _maxSingle
     /// @param _maxDaily _maxDaily
@@ -1195,7 +1165,11 @@ contract Seer is ReentrancyGuard {
     /// @notice DAO can set operator punishment and cross-operator subject limits
     /// @param _maxDailyPunish _maxDailyPunish
     /// @param _maxDailySubject _maxDailySubject
-    function setOperatorPunishLimits(uint16 _maxDailyPunish, uint32 _maxDailySubject) external onlyDAO nonReentrant {
+    function setOperatorPunishLimits(uint16 _maxDailyPunish, uint32 _maxDailySubject)
+        external
+        onlyDAO
+        nonReentrant
+    {
         if (_maxDailyPunish > 1000) revert TRUST_Bounds();
         if (_maxDailySubject > 2000) revert TRUST_Bounds();
         if (_maxDailySubject < _maxDailyPunish) revert TRUST_Bounds();
@@ -1229,11 +1203,11 @@ contract Seer is ReentrancyGuard {
         lastActivity[subject] = uint64(block.timestamp);
 
         _syncBurnRouterScore(subject);
-
+        
         emit ScoreSet(subject, cur, newScore, reason);
         emit ScoreReasonCode(subject, reasonCode, int16(newScore) - int16(cur), msg.sender);
         _logEv(subject, uint256(int256(d < 0 ? -d : d)), reason);
-
+        
         // CASCADE: Notify SeerAutonomous for automatic enforcement
         if (seerAutonomous != address(0)) {
             try ISeerAutonomous(seerAutonomous).onScoreChange(subject, cur, newScore) {} catch {}
@@ -1241,7 +1215,7 @@ contract Seer is ReentrancyGuard {
 
         _deltaInProgress[subject] = false;
     }
-
+    
     /// @notice _recordHistory
     /// @param subject subject
     /// @param oldScore oldScore
@@ -1250,7 +1224,12 @@ contract Seer is ReentrancyGuard {
     function _recordHistory(address subject, uint16 oldScore, uint16 newScore, string memory reason) internal {
         // S-05 FIX: Use circular buffer (O(1)) instead of O(n) array shift
         uint8 head = scoreHistoryHead[subject];
-        scoreHistory[subject][head] = ScoreChange({oldScore: oldScore, newScore: newScore, timestamp: uint64(block.timestamp), reasonHash: keccak256(bytes(reason))});
+        scoreHistory[subject][head] = ScoreChange({
+            oldScore: oldScore,
+            newScore: newScore,
+            timestamp: uint64(block.timestamp),
+            reasonHash: keccak256(bytes(reason))
+        });
         scoreHistoryHead[subject] = uint8((uint256(head) + 1) % MAX_HISTORY_PER_USER);
         uint8 count = scoreHistoryCount[subject];
         if (count < MAX_HISTORY_PER_USER) {
@@ -1270,9 +1249,7 @@ contract Seer is ReentrancyGuard {
     /// @notice _logSystem
     function _logSystem() internal {
         address L = address(ledger);
-        if (L != address(0)) {
-            try ProofLedger(L).logSystemEvent(address(this), LOG_ACTION, msg.sender) {} catch {}
-        }
+        if (L != address(0)) { try ProofLedger(L).logSystemEvent(address(this), LOG_ACTION, msg.sender) {} catch {} }
     }
 
     /// @notice _consumePolicyChange
@@ -1290,11 +1267,9 @@ contract Seer is ReentrancyGuard {
     /// @param note note
     function _logEv(address who, uint256 amount, string memory note) internal {
         address L = address(ledger);
-        if (L != address(0)) {
-            try ProofLedger(L).logEvent(who, LOG_ACTION, amount, note) {} catch {}
-        }
+        if (L != address(0)) { try ProofLedger(L).logEvent(who, LOG_ACTION, amount, note) {} catch {} }
     }
-
+    
     /// @notice Set or clear a badge for a user (DAO-only)
     /// @param subject The user address
     /// @param badge The badge ID
@@ -1311,7 +1286,7 @@ contract Seer is ReentrancyGuard {
         }
         _logEv(subject, uint256(badge), "");
     }
-
+    
     /// @notice Check if a badge is valid (not expired)
     /// @param subject subject
     /// @param badge badge
@@ -1321,7 +1296,7 @@ contract Seer is ReentrancyGuard {
         uint256 exp = badgeExpiry[subject][badge];
         return exp == 0 || exp > block.timestamp;
     }
-
+    
     /// @notice Batch set badges for gas efficiency
     /// @param subjects Array of user addresses
     /// @param badge The badge ID to set for all subjects
@@ -1331,7 +1306,7 @@ contract Seer is ReentrancyGuard {
         uint256 len = subjects.length;
         if (len == 0 || len > 100) revert TRUST_Bounds();
         if (active && expiry > 0 && expiry <= block.timestamp) revert TRUST_Bounds();
-
+        
         for (uint256 i = 0; i < len; ++i) {
             address subject = subjects[i];
             if (subject == address(0)) revert TRUST_Zero();
@@ -1356,7 +1331,7 @@ contract Seer is ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     //                         USABILITY IMPROVEMENTS
     // ═══════════════════════════════════════════════════════════════════════
-
+    
     // Score dispute tracking
     struct ScoreDispute {
         address requester;
@@ -1365,7 +1340,7 @@ contract Seer is ReentrancyGuard {
         bool resolved;
         bool approved;
     }
-
+    
     /// @notice scoreDisputes
     mapping(address => ScoreDispute) public scoreDisputes;
     /// @notice pendingDisputeCount
@@ -1380,7 +1355,7 @@ contract Seer is ReentrancyGuard {
     /// @param approved approved
     /// @param adjustment adjustment
     event ScoreDisputeResolved(address indexed subject, bool approved, int256 adjustment);
-
+    
     /**
      * @notice Request a review of your ProofScore
      * @param reason Explanation for why you believe your score is incorrect
@@ -1389,15 +1364,21 @@ contract Seer is ReentrancyGuard {
     function requestScoreReview(string calldata reason) external nonReentrant {
         if (bytes(reason).length == 0 || bytes(reason).length > 500) revert TRUST_Bounds();
         if (scoreDisputes[msg.sender].timestamp > 0 && !scoreDisputes[msg.sender].resolved) revert TRUST_AlreadySet();
-
-        scoreDisputes[msg.sender] = ScoreDispute({requester: msg.sender, reason: reason, timestamp: uint64(block.timestamp), resolved: false, approved: false});
-
+        
+        scoreDisputes[msg.sender] = ScoreDispute({
+            requester: msg.sender,
+            reason: reason,
+            timestamp: uint64(block.timestamp),
+            resolved: false,
+            approved: false
+        });
+        
         ++pendingDisputeCount;
-
+        
         emit ScoreDisputeRequested(msg.sender, reason);
         _logEv(msg.sender, 0, reason);
     }
-
+    
     // slither-disable-next-line reentrancy-benign
     /**
      * @notice Resolve a score dispute (DAO only)
@@ -1409,10 +1390,10 @@ contract Seer is ReentrancyGuard {
         ScoreDispute storage dispute = scoreDisputes[subject];
         if (dispute.timestamp == 0) revert TRUST_NotSet();
         if (dispute.resolved) revert TRUST_AlreadySet();
-
+        
         dispute.resolved = true;
         dispute.approved = approved;
-
+        
         if (approved && adjustment != 0) {
             uint16 cur = getScore(subject);
             uint16 next = _clampScore(int256(uint256(cur)) + int256(adjustment));
@@ -1426,7 +1407,7 @@ contract Seer is ReentrancyGuard {
             emit ScoreSet(subject, cur, next, "disp_ok");
             emit ScoreReasonCode(subject, 503, int16(next) - int16(cur), msg.sender);
         }
-
+        
         if (pendingDisputeCount > 0) {
             --pendingDisputeCount;
         }
@@ -1445,7 +1426,14 @@ contract Seer is ReentrancyGuard {
      * @return onChainWeight Weight of on-chain score
      * @return hasVault Whether user has a vault (contributes +500)
      */
-    function getScoreBreakdown(address subject) external view returns (uint16 daoSetScore, uint16 onChainScore, uint16 finalScore, uint8 daoWeight, uint8 onChainWeight, bool hasVault) {
+    function getScoreBreakdown(address subject) external view returns (
+        uint16 daoSetScore,
+        uint16 onChainScore,
+        uint16 finalScore,
+        uint8 daoWeight,
+        uint8 onChainWeight,
+        bool hasVault
+    ) {
         daoSetScore = _score[subject];
         if (daoSetScore < MIN_SCORE) {
             daoSetScore = calculateAutomatedScore(subject);
@@ -1456,11 +1444,11 @@ contract Seer is ReentrancyGuard {
         onChainWeight = onChainScoreWeight;
         hasVault = address(vaultHub) != address(0) && vaultHub.vaultOf(subject) != address(0);
     }
-
+    
     // ═══════════════════════════════════════════════════════════════════════
     //                    SCORE DECAY FUNCTIONS
     // ═══════════════════════════════════════════════════════════════════════
-
+    
     /**
      * @notice Calculate decay-adjusted score for a user
      * @param subject The user to check
@@ -1468,27 +1456,31 @@ contract Seer is ReentrancyGuard {
      * @return daysInactive Number of days since last activity
      * @return decayAmount Amount of decay applied
      */
-    function getDecayAdjustedScore(address subject) public view returns (uint16 adjustedScore, uint64 daysInactive, uint16 decayAmount) {
+    function getDecayAdjustedScore(address subject) public view returns (
+        uint16 adjustedScore,
+        uint64 daysInactive,
+        uint16 decayAmount
+    ) {
         uint16 rawScore = getScore(subject);
         uint64 lastAct = lastActivity[subject];
-
+        
         // No activity recorded = no decay (new user)
         if (lastAct == 0 || !decayEnabled) {
             return (rawScore, 0, 0);
         }
-
+        
         uint64 elapsed = uint64(block.timestamp) - lastAct;
         daysInactive = elapsed / 1 days;
-
+        
         // No decay if active within grace period
         if (daysInactive < decayStartDays) {
             return (rawScore, daysInactive, 0);
         }
-
+        
         // Calculate decay: (daysInactive - decayStartDays) / 30 * decayPerMonth
         uint64 decayDays = daysInactive - decayStartDays;
         decayAmount = uint16((decayDays * uint64(decayPerMonth)) / 30);
-
+        
         // Decay toward neutral, not below/above
         if (rawScore > NEUTRAL) {
             // High scores decay down toward neutral
@@ -1508,35 +1500,35 @@ contract Seer is ReentrancyGuard {
             adjustedScore = NEUTRAL;
         }
     }
-
+    
     /**
      * @notice Apply decay to a user's stored score (callable by anyone, gas refund opportunity)
      * @param subject The user to apply decay to
      */
     function applyDecay(address subject) external onlyNotPaused nonReentrant {
         if (!decayEnabled) revert TRUST_Disabled();
-
+        
         uint64 lastAct = lastActivity[subject];
         if (lastAct == 0) revert TRUST_NotSet();
-
+        
         uint64 elapsed = uint64(block.timestamp) - lastAct;
         uint64 daysInactive = elapsed / 1 days;
         if (daysInactive < decayStartDays) revert TRUST_InvalidState();
-
+        
         (uint16 adjustedScore, , uint16 decayAmount) = getDecayAdjustedScore(subject);
-
+        
         if (decayAmount > 0) {
             uint16 oldScore = getScore(subject);
             _score[subject] = adjustedScore;
             _operatorScoreAdjustment[subject] = 0;
-            lastActivity[subject] = uint64(block.timestamp); // Reset decay timer
+            lastActivity[subject] = uint64(block.timestamp);  // Reset decay timer
             _syncBurnRouterScore(subject);
-
+            
             emit DecayApplied(subject, oldScore, adjustedScore, daysInactive);
             _logEv(subject, decayAmount, "ina");
         }
     }
-
+    
     // slither-disable-next-line reentrancy-no-eth
     /**
      * @notice Batch apply decay to multiple users (keeper function)
@@ -1545,18 +1537,18 @@ contract Seer is ReentrancyGuard {
     function applyDecayBatch(address[] calldata subjects) external onlyNotPaused nonReentrant {
         if (!decayEnabled) revert TRUST_Disabled();
         if (subjects.length == 0 || subjects.length > 50) revert TRUST_Bounds();
-
+        
         for (uint256 i = 0; i < subjects.length; ++i) {
             address subject = subjects[i];
             uint64 lastAct = lastActivity[subject];
             if (lastAct == 0) continue;
-
+            
             uint64 elapsed = uint64(block.timestamp) - lastAct;
             uint64 daysInactive = elapsed / 1 days;
             if (daysInactive < decayStartDays) continue;
-
+            
             (uint16 adjustedScore, , uint16 decayAmount) = getDecayAdjustedScore(subject);
-
+            
             if (decayAmount > 0) {
                 uint16 oldScore = getScore(subject);
                 _score[subject] = adjustedScore;
@@ -1567,23 +1559,26 @@ contract Seer is ReentrancyGuard {
             }
         }
     }
-
+    
     // ═══════════════════════════════════════════════════════════════════════
     //                    SCORE HISTORY QUERIES
     // ═══════════════════════════════════════════════════════════════════════
-
+    
     /**
      * @notice Get score history for a user
      * @param subject The user to query
      * @return count Number of history entries
      * @return recentChanges Last 10 score changes (or fewer if less history)
      */
-    function getScoreHistory(address subject) external view returns (uint256 count, ScoreChange[] memory recentChanges) {
+    function getScoreHistory(address subject) external view returns (
+        uint256 count,
+        ScoreChange[] memory recentChanges
+    ) {
         // S-05 FIX: Read from circular buffer in chronological order
         count = scoreHistoryCount[subject];
         uint256 returnCount = count > 10 ? 10 : count;
         recentChanges = new ScoreChange[](returnCount);
-
+        
         uint8 head = scoreHistoryHead[subject];
         // Walk backwards from the most-recent slot
         for (uint256 i = 0; i < returnCount; ++i) {
@@ -1591,7 +1586,7 @@ contract Seer is ReentrancyGuard {
             recentChanges[returnCount - 1 - i] = scoreHistory[subject][idx];
         }
     }
-
+    
     /**
      * @notice Check if a specific reason was used in recent score changes
      * @param subject The user to check
@@ -1599,11 +1594,14 @@ contract Seer is ReentrancyGuard {
      * @return found Whether the reason was found in recent history
      * @return timestamp When the reason was last used (0 if not found)
      */
-    function findReasonInHistory(address subject, string calldata reason) external view returns (bool found, uint64 timestamp) {
+    function findReasonInHistory(address subject, string calldata reason) external view returns (
+        bool found,
+        uint64 timestamp
+    ) {
         bytes32 targetHash = keccak256(bytes(reason));
         uint8 count = scoreHistoryCount[subject];
         uint8 head = scoreHistoryHead[subject];
-
+        
         // S-05 FIX: Search circular buffer from newest to oldest
         for (uint8 i = 0; i < count; ++i) {
             uint8 idx = uint8((uint256(head) + MAX_HISTORY_PER_USER - 1 - uint256(i)) % MAX_HISTORY_PER_USER);
@@ -1613,7 +1611,7 @@ contract Seer is ReentrancyGuard {
         }
         return (false, 0);
     }
-
+    
     /**
      * @notice Get comprehensive user status including decay
      * @param subject The user to check
@@ -1625,9 +1623,15 @@ contract Seer is ReentrancyGuard {
      * @return hasPendingDispute hasPendingDispute
      * @return isOperator isOperator
      */
-    function getUserStatus(
-        address subject
-    ) external view returns (uint16 currentScore, uint16 decayAdjustedScore, uint64 daysInactive, uint64 lastActivityTime, uint256 historyCount, bool hasPendingDispute, bool isOperator) {
+    function getUserStatus(address subject) external view returns (
+        uint16 currentScore,
+        uint16 decayAdjustedScore,
+        uint64 daysInactive,
+        uint64 lastActivityTime,
+        uint256 historyCount,
+        bool hasPendingDispute,
+        bool isOperator
+    ) {
         currentScore = getScore(subject);
         (decayAdjustedScore, daysInactive, ) = getDecayAdjustedScore(subject);
         lastActivityTime = lastActivity[subject];
@@ -1657,21 +1661,21 @@ contract ProofScoreBurnRouterPlus {
     /// @notice dao
     address public immutable dao;
     /// @notice seer
-    Seer public seer;
+    Seer    public seer;
 
     // base policy (DAO-tunable)
     /// @notice baseBurnBps
-    uint16 public baseBurnBps = 200; // 2.00%
+    uint16 public baseBurnBps    = 200;  // 2.00%
     /// @notice baseRewardBps
-    uint16 public baseRewardBps = 50; // 0.50% (used by staking/loyalty)
+    uint16 public baseRewardBps  = 50;   // 0.50% (used by staking/loyalty)
     /// @notice highBoostBps
-    uint16 public highBoostBps = 50; // +0.50% reward for high-trust
+    uint16 public highBoostBps   = 50;   // +0.50% reward for high-trust
     /// @notice lowPenaltyBps
-    uint16 public lowPenaltyBps = 150; // +1.50% extra burn for low-trust
+    uint16 public lowPenaltyBps  = 150;  // +1.50% extra burn for low-trust
     /// @notice maxTotalBps
-    uint16 public maxTotalBps = 1000; // 10.00% ceiling for (burn + reward + treasury)
+    uint16 public maxTotalBps    = 1000; // 10.00% ceiling for (burn + reward + treasury)
     /// @notice treasury
-    address public treasury; // EcoTreasuryVault later
+    address public treasury;             // EcoTreasuryVault later
     /// @notice _reentrancyLock
     uint256 private _reentrancyLock;
 
@@ -1723,27 +1727,30 @@ contract ProofScoreBurnRouterPlus {
     /// @param _lowPenaltyBps _lowPenaltyBps
     /// @param _maxTotalBps _maxTotalBps
     /// @param _treasury _treasury
-    function setPolicy(uint16 _baseBurnBps, uint16 _baseRewardBps, uint16 _highBoostBps, uint16 _lowPenaltyBps, uint16 _maxTotalBps, address _treasury) external onlyDAO nonReentrantPSBRP {
+    function setPolicy(
+        uint16 _baseBurnBps,
+        uint16 _baseRewardBps,
+        uint16 _highBoostBps,
+        uint16 _lowPenaltyBps,
+        uint16 _maxTotalBps,
+        address _treasury
+    ) external onlyDAO nonReentrantPSBRP {
         if (_treasury == address(0)) revert TRUST_Zero();
         if (_maxTotalBps == 0 || _maxTotalBps > 4000) revert TRUST_Bounds(); // hard ceiling 40% for safety
         if (_baseBurnBps > _maxTotalBps || _baseRewardBps > _maxTotalBps) revert TRUST_Bounds();
         if (uint256(_baseBurnBps) + _baseRewardBps > _maxTotalBps) revert TRUST_Bounds();
         if (uint256(_baseBurnBps) + _baseRewardBps + _highBoostBps > _maxTotalBps) revert TRUST_Bounds();
         if (uint256(_baseBurnBps) + _baseRewardBps + _lowPenaltyBps > _maxTotalBps) revert TRUST_Bounds();
-        baseBurnBps = _baseBurnBps;
+        baseBurnBps   = _baseBurnBps;
         baseRewardBps = _baseRewardBps;
-        highBoostBps = _highBoostBps;
+        highBoostBps  = _highBoostBps;
         lowPenaltyBps = _lowPenaltyBps;
-        maxTotalBps = _maxTotalBps;
-        treasury = _treasury;
+        maxTotalBps   = _maxTotalBps;
+        treasury      = _treasury;
         emit PolicySet(baseBurnBps, baseRewardBps, highBoostBps, lowPenaltyBps, maxTotalBps, treasury);
     }
 
-    struct Route {
-        uint16 burnBps;
-        uint16 rewardBps;
-        uint16 treasuryBps;
-    }
+    struct Route { uint16 burnBps; uint16 rewardBps; uint16 treasuryBps; }
 
     /**
      * Computes dynamic bps from a subject's ProofScore.
@@ -1759,7 +1766,7 @@ contract ProofScoreBurnRouterPlus {
 
         // start from base
         uint256 burn = baseBurnBps;
-        uint256 rew = baseRewardBps;
+        uint256 rew  = baseRewardBps;
 
         // adjust based on thresholds
         if (s >= seer.highTrustThreshold()) {
@@ -1776,4 +1783,4 @@ contract ProofScoreBurnRouterPlus {
         // Safe: burn, rew, treas are all <= maxTotalBps (max 1000) which fits in uint16
         r = Route({burnBps: uint16(burn), rewardBps: uint16(rew), treasuryBps: uint16(treas)});
     }
-}
+    }

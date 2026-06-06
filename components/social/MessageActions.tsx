@@ -7,7 +7,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import {
   MoreVertical,
   Edit2,
@@ -163,7 +163,7 @@ export function MessageActions({
 
         <AnimatePresence>
           {isOpen && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, scale: 0.95, y: -10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -10 }}
@@ -247,7 +247,7 @@ export function MessageActions({
                   </>
                 )}
               </div>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
       </div>
@@ -255,14 +255,14 @@ export function MessageActions({
       {/* Delete Confirmation Modal */}
       <AnimatePresence>
         {showDeleteConfirm && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 backdrop-blur-sm"
             onClick={() => setShowDeleteConfirm(false)}
           >
-            <motion.div
+            <m.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
@@ -289,8 +289,8 @@ export function MessageActions({
                   Cancel
                 </button>
               </div>
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         )}
       </AnimatePresence>
     </>

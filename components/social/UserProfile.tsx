@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import {
   Users,
@@ -127,28 +127,28 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-[#1A1A2E] to-zinc-950">
       {/* Cover Image */}
-      <motion.div
+      <m.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="relative h-48 md:h-64 bg-gradient-to-r from-cyan-400/20 via-violet-400/20 to-rose-500/20"
+        className="relative h-48 md:h-64 bg-gradient-to-r from-accent/20 via-violet-400/20 to-rose-500/20"
       >
         {user.coverImage && (
           <Image src={user.coverImage} alt="cover" fill className="object-cover" sizes="100vw" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 to-transparent" />
-      </motion.div>
+      </m.div>
 
       {/* Profile Header */}
       <div className="relative px-4 md:px-8 pb-8">
         {/* Avatar */}
-        <motion.div
+        <m.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.1 }}
           className="flex flex-col md:flex-row md:items-end gap-4 -mt-20 mb-6"
         >
           <div className="shrink-0">
-            <div className="w-32 h-32 md:w-40 md:h-40 rounded-2xl bg-gradient-to-br from-cyan-400 to-violet-400 p-1 shadow-2xl">
+            <div className="w-32 h-32 md:w-40 md:h-40 rounded-2xl bg-gradient-to-br from-accent to-violet-400 p-1 shadow-2xl">
               <div className="w-full h-full rounded-xl bg-zinc-900 flex items-center justify-center text-6xl md:text-8xl">
                 {user.avatar}
               </div>
@@ -160,13 +160,13 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
             <div className="flex items-center gap-3 mb-2">
               <h1 className="text-3xl md:text-4xl font-bold text-zinc-100">{user.displayName}</h1>
               {user.isVerified && (
-                <motion.div
+                <m.div
                   animate={{ scale: [1, 1.1, 1] }}
                   transition={{ duration: 2, repeat: Infinity }}
                   title="Verified user"
                 >
-                  <CheckCircle2 className="w-8 h-8 text-cyan-400" />
-                </motion.div>
+                  <CheckCircle2 className="w-8 h-8 text-accent" />
+                </m.div>
               )}
             </div>
             <p className="text-zinc-400 text-lg mb-3">@{user.username}</p>
@@ -192,7 +192,7 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
               <button
                 disabled
                 title="Profile editing requires a /api/social/profile PUT endpoint that isn't built yet."
-                className="px-6 py-3 bg-cyan-400/20 border border-cyan-400/40 text-cyan-400/60 rounded-lg cursor-not-allowed font-semibold"
+                className="px-6 py-3 bg-accent/20 border border-accent/40 text-accent/60 rounded-lg cursor-not-allowed font-semibold"
               >
                 Edit Profile
               </button>
@@ -201,7 +201,7 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
                 <button
                   disabled
                   title="Following requires a social-graph API that isn't built yet."
-                  className="px-4 py-2 bg-cyan-400/40 text-zinc-950/60 rounded-lg cursor-not-allowed font-semibold"
+                  className="px-4 py-2 bg-accent/40 text-zinc-950/60 rounded-lg cursor-not-allowed font-semibold"
                 >
                   {user.isFollowing ? 'Following' : 'Follow'}
                 </button>
@@ -218,14 +218,14 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
             <div className="relative">
               <button
                 onClick={() => setShowShareMenu(!showShareMenu)}
-                className="px-4 py-2 bg-zinc-800 border border-zinc-700 text-zinc-400 rounded-lg hover:border-cyan-400 transition-colors"
+                className="px-4 py-2 bg-zinc-800 border border-zinc-700 text-zinc-400 rounded-lg hover:border-accent transition-colors"
               >
                 <Share2 className="w-5 h-5" />
               </button>
 
               <AnimatePresence>
                 {showShareMenu && (
-                  <motion.div
+                  <m.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
@@ -262,22 +262,22 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
                       <MessageCircle className="w-4 h-4" />
                       Share Message
                     </button>
-                  </motion.div>
+                  </m.div>
                 )}
               </AnimatePresence>
             </div>
           </div>
-        </motion.div>
+        </m.div>
 
         {/* Stats Grid */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
           className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8"
         >
-          <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 text-center hover:border-cyan-400 transition-colors">
-            <div className="text-cyan-400 text-2xl font-bold mb-1">{user.proofScore.toLocaleString()}</div>
+          <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 text-center hover:border-accent transition-colors">
+            <div className="text-accent text-2xl font-bold mb-1">{user.proofScore.toLocaleString()}</div>
             <div className="text-xs text-zinc-400">Proof Score</div>
           </div>
 
@@ -303,11 +303,11 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
             <div className="text-amber-400 text-2xl font-bold mb-1">{user.totalPoints.toLocaleString()}</div>
             <div className="text-xs text-zinc-400">Total Points</div>
           </div>
-        </motion.div>
+        </m.div>
 
         {/* Badges Quick View */}
         {user.badges.length > 0 && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
@@ -316,7 +316,7 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
             <h3 className="text-lg font-bold text-zinc-100 mb-4">Featured Badges</h3>
             <div className="flex gap-3 overflow-x-auto pb-2">
               {user.badges.slice(0, 4).map((badge) => (
-                <motion.div
+                <m.div
                   key={badge.id}
                   whileHover={{ scale: 1.1 }}
                   className={`shrink-0 relative group cursor-pointer`}
@@ -328,7 +328,7 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
                         : badge.rarity === 'uncommon'
                           ? 'border-green-500 bg-green-500/10'
                           : badge.rarity === 'rare'
-                            ? 'border-cyan-400 bg-cyan-400/10'
+                            ? 'border-accent bg-accent/10'
                             : badge.rarity === 'epic'
                               ? 'border-violet-400 bg-violet-400/10'
                               : 'border-yellow-500 bg-yellow-500/10'
@@ -336,18 +336,18 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
                   >
                     {badge.icon}
                   </div>
-                  <motion.div
+                  <m.div
                     initial={{ opacity: 0 }}
                     whileHover={{ opacity: 1 }}
                     className="absolute inset-0 bg-black/80 rounded-xl flex flex-col items-center justify-center p-2"
                   >
                     <div className="text-xs font-bold text-center text-zinc-100">{badge.name}</div>
                     <div className="text-[10px] text-zinc-400 text-center mt-1">{badge.description}</div>
-                  </motion.div>
-                </motion.div>
+                  </m.div>
+                </m.div>
               ))}
             </div>
-          </motion.div>
+          </m.div>
         )}
       </div>
 
@@ -361,7 +361,7 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
                 onClick={() => setActiveTab(tab.key as typeof activeTab)}
                 className={`px-4 py-3 font-semibold text-sm whitespace-nowrap border-b-2 transition-all ${
                   activeTab === tab.key
-                    ? 'border-cyan-400 text-cyan-400'
+                    ? 'border-accent text-accent'
                     : 'border-transparent text-zinc-400 hover:text-zinc-100'
                 }`}
               >
@@ -378,7 +378,7 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
         <AnimatePresence mode="wait">
           {/* Activity Tab */}
           {activeTab === 'activity' && (
-            <motion.div
+            <m.div
               key="activity"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -386,12 +386,12 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
               className="space-y-4"
             >
               {([] as ActivityItem[]).map((item, idx) => (
-                <motion.div
+                <m.div
                   key={item.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: idx * 0.05 }}
-                  className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 hover:border-cyan-400/50 transition-colors"
+                  className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 hover:border-accent/50 transition-colors"
                 >
                   <div className="flex items-start gap-4">
                     <div className="text-2xl shrink-0">{item.icon}</div>
@@ -404,14 +404,14 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
                       </p>
                     </div>
                   </div>
-                </motion.div>
+                </m.div>
               ))}
-            </motion.div>
+            </m.div>
           )}
 
           {/* Friends Tab */}
           {activeTab === 'friends' && (
-            <motion.div
+            <m.div
               key="friends"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -419,7 +419,7 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
             >
               {([] as FriendInfo[]).map((friend, idx) => (
-                <motion.div
+                <m.div
                   key={friend.id}
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -433,7 +433,7 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
                     <div className="flex-1 min-w-0">
                       <h4 className="font-semibold text-zinc-100 truncate">{friend.displayName}</h4>
                       {friend.isMutual && (
-                        <div className="text-xs text-cyan-400 flex items-center gap-1">
+                        <div className="text-xs text-accent flex items-center gap-1">
                           <Users className="w-3 h-3" />
                           Mutual friends
                         </div>
@@ -442,7 +442,7 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
                   </div>
                   <div className="flex items-center justify-between text-sm mb-3">
                     <div>
-                      <div className="text-cyan-400 font-semibold">{friend.proofScore}</div>
+                      <div className="text-accent font-semibold">{friend.proofScore}</div>
                       <div className="text-zinc-400 text-xs">Proof Score</div>
                     </div>
                   </div>
@@ -453,14 +453,14 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
                   >
                     View Profile
                   </button>
-                </motion.div>
+                </m.div>
               ))}
-            </motion.div>
+            </m.div>
           )}
 
           {/* Achievements Tab */}
           {activeTab === 'achievements' && (
-            <motion.div
+            <m.div
               key="achievements"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -468,13 +468,13 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
               className="grid grid-cols-1 md:grid-cols-2 gap-4"
             >
               {([] as Achievement[]).map((achievement, idx) => (
-                <motion.div
+                <m.div
                   key={achievement.id}
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: idx * 0.05 }}
                   className={`bg-zinc-900 border rounded-lg p-4 transition-colors ${
-                    achievement.isUnlocked ? 'border-cyan-400' : 'border-zinc-700'
+                    achievement.isUnlocked ? 'border-accent' : 'border-zinc-700'
                   }`}
                 >
                   <div className="flex items-start gap-4">
@@ -485,11 +485,11 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
                       <h4 className="font-semibold text-zinc-100 mb-1">{achievement.title}</h4>
                       <p className="text-zinc-400 text-sm mb-3">{achievement.description}</p>
                       <div className="w-full bg-zinc-950 rounded-full h-2 overflow-hidden">
-                        <motion.div
+                        <m.div
                           initial={{ width: 0 }}
                           animate={{ width: `${(achievement.progress / achievement.maxProgress) * 100}%` }}
                           transition={{ duration: 1, delay: 0.2 }}
-                          className={`h-full ${achievement.isUnlocked ? 'bg-gradient-to-r from-cyan-400 to-violet-400' : 'bg-zinc-700'}`}
+                          className={`h-full ${achievement.isUnlocked ? 'bg-gradient-to-r from-accent to-violet-400' : 'bg-zinc-700'}`}
                         />
                       </div>
                       <div className="flex justify-between items-center mt-2">
@@ -497,19 +497,19 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
                           {achievement.progress} / {achievement.maxProgress}
                         </span>
                         {achievement.isUnlocked && (
-                          <span className="text-[10px] text-cyan-400 font-semibold">UNLOCKED</span>
+                          <span className="text-[10px] text-accent font-semibold">UNLOCKED</span>
                         )}
                       </div>
                     </div>
                   </div>
-                </motion.div>
+                </m.div>
               ))}
-            </motion.div>
+            </m.div>
           )}
 
           {/* Badges Tab */}
           {activeTab === 'badges' && (
-            <motion.div
+            <m.div
               key="badges"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -517,14 +517,14 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
               className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
             >
               {user.badges.map((badge, idx) => (
-                <motion.div
+                <m.div
                   key={badge.id}
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: idx * 0.05 }}
                   className="group cursor-pointer"
                 >
-                  <motion.div
+                  <m.div
                     whileHover={{ scale: 1.05, rotateZ: 5 }}
                     className={`w-full aspect-square rounded-xl flex items-center justify-center text-6xl border-2 mb-3 transition-colors ${
                       badge.rarity === 'common'
@@ -532,14 +532,14 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
                         : badge.rarity === 'uncommon'
                           ? 'border-green-500 bg-green-500/10'
                           : badge.rarity === 'rare'
-                            ? 'border-cyan-400 bg-cyan-400/10'
+                            ? 'border-accent bg-accent/10'
                             : badge.rarity === 'epic'
                               ? 'border-violet-400 bg-violet-400/10'
                               : 'border-yellow-500 bg-yellow-500/10'
                     }`}
                   >
                     {badge.icon}
-                  </motion.div>
+                  </m.div>
                   <h4 className="font-semibold text-zinc-100 text-center text-sm mb-1">{badge.name}</h4>
                   <p className="text-zinc-400 text-xs text-center">{badge.description}</p>
                   <div className="text-center mt-2">
@@ -550,7 +550,7 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
                           : badge.rarity === 'uncommon'
                             ? 'text-green-400 bg-green-500/20'
                             : badge.rarity === 'rare'
-                              ? 'text-cyan-400 bg-cyan-400/20'
+                              ? 'text-accent bg-accent/20'
                               : badge.rarity === 'epic'
                                 ? 'text-violet-400 bg-violet-400/20'
                                 : 'text-yellow-400 bg-yellow-500/20'
@@ -559,9 +559,9 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
                       {badge.rarity.toUpperCase()}
                     </span>
                   </div>
-                </motion.div>
+                </m.div>
               ))}
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
       </div>

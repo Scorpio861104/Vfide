@@ -34,7 +34,7 @@ export function TrendingSidebar({ trending, suggested }: { trending: TrendingTop
         {/* Quick Links */}
         <div className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-2xl p-4 ring-effect">
           <h3 className="font-semibold text-zinc-50 mb-4 flex items-center gap-2">
-            <Zap className="w-5 h-5 text-cyan-400" />
+            <Zap className="w-5 h-5 text-accent" />
             Quick Access
           </h3>
         <div className="space-y-2">
@@ -74,7 +74,7 @@ export function TrendingSidebar({ trending, suggested }: { trending: TrendingTop
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-zinc-500">{index + 1}</span>
-                  <span className="text-cyan-400 font-medium group-hover:underline">{topic.tag}</span>
+                  <span className="text-accent font-medium group-hover:underline">{topic.tag}</span>
                 </div>
                 <span className="text-xs text-zinc-500">{formatNumber(topic.posts)} posts</span>
               </div>
@@ -97,13 +97,13 @@ export function TrendingSidebar({ trending, suggested }: { trending: TrendingTop
           ) : null}
           {suggested.map((user) => (
             <div key={user.address} className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-lg">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent to-violet-400 flex items-center justify-center text-lg">
                 {user.avatar}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1">
                   <span className="font-medium text-zinc-50 truncate">{user.name}</span>
-                  {user.verified && <Shield className="w-3 h-3 text-cyan-400" />}
+                  {user.verified && <Shield className="w-3 h-3 text-accent" />}
                 </div>
                 <span className="text-xs text-zinc-500">{user.mutualFriends} mutual</span>
               </div>
@@ -113,7 +113,7 @@ export function TrendingSidebar({ trending, suggested }: { trending: TrendingTop
                 aria-disabled="true"
                 aria-label={`Follow ${user.name} (not yet available)`}
                 title="Following requires a social-graph API that isn't built yet."
-                className="px-3 py-1 bg-cyan-400/40 text-zinc-950/60 text-sm font-semibold rounded-full cursor-not-allowed"
+                className="px-3 py-1 bg-accent/40 text-zinc-950/60 text-sm font-semibold rounded-full cursor-not-allowed"
               >
                 Follow
               </button>
@@ -126,7 +126,7 @@ export function TrendingSidebar({ trending, suggested }: { trending: TrendingTop
           aria-disabled="true"
           aria-label="Show more suggested users (not yet available)"
           title="Pagination not wired up — only the initial trending users are returned."
-          className="w-full mt-4 text-cyan-400/40 text-sm cursor-not-allowed"
+          className="w-full mt-4 text-accent/40 text-sm cursor-not-allowed"
         >
           Show more
         </button>

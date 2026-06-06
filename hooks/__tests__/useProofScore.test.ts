@@ -57,7 +57,7 @@ describe('useProofScore', () => {
     const { result } = renderHook(() => useProofScore())
 
     expect(result.current.score).toBe(7200)
-    expect(result.current.burnFee).toBe(1.0)
+    expect(result.current.burnFee).toBeCloseTo(1.2)
     expect(result.current.color).toBe('#00F0FF')
   })
 
@@ -67,7 +67,7 @@ describe('useProofScore', () => {
     const { result } = renderHook(() => useProofScore())
 
     expect(result.current.score).toBe(5500)
-    expect(result.current.burnFee).toBe(2.5)
+    expect(result.current.burnFee).toBeCloseTo(3.21875)
     expect(result.current.color).toBe('#FFD700')
   })
 
@@ -77,7 +77,7 @@ describe('useProofScore', () => {
     const { result } = renderHook(() => useProofScore())
 
     expect(result.current.score).toBe(4200)
-    expect(result.current.burnFee).toBe(3.5)
+    expect(result.current.burnFee).toBeCloseTo(4.7625)
   })
 
   it('calculates risky score', () => {
@@ -203,7 +203,7 @@ describe('useProofScore', () => {
 
     const { result } = renderHook(() => useProofScore())
 
-    expect(result.current.burnFee).toBe(1)
+    expect(result.current.burnFee).toBeCloseTo(0.84375)
   })
 
   it('treats missing fee tuple entries as zero values', () => {
@@ -239,12 +239,12 @@ describe('getScoreTier', () => {
     expect(getScoreTier(6999)).toBe('Trusted')
   })
 
-  it('returns Low Trust for scores >= 3500', () => {
-    expect(getScoreTier(3500)).toBe('Low Trust')
+  it('returns Low Trust for scores >= 4000', () => {
+    expect(getScoreTier(4000)).toBe('Low Trust')
     expect(getScoreTier(4999)).toBe('Low Trust')
   })
 
-  it('returns Risky for scores < 3500', () => {
+  it('returns Risky for scores < 4000', () => {
     expect(getScoreTier(0)).toBe('Risky')
     expect(getScoreTier(3499)).toBe('Risky')
     expect(getScoreTier(1000)).toBe('Risky')
@@ -265,7 +265,7 @@ describe('useSeerThresholds', () => {
 
     expect(result.current.minForGovernance).toBe(5400)
     expect(result.current.minForMerchant).toBe(5600)
-    expect(result.current.lowTrustThreshold).toBe(3500)
+    expect(result.current.lowTrustThreshold).toBe(4000)
     expect(result.current.highTrustThreshold).toBe(8000)
   })
 

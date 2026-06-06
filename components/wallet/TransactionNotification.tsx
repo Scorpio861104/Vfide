@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Transaction Notifications with Confetti 🎉
  * Beautiful feedback for every blockchain action
@@ -5,7 +7,7 @@
 
 'use client'
 
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { useChainId } from 'wagmi'
 import { getExplorerLink } from '@/components/ui/EtherscanLink'
@@ -104,7 +106,7 @@ export function TransactionNotification({ notification, onClose }: TransactionNo
       
       {/* Notification Toast */}
       <AnimatePresence>
-        <motion.div
+        <m.div
           key={notification.id}
           initial={{ opacity: 0, y: -50, x: 50 }}
           animate={{ opacity: 1, y: 0, x: 0 }}
@@ -112,7 +114,7 @@ export function TransactionNotification({ notification, onClose }: TransactionNo
           className="fixed top-4 right-4 z-50 max-w-md"
         >
           {/* Glow effect */}
-          <motion.div
+          <m.div
             className="absolute inset-0 rounded-xl blur-xl opacity-50"
             style={{ backgroundColor: config.color }}
             animate={{
@@ -123,7 +125,7 @@ export function TransactionNotification({ notification, onClose }: TransactionNo
           />
           
           {/* Card */}
-          <motion.div
+          <m.div
             className="relative backdrop-blur-xl rounded-xl p-4 shadow-2xl border-2"
             style={{
               backgroundColor: config.bgColor,
@@ -136,7 +138,7 @@ export function TransactionNotification({ notification, onClose }: TransactionNo
           >
             <div className="flex items-start gap-3">
               {/* Animated Icon */}
-              <motion.div
+              <m.div
                 className="text-3xl"
                 animate={{
                   rotate: notification.type === 'pending' ? 360 : 0,
@@ -148,7 +150,7 @@ export function TransactionNotification({ notification, onClose }: TransactionNo
                 }}
               >
                 {config.icon}
-              </motion.div>
+              </m.div>
               
               {/* Content */}
               <div className="flex-1 min-w-0">
@@ -163,17 +165,17 @@ export function TransactionNotification({ notification, onClose }: TransactionNo
                 </p>
                 
                 {notification.txHash && (
-                  <motion.a
+                  <m.a
                     initial={{ opacity: 0, y: -5 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
                     href={getExplorerLink(chainId, notification.txHash, 'tx')}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs text-cyan-400 hover:text-cyan-400 mt-2 inline-flex items-center gap-1 transition-colors"
+                    className="text-xs text-accent hover:text-accent mt-2 inline-flex items-center gap-1 transition-colors"
                   >
                     View on Explorer →
-                  </motion.a>
+                  </m.a>
                 )}
               </div>
               
@@ -188,11 +190,11 @@ export function TransactionNotification({ notification, onClose }: TransactionNo
             
             {/* Progress bar for pending */}
             {notification.type === 'pending' && (
-              <motion.div
+              <m.div
                 className="mt-3 h-1 rounded-full overflow-hidden"
                 style={{ backgroundColor: `${config.color}20` }}
               >
-                <motion.div
+                <m.div
                   className="h-full"
                   style={{ backgroundColor: config.color }}
                   animate={{
@@ -204,10 +206,10 @@ export function TransactionNotification({ notification, onClose }: TransactionNo
                     ease: 'linear',
                   }}
                 />
-              </motion.div>
+              </m.div>
             )}
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       </AnimatePresence>
     </>
   )

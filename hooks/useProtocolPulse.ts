@@ -81,7 +81,7 @@ function tierForScore(score: number): string {
   if (score >= 5600) return TIER_HEX.trusted!;
   if (score >= 5400) return TIER_HEX.governance!;
   if (score >= 5000) return TIER_HEX.neutral!;
-  if (score >= 3500) return TIER_HEX.low!;
+  if (score >= 4000) return TIER_HEX.low!;
   return TIER_HEX.risky!;
 }
 
@@ -109,7 +109,7 @@ function generateDemoEvent(id: number, baseTs: number): PulseEvent {
     // Skewed log-normal-ish: most payments small, occasional larger.
     const r = Math.random();
     const amount = +(2 + Math.pow(r, 3) * 480).toFixed(2);
-    const score = 3500 + Math.floor(Math.random() * 5500);
+    const score = 4000 + Math.floor(Math.random() * 6000);
     return {
       id, ts, kind: 'payment',
       amount,
@@ -134,7 +134,7 @@ function generateDemoEvent(id: number, baseTs: number): PulseEvent {
   }
   // Score updates (someone's ProofScore moved).
   if (roll < 0.93) {
-    const score = 3500 + Math.floor(Math.random() * 6500);
+    const score = 4000 + Math.floor(Math.random() * 6000);
     return {
       id, ts, kind: 'score',
       score,

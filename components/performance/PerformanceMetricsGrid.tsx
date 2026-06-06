@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import {
   PerformanceMetric,
   getMetricTypeLabel,
@@ -60,7 +60,7 @@ export function PerformanceMetricsGrid({
 
   if (isLoading) {
     return (
-      <motion.div
+      <m.div
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
         variants={containerVariants}
         initial="hidden"
@@ -72,19 +72,19 @@ export function PerformanceMetricsGrid({
             className="bg-slate-900 rounded-lg border border-slate-800 p-4 h-48 animate-pulse"
           />
         ))}
-      </motion.div>
+      </m.div>
     );
   }
 
   return (
-    <motion.div
+    <m.div
       className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
       variants={containerVariants}
       initial="hidden"
       animate="show"
     >
       {metrics.map((metric) => (
-        <motion.div
+        <m.div
           key={metric.id}
           variants={itemVariants}
           className={`rounded-lg border p-6 backdrop-blur-sm transition-all hover:shadow-lg ${getStatusBgColor(
@@ -124,7 +124,7 @@ export function PerformanceMetricsGrid({
 
           {/* Progress bar */}
           <div className="mt-4 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-            <motion.div
+            <m.div
               className={`h-full ${
                 metric.status === 'critical'
                   ? 'bg-red-500'
@@ -142,8 +142,8 @@ export function PerformanceMetricsGrid({
           <div className="mt-4 text-xs text-slate-500">
             {new Date(metric.timestamp).toLocaleTimeString()}
           </div>
-        </motion.div>
+        </m.div>
       ))}
-    </motion.div>
+    </m.div>
   );
 }

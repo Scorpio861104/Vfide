@@ -43,7 +43,7 @@ export function usePagePerformance(): UsePagePerformanceResult {
 
       const apiStored = localStorage.getItem(API_STORAGE_KEY);
       if (apiStored) {
-        setApiMetrics(JSON.parse(apiStored));
+        try { setApiMetrics(JSON.parse(apiStored)); } catch { /* corrupted — ignore */ }
       }
     } catch (e) {
       logger.error('Failed to load performance metrics:', e);
@@ -88,7 +88,7 @@ export function usePagePerformance(): UsePagePerformanceResult {
 
       // Get error count from local error logs
       const errorLogsStr = localStorage.getItem('error_logs_v1');
-      const errorLogs = errorLogsStr ? JSON.parse(errorLogsStr) : [];
+      let errorLogs = []; try { errorLogs = errorLogsStr ? JSON.parse(errorLogsStr) : []; } catch { /* corrupted */ }
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
       const todayErrors = errorLogs.filter(

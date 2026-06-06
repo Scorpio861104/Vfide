@@ -1,126 +1,96 @@
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { render, screen } from '@testing-library/react';
-import type React from 'react';
 
-const renderAboutPage = () => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const pageModule = require('../../app/about/page');
-  const AboutPage = pageModule.default as React.ComponentType;
-  return render(<AboutPage />);
-};
+/* ── Suppress React DOM prop warnings from framer-motion ── */
+const originalConsoleError = console.error;
+beforeEach(() => {
+  console.error = (...args: unknown[]) => {
+    const msg = String(args[0] ?? '');
+    if (msg.includes('whileInView') || msg.includes('whileinview') ||
+        msg.includes('React does not recognize') || msg.includes('Unknown prop') ||
+        msg.includes('animate') || msg.includes('initial')) {
+      return;
+    }
+    originalConsoleError(...args);
+  };
+});
 
-jest.mock('@/components/layout/Footer', () => ({
-  Footer: () => <div data-testid="footer" />,
+/* ── Mocks ── */
+jest.mock('framer-motion', () => {
+  const React = require('react');
+  const SKIP = new Set([
+    'initial','animate','exit','transition','whileHover','whileTap','whileInView',
+    'viewport','layout','layoutId','custom','onAnimationStart','onAnimationComplete',
+    'onViewportEnter','onViewportLeave','drag','dragConstraints',
+  ]);
+  const make = (tag: string) =>
+    React.forwardRef((props: Record<string,unknown>, ref: unknown) => {
+      const s: Record<string,unknown> = { ref };
+      for (const k of Object.keys(props)) { if (!SKIP.has(k)) s[k] = props[k]; }
+      return React.createElement(tag, s);
+    });
+  const motion = new Proxy({} as Record<string,unknown>, {
+    get: (t, p) => {
+      if (typeof p !== 'string') return undefined;
+      if (!t[p]) t[p] = make(p === 'custom' ? 'div' : p);
+      return t[p];
+    },
+  });
+  return { motion, m: motion, AnimatePresence: ({ children }: { children: unknown }) => children, LazyMotion: ({ children }: any) => children, domAnimation: {} };
+});
+
+jest.mock('wagmi', () => ({
+  useAccount: () => ({ address: undefined, isConnected: false }),
 }));
 
-jest.mock('framer-motion', () => {
-  /* FRAMER_MOTION_MOCK_V1 */
-  const React = require('react');
-  // Reusable component that strips motion-only props and renders the underlying tag.
-  const __MOTION_PROPS = new Set([
-    'initial', 'animate', 'exit', 'transition', 'variants', 'whileHover',
-    'whileTap', 'whileFocus', 'whileDrag', 'whileInView', 'drag',
-    'dragConstraints', 'dragElastic', 'dragMomentum', 'dragTransition',
-    'layout', 'layoutId', 'layoutDependency', 'layoutScroll',
-    'onAnimationStart', 'onAnimationComplete', 'onUpdate', 'onPan',
-    'onPanStart', 'onPanEnd', 'onTap', 'onTapStart', 'onTapCancel',
-    'onHoverStart', 'onHoverEnd', 'onDrag', 'onDragStart', 'onDragEnd',
-    'onDirectionLock', 'onViewportEnter', 'onViewportLeave',
-    'viewport', 'custom', 'transformTemplate', 'inherit',
-  ]);
-  const __makeMotion = (tag) => React.forwardRef((props, ref) => {
-    const sanitized = {};
-    for (const k of Object.keys(props || {})) {
-      if (!__MOTION_PROPS.has(k)) sanitized[k] = props[k];
-    }
-    return React.createElement(tag, { ...sanitized, ref });
-  });
-  const motion = new Proxy({}, {
-    get: (t, prop) => {
-      if (typeof prop !== 'string') return undefined;
-      if (!t[prop]) t[prop] = __makeMotion(prop === 'custom' ? 'div' : prop);
-      return t[prop];
+jest.mock('@/hooks/useLocale', () => ({
+  useLocale: () => ['en-US', jest.fn()],
+}));
+
+jest.mock('@/lib/i18n', () => ({
+  useT: () => ({ developer_heading: 'Developer Hub', support_heading: 'Help & Support Center', support_tab_faq: 'FAQ', support_tab_tickets: 'My Tickets', support_tab_new: 'New Ticket', common_loading: 'Loading…', common_back: 'Back', security_heading: 'Account Security', security_subtitle: 'Monitor sessions.', common_settings: 'Settings' }),
+  pickLocaleCopy: () => ({}),
+  ABOUT_TRANSLATIONS: {},
+}));
+
+jest.mock('@/components/layout/Footer', () => ({
+  Footer: () => null,
+}));
+
+jest.mock('lucide-react', () =>
+  new Proxy({} as Record<string,unknown>, {
+    get: (_t, name) => {
+      const React = require('react');
+      return ({ className }: { className?: string }) =>
+        React.createElement('span', { 'data-testid': `icon-${String(name).toLowerCase()}`, className });
     },
-  });
-  return {
-    motion,
-    AnimatePresence: ({ children }) => children,
-    LayoutGroup: ({ children }) => children,
-    LazyMotion: ({ children }) => children,
-    MotionConfig: ({ children }) => children,
-    Reorder: { Group: ({ children }) => children, Item: ({ children }) => children },
-    domAnimation: {},
-    domMax: {},
-    useAnimation: () => ({ start: jest.fn(), stop: jest.fn(), set: jest.fn() }),
-    useAnimationControls: () => ({ start: jest.fn(), stop: jest.fn(), set: jest.fn() }),
-    useScroll: () => ({ scrollY: { get: () => 0, on: jest.fn(() => jest.fn()) }, scrollX: { get: () => 0, on: jest.fn(() => jest.fn()) }, scrollYProgress: { get: () => 0, on: jest.fn(() => jest.fn()) }, scrollXProgress: { get: () => 0, on: jest.fn(() => jest.fn()) } }),
-    useMotionValue: (v) => ({ get: () => v, set: jest.fn(), on: jest.fn(() => jest.fn()) }),
-    useTransform: (v) => ({ get: () => 0, set: jest.fn(), on: jest.fn(() => jest.fn()) }),
-    useSpring: (v) => ({ get: () => v, set: jest.fn(), on: jest.fn(() => jest.fn()) }),
-    useInView: () => true,
-    useReducedMotion: () => false,
-    useDragControls: () => ({ start: jest.fn() }),
-    usePresence: () => [true, jest.fn()],
-    useIsPresent: () => true,
-    useMotionTemplate: () => ({ get: () => '', set: jest.fn(), on: jest.fn(() => jest.fn()) }),
-    useViewportScroll: () => ({ scrollY: { get: () => 0, on: jest.fn(() => jest.fn()) }, scrollYProgress: { get: () => 0, on: jest.fn(() => jest.fn()) } }),
-    useCycle: (...args) => [args[0], jest.fn()],
-    animate: jest.fn(),
-    stagger: jest.fn(() => 0),
-    transform: jest.fn((v) => v),
-  };
-});;
+  })
+);
 
-jest.mock('lucide-react', () => (() => { /* LucideProxyFallback */
-  const Icon = ({ className }: { className?: string }) => {
-    const React = require('react');
-    return React.createElement('span', { className }, 'icon');
-  };
-  const __orig: Record<string, any> = {
-    Shield: Icon,
-    Users: Icon,
-    Zap: Icon,
-    Heart: Icon,
-  };
-  return new Proxy(__orig, {
-    get: (t, prop) => {
-      if (prop in t) return (t as any)[prop];
-      if (prop === '__esModule') return true;
-      if (typeof prop === 'symbol') return undefined;
-      const name = String(prop);
-      const Icon = ({ className, ...rest }: any) => {
-        const React = require('react');
-        return React.createElement('span', { 'data-testid': `${name.toLowerCase()}-icon`, className, ...rest });
-      };
-      Icon.displayName = `LucideMock(${name})`;
-      return Icon;
-    },
-  });
-})());
+import AboutPage from '@/app/about/page';
 
-describe('About page logic pathways', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
+describe('About Page', () => {
+  it('renders the full mission page with content', () => {
+    render(<AboutPage />);
+    // Hero h1: "Money should work...for everyone."
+    expect(screen.getByText(/for everyone/i)).toBeTruthy();
+    expect(screen.getByText(/unbanked/i)).toBeTruthy();
   });
 
-  it('renders mission and core value content', () => {
-    renderAboutPage();
-
-    expect(screen.getByRole('heading', { name: /About VFIDE/i })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: /Our Mission/i })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: /Guardian-Protected Self-Custody/i })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: /Community Governed/i })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: /No Processor Fees/i })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: /For Everyone/i })).toBeTruthy();
+  it('displays core principles', () => {
+    render(<AboutPage />);
+    // Real principle titles from the page
+    expect(screen.getByText(/Zero merchant fees/i)).toBeTruthy();
+    expect(screen.getByText(/You hold the keys/i)).toBeTruthy();
+    expect(screen.getByText(/Seer Constitution/i)).toBeTruthy();
   });
 
-  it('includes public source code link with secure target attributes', () => {
-    renderAboutPage();
-
-    const sourceLink = screen.getByRole('link', { name: /View Source Code on GitHub/i });
-
-    expect(sourceLink.getAttribute('href')).toBe('https://github.com/Scorpio861104/Vfide');
-    expect(sourceLink.getAttribute('target')).toBe('_blank');
-    expect(sourceLink.getAttribute('rel')).toBe('noopener noreferrer');
+  it('shows the problem section and target audience', () => {
+    render(<AboutPage />);
+    // "The problem we're solving" heading (apostrophe escaped as &apos;)
+    expect(screen.getByText(/problem we/i)).toBeTruthy();
+    expect(screen.getByText(/building for/i)).toBeTruthy();
+    const pageText = document.body.textContent ?? '';
+    expect(pageText).toMatch(/unbanked|developing|financial|fee/i);
   });
 });

@@ -18,6 +18,7 @@ import {
   DAOABI,
   DAOTimelockABI,
   MerchantPortalABI,
+  MerchantPortalViewerABI,
   ProofScoreBurnRouterABI,
   ProofLedgerABI,
   OwnerControlPanelABI,
@@ -69,8 +70,10 @@ const CONTRACT_ENV_VAR_MAP: Record<string, string> = {
   VFIDEToken: 'NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS',
   StablecoinRegistry: 'NEXT_PUBLIC_STABLECOIN_REGISTRY_ADDRESS',
   MerchantPortal: 'NEXT_PUBLIC_MERCHANT_PORTAL_ADDRESS',
+  MerchantPortalViewer: 'NEXT_PUBLIC_MERCHANT_PORTAL_VIEWER_ADDRESS',
   MerchantRegistry: 'NEXT_PUBLIC_MERCHANT_REGISTRY_ADDRESS',
   VaultHub: 'NEXT_PUBLIC_VAULT_HUB_ADDRESS',
+  AdminMultiSig: 'NEXT_PUBLIC_ADMIN_MULTISIG_ADDRESS',
   Seer: 'NEXT_PUBLIC_SEER_ADDRESS',
   SeerView: 'NEXT_PUBLIC_SEER_VIEW_ADDRESS',
   DAO: 'NEXT_PUBLIC_DAO_ADDRESS',
@@ -84,6 +87,7 @@ const CONTRACT_ENV_VAR_MAP: Record<string, string> = {
   ProofLedger: 'NEXT_PUBLIC_PROOF_LEDGER_ADDRESS',
   LiquidityIncentives: 'NEXT_PUBLIC_LIQUIDITY_INCENTIVES_ADDRESS',
   DutyDistributor: 'NEXT_PUBLIC_DUTY_DISTRIBUTOR_ADDRESS',
+  VFIDEAccessControl: 'NEXT_PUBLIC_VFIDE_ACCESS_CONTROL_ADDRESS',
   OwnerControlPanel: 'NEXT_PUBLIC_OWNER_CONTROL_PANEL_ADDRESS',
   PayrollManager: 'NEXT_PUBLIC_PAYROLL_MANAGER_ADDRESS',
   SanctumVault: 'NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS',
@@ -167,8 +171,10 @@ function buildContractAddresses(chainId: number = CURRENT_CHAIN_ID) {
     VFIDEToken: validateContractAddress(process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS, 'VFIDEToken', chainId),
     StablecoinRegistry: validateContractAddress(process.env.NEXT_PUBLIC_STABLECOIN_REGISTRY_ADDRESS, 'StablecoinRegistry', chainId),
     MerchantPortal: validateContractAddress(process.env.NEXT_PUBLIC_MERCHANT_PORTAL_ADDRESS, 'MerchantPortal', chainId),
+    MerchantPortalViewer: validateContractAddress(process.env.NEXT_PUBLIC_MERCHANT_PORTAL_VIEWER_ADDRESS, 'MerchantPortalViewer', chainId),
     MerchantRegistry: validateContractAddress(process.env.NEXT_PUBLIC_MERCHANT_REGISTRY_ADDRESS, 'MerchantRegistry', chainId),
     VaultHub: validateContractAddress(process.env.NEXT_PUBLIC_VAULT_HUB_ADDRESS, 'VaultHub', chainId),
+    AdminMultiSig: validateContractAddress(process.env.NEXT_PUBLIC_ADMIN_MULTISIG_ADDRESS, 'AdminMultiSig', chainId),
     Seer: validateContractAddress(process.env.NEXT_PUBLIC_SEER_ADDRESS, 'Seer', chainId),
     SeerView: validateContractAddress(process.env.NEXT_PUBLIC_SEER_VIEW_ADDRESS, 'SeerView', chainId),
     DAO: validateContractAddress(process.env.NEXT_PUBLIC_DAO_ADDRESS, 'DAO', chainId),
@@ -183,6 +189,7 @@ function buildContractAddresses(chainId: number = CURRENT_CHAIN_ID) {
     ProofLedger: validateContractAddress(process.env.NEXT_PUBLIC_PROOF_LEDGER_ADDRESS, 'ProofLedger', chainId),
     LiquidityIncentives: validateContractAddress(process.env.NEXT_PUBLIC_LIQUIDITY_INCENTIVES_ADDRESS, 'LiquidityIncentives', chainId),
     DutyDistributor: validateContractAddress(process.env.NEXT_PUBLIC_DUTY_DISTRIBUTOR_ADDRESS, 'DutyDistributor', chainId),
+    VFIDEAccessControl: validateContractAddress(process.env.NEXT_PUBLIC_VFIDE_ACCESS_CONTROL_ADDRESS, 'VFIDEAccessControl', chainId),
     OwnerControlPanel: validateContractAddress(process.env.NEXT_PUBLIC_OWNER_CONTROL_PANEL_ADDRESS, 'OwnerControlPanel', chainId),
     PayrollManager: validateContractAddress(process.env.NEXT_PUBLIC_PAYROLL_MANAGER_ADDRESS, 'PayrollManager', chainId),
     SanctumVault: validateContractAddress(process.env.NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS, 'SanctumVault', chainId),
@@ -294,6 +301,7 @@ export function getContractAddresses(chainId: number) {
 
 // Legacy ABI alias names for compatibility with existing hooks
 export const MERCHANT_PORTAL_ABI = MerchantPortalABI;
+export const MERCHANT_PORTAL_VIEWER_ABI = MerchantPortalViewerABI;
 export const SEER_ABI = SeerABI;
 export const VFIDE_TOKEN_ABI = VFIDETokenABI;
 // Use the full VaultHub ABI for all features.

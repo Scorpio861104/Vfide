@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ArrowLeft, Shield, Users, Clock, Heart, Lock, Eye, AlertTriangle, ChevronRight } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 import { GlassCard } from '@/components/ui/GlassCard';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 /**
  * /vault/safety — the canonical plain-language explanation of CardBoundVault safety.
@@ -23,6 +24,9 @@ import { GlassCard } from '@/components/ui/GlassCard';
  * a real tradeoff, name the tradeoff.
  */
 export default function VaultSafetyPage() {
+  const { locale } = useLocale();
+  void locale;
+
   return (
     <>
       <div className="min-h-screen md:pt-[3.5rem] text-white">
@@ -55,7 +59,7 @@ export default function VaultSafetyPage() {
             <p>
               When you open a vault on VFIDE, the only person who can move money
               out of it is you. There is no admin key. There is no &quot;reset
-              password&quot; button. Nobody at VFIDE, nobody at Anthropic, nobody
+              password&quot; button. Nobody at VFIDE, no DAO vote, nobody
               at any company can freeze your account, reverse your transactions,
               or take what&apos;s yours.
             </p>
@@ -245,10 +249,12 @@ export default function VaultSafetyPage() {
             </p>
             <p>
               The flow is: you set up heirs and their inheritance shares once.
-              If you go inactive for the configured period (usually 180 days),
-              your guardians can initiate the inheritance claim. The vault
-              then enters a memorial state and the assets are distributed to
-              your heirs based on your configured shares.
+              When your guardians believe you are no longer able to access
+              your vault, they can initiate the inheritance claim on your behalf.
+              The vault then enters a 30-day veto period — during which you can
+              cancel it if you are still active — before entering a memorial state
+              where assets are distributed to your heirs based on your configured
+              shares.
             </p>
             <SubItem title="Why this is separate from recovery">
               Recovery assumes you&apos;re alive and trying to get your vault back.
@@ -320,7 +326,7 @@ export default function VaultSafetyPage() {
             <p>
               For a complete breakdown of what&apos;s visible to whom and how to
               think about privacy on VFIDE, see the{' '}
-              <Link href="/legal?tab=privacy" className="text-cyan-300 hover:text-cyan-200">
+              <Link href="/legal" className="text-cyan-300 hover:text-cyan-200">
                 full privacy explanation
               </Link>.
             </p>

@@ -32,6 +32,8 @@ const footerLinks: {
     { href: "https://discord.gg/vfide",              label: "Discord", external: true, soon: true },
   ],
   resources: [
+    { href: "/whitepaper/vfide-whitepaper.pdf",         label: "White Paper",   external: true },
+    { href: "/whitepaper/vfide-executive-summary.pdf",  label: "1-Page Summary", external: true },
     { href: "/docs",       label: "Documentation" },
     { href: "/onboarding", label: "Setup Wizard" },
     { href: "/about",      label: "About" },
@@ -54,7 +56,7 @@ export function Footer() {
     <footer className="footer-premium overflow-hidden">
       {/* Ambient background glow */}
       <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[700px] h-[300px] bg-cyan-400/4 rounded-full blur-[120px]" />
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[700px] h-[300px] bg-accent/4 rounded-full blur-[120px]" />
         <div className="absolute bottom-0 left-1/4 w-[400px] h-[200px] bg-violet-400/3 rounded-full blur-[100px]" />
       </div>
 
@@ -82,7 +84,7 @@ export function Footer() {
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-xl bg-white/4 border border-white/8 flex items-center justify-center text-zinc-400 hover:text-cyan-400 hover:border-cyan-400/25 hover:bg-cyan-400/5 transition-all"
+                  className="w-9 h-9 rounded-xl bg-white/4 border border-white/8 flex items-center justify-center text-zinc-400 hover:text-accent hover:border-accent/25 hover:bg-accent/5 transition-all"
                   aria-label={social.label}
                 >
                   <social.icon className="w-4 h-4" />
@@ -142,9 +144,21 @@ export function Footer() {
             <ul className="space-y-2.5">
               {footerLinks.resources.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="footer-link">
-                    {link.label}
-                  </Link>
+                  {link.external ? (
+                    <a
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="footer-link"
+                    >
+                      {link.label}
+                      <ArrowUpRight className="w-3 h-3 opacity-50" />
+                    </a>
+                  ) : (
+                    <Link href={link.href} className="footer-link">
+                      {link.label}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>
@@ -173,7 +187,7 @@ export function Footer() {
             <strong className="text-zinc-400">DISCLAIMER:</strong> VFIDE tokens are utility tokens for governance and
             payments, NOT investment securities. No guarantee of profits or returns. Cryptocurrency involves risk of
             total loss. Not financial, legal, or tax advice. See{" "}
-            <Link href="/legal" className="text-cyan-400/70 hover:text-cyan-400 underline underline-offset-2 transition-colors">
+            <Link href="/legal" className="text-accent/70 hover:text-accent underline underline-offset-2 transition-colors">
               Legal & Terms
             </Link>{" "}
             for full details.

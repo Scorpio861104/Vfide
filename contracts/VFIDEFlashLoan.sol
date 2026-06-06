@@ -61,7 +61,13 @@ interface IERC3156FlashBorrower {
     /// @param fee fee
     /// @param data data
     /// @return _bytes32 _bytes32
-    function onFlashLoan(address initiator, address token, uint256 amount, uint256 fee, bytes calldata data) external returns (bytes32);
+    function onFlashLoan(
+        address initiator,
+        address token,
+        uint256 amount,
+        uint256 fee,
+        bytes calldata data
+    ) external returns (bytes32);
 }
 
 /// @dev External query interface for system exemption checks.
@@ -302,7 +308,10 @@ contract VFIDEFlashLoan is ReentrancyGuard {
     /// @param amount amount
     /// @param lenderFee lenderFee
     /// @param protocolFee protocolFee
-    event FlashLoanExecuted(address indexed lender, address indexed borrower, address receiver, uint256 amount, uint256 lenderFee, uint256 protocolFee);
+    event FlashLoanExecuted(
+        address indexed lender, address indexed borrower,
+        address receiver, uint256 amount, uint256 lenderFee, uint256 protocolFee
+    );
     /// @notice Paused
     /// @param isPaused isPaused
     event Paused(bool isPaused);
@@ -359,15 +368,9 @@ contract VFIDEFlashLoan is ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
 
     /// @notice onlyDAO
-    modifier onlyDAO() {
-        if (msg.sender != dao) revert FL_NotDAO();
-        _;
-    }
+    modifier onlyDAO() { if (msg.sender != dao) revert FL_NotDAO(); _; }
     /// @notice whenNotPaused
-    modifier whenNotPaused() {
-        if (paused) revert FL_Paused();
-        _;
-    }
+    modifier whenNotPaused() { if (paused) revert FL_Paused(); _; }
 
     /// @notice _checkFraudStatus
     /// @param subject subject
@@ -506,7 +509,6 @@ contract VFIDEFlashLoan is ReentrancyGuard {
      *
      * If receiver doesn't repay amount + fee, the entire tx reverts.
      * Lender funds are mathematically impossible to lose.
-     * @return _bool _bool
      */
     function flashLoan(address lender, IERC3156FlashBorrower receiver, uint256 amount, uint256 maxFeeBps, bytes calldata data) external nonReentrant whenNotPaused returns (bool) {
         // SLITHER FALSE POSITIVES (suppressed via slither-disable-start below):
@@ -680,16 +682,17 @@ contract VFIDEFlashLoan is ReentrancyGuard {
     /// @return loans loans
     /// @return isPaused isPaused
     /// @return isRegistered isRegistered
-    function getLenderInfo(address lender) external view returns (uint256 balance, uint256 feeBps, uint256 earned, uint256 volume, uint256 loans, bool isPaused, bool isRegistered) {
+    function getLenderInfo(address lender) external view returns (
+        uint256 balance, uint256 feeBps, uint256 earned,
+        uint256 volume, uint256 loans, bool isPaused, bool isRegistered
+    ) {
         LenderInfo storage i = lenders[lender];
         return (i.balance, i.feeBps, i.totalEarned, i.totalVolume, i.loanCount, i.paused, i.registered);
     }
 
     /// @notice Number of registered lenders
     /// @return _uint256 _uint256
-    function lenderCount() external view returns (uint256) {
-        return lenderList.length;
-    }
+    function lenderCount() external view returns (uint256) { return lenderList.length; }
 
     /// @notice Paginated lender list (for frontend discovery)
     /// @param offset offset
@@ -750,10 +753,7 @@ contract VFIDEFlashLoan is ReentrancyGuard {
 
     /// @notice setPaused
     /// @param _paused _paused
-    function setPaused(bool _paused) external onlyDAO {
-        paused = _paused;
-        emit Paused(_paused);
-    }
+    function setPaused(bool _paused) external onlyDAO { paused = _paused; emit Paused(_paused); }
 
     /// @notice Propose a DAO rotation with 48-hour timelock (C-2 FIX)
     /// @param _dao _dao

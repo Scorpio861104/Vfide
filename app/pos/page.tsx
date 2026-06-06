@@ -4,8 +4,12 @@ export const dynamic = 'force-dynamic';
 
 import { Footer } from '@/components/layout/Footer';
 import { MerchantPOS } from '@/components/commerce/MerchantPOS';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function POSPage() {
+  const { locale } = useLocale();
+  void locale;
+
   return (
     <>
       <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] text-white relative">

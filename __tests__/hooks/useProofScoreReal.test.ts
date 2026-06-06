@@ -109,7 +109,7 @@ describe('useProofScore real guards', () => {
 
     expect(result.current.score).toBe(5000)
     expect(result.current.tierName).toBe('Neutral')
-    expect(result.current.burnFee).toBe(2.5)
+    expect(result.current.burnFee).toBeCloseTo(3.8125)
   })
 
   it('returns badge defaults when Seer is not configured', () => {

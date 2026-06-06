@@ -22,7 +22,7 @@
 'use client';
 
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, XCircle, AlertCircle, X } from 'lucide-react';
 import { subscribeToToasts } from '@/lib/toast';
 
@@ -93,7 +93,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       <div className="fixed top-20 right-4 z-50 flex flex-col gap-2 max-w-md">
         <AnimatePresence>
           {toasts.map((t) => (
-            <motion.div
+            <m.div
               key={t.id}
               initial={{ opacity: 0, y: -20, x: 100 }}
               animate={{ opacity: 1, y: 0, x: 0 }}
@@ -102,12 +102,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               className={`p-4 rounded-lg shadow-lg border flex items-start gap-3 backdrop-blur-xl ${
                 t.type === 'success' ? 'bg-emerald-500/10 border-emerald-500' :
                 t.type === 'error' ? 'bg-red-600/10 border-red-600' :
-                'bg-cyan-400/10 border-cyan-400'
+                'bg-accent/10 border-accent'
               }`}
             >
               {t.type === 'success' && <CheckCircle2 className="text-emerald-500 shrink-0" size={20} />}
               {t.type === 'error' && <XCircle className="text-red-600 shrink-0" size={20} />}
-              {t.type === 'info' && <AlertCircle className="text-cyan-400 shrink-0" size={20} />}
+              {t.type === 'info' && <AlertCircle className="text-accent shrink-0" size={20} />}
 
               <div className="flex-1 text-zinc-100 text-sm">{t.message}</div>
 
@@ -117,7 +117,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               >
                 <X size={16} />
               </button>
-            </motion.div>
+            </m.div>
           ))}
         </AnimatePresence>
       </div>

@@ -6,7 +6,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence, PanInfo } from 'framer-motion';
+import { m, AnimatePresence, PanInfo } from 'framer-motion';
 import { 
   Bell, 
   BellOff,
@@ -197,7 +197,7 @@ function NotificationItem({ notification, onRead, onArchive, onSnooze, onClose }
   }, [onArchive, onRead]);
 
   return (
-    <motion.div
+    <m.div
       className="relative overflow-hidden group"
       drag="x"
       dragConstraints={{ left: -100, right: 100 }}
@@ -216,10 +216,10 @@ function NotificationItem({ notification, onRead, onArchive, onSnooze, onClose }
       </div>
 
       {/* Content */}
-      <motion.div style={{ x: swipeX }}>
+      <m.div style={{ x: swipeX }}>
         <div
           className={`relative p-4 border-b border-zinc-700 hover:bg-zinc-700/50 transition-colors ${
-            !notification.read ? 'bg-cyan-400/5' : ''
+            !notification.read ? 'bg-accent/5' : ''
           }`}
         >
           {/* Priority indicator */}
@@ -257,7 +257,7 @@ function NotificationItem({ notification, onRead, onArchive, onSnooze, onClose }
                     {formatTimeAgo(notification.timestamp)}
                   </span>
                   {!notification.read && (
-                    <div className="w-2 h-2 rounded-full bg-cyan-400" />
+                    <div className="w-2 h-2 rounded-full bg-accent" />
                   )}
                 </div>
               </div>
@@ -297,8 +297,8 @@ function NotificationItem({ notification, onRead, onArchive, onSnooze, onClose }
             </button>
           </div>
         </div>
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 }
 
@@ -319,7 +319,7 @@ function SettingsPanel({ prefs, onUpdate }: SettingsPanelProps) {
             type="checkbox"
             checked={prefs.sound}
             onChange={(e) =>  onUpdate({ ...prefs, sound: e.target.checked })}
-            className="w-5 h-5 rounded bg-zinc-700 border-zinc-700 text-cyan-500 focus:ring-cyan-500/50"
+            className="w-5 h-5 rounded bg-zinc-700 border-zinc-700 text-accent focus:ring-accent/50"
           />
         </label>
         <label className="flex items-center justify-between">
@@ -328,7 +328,7 @@ function SettingsPanel({ prefs, onUpdate }: SettingsPanelProps) {
             type="checkbox"
             checked={prefs.desktop}
             onChange={(e) =>  onUpdate({ ...prefs, desktop: e.target.checked })}
-            className="w-5 h-5 rounded bg-zinc-700 border-zinc-700 text-cyan-500 focus:ring-cyan-500/50"
+            className="w-5 h-5 rounded bg-zinc-700 border-zinc-700 text-accent focus:ring-accent/50"
           />
         </label>
         <label className="flex items-center justify-between">
@@ -337,7 +337,7 @@ function SettingsPanel({ prefs, onUpdate }: SettingsPanelProps) {
             type="checkbox"
             checked={prefs.vibrate}
             onChange={(e) =>  onUpdate({ ...prefs, vibrate: e.target.checked })}
-            className="w-5 h-5 rounded bg-zinc-700 border-zinc-700 text-cyan-500 focus:ring-cyan-500/50"
+            className="w-5 h-5 rounded bg-zinc-700 border-zinc-700 text-accent focus:ring-accent/50"
           />
         </label>
       </div>
@@ -352,7 +352,7 @@ function SettingsPanel({ prefs, onUpdate }: SettingsPanelProps) {
               ...prefs, 
               quietHours: { ...prefs.quietHours, enabled: e.target.checked }
             })}
-            className="w-5 h-5 rounded bg-zinc-700 border-zinc-700 text-cyan-500 focus:ring-cyan-500/50"
+            className="w-5 h-5 rounded bg-zinc-700 border-zinc-700 text-accent focus:ring-accent/50"
           />
         </label>
         {prefs.quietHours.enabled && (
@@ -510,21 +510,21 @@ export function NotificationCenter() {
       {/* Bell Button with enhanced badge */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-zinc-400 hover:text-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500/50 rounded-lg"
+        className="relative p-2 text-zinc-400 hover:text-zinc-100 transition-colors focus:outline-none focus:ring-2 focus:ring-accent/50 rounded-lg"
         aria-label="Notifications"
       >
         <Bell size={20} />
         {unreadCount > 0 && (
           <>
-            <motion.span
+            <m.span
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs font-bold rounded-full flex items-center justify-center"
+              className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-gradient-to-r from-accent to-blue-500 text-white text-xs font-bold rounded-full flex items-center justify-center"
             >
               {unreadCount > 9 ? '9+' : unreadCount}
-            </motion.span>
+            </m.span>
             {/* Pulse animation */}
-            <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-cyan-500 rounded-full animate-ping opacity-30" />
+            <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-accent rounded-full animate-ping opacity-30" />
           </>
         )}
       </button>
@@ -534,7 +534,7 @@ export function NotificationCenter() {
         {isOpen && (
           <>
             {/* Backdrop */}
-            <motion.div 
+            <m.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -543,7 +543,7 @@ export function NotificationCenter() {
             />
             
             {/* Panel */}
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: -10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
@@ -554,10 +554,10 @@ export function NotificationCenter() {
               <div className="px-4 py-3 border-b border-zinc-700">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-bold text-zinc-100 flex items-center gap-2">
-                    <Bell size={18} className="text-cyan-400" />
+                    <Bell size={18} className="text-accent" />
                     Notifications
                     {unreadCount > 0 && (
-                      <span className="px-2 py-0.5 bg-cyan-500/20 text-cyan-400 rounded-full text-xs font-medium">
+                      <span className="px-2 py-0.5 bg-accent/20 text-accent rounded-full text-xs font-medium">
                         {unreadCount}
                       </span>
                     )}
@@ -566,7 +566,7 @@ export function NotificationCenter() {
                     <button
                       onClick={() => setPrefs(p => ({ ...p, sound: !p.sound }))}
                       className={`p-2 rounded-lg transition-colors ${
-                        prefs.sound ? 'bg-cyan-500/20 text-cyan-400' : 'bg-white/5 text-zinc-400'
+                        prefs.sound ? 'bg-accent/20 text-accent' : 'bg-white/5 text-zinc-400'
                       }`}
                       title={prefs.sound ? 'Mute sounds' : 'Enable sounds'}
                     >
@@ -614,7 +614,7 @@ export function NotificationCenter() {
                       >
                         Unread
                         {unreadCount > 0 && (
-                          <span className="w-5 h-5 rounded-full bg-cyan-500 text-white text-xs flex items-center justify-center">
+                          <span className="w-5 h-5 rounded-full bg-accent text-white text-xs flex items-center justify-center">
                             {unreadCount}
                           </span>
                         )}
@@ -622,7 +622,7 @@ export function NotificationCenter() {
                       <div className="flex-1" />
                       <button
                         onClick={markAllRead}
-                        className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+                        className="text-xs text-accent hover:text-accent transition-colors"
                       >
                         Mark all read
                       </button>
@@ -636,7 +636,7 @@ export function NotificationCenter() {
                         value={searchQuery}
                         onChange={(e) =>  setSearchQuery(e.target.value)}
                        
-                        className="w-full pl-9 pr-3 py-2 bg-white/5 border border-zinc-700 rounded-lg text-sm text-white  focus:outline-none focus:border-cyan-500/50"
+                        className="w-full pl-9 pr-3 py-2 bg-white/5 border border-zinc-700 rounded-lg text-sm text-white  focus:outline-none focus:border-accent/50"
                       />
                     </div>
                   </>
@@ -676,7 +676,7 @@ export function NotificationCenter() {
                 <Link
                   href="/settings?tab=notifications"
                   onClick={() => setIsOpen(false)}
-                  className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-1"
+                  className="text-sm text-accent hover:text-accent transition-colors flex items-center gap-1"
                 >
                   View all
                   <ChevronRight size={14} />
@@ -689,7 +689,7 @@ export function NotificationCenter() {
                   Clear archived
                 </button>
               </div>
-            </motion.div>
+            </m.div>
           </>
         )}
       </AnimatePresence>

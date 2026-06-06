@@ -1,7 +1,7 @@
 'use client'
 
 import { useReadContract, useAccount } from 'wagmi'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { Users, TrendingUp, Clock } from 'lucide-react'
 import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts'
 import { SeerSocialABI } from '@/lib/abis'
@@ -44,7 +44,7 @@ export function EndorsementStats({
 
   return (
     <div className={`grid grid-cols-3 gap-2 ${sizeClasses}`}>
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0 }}
@@ -55,9 +55,9 @@ export function EndorsementStats({
         </div>
         <div className="font-bold text-white">{activeEndorsers}</div>
         <div className="text-xs text-gray-400">Endorsers</div>
-      </motion.div>
+      </m.div>
 
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
@@ -68,20 +68,20 @@ export function EndorsementStats({
         </div>
         <div className="font-bold text-white">+{activeBonus}</div>
         <div className="text-xs text-gray-400">Score Bonus</div>
-      </motion.div>
+      </m.div>
 
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="bg-gradient-to-br from-blue-900/20 to-cyan-900/20 border border-blue-500/30 rounded-lg p-3 text-center"
+        className="bg-gradient-to-br from-blue-900/20 to-accent/20 border border-blue-500/30 rounded-lg p-3 text-center"
       >
         <div className="flex items-center justify-center gap-1 mb-1">
           <Clock className={`${iconSize} text-blue-400`} />
         </div>
         <div className="font-bold text-white">{youGave}</div>
         <div className="text-xs text-gray-400">You Gave</div>
-      </motion.div>
+      </m.div>
     </div>
   )
 }

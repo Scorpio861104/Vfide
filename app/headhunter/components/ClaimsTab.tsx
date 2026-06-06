@@ -78,12 +78,15 @@ export function ClaimsTab() {
   const previewConfigured =
     isConfiguredContractAddress(viewAddress) && !!address && periods.length > 0;
   const { data: previewData, isLoading: previewLoading } = useReadContracts({
-    contracts: periods.map((p) => ({
-      address: viewAddress,
-      abi: EcosystemVaultViewABI as any,
-      functionName: 'previewHeadhunterReward',
-      args: [p.year, p.quarter, address ?? '0x0000000000000000000000000000000000000000'] as const,
-    })),
+    contracts: previewConfigured
+      ? periods.map((p) => ({
+          address: viewAddress,
+          abi: EcosystemVaultViewABI as any,
+          functionName: 'previewHeadhunterReward',
+          // abi-parity-ok: previewHeadhunterReward(uint256 year, uint256 quarter, address user) — 3 args, statically present
+          args: [p.year, p.quarter, address] as const,
+        }))
+      : [],
     query: { enabled: previewConfigured },
   });
 
@@ -185,7 +188,7 @@ export function ClaimsTab() {
 
       {loading && (
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="animate-spin text-cyan-400" size={32} aria-hidden="true" />
+          <Loader2 className="animate-spin text-accent" size={32} aria-hidden="true" />
         </div>
       )}
 
@@ -220,7 +223,7 @@ export function ClaimsTab() {
                   <div className="text-sm text-zinc-400 mt-1 flex flex-wrap gap-x-4 gap-y-1">
                     <span>
                       Points:{' '}
-                      <span className="font-mono text-cyan-300">{q.referrerPoints}</span>
+                      <span className="font-mono text-accent">{q.referrerPoints}</span>
                     </span>
                     <span>
                       Pool:{' '}
@@ -235,7 +238,7 @@ export function ClaimsTab() {
                           <CheckCircle size={12} aria-hidden="true" /> Claimed
                         </span>
                       ) : q.quarterEnded ? (
-                        <span className="text-cyan-300">Eligible</span>
+                        <span className="text-accent">Eligible</span>
                       ) : (
                         <span className="text-amber-400">Quarter in progress</span>
                       )}
@@ -247,7 +250,7 @@ export function ClaimsTab() {
                   onClick={() => handleClaim(q)}
                   disabled={!canClaim || isClaiming || isPending}
                   aria-label={`Claim Q${q.quarter} ${q.year} reward`}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 disabled:opacity-40 disabled:cursor-not-allowed text-zinc-950 text-sm font-bold transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent hover:bg-accent-light disabled:opacity-40 disabled:cursor-not-allowed text-zinc-950 text-sm font-bold transition-colors"
                 >
                   {isClaiming ? (
                     <Loader2 className="animate-spin" size={14} aria-hidden="true" />

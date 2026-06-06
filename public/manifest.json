@@ -1,7 +1,7 @@
 {
   "name": "VFIDE Protocol",
   "short_name": "VFIDE",
-  "description": "Decentralized Payment Protocol - Accept crypto payments. Build trust. No processor fees (burn + gas apply).",
+  "description": "Zero merchant fees. You hold your keys. Self-custodial payments and commerce on Base.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0F0F12",
@@ -21,6 +21,18 @@
       "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }

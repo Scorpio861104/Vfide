@@ -1,0 +1,38 @@
+export default function ProfileLoading() {
+  return (
+    <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] relative">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+        <div
+          className="absolute top-20 left-1/2 -translate-x-1/2 w-[600px] h-[300px] rounded-full opacity-[0.06]"
+          style={{ background: "radial-gradient(ellipse, #8b5cf6 0%, transparent 70%)" }}
+        />
+      </div>
+      {/* Header */}
+      <div className="container mx-auto px-4 max-w-6xl py-10">
+        <div className="mb-8">
+          <div className="h-3 w-20 rounded-full bg-accent/10 border border-accent/20 animate-pulse mb-3" />
+          <div className="h-9 w-56 rounded-xl bg-white/8 animate-pulse mb-2" />
+          <div className="h-4 w-80 rounded-lg bg-white/5 animate-pulse" />
+        </div>
+        {/* Avatar */}
+        <div className="flex flex-col items-center gap-4 mb-8">
+          <div className="w-24 h-24 rounded-full bg-white/8 animate-pulse" />
+          <div className="h-6 w-40 rounded-xl bg-white/8 animate-pulse" />
+          <div className="h-4 w-28 rounded bg-white/5 animate-pulse" />
+        </div>
+        {/* Content */}
+        {/* Tabs */}
+        <div className="flex gap-2 mb-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-9 w-24 rounded-lg bg-white/6 border border-white/8 animate-pulse" />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="rounded-2xl border border-white/6 bg-white/[0.02] p-6 h-48 animate-pulse" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}

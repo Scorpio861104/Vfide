@@ -14,7 +14,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Search, Star, Store, ShoppingCart, Send, Repeat, Banknote, QrCode } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
@@ -122,7 +122,7 @@ export function QuickActions({ actions = DEFAULT_QUICK_ACTIONS, visible, onSelec
             const y = Math.sin((angle * Math.PI) / 180) * radius;
 
             return (
-              <motion.button
+              <m.button
                 key={action.id}
                 initial={{ opacity: 0, x: 0, y: 0, scale: 0.3 }}
                 animate={{ opacity: 1, x, y, scale: 1 }}
@@ -142,7 +142,7 @@ export function QuickActions({ actions = DEFAULT_QUICK_ACTIONS, visible, onSelec
                   {action.icon}
                 </div>
                 <span className="text-[9px] font-bold text-gray-300 whitespace-nowrap">{action.label}</span>
-              </motion.button>
+              </m.button>
             );
           })}
         </div>
@@ -283,13 +283,13 @@ export function NotificationPulse({ active, count = 0, color = '#06B6D4' }: Noti
       {/* Pulse rings */}
       {active && (
         <>
-          <motion.div
+          <m.div
             className="absolute inset-0 rounded-2xl pointer-events-none"
             animate={{ scale: [1, 1.5], opacity: [0.4, 0] }}
             transition={{ duration: 1.5, repeat: Infinity, ease: 'easeOut' }}
             style={{ border: `2px solid ${color}` }}
           />
-          <motion.div
+          <m.div
             className="absolute inset-0 rounded-2xl pointer-events-none"
             animate={{ scale: [1, 1.8], opacity: [0.2, 0] }}
             transition={{ duration: 1.5, repeat: Infinity, ease: 'easeOut', delay: 0.3 }}
@@ -300,7 +300,7 @@ export function NotificationPulse({ active, count = 0, color = '#06B6D4' }: Noti
 
       {/* Count badge */}
       {count > 0 && (
-        <motion.div
+        <m.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white z-20"
@@ -309,7 +309,7 @@ export function NotificationPulse({ active, count = 0, color = '#06B6D4' }: Noti
             boxShadow: `0 0 8px ${color}60, 0 2px 4px rgba(0,0,0,0.3)`,
           }}>
           {count > 9 ? '9+' : count}
-        </motion.div>
+        </m.div>
       )}
     </>
   );
@@ -343,7 +343,7 @@ export function MenuSearch({ value, onChange, resultCount }: MenuSearchProps) {
           value={value}
           onChange={e =>  onChange(e.target.value)}
          
-          className="w-full pl-7 pr-3 py-1.5 bg-white/3 border border-white/5 rounded-lg text-xs text-white  focus:outline-none focus:border-cyan-500/30"
+          className="w-full pl-7 pr-3 py-1.5 bg-white/3 border border-white/5 rounded-lg text-xs text-white  focus:outline-none focus:border-accent/30"
         />
         {value && (
           <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] text-gray-600">
@@ -394,7 +394,7 @@ interface FavoriteStarProps {
 
 export function FavoriteStar({ itemId, isFavorite, onToggle, color = '#F59E0B' }: FavoriteStarProps) {
   return (
-    <motion.button
+    <m.button
       onClick={e => { e.stopPropagation(); onToggle(itemId); }}
       whileTap={{ scale: 0.8 }}
       className="w-5 h-5 flex items-center justify-center rounded shrink-0"
@@ -406,7 +406,7 @@ export function FavoriteStar({ itemId, isFavorite, onToggle, color = '#F59E0B' }
         stroke={isFavorite ? color : 'rgba(255,255,255,0.15)'}
         style={isFavorite ? { filter: `drop-shadow(0 0 4px ${color}60)` } : undefined}
       />
-    </motion.button>
+    </m.button>
   );
 }
 
@@ -507,7 +507,7 @@ export function PaymentRipple({ trigger, color = '#10B981' }: PaymentRippleProps
   return (
     <>
       {ripples.map(id => (
-        <motion.div
+        <m.div
           key={id}
           className="absolute inset-0 rounded-2xl pointer-events-none"
           initial={{ scale: 1, opacity: 0.6, borderWidth: 3 }}

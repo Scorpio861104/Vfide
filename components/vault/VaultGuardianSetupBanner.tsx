@@ -31,7 +31,7 @@
 
 import Link from 'next/link';
 import { ShieldAlert, ShieldCheck, ChevronRight, Clock } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { useReadContract } from 'wagmi';
 import type { Address } from 'viem';
 import { CONTRACT_ADDRESSES, VAULT_HUB_ABI, isConfiguredContractAddress } from '@/lib/contracts';
@@ -99,9 +99,9 @@ export function VaultGuardianSetupBanner({ vaultAddress }: { vaultAddress: Addre
     title = `Only ${daysRemaining} day${daysRemaining === 1 ? '' : 's'} left to finalize guardian setup`;
     subtitle = 'After the deadline, guardian-mediated recovery rotations will be blocked until setup is completed.';
   } else {
-    containerClass = 'bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border-cyan-500/30 hover:border-cyan-400/50';
-    iconBg = 'bg-cyan-500/20';
-    iconColor = 'text-cyan-300';
+    containerClass = 'bg-gradient-to-br from-accent/10 to-blue-500/5 border-accent/30 hover:border-accent/50';
+    iconBg = 'bg-accent/20';
+    iconColor = 'text-accent';
     Icon = ShieldCheck;
     title = 'Finalize your guardian setup';
     subtitle = `${daysRemaining} day${daysRemaining === 1 ? '' : 's'} remaining in the 30-day grace period. Add at least 2 guardians, then complete setup.`;
@@ -110,7 +110,7 @@ export function VaultGuardianSetupBanner({ vaultAddress }: { vaultAddress: Addre
   return (
     <section className="py-2 relative z-10">
       <div className="container mx-auto px-4 max-w-6xl">
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
         >
@@ -131,7 +131,7 @@ export function VaultGuardianSetupBanner({ vaultAddress }: { vaultAddress: Addre
               <ChevronRight className={iconColor} size={20} />
             </div>
           </Link>
-        </motion.div>
+        </m.div>
       </div>
     </section>
   );

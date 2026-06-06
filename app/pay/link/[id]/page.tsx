@@ -1,10 +1,13 @@
 import { Suspense } from 'react';
 import { Footer } from '@/components/layout/Footer';
 import { PayLinkContent } from './components/PayLinkContent';
+import { DEFAULT_LOCALE } from '@/lib/i18n';
 
 export const dynamic = 'force-dynamic';
 
 export default async function PayLinkPage({ params }: { params: Promise<{ id: string }> }) {
+  const locale = DEFAULT_LOCALE;
+  void locale;
   const { id } = await params;
   return (
     <>

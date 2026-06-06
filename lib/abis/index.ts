@@ -15,6 +15,7 @@ import SeerRaw from './Seer.json'
 import DAORaw from './DAO.json'
 import DAOTimelockRaw from './DAOTimelock.json'
 import MerchantPortalRaw from './MerchantPortal.json'
+import MerchantPortalViewerRaw from './MerchantPortalViewer.json'
 import VFIDECommerceRaw from './VFIDECommerce.json'
 import MerchantRegistryRaw from './MerchantRegistry.json'
 import ProofScoreBurnRouterRaw from './ProofScoreBurnRouter.json'
@@ -97,6 +98,7 @@ const SeerABI = normalizeImportedABI(SeerRaw);
 const DAOABI = normalizeImportedABI(DAORaw);
 const DAOTimelockABI = normalizeImportedABI(DAOTimelockRaw);
 const MerchantPortalABI = normalizeImportedABI(MerchantPortalRaw);
+const MerchantPortalViewerABI = normalizeImportedABI(MerchantPortalViewerRaw);
 // MerchantRegistry is a SEPARATE contract from CommerceEscrow.
 // Previously this file aliased MerchantRegistryABI = VFIDECommerceRaw, but
 // VFIDECommerce.json only contains the CommerceEscrow ABI — the registry
@@ -185,6 +187,7 @@ validateABI(SeerABI, 'Seer');
 validateABI(DAOABI, 'DAO');
 validateABI(DAOTimelockABI, 'DAOTimelock');
 validateABI(MerchantPortalABI, 'MerchantPortal');
+validateABI(MerchantPortalViewerABI, 'MerchantPortalViewer');
 validateABI(MerchantRegistryABI, 'MerchantRegistry');
 validateABI(VFIDECommerceABI, 'VFIDECommerce');
 validateABI(ProofScoreBurnRouterABI, 'ProofScoreBurnRouter');
@@ -262,6 +265,7 @@ export {
   DAOABI,
   DAOTimelockABI,
   MerchantPortalABI,
+  MerchantPortalViewerABI,
   MerchantRegistryABI,
   VFIDECommerceABI,
   ProofScoreBurnRouterABI,

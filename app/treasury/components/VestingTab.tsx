@@ -10,7 +10,7 @@ import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts
  * Treasury → VestingTab — DevReserveVesting real-data view.
  *
  * Tier 2 Phase 4 Turn 2 (2026-05-17). Replaces hardcoded schedule
- * (50M VFIDE / 60-day cliff / 36-month linear) with real on-chain reads
+ * (50M VFIDE / 60-day cliff / 60-month linear — 30 bi-monthly unlocks over 5 years) with real on-chain reads
  * via `DevReserveVesting.getVestingStatus()` which returns the aggregate
  * schedule in one call.
  *

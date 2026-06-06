@@ -693,19 +693,6 @@
   },
   {
     "inputs": [],
-    "name": "MIN_BURN_BPS",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "MIN_DISTRIBUTION_INTERVAL",
     "outputs": [
       {
@@ -751,19 +738,6 @@
         "internalType": "bool",
         "name": "",
         "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "burnAddress",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -844,16 +818,6 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "burnBps",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "sanctumBps",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
         "name": "daoPayrollBps",
         "type": "uint256"
       },
@@ -865,39 +829,6 @@
       {
         "internalType": "uint256",
         "name": "headhunterPoolBps",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getCurrentSplit",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
         "type": "uint256"
       }
     ],
@@ -1310,19 +1241,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "sanctumFund",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "address",
@@ -1385,32 +1303,6 @@
         "internalType": "bool",
         "name": "",
         "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "totalBurnSinkHeld",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "totalBurned",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -1496,19 +1388,6 @@
   },
   {
     "inputs": [],
-    "name": "totalToSanctum",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "unpause",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -1526,5 +1405,28 @@
     ],
     "stateMutability": "view",
     "type": "function"
+  },
+  {
+    "type": "function",
+    "name": "getSplit",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "daoPayrollBps",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "merchantPoolBps",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "headhunterPoolBps",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
   }
 ]

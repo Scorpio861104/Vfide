@@ -56,17 +56,21 @@ export function LenderDashboardTab() {
   // Also clear the input that the user just acted on, so the form is
   // reset only AFTER the chain confirms, not before.
   useEffect(() => {
+    let _cancelled = false;
     if (depositConfirmed) {
       refetch();
       setDepositInput('');
     }
-  }, [depositConfirmed, refetch]);
+    return () => { _cancelled = true; };
+    }, [depositConfirmed, refetch]);
   useEffect(() => {
+    let _cancelled = false;
     if (withdrawConfirmed) {
       refetch();
       setWithdrawInput('');
     }
-  }, [withdrawConfirmed, refetch]);
+    return () => { _cancelled = true; };
+    }, [withdrawConfirmed, refetch]);
 
   // VFIDE balance check for deposit pre-flight (avoid confusing ERC20
   // transferFrom revert at the approve step if they\u2019d be paying
@@ -115,7 +119,7 @@ export function LenderDashboardTab() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 size={24} className="text-cyan-400 animate-spin" aria-hidden="true" />
+        <Loader2 size={24} className="text-accent animate-spin" aria-hidden="true" />
       </div>
     );
   }
@@ -165,15 +169,18 @@ export function LenderDashboardTab() {
   if (!info?.registered) {
     return (
       <div className="space-y-5">
-        <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-6">
+        <div className="rounded-2xl border border-accent/20 bg-accent/5 p-6">
           <div className="flex items-center gap-2 mb-3">
-            <Wallet size={16} className="text-cyan-400" aria-hidden="true" />
+            <Wallet size={16} className="text-accent" aria-hidden="true" />
             <h3 className="text-white font-semibold">Become a Lender</h3>
           </div>
           <p className="text-zinc-300 text-sm mb-4">
             Deposit VFIDE to make it available for flash loans. You earn fees on every loan
             that borrows from your balance. You can withdraw anytime, as long as your funds
             aren&rsquo;t in the middle of a loan (which only lasts one transaction anyway).
+          </p>
+          <p className="text-xs text-amber-400/80 mb-3">
+            ⚠ Minimum initial deposit: <strong>100 VFIDE</strong>. Deposits below this threshold will be rejected by the contract.
           </p>
           <div className="flex gap-2">
             <input
@@ -185,12 +192,12 @@ export function LenderDashboardTab() {
               onChange={(e) => setDepositInput(e.target.value)}
               placeholder="Amount in VFIDE"
               aria-label="Initial deposit amount"
-              className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/50"
+              className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:outline-none focus:border-accent/50"
             />
             <button
               onClick={handleDeposit}
               disabled={depositPending || depositConfirming || !depositInput}
-              className="flex items-center gap-2 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 px-4 py-2 text-sm font-semibold text-cyan-400 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+              className="flex items-center gap-2 rounded-lg bg-accent/20 hover:bg-accent/30 px-4 py-2 text-sm font-semibold text-accent transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
             >
               {depositPending || depositConfirming ? (
                 <Loader2 size={14} className="animate-spin" aria-hidden="true" />
@@ -215,7 +222,7 @@ export function LenderDashboardTab() {
     {
       label: 'Available balance',
       value: `${formatUnits(info.balance, VFIDE_DECIMALS)} VFIDE`,
-      icon: <Wallet size={14} className="text-cyan-400" aria-hidden="true" />,
+      icon: <Wallet size={14} className="text-accent" aria-hidden="true" />,
     },
     {
       label: 'Fee rate',
@@ -257,7 +264,7 @@ export function LenderDashboardTab() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
           <div className="flex items-center gap-2 mb-3">
-            <Plus size={16} className="text-cyan-400" aria-hidden="true" />
+            <Plus size={16} className="text-accent" aria-hidden="true" />
             <h3 className="text-white font-semibold text-sm">Top up</h3>
           </div>
           <div className="flex gap-2">
@@ -270,12 +277,12 @@ export function LenderDashboardTab() {
               onChange={(e) => setDepositInput(e.target.value)}
               placeholder="Amount"
               aria-label="Top-up amount in VFIDE"
-              className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/50"
+              className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:outline-none focus:border-accent/50"
             />
             <button
               onClick={handleDeposit}
               disabled={depositPending || depositConfirming || !depositInput}
-              className="rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 px-3 py-2 text-sm font-semibold text-cyan-400 disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+              className="rounded-lg bg-accent/20 hover:bg-accent/30 px-3 py-2 text-sm font-semibold text-accent disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
             >
               {depositPending || depositConfirming ? <Loader2 size={14} className="animate-spin" aria-hidden="true" /> : 'Add'}
             </button>
@@ -297,12 +304,12 @@ export function LenderDashboardTab() {
               onChange={(e) => setWithdrawInput(e.target.value)}
               placeholder="Amount"
               aria-label="Withdraw amount in VFIDE"
-              className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/50"
+              className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:outline-none focus:border-accent/50"
             />
             <button
               onClick={handleWithdraw}
               disabled={withdrawPending || withdrawConfirming || !withdrawInput}
-              className="rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 px-3 py-2 text-sm font-semibold text-emerald-400 disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+              className="rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 px-3 py-2 text-sm font-semibold text-emerald-400 disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
             >
               {withdrawPending || withdrawConfirming ? <Loader2 size={14} className="animate-spin" aria-hidden="true" /> : 'Pull'}
             </button>

@@ -4,6 +4,7 @@ import { useAccount } from 'wagmi'
 import { TrustChallenges } from '@/app/proofscore/components/TrustChallenges'
 import { ScoreStoryFeed } from '@/app/proofscore/components/ScoreStoryFeed'
 import { ProofScoreVisualizer } from '@/components/trust/ProofScoreVisualizer'
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 const TIERS = [
   { tier: 'Risky',      min: 0,   max: 299, color: 'bg-red-500',    desc: 'No verified identity. High risk.' },
@@ -11,11 +12,14 @@ const TIERS = [
   { tier: 'Neutral',    min: 500, max: 599, color: 'bg-yellow-400', desc: 'Basic address ownership verified.' },
   { tier: 'Governance', min: 600, max: 699, color: 'bg-lime-400',   desc: 'Governance participation active.' },
   { tier: 'Trusted',    min: 700, max: 799, color: 'bg-green-500',  desc: 'Multi-source trust. Recognised.' },
-  { tier: 'Council',    min: 800, max: 899, color: 'bg-cyan-500',   desc: 'Council-level governance + staking.' },
+  { tier: 'Council',    min: 800, max: 899, color: 'bg-cyan-500',   desc: 'Council-level governance.' },
   { tier: 'Elite',      min: 900, max: 999, color: 'bg-violet-600', desc: 'Elite — top 1% verified wallets.' },
 ]
 
 export default function ProofScorePage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address } = useAccount()
 
   return (

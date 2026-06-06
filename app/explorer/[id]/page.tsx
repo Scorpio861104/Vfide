@@ -11,8 +11,12 @@ import { BadgeGallery } from '@/components/badge/BadgeGallery'
 import { EndorsementStats } from '@/components/trust/EndorsementStats'
 import { useProofScore } from '@/lib/vfide-hooks'
 import { useCopyToClipboard } from '@/lib/hooks/useCopyToClipboard'
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function AddressPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const params = useParams()
   const { address: connectedAddress } = useAccount()
   const address = params.id as `0x${string}`
@@ -21,7 +25,7 @@ export default function AddressPage() {
   // Validate address format
   const isValidAddress = address && address.startsWith('0x') && address.length === 42
   
-  const { score, tier, canVote, canMerchant, isLoading } = useProofScore(
+  const { score, tierName, canVote, canMerchant, isLoading } = useProofScore(
     isValidAddress ? address : undefined
   )
   // Suppress unused variable warning - score is part of returned data structure
@@ -104,7 +108,7 @@ export default function AddressPage() {
               <div className="text-sm space-y-2">
                 <div>
                   <span className="text-gray-400">Trust Tier:</span>
-                  <span className="ml-2 font-bold text-amber-300">{tier || 'Loading...'}</span>
+                  <span className="ml-2 font-bold text-amber-300">{tierName || 'Loading...'}</span>
                 </div>
                 {!isLoading && (
                   <>

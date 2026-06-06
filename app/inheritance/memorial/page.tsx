@@ -45,10 +45,14 @@ import { isAddress, formatUnits, type Abi, type Address, type Hex } from 'viem';
 import CardBoundVaultABI from '@/lib/abis/CardBoundVault.json';
 import CardBoundVaultInheritanceManagerABI from '@/lib/abis/CardBoundVaultInheritanceManager.json';
 import { INHERITANCE_STATE_LABEL } from '@/hooks/useInheritance';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 const ZERO_ADDR = '0x0000000000000000000000000000000000000000' as const;
 
 export default function MemorialPage() {
+  const { locale } = useLocale();
+  void locale;
+
   return (
     <Suspense fallback={<LoadingPage />}>
       <MemorialInner />
@@ -99,7 +103,7 @@ function MemorialInner() {
               type="button"
               onClick={submitVault}
               disabled={!isAddress(vaultInput.trim())}
-              className="rounded-lg bg-cyan-500/20 px-4 py-2 text-sm text-cyan-300 hover:bg-cyan-500/30 disabled:opacity-50"
+              className="rounded-lg bg-accent/20 px-4 py-2 text-sm text-accent hover:bg-accent/30 disabled:opacity-50"
             >
               View memorial
             </button>
@@ -275,8 +279,8 @@ function MemorialState({ state, windowEnd }: { state: number; windowEnd: number 
 
   if (state === 3) {
     return (
-      <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/5 p-4">
-        <div className="flex items-center gap-3 text-cyan-200">
+      <div className="rounded-xl border border-accent/30 bg-accent/5 p-4">
+        <div className="flex items-center gap-3 text-accent">
           <Clock size={20} />
           <div className="flex-1">
             <div className="text-xs uppercase tracking-wider opacity-70">State</div>
@@ -486,7 +490,7 @@ function NoticeCard({
 }) {
   const toneClass = {
     amber: 'border-amber-500/30 bg-amber-500/5 text-amber-200',
-    cyan: 'border-cyan-500/30 bg-cyan-500/5 text-cyan-200',
+    cyan: 'border-accent/30 bg-accent/5 text-accent',
     emerald: 'border-emerald-500/30 bg-emerald-500/5 text-emerald-200',
     gray: 'border-gray-500/30 bg-gray-500/5 text-gray-300',
   }[tone];

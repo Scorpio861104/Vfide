@@ -15,6 +15,7 @@ import {
 import { formatEther, type Address } from 'viem';
 import { Footer } from '@/components/layout/Footer';
 import { useSanctumVault, deriveDisbursementStatus } from '@/hooks/useSanctumVault';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 /**
  * /sanctum/charities/[id] — detail view for a single DAO-approved charity.
@@ -28,6 +29,9 @@ import { useSanctumVault, deriveDisbursementStatus } from '@/hooks/useSanctumVau
  * registry entry).
  */
 export default function CharityDetailPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const params = useParams();
   const rawId = (params?.id ?? '') as string;
   const isValidAddress =
@@ -107,7 +111,7 @@ export default function CharityDetailPage() {
             <>
               No charity is registered at this address, or the read from the contract failed. Try
               returning to the{' '}
-              <Link href="/sanctum?tab=charities" className="text-cyan-400 hover:text-cyan-300">
+              <Link href="/sanctum?tab=charities" className="text-accent hover:text-accent">
                 charity list
               </Link>
               .
@@ -275,7 +279,7 @@ function DetailFrame({ children }: { children: React.ReactNode }) {
         <div className="max-w-4xl mx-auto px-4 space-y-6">
           <Link
             href="/sanctum?tab=charities"
-            className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-cyan-400 transition-colors"
+            className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-accent transition-colors"
           >
             <ArrowLeft size={16} /> Back to charities
           </Link>

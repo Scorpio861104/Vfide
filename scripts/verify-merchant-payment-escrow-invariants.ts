@@ -1,0 +1,257 @@
+import { Contract, ContractFactory, FetchRequest, JsonRpcProvider } from 'ethers';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+function loadArtifact(relativePath: string) {
+  const filePath = resolve(process.cwd(), relativePath);
+  return JSON.parse(readFileSync(filePath, 'utf8')) as {
+    abi: any[];
+    bytecode: string;
+    linkReferences?: Record<string, Record<string, Array<{ start: number; length: number }>>>;
+  };
+}
+
+async function expectRevert(action: () => Promise<any>, label: string) {
+  try {
+    await action();
+    throw new Error(`Expected revert for: ${label}`);
+  } catch (err: any) {
+    if (err?.message?.startsWith('Expected revert')) throw err;
+    // Reverted as expected — any revert reason is acceptable
+  }
+}
+
+async function main() {
+  const rpcUrl = process.env.RPC_URL ?? 'http://127.0.0.1:8545';
+  const request = new FetchRequest(rpcUrl);
+  request.timeout = 180_000;
+  const provider = new JsonRpcProvider(request);
+
+  const dao = await provider.getSigner(0);
+  const merchant = await provider.getSigner(1);
+  const customer = await provider.getSigner(2);
+  const attacker = await provider.getSigner(3);
+
+  const daoAddress = await dao.getAddress();
+  const merchantAddress = await merchant.getAddress();
+  const customerAddress = await customer.getAddress();
+
+  // Load artifacts (compiled during the CI compile step before this script runs)
+  const seerArtifact = loadArtifact(
+    'artifacts/contracts/mocks/CommerceEscrowVerifierMocks.sol/MockSeerForEscrow.json'
+  );
+  const vaultHubArtifact = loadArtifact(
+    'artifacts/contracts/mocks/CommerceEscrowVerifierMocks.sol/MockVaultHubForEscrow.json'
+  );
+  const ledgerArtifact = loadArtifact(
+    'artifacts/contracts/mocks/CommerceEscrowVerifierMocks.sol/MockLedgerForEscrow.json'
+  );
+  const tokenArtifact = loadArtifact(
+    'artifacts/contracts/mocks/CommerceEscrowVerifierMocks.sol/MockTokenForEscrow.json'
+  );
+  const portalArtifact = loadArtifact('artifacts/contracts/MerchantPortal.sol/MerchantPortal.json');
+  // F-60 path: customer vault is now a real contract; we need its ABI to drive
+  // approvals when the contract requires vault-side ERC20 allowance.
+  const cardBoundVaultArtifact = loadArtifact(
+    'artifacts/contracts/mocks/CommerceEscrowVerifierMocks.sol/MockCardBoundVaultForEscrow.json'
+  );
+
+  // Deploy mock seer (full ISeer stub — returns 0 for minForMerchant so portal uses its own floor)
+  const seerFactory = new ContractFactory(seerArtifact.abi as any, seerArtifact.bytecode, dao);
+  const seer = (await seerFactory.deploy()) as any;
+  await seer.waitForDeployment();
+
+  // Set merchant score well above any threshold
+  await (await seer.setScore(merchantAddress, 9000)).wait();
+
+  // Deploy mock vaultHub
+  const vaultHubFactory = new ContractFactory(
+    vaultHubArtifact.abi as any,
+    vaultHubArtifact.bytecode,
+    dao
+  );
+  const vaultHub = (await vaultHubFactory.deploy()) as any;
+  await vaultHub.waitForDeployment();
+
+  // Deploy mock ledger
+  const ledgerFactory = new ContractFactory(
+    ledgerArtifact.abi as any,
+    ledgerArtifact.bytecode,
+    dao
+  );
+  const ledger = (await ledgerFactory.deploy()) as any;
+  await ledger.waitForDeployment();
+
+  // Deploy mock token
+  const tokenFactory = new ContractFactory(tokenArtifact.abi as any, tokenArtifact.bytecode, dao);
+  const token = (await tokenFactory.deploy()) as any;
+  await token.waitForDeployment();
+  const tokenAddress = await token.getAddress();
+
+  // Mint tokens to customer
+  const mintAmount = 1_000_000n * 10n ** 18n;
+  await (await token.mint(customerAddress, mintAmount)).wait();
+
+  // Deploy MerchantPortal with proper mocks
+  const portalFactory = new ContractFactory(
+    portalArtifact.abi as any,
+    portalArtifact.bytecode,
+    dao
+  );
+  const portal = (await portalFactory.deploy(
+    daoAddress,
+    await vaultHub.getAddress(),
+    await seer.getAddress(),
+    await ledger.getAddress()
+  )) as any;
+  await portal.waitForDeployment();
+
+  console.log('✓ MerchantPortal deployed at', await portal.getAddress());
+
+  // ── INV-01: Unregistered merchant cannot process payment ──────────────────
+  await expectRevert(
+    () =>
+      portal
+        .connect(merchant)
+        .processPayment(customerAddress, tokenAddress, 100n * 10n ** 18n, 'order-001'),
+    'INV-01: unregistered merchant'
+  );
+  console.log('✓ INV-01: Unregistered merchant cannot process payment');
+
+  // Register merchant (score 9000 passes any threshold)
+  await (await portal.connect(merchant).registerMerchant('Test Merchant', 'retail')).wait();
+  console.log('✓ Merchant registered successfully');
+
+  // ── INV-02: Payment without customer approval reverts ─────────────────────
+  await expectRevert(
+    () =>
+      portal
+        .connect(merchant)
+        .processPayment(customerAddress, tokenAddress, 100n * 10n ** 18n, 'order-002'),
+    'INV-02: no approval'
+  );
+  console.log('✓ INV-02: Payment without customer approval reverts');
+
+  // Provision a customer vault via mock VaultHub. F-60 path requires
+  // vaultHub.vaultOf(msg.sender) != 0 AND the vault to expose a non-zero
+  // dailyTransferLimit() via ICardBoundVaultPermitView. The mock vault
+  // returns type(uint256).max so per-merchant pull limits stay binding.
+  await (await vaultHub.connect(customer).ensureVault(customerAddress)).wait();
+  const customerVaultAddress: string = await vaultHub.vaultOf(customerAddress);
+  // Bind a typed handle to the deployed vault. Cast to any so downstream
+  // dynamic method calls (approveToken) don't trigger TS2722 — the ABI is
+  // loaded at runtime from the compiled artifact.
+  const customerVault = new Contract(
+    customerVaultAddress,
+    cardBoundVaultArtifact.abi as any,
+    customer
+  ) as any;
+
+  // Register tokens as accepted by the merchant portal (onlyDAO). Required by
+  // _setMerchantPullPermit and processPayment paths whenever a non-zero token
+  // address is passed.
+  await (await portal.connect(dao).setAcceptedToken(tokenAddress, true)).wait();
+
+  // Grant pull permit to merchant.
+  // F-60 FIX (contracts/MerchantPortal.sol#_setMerchantPullPermit): a never-expiring
+  // permit (expiresAt == 0) is rejected on-chain — a compromised merchant key could
+  // drain forgotten permits indefinitely. Use a bounded future expiry that fits the
+  // 90-day MAX_PULL_PERMIT_DURATION cap.
+  const pullLimit = 500n * 10n ** 18n;
+  const setupBlock = await provider.getBlock('latest');
+  const setupNow = BigInt(setupBlock?.timestamp ?? Math.floor(Date.now() / 1000));
+  const validExpiry = setupNow + 30n * 24n * 60n * 60n; // +30 days
+  await (
+    await portal.connect(customer).setMerchantPullPermit(merchantAddress, pullLimit, validExpiry)
+  ).wait();
+
+  // ── INV-03: Over-limit payment reverts ────────────────────────────────────
+  const overLimit = pullLimit + 1n;
+  await expectRevert(
+    () =>
+      portal
+        .connect(merchant)
+        .processPayment(customerAddress, tokenAddress, overLimit, 'order-003'),
+    'INV-03: over limit'
+  );
+  console.log('✓ INV-03: Over-limit payment reverts (pull limit enforced)');
+
+  // ── INV-04: Expired permit is rejected at set-time (F-60) ─────────────────
+  // The original invariant — "a payment using an expired permit must revert" —
+  // is now enforced one layer earlier: the contract refuses to STORE an
+  // already-expired permit. Same security property, correctly localized.
+  const latestBlock = await provider.getBlock('latest');
+  const pastExpiry = BigInt((latestBlock?.timestamp ?? 0) - 1);
+  await expectRevert(
+    () => portal.connect(customer).setMerchantPullPermit(merchantAddress, pullLimit, pastExpiry),
+    'INV-04: expired permit (set-time rejection)'
+  );
+  console.log('✓ INV-04: Expired permit is rejected (at set-time, per F-60)');
+
+  // Reset to a valid bounded-future permit for the remaining invariants.
+  await (
+    await portal.connect(customer).setMerchantPullPermit(merchantAddress, pullLimit, validExpiry)
+  ).wait();
+
+  // ── INV-05: Revoke zeroes remaining pull limit ────────────────────────────
+  await (await portal.connect(customer).setMerchantPullApproval(merchantAddress, false)).wait();
+  const remainingAfterRevoke = await portal.merchantPullRemaining(customerAddress, merchantAddress);
+  if (remainingAfterRevoke !== 0n) {
+    throw new Error(`INV-05 FAIL: Expected remaining=0 after revoke, got ${remainingAfterRevoke}`);
+  }
+  console.log('✓ INV-05: Revoke zeroes remaining pull limit');
+
+  // ── INV-06: setMerchantPullApproval cannot grant (M-12 protection) ────────
+  await expectRevert(
+    () => portal.connect(customer).setMerchantPullApproval(merchantAddress, true),
+    'INV-06: direct grant blocked'
+  );
+  console.log('✓ INV-06: setMerchantPullApproval cannot grant (M-12 protection)');
+
+  // ── INV-07: Token-scoped permit rejects mismatched token ──────────────────
+  const token2 = (await tokenFactory.deploy()) as any;
+  await token2.waitForDeployment();
+  const token2Address = await token2.getAddress();
+
+  // setMerchantPullPermitForToken (requireVaultAllowance branch) checks
+  // IERC20(token).allowance(customerVault, address(this)) >= maxAmount.
+  // The vault is the on-chain holder, so the approval must originate from
+  // the vault contract — not from the customer EOA.
+  await (
+    await customerVault.approveToken(tokenAddress, await portal.getAddress(), pullLimit)
+  ).wait();
+  // Register token2 as accepted so the wrong-token revert at processPayment time
+  // is what we test (rather than failing earlier at the token-not-accepted gate).
+  await (await portal.connect(dao).setAcceptedToken(token2Address, true)).wait();
+
+  await (
+    await portal
+      .connect(customer)
+      .setMerchantPullPermitForToken(merchantAddress, tokenAddress, pullLimit, validExpiry)
+  ).wait();
+  await expectRevert(
+    () =>
+      portal
+        .connect(merchant)
+        .processPayment(customerAddress, token2Address, 10n * 10n ** 18n, 'order-007'),
+    'INV-07: wrong token'
+  );
+  console.log('✓ INV-07: Token-scoped permit rejects mismatched token');
+
+  // ── INV-08: Non-merchant cannot call processPayment ───────────────────────
+  await expectRevert(
+    () =>
+      portal
+        .connect(attacker)
+        .processPayment(customerAddress, tokenAddress, 10n * 10n ** 18n, 'order-008'),
+    'INV-08: non-merchant blocked'
+  );
+  console.log('✓ INV-08: Non-merchant cannot call processPayment');
+
+  console.log('\n✅ All merchant payment escrow invariants verified.');
+}
+
+main().catch((err) => {
+  console.error('❌ Invariant check failed:', err.message ?? err);
+  process.exit(1);
+});

@@ -12,7 +12,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 
 // ═══════════════════════════════════════════════════════════════════════════
 //  1. SWIPE GESTURE — Directional swipe for instant navigation
@@ -91,7 +91,7 @@ export function SwipeHints({ visible, config = DEFAULT_SWIPE }: SwipeHintProps) 
   return (
     <AnimatePresence>
       {hints.map((h, i) => (
-        <motion.div
+        <m.div
           key={h.dir}
           initial={{ opacity: 0, x: 0, y: 0, scale: 0.5 }}
           animate={{ opacity: 0.6, x: h.x, y: h.y, scale: 1 }}
@@ -101,7 +101,7 @@ export function SwipeHints({ visible, config = DEFAULT_SWIPE }: SwipeHintProps) 
           style={{ transform: `translate(${h.x}px, ${h.y}px)` }}
         >
           {h.label}
-        </motion.div>
+        </m.div>
       ))}
     </AnimatePresence>
   );
@@ -122,7 +122,7 @@ export function RevenuePulse({ todayRevenue, todayOrders, currency = '$', visibl
   if (!visible || todayRevenue === 0) return null;
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       className="absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap"
@@ -136,7 +136,7 @@ export function RevenuePulse({ todayRevenue, todayOrders, currency = '$', visibl
         }}>
         {currency}{todayRevenue.toLocaleString()} · {todayOrders} sales
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -191,14 +191,14 @@ export function StreakFlame({ streak }: StreakFlameProps) {
   const size = 14 + intensity * 6; // 14-20px
 
   return (
-    <motion.div
+    <m.div
       initial={{ scale: 0 }}
       animate={{ scale: 1 }}
       className="absolute -bottom-3 -left-2 flex items-center gap-0.5 pointer-events-none"
     >
       {/* Flame SVG */}
       <svg width={size} height={size} viewBox="0 0 24 24" style={{ filter: `drop-shadow(0 0 ${2 + intensity * 4}px rgba(249,115,22,${0.3 + intensity * 0.4}))` }}>
-        <motion.path
+        <m.path
           d="M12 2C10 6 6 8.5 6 13c0 3.3 2.7 6 6 6s6-2.7 6-6c0-4.5-4-7-6-11z"
           fill={`rgba(249,115,22,${0.6 + intensity * 0.4})`}
           stroke="rgba(234,88,12,0.8)"
@@ -206,7 +206,7 @@ export function StreakFlame({ streak }: StreakFlameProps) {
           animate={{ scale: [1, 1.05, 1], opacity: [0.9, 1, 0.9] }}
           transition={{ duration: 0.8, repeat: Infinity }}
         />
-        <motion.path
+        <m.path
           d="M12 8c-1 2.5-3 3.5-3 6.5c0 1.7 1.3 3 3 3s3-1.3 3-3c0-3-2-4-3-6.5z"
           fill={`rgba(251,191,36,${0.5 + intensity * 0.5})`}
           animate={{ scale: [1, 1.1, 1] }}
@@ -216,7 +216,7 @@ export function StreakFlame({ streak }: StreakFlameProps) {
       <span className="text-[9px] font-bold" style={{ color: `rgba(249,115,22,${0.7 + intensity * 0.3})` }}>
         {streak}
       </span>
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -251,7 +251,7 @@ export function AchievementBurst({ badgeName, badgeIcon: _badgeIcon, onComplete 
   return (
     <div className="absolute inset-0 pointer-events-none z-30">
       {/* Gold ring expansion */}
-      <motion.div
+      <m.div
         className="absolute inset-0 rounded-2xl"
         initial={{ scale: 1, opacity: 0.8 }}
         animate={{ scale: 2, opacity: 0 }}
@@ -261,7 +261,7 @@ export function AchievementBurst({ badgeName, badgeIcon: _badgeIcon, onComplete 
 
       {/* Confetti particles */}
       {particles.map((p, i) => (
-        <motion.div
+        <m.div
           key={i}
           className="absolute rounded-full"
           style={{
@@ -282,7 +282,7 @@ export function AchievementBurst({ badgeName, badgeIcon: _badgeIcon, onComplete 
       ))}
 
       {/* Badge name flash */}
-      <motion.div
+      <m.div
         className="absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap"
         initial={{ opacity: 0, y: 10, scale: 0.8 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -297,7 +297,7 @@ export function AchievementBurst({ badgeName, badgeIcon: _badgeIcon, onComplete 
           }}>
           {badgeName} earned!
         </div>
-      </motion.div>
+      </m.div>
     </div>
   );
 }
@@ -397,29 +397,29 @@ export function OfflineIndicator({ online, justReconnected }: OfflineIndicatorPr
 
       {/* Reconnection sweep */}
       {justReconnected && (
-        <motion.div
+        <m.div
           className="absolute inset-0 rounded-2xl pointer-events-none z-20 overflow-hidden"
           initial={{ opacity: 1 }} animate={{ opacity: 0 }} transition={{ duration: 1.5 }}
         >
-          <motion.div
+          <m.div
             className="absolute inset-0"
             initial={{ x: '-100%' }}
             animate={{ x: '200%' }}
             transition={{ duration: 0.8, ease: 'easeInOut' }}
             style={{ background: 'linear-gradient(90deg, transparent, rgba(16,185,129,0.3), transparent)', width: '50%' }}
           />
-        </motion.div>
+        </m.div>
       )}
 
       {/* Offline label */}
       {!online && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
           className="absolute -top-6 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded text-[8px] font-bold text-red-400 bg-red-500/10 border border-red-500/20 whitespace-nowrap pointer-events-none"
         >
           Offline
-        </motion.div>
+        </m.div>
       )}
     </>
   );

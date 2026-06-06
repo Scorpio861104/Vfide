@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useAccount } from 'wagmi';
 import { ArrowLeft, MapPin, Plus, CheckCircle2 } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 interface LocationRecord {
   id: string;
@@ -18,6 +19,9 @@ interface LocationRecord {
 }
 
 export default function MerchantLocationsPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address } = useAccount();
   const [locations, setLocations] = useState<LocationRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,19 +72,19 @@ export default function MerchantLocationsPage() {
         </div>
         <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         <div className="container mx-auto max-w-3xl px-4 pb-16">
-          <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200">
+          <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-accent hover:text-accent">
             <ArrowLeft size={16} /> Back to Merchant Hub
           </Link>
 
           <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <div className="badge-live mb-3">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> Store Locations
+              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" /> Store Locations
             </div>
-            <h1 className="flex items-center gap-3 text-3xl font-black tracking-tight"><MapPin className="text-cyan-400" /> Store locations</h1>
+            <h1 className="flex items-center gap-3 text-3xl font-black tracking-tight"><MapPin className="text-accent" /> Store locations</h1>
               <p className="mt-2 text-gray-400">Register each market stall, branch, or pickup point so staff and buyers know where orders are fulfilled.</p>
             </div>
-            <button type="button" onClick={() => setShowAdd((current) => !current)} className="inline-flex items-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-200">
+            <button type="button" onClick={() => setShowAdd((current) => !current)} className="inline-flex items-center gap-2 rounded-xl border border-accent/30 bg-accent/10 px-4 py-2 text-sm font-semibold text-accent">
               <Plus size={16} /> Add location
             </button>
           </div>
@@ -93,7 +97,7 @@ export default function MerchantLocationsPage() {
                 <input value={form.city} onChange={(event) =>  setForm((current) => ({ ...current, city: event.target.value }))} className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-white" />
                 <input value={form.country} onChange={(event) =>  setForm((current) => ({ ...current, country: event.target.value }))} className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-white" />
               </div>
-              <button type="button" onClick={() => void handleAdd()} disabled={!form.name.trim()} className="rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">Save location</button>
+              <button type="button" onClick={() => void handleAdd()} disabled={!form.name.trim()} className="rounded-xl bg-gradient-to-r from-accent to-blue-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">Save location</button>
             </div>
           )}
 

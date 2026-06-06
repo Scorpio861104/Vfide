@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useAccount, useWriteContract, useReadContract, useChainId, useSignTypedData } from 'wagmi';
+import { useAccount, useWriteContract, useReadContract, useSignTypedData } from 'wagmi';
 import { isAddress, parseUnits } from 'viem';
 import { useToast } from '@/components/ui/toast';
 import { useVaultRecovery } from '@/hooks/useVaultRecovery';
@@ -21,7 +21,6 @@ export interface QueuedWithdrawal {
 export function useVaultOperations() {
   const { showToast } = useToast();
   const { address } = useAccount();
-  const chainId = useChainId();
   const { signTypedDataAsync } = useSignTypedData();
   const isVaultHubAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.VaultHub);
 
@@ -201,13 +200,17 @@ export function useVaultOperations() {
         return;
       }
       const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
-      const transferChainId = BigInt(chainId);
+      // EIP-712 chainId must bind to the vault's deployment chain (expectedChainId),
+      // not the wallet's current chainId. ensureCorrectChain() above already switches
+      // the wallet to this chain; signing with expectedChainId keeps the signature valid
+      // even right after a switch, when a captured useChainId() value would be stale.
+      const transferChainId = BigInt(vaultHub.expectedChainId);
 
       const signature = await signTypedDataAsync({
         domain: {
           name: 'CardBoundVault',
           version: '1',
-          chainId,
+          chainId: vaultHub.expectedChainId,
           verifyingContract: vaultAddress,
         },
         types: {

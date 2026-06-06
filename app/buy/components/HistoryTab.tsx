@@ -25,13 +25,15 @@ export function HistoryTab() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    let _cancelled = false;
     if (!address) return;
     setLoading(true);
     fetch(`/api/activities?userAddress=${address}&limit=50`)
       .then((r) => r.json())
       .then((d) => setActivities(d.activities ?? []))
       .finally(() => setLoading(false));
-  }, [address]);
+    return () => { _cancelled = true; };
+    }, [address]);
 
   const txActivities = activities.filter((a) =>
     ['purchase', 'swap', 'transfer', 'receive', 'buy', 'sell'].includes(a.type.toLowerCase())
@@ -54,7 +56,7 @@ export function HistoryTab() {
         </div>
       ) : loading ? (
         <div className="flex items-center justify-center py-10">
-          <Loader2 size={20} className="text-cyan-400 animate-spin" />
+          <Loader2 size={20} className="text-accent animate-spin" />
         </div>
       ) : txActivities.length === 0 ? (
         <div className="bg-white/3 border border-white/10 rounded-2xl p-8 text-center">

@@ -26,7 +26,6 @@ interface IEcosystemVaultView {
     /// @return _uint256 _uint256
     function operationsPool() external view returns (uint256);
     /// @notice rewardToken
-    /// @return _arg _arg
     function rewardToken() external view returns (IERC20);
     /// @notice currentMerchantPeriod
     /// @return _uint256 _uint256
@@ -49,9 +48,6 @@ interface IEcosystemVaultView {
     /// @notice totalHeadhunterPaid
     /// @return _uint256 _uint256
     function totalHeadhunterPaid() external view returns (uint256);
-    /// @notice totalBurned
-    /// @return _uint256 _uint256
-    function totalBurned() external view returns (uint256);
     /// @notice totalExpensesPaid
     /// @return _uint256 _uint256
     function totalExpensesPaid() external view returns (uint256);
@@ -196,7 +192,9 @@ contract EcosystemVaultView {
     /// @return merchant merchant
     /// @return headhunter headhunter
     /// @return total total
-    function getPoolBalances() external view returns (uint256 council, uint256 merchant, uint256 headhunter, uint256 total) {
+    function getPoolBalances() external view returns (
+        uint256 council, uint256 merchant, uint256 headhunter, uint256 total
+    ) {
         council = vault.councilPool();
         merchant = vault.merchantPool();
         headhunter = vault.headhunterPool();
@@ -209,7 +207,9 @@ contract EcosystemVaultView {
     /// @return bonusesPaid bonusesPaid
     /// @return currentTier currentTier
     /// @return currentPeriodRank currentPeriodRank
-    function getMerchantStats(address merchant) external view returns (uint256 txCount, uint256 bonusesPaid, uint16 currentTier, uint8 currentPeriodRank) {
+    function getMerchantStats(address merchant) external view returns (
+        uint256 txCount, uint256 bonusesPaid, uint16 currentTier, uint8 currentPeriodRank
+    ) {
         uint256 period = vault.currentMerchantPeriod();
         txCount = vault.periodMerchantTxCount(period, merchant);
         bonusesPaid = vault.totalMerchantBonusesPaid(merchant);
@@ -224,9 +224,10 @@ contract EcosystemVaultView {
     /// @return currentYearNumber currentYearNumber
     /// @return currentQuarterNumber currentQuarterNumber
     /// @return quarterEndsAt quarterEndsAt
-    function getHeadhunterStats(
-        address referrer
-    ) external view returns (uint16 currentYearPoints, uint8 estimatedRank, uint256 currentYearNumber, uint256 currentQuarterNumber, uint256 quarterEndsAt) {
+    function getHeadhunterStats(address referrer) external view returns (
+        uint16 currentYearPoints, uint8 estimatedRank,
+        uint256 currentYearNumber, uint256 currentQuarterNumber, uint256 quarterEndsAt
+    ) {
         uint256 year = vault.currentYear();
         uint256 qtr = vault.currentQuarter();
         currentYearPoints = vault.yearPoints(year, referrer);
@@ -245,10 +246,10 @@ contract EcosystemVaultView {
     /// @return nextLevel nextLevel
     /// @return nextLevelRequiredPoints nextLevelRequiredPoints
     /// @return nextLevelReward nextLevelReward
-    function getReferralLevelStatus(
-        address referrer,
-        uint256 year
-    ) external view returns (uint16 points, uint8 unlockedLevel, uint8 highestPaidLevel, uint8 nextLevel, uint16 nextLevelRequiredPoints, uint256 nextLevelReward) {
+    function getReferralLevelStatus(address referrer, uint256 year) external view returns (
+        uint16 points, uint8 unlockedLevel, uint8 highestPaidLevel,
+        uint8 nextLevel, uint16 nextLevelRequiredPoints, uint256 nextLevelReward
+    ) {
         points = vault.yearPoints(year, referrer);
         unlockedLevel = _getReferralWorkLevel(points);
         highestPaidLevel = vault.referralLevelPaid(year, referrer);
@@ -262,7 +263,9 @@ contract EcosystemVaultView {
     /// @return merchantReferrer merchantReferrer
     /// @return userReferrer userReferrer
     /// @return credited credited
-    function getPendingReferral(address referred) external view returns (address merchantReferrer, address userReferrer, bool credited) {
+    function getPendingReferral(address referred) external view returns (
+        address merchantReferrer, address userReferrer, bool credited
+    ) {
         merchantReferrer = vault.pendingMerchantReferrer(referred);
         userReferrer = vault.pendingUserReferrer(referred);
         credited = vault.referralCredited(referred);
@@ -272,16 +275,19 @@ contract EcosystemVaultView {
     /// @return councilTotal councilTotal
     /// @return merchantTotal merchantTotal
     /// @return headhunterTotal headhunterTotal
-    /// @return burnedTotal burnedTotal
     /// @return expensesTotal expensesTotal
     /// @return grandTotal grandTotal
-    function getSpendingSummary() external view returns (uint256 councilTotal, uint256 merchantTotal, uint256 headhunterTotal, uint256 burnedTotal, uint256 expensesTotal, uint256 grandTotal) {
+    function getSpendingSummary() external view returns (
+        uint256 councilTotal, uint256 merchantTotal, uint256 headhunterTotal,
+        uint256 expensesTotal, uint256 grandTotal
+    ) {
         councilTotal = vault.totalCouncilPaid();
         merchantTotal = vault.totalMerchantBonusPaid();
         headhunterTotal = vault.totalHeadhunterPaid();
-        burnedTotal = vault.totalBurned();
+        // burnedTotal removed — EcosystemVault is not a burn pathway (soul commitment).
+        // Burning is handled exclusively by ProofScoreBurnRouter.
         expensesTotal = vault.totalExpensesPaid();
-        grandTotal = councilTotal + merchantTotal + headhunterTotal + burnedTotal + expensesTotal;
+        grandTotal = councilTotal + merchantTotal + headhunterTotal + expensesTotal;
     }
 
     /// @notice getVaultHealth
@@ -291,11 +297,10 @@ contract EcosystemVaultView {
     /// @return councilPoolBalance councilPoolBalance
     /// @return merchantPoolBalance merchantPoolBalance
     /// @return headhunterPoolBalance headhunterPoolBalance
-    function getVaultHealth()
-        external
-        view
-        returns (uint256 currentBalance, uint256 totalIn, uint256 totalOut, uint256 councilPoolBalance, uint256 merchantPoolBalance, uint256 headhunterPoolBalance)
-    {
+    function getVaultHealth() external view returns (
+        uint256 currentBalance, uint256 totalIn, uint256 totalOut,
+        uint256 councilPoolBalance, uint256 merchantPoolBalance, uint256 headhunterPoolBalance
+    ) {
         currentBalance = vault.rewardToken().balanceOf(address(vault));
         uint256 cp = vault.councilPool();
         uint256 mp = vault.merchantPool();
@@ -304,10 +309,10 @@ contract EcosystemVaultView {
         uint256 tcp = vault.totalCouncilPaid();
         uint256 tmp = vault.totalMerchantBonusPaid();
         uint256 thp = vault.totalHeadhunterPaid();
-        uint256 tb = vault.totalBurned();
+        // tb (totalBurned) removed — EcosystemVault is not a burn pathway.
         uint256 te = vault.totalExpensesPaid();
-        totalIn = cp + mp + hp + op + tcp + tmp + thp + tb + te;
-        totalOut = tcp + tmp + thp + tb + te;
+        totalIn = cp + mp + hp + op + tcp + tmp + thp + te;
+        totalOut = tcp + tmp + thp + te;
         councilPoolBalance = cp;
         merchantPoolBalance = mp;
         headhunterPoolBalance = hp;
@@ -321,7 +326,9 @@ contract EcosystemVaultView {
     /// @return claimed claimed
     /// @return periodEnded periodEnded
     /// @return poolSnapshot poolSnapshot
-    function previewMerchantReward(uint256 period, address merchant) external view returns (uint256 txCount, uint16 bestTier, bool claimed, bool periodEnded, uint256 poolSnapshot) {
+    function previewMerchantReward(uint256 period, address merchant) external view returns (
+        uint256 txCount, uint16 bestTier, bool claimed, bool periodEnded, uint256 poolSnapshot
+    ) {
         txCount = vault.periodMerchantTxCount(period, merchant);
         bestTier = vault.periodMerchantTier(period, merchant);
         claimed = vault.merchantPeriodClaimed(period, merchant);
@@ -337,7 +344,9 @@ contract EcosystemVaultView {
     /// @return claimed claimed
     /// @return quarterEndedFlag quarterEndedFlag
     /// @return poolSnapshot poolSnapshot
-    function previewHeadhunterReward(uint256 year, uint256 quarter, address referrer) external view returns (uint16 referrerPoints, bool claimed, bool quarterEndedFlag, uint256 poolSnapshot) {
+    function previewHeadhunterReward(uint256 year, uint256 quarter, address referrer) external view returns (
+        uint16 referrerPoints, bool claimed, bool quarterEndedFlag, uint256 poolSnapshot
+    ) {
         referrerPoints = vault.yearPoints(year, referrer);
         claimed = vault.quarterClaimed(year, quarter, referrer);
         quarterEndedFlag = vault.quarterEnded(year, quarter);
@@ -350,7 +359,10 @@ contract EcosystemVaultView {
     /// @return lastWithdrawal lastWithdrawal
     /// @return cooldown cooldown
     /// @return canWithdraw canWithdraw
-    function getOperationsStatus() external view returns (address wallet, uint256 pool, uint256 lastWithdrawal, uint256 cooldown, bool canWithdraw) {
+    function getOperationsStatus() external view returns (
+        address wallet, uint256 pool, uint256 lastWithdrawal,
+        uint256 cooldown, bool canWithdraw
+    ) {
         wallet = vault.operationsWallet();
         pool = vault.operationsPool();
         lastWithdrawal = vault.lastOperationsWithdrawal();
@@ -367,21 +379,18 @@ contract EcosystemVaultView {
     /// @return tier3Multiplier tier3Multiplier
     /// @return tier4Threshold tier4Threshold
     /// @return tier4Multiplier tier4Multiplier
-    function getMerchantTierMultipliers()
-        external
-        pure
-        returns (
-            uint16 tier1Threshold,
-            uint16 tier1Multiplier,
-            uint16 tier2Threshold,
-            uint16 tier2Multiplier,
-            uint16 tier3Threshold,
-            uint16 tier3Multiplier,
-            uint16 tier4Threshold,
-            uint16 tier4Multiplier
-        )
-    {
-        return (TIER1_THRESHOLD, TIER1_MULTIPLIER, TIER2_THRESHOLD, TIER2_MULTIPLIER, TIER3_THRESHOLD, TIER3_MULTIPLIER, TIER4_THRESHOLD, TIER4_MULTIPLIER);
+    function getMerchantTierMultipliers() external pure returns (
+        uint16 tier1Threshold, uint16 tier1Multiplier,
+        uint16 tier2Threshold, uint16 tier2Multiplier,
+        uint16 tier3Threshold, uint16 tier3Multiplier,
+        uint16 tier4Threshold, uint16 tier4Multiplier
+    ) {
+        return (
+            TIER1_THRESHOLD, TIER1_MULTIPLIER,
+            TIER2_THRESHOLD, TIER2_MULTIPLIER,
+            TIER3_THRESHOLD, TIER3_MULTIPLIER,
+            TIER4_THRESHOLD, TIER4_MULTIPLIER
+        );
     }
 
     // ── Internal helpers ──

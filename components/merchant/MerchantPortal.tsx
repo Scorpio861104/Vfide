@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Advanced Merchant Portal Component
  * Payment requests, revenue analytics, bulk payments, and API key management
@@ -14,7 +16,7 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
+import { m, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import { MobileButton, MobileInput, MobileSelect } from '@/components/mobile/MobileForm';
 import { responsiveGrids } from '@/lib/mobile';
 import { safeParseFloat } from '@/lib/validation';
@@ -44,7 +46,7 @@ function AnimatedCounter({ value, prefix = '', suffix = '' }: { value: number; p
     return unsubscribe;
   }, [rounded]);
   
-  return <motion.span>{prefix}{displayValue}{suffix}</motion.span>;
+  return <m.span>{prefix}{displayValue}{suffix}</m.span>;
 }
 
 // ==================== TYPES ====================
@@ -228,6 +230,7 @@ export default function MerchantPortal() {
   }, [bulkJobs]);
 
   useEffect(() => {
+    let _cancelled = false;
     if (!address) {
       setPaymentRequests([]);
       return;
@@ -257,7 +260,8 @@ export default function MerchantPortal() {
     };
 
     fetchRequests();
-  }, [address]);
+    return () => { _cancelled = true; };
+    }, [address]);
 
   const revenueData = useMemo(() => buildRevenueSeries(paymentRequests, 90), [paymentRequests]);
 
@@ -387,7 +391,7 @@ export default function MerchantPortal() {
   return (
     <div className="space-y-6 md:space-y-8">
       {/* Header */}
-      <motion.div 
+      <m.div 
         className="mb-8"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -398,7 +402,7 @@ export default function MerchantPortal() {
         <p className="text-gray-600 dark:text-gray-400">
           Manage payments, revenue, and API integrations
         </p>
-      </motion.div>
+      </m.div>
 
       {/* Key Metrics */}
       <div className={`grid ${responsiveGrids.balanced} gap-4`}>
@@ -408,7 +412,7 @@ export default function MerchantPortal() {
           { label: 'Average Transaction', value: averageTransaction, type: 'currency', icon: '📈' },
           { label: 'Pending Requests', value: paymentRequests.filter(r => r.status === 'pending').length, type: 'number', icon: '⏳' }
         ].map((metric, index) => (
-          <motion.div
+          <m.div
             key={metric.label}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -420,7 +424,7 @@ export default function MerchantPortal() {
               type={metric.type as 'currency' | 'number'}
               icon={metric.icon}
             />
-          </motion.div>
+          </m.div>
         ))}
       </div>
 
@@ -440,7 +444,7 @@ export default function MerchantPortal() {
           { id: 'bulk', label: 'Bulk Payments', icon: Upload },
           { id: 'api', label: 'API Keys', icon: Key },
         ].map((tab) => (
-          <motion.button
+          <m.button
             key={tab.id}
             onClick={() => {
               setActiveTab(tab.id);
@@ -459,19 +463,19 @@ export default function MerchantPortal() {
               <span className="hidden sm:inline">{tab.label}</span>
             </span>
             {activeTab === tab.id && (
-              <motion.div
+              <m.div
                 className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400"
                 layoutId="activeTab"
                 transition={{ type: 'spring', stiffness: 500, damping: 30 }}
               />
             )}
-          </motion.button>
+          </m.button>
         ))}
       </div>
 
       {/* Tab Content */}
       <AnimatePresence mode="wait">
-        <motion.div
+        <m.div
           key={activeTab}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -555,13 +559,13 @@ export default function MerchantPortal() {
               }}
             />
           )}
-        </motion.div>
+        </m.div>
       </AnimatePresence>
 
       {/* API Key Request Modal */}
       {newlyGeneratedKey && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <motion.div
+          <m.div
             className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-lg w-full shadow-2xl border-2 border-yellow-500"
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -610,7 +614,7 @@ export default function MerchantPortal() {
                 Done
               </button>
             </div>
-          </motion.div>
+          </m.div>
         </div>
       )}
     </div>
@@ -869,7 +873,7 @@ function BulkPaymentsSection({
           <label htmlFor="csv-upload" className={`
             block w-full min-h-12 text-base font-semibold rounded-lg
             transition-all active:scale-95 cursor-pointer text-center
-            px-4 py-3 bg-cyan-400 text-zinc-900 hover:bg-cyan-400
+            px-4 py-3 bg-accent text-zinc-900 hover:bg-accent
             ${uploading ? 'opacity-60 cursor-not-allowed' : ''}
           `}>
             {uploading ? '⏳ Uploading...' : '📤 Choose File'}
@@ -997,7 +1001,7 @@ function MetricCard({
     : value.toLocaleString();
 
   return (
-    <motion.div 
+    <m.div 
       className="bg-white dark:bg-gray-800 rounded-lg p-4 md:p-6 shadow-sm border border-gray-200 dark:border-gray-700"
       whileHover={{ scale: 1.02, borderColor: 'rgba(59, 130, 246, 0.5)' }}
       transition={{ type: 'spring', stiffness: 400 }}
@@ -1011,15 +1015,15 @@ function MetricCard({
             <AnimatedCounter value={value} prefix={type === 'currency' ? '$' : ''} />
           </p>
         </div>
-        <motion.span 
+        <m.span 
           className="text-2xl md:text-3xl"
           animate={{ scale: [1, 1.1, 1] }}
           transition={{ duration: 2, repeat: Infinity, repeatDelay: 2 }}
         >
           {icon}
-        </motion.span>
+        </m.span>
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -1108,7 +1112,7 @@ function ApiKeyCard({
   onRevoke: () => void;
 }) {
   return (
-    <motion.div 
+    <m.div 
       className="rounded-lg p-4 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
@@ -1120,7 +1124,7 @@ function ApiKeyCard({
             <p className="font-bold text-gray-900 dark:text-white">
               {apiKey.name}
             </p>
-            <motion.span 
+            <m.span 
               className={`px-2 py-1 rounded text-xs font-medium ${
                 apiKey.status === 'active'
                   ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300'
@@ -1130,14 +1134,14 @@ function ApiKeyCard({
               animate={{ scale: 1 }}
             >
               {apiKey.status}
-            </motion.span>
+            </m.span>
           </div>
-          <motion.p
+          <m.p
             className="text-sm font-mono text-gray-600 dark:text-gray-400 break-all"
             animate={{ opacity: 0.85 }}
           >
             {apiKey.maskedKey}
-          </motion.p>
+          </m.p>
           <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
             Created {new Date(apiKey.createdAt).toLocaleDateString()}
             {apiKey.lastUsed && ` · Last used ${new Date(apiKey.lastUsed).toLocaleDateString()}`}
@@ -1146,19 +1150,19 @@ function ApiKeyCard({
         <div className="flex gap-2">
           {apiKey.status === 'active' && (
             <>
-              <motion.button
+              <m.button
                 onClick={onRevoke}
                 className="px-3 py-1 text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
                 Revoke
-              </motion.button>
+              </m.button>
             </>
           )}
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -1193,6 +1197,7 @@ function WebhooksSection({ merchantAddress }: { merchantAddress: string }) {
   ];
 
   useEffect(() => {
+    let _cancelled = false;
     (async () => {
       try {
         const res = await fetch('/api/merchant/webhooks', {
@@ -1205,7 +1210,8 @@ function WebhooksSection({ merchantAddress }: { merchantAddress: string }) {
       } catch { /* ignore */ }
       setLoading(false);
     })();
-  }, [merchantAddress]);
+    return () => { _cancelled = true; };
+    }, [merchantAddress]);
 
   useEffect(() => {
     if (!shownSecret) return;
@@ -1423,7 +1429,7 @@ function InvoicesSection({ merchantAddress }: { merchantAddress: string }) {
       const url = statusFilter
         ? `/api/merchant/invoices?status=${statusFilter}`
         : '/api/merchant/invoices';
-      const res = await fetch(url, );
+      const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         setInvoices(data.invoices || []);
@@ -1774,6 +1780,7 @@ function ProductsSection({ merchantAddress }: { merchantAddress: string }) {
   const [platformCategories, setPlatformCategories] = useState<Array<{ id: number; name: string; slug: string; children?: Array<{ id: number; name: string; slug: string }> }>>([]);
 
   useEffect(() => {
+    let _cancelled = false;
     fetch(`/api/merchant/products?merchant=${encodeURIComponent(merchantAddress)}`)
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d?.products) setProducts(d.products); })
@@ -1783,23 +1790,28 @@ function ProductsSection({ merchantAddress }: { merchantAddress: string }) {
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d?.categories) setPlatformCategories(d.categories); })
       .catch(() => {});
-  }, [merchantAddress]);
+    return () => { _cancelled = true; };
+    }, [merchantAddress]);
 
   const addProduct = async () => {
     if (!form.name || !form.price) return;
     const payload: Record<string, unknown> = { ...form, price: Number(form.price) };
     if (form.platform_category_id) payload.platform_category_id = Number(form.platform_category_id);
     else delete payload.platform_category_id;
-    const res = await fetch('/api/merchant/products', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    if (res.ok) {
-      const d = await res.json();
-      setProducts(prev => [d.product, ...prev]);
-      setForm({ name: '', price: '', description: '', product_type: 'physical', platform_category_id: '' });
-      setShowAdd(false);
+    try {
+      const res = await fetch('/api/merchant/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        const d = await res.json();
+        setProducts(prev => [d.product, ...prev]);
+        setForm({ name: '', price: '', description: '', product_type: 'physical', platform_category_id: '' });
+        setShowAdd(false);
+      }
+    } catch {
+      // Network error — product not saved, form stays open
     }
   };
 
@@ -1869,20 +1881,26 @@ function OrdersSection({ merchantAddress }: { merchantAddress: string }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let _cancelled = false;
     fetch(`/api/merchant/orders?role=merchant`, )
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d?.orders) setOrders(d.orders); })
       .finally(() => setLoading(false));
-  }, [merchantAddress]);
+    return () => { _cancelled = true; };
+    }, [merchantAddress]);
 
   const updateStatus = async (id: string, status: string) => {
-    const res = await fetch('/api/merchant/orders', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ order_id: id, status }),
-    });
-    if (res.ok) {
-      setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
+    try {
+      const res = await fetch('/api/merchant/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_id: id, status }),
+      });
+      if (res.ok) {
+        setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
+      }
+    } catch {
+      // Network error — order status unchanged
     }
   };
 
@@ -1953,6 +1971,7 @@ function ReviewsSection({ merchantAddress }: { merchantAddress: string }) {
   const [replyText, setReplyText] = useState<Record<string, string>>({});
 
   useEffect(() => {
+    let _cancelled = false;
     fetch(`/api/merchant/reviews?merchant=${encodeURIComponent(merchantAddress)}`)
       .then(r => r.ok ? r.json() : null)
       .then(d => {
@@ -1960,7 +1979,8 @@ function ReviewsSection({ merchantAddress }: { merchantAddress: string }) {
         if (d?.stats) setStats(d.stats);
       })
       .finally(() => setLoading(false));
-  }, [merchantAddress]);
+    return () => { _cancelled = true; };
+    }, [merchantAddress]);
 
   const submitReply = async (reviewId: string) => {
     const reply = replyText[reviewId];
@@ -2028,11 +2048,13 @@ function BookingsSection({ merchantAddress }: { merchantAddress: string }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let _cancelled = false;
     fetch(`/api/merchant/bookings?role=merchant`, )
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d?.bookings) setBookings(d.bookings); })
       .finally(() => setLoading(false));
-  }, [merchantAddress]);
+    return () => { _cancelled = true; };
+    }, [merchantAddress]);
 
   const updateBookingStatus = async (id: string, status: string) => {
     const res = await fetch('/api/merchant/bookings', {
@@ -2086,11 +2108,13 @@ function DigitalGoodsSection({ merchantAddress }: { merchantAddress: string }) {
   const [form, setForm] = useState({ product_id: '', file_name: '', file_url: '', file_size: '', license_keys: '' });
 
   useEffect(() => {
+    let _cancelled = false;
     fetch(`/api/merchant/digital?role=merchant`, )
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d?.assets) setAssets(d.assets); })
       .finally(() => setLoading(false));
-  }, [merchantAddress]);
+    return () => { _cancelled = true; };
+    }, [merchantAddress]);
 
   const addAsset = async () => {
     if (!form.product_id || !form.file_name || !form.file_url) return;

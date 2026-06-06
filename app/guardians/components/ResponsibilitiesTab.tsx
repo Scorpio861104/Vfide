@@ -2,7 +2,7 @@
 
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Shield, Users } from 'lucide-react';
 import { useAccount } from 'wagmi';
 
@@ -29,23 +29,23 @@ export function ResponsibilitiesTab({ isConnected }: { isConnected: boolean }) {
 
   if (!isConnected) {
     return (
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="py-16 text-center"
       >
-        <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }}>
+        <m.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }}>
           <Shield className="mx-auto mb-4 h-16 w-16 text-gray-400" />
-        </motion.div>
+        </m.div>
         <h2 className="mb-4 text-2xl font-bold text-white">Connect Wallet</h2>
         <p className="text-gray-400">Connect your wallet to see vaults you&apos;re guarding</p>
         <div className="mt-6 flex justify-center"><VfideConnectButton size="md" /></div>
-      </motion.div>
+      </m.div>
     );
   }
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="mx-auto max-w-4xl space-y-6"
@@ -61,28 +61,28 @@ export function ResponsibilitiesTab({ isConnected }: { isConnected: boolean }) {
            
             value={vaultInput}
             onChange={(e) => setVaultInput(e.target.value)}
-            className="font-mono md:col-span-2 rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white focus:border-cyan-500/50 focus:outline-none"
+            className="font-mono md:col-span-2 rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white focus:border-accent/50 focus:outline-none"
           />
           <input
             type="text"
            
             value={vaultLabel}
             onChange={(e) => setVaultLabel(e.target.value)}
-            className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white focus:border-cyan-500/50 focus:outline-none"
+            className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white focus:border-accent/50 focus:outline-none"
           />
         </div>
         <button
           onClick={handleAddVault}
-          className="mt-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 px-4 py-2 font-bold text-white"
+          className="mt-3 rounded-xl bg-gradient-to-r from-accent to-blue-500 px-4 py-2 font-bold text-white"
         >
           Add Vault to Watchlist
         </button>
-        {notice && <p className="mt-3 text-sm text-cyan-200">{notice}</p>}
+        {notice && <p className="mt-3 text-sm text-accent">{notice}</p>}
       </div>
 
       <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/8 to-white/2 p-6 backdrop-blur-xl">
         <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-white">
-          <Users className="h-5 w-5 text-cyan-400" />
+          <Users className="h-5 w-5 text-accent" />
           Vaults You&apos;re Guarding ({inboxEntries.length})
         </h2>
 
@@ -105,7 +105,7 @@ export function ResponsibilitiesTab({ isConnected }: { isConnected: boolean }) {
         )}
       </div>
 
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
@@ -118,8 +118,8 @@ export function ResponsibilitiesTab({ isConnected }: { isConnected: boolean }) {
           <li>• <strong>Never approve</strong> if you can&apos;t verify the request is legitimate</li>
           <li>• <strong>Report suspicious</strong> activity if you suspect fraud</li>
         </ul>
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 }
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { X, Copy, Check, MessageCircle, Share2, QrCode } from 'lucide-react';
 // v19.10 BCOMPAT-1 FIX: in-app browser clipboard fallback.
 import { copyToClipboardSafe } from '@/lib/clipboardSafe';
@@ -42,14 +42,14 @@ export function ShareStoreSheet({ show, onClose, storeName, slug }: ShareStoreSh
   return (
     <AnimatePresence>
       {show && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center"
           onClick={onClose}
         >
-          <motion.div
+          <m.div
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
@@ -65,7 +65,7 @@ export function ShareStoreSheet({ show, onClose, storeName, slug }: ShareStoreSh
             <div className="bg-white/5 border border-white/10 rounded-xl p-3 mb-4">
               <div className="text-xs text-gray-500 mb-1">Store link</div>
               <div className="flex items-center gap-2">
-                <code className="flex-1 text-cyan-400 text-sm truncate">{storeUrl}</code>
+                <code className="flex-1 text-accent text-sm truncate">{storeUrl}</code>
                 <button onClick={copyLink} className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
                   {copied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} className="text-gray-400" />}
                 </button>
@@ -86,10 +86,10 @@ export function ShareStoreSheet({ show, onClose, storeName, slug }: ShareStoreSh
 
               <button
                 onClick={shareNative}
-                className="flex flex-col items-center gap-2 p-4 bg-cyan-500/10 border border-cyan-500/20 rounded-xl hover:bg-cyan-500/20 transition-colors"
+                className="flex flex-col items-center gap-2 p-4 bg-accent/10 border border-accent/20 rounded-xl hover:bg-accent/20 transition-colors"
               >
-                <Share2 size={24} className="text-cyan-400" />
-                <span className="text-xs text-cyan-400 font-medium">Share</span>
+                <Share2 size={24} className="text-accent" />
+                <span className="text-xs text-accent font-medium">Share</span>
               </button>
 
               <button
@@ -100,8 +100,8 @@ export function ShareStoreSheet({ show, onClose, storeName, slug }: ShareStoreSh
                 <span className="text-xs text-gray-400 font-medium">QR Code</span>
               </button>
             </div>
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       )}
     </AnimatePresence>
   );

@@ -46,6 +46,7 @@ jest.mock('framer-motion', () => {
   });
   return {
     motion,
+    m: motion,
     AnimatePresence: ({ children }) => children,
     LayoutGroup: ({ children }) => children,
     LazyMotion: ({ children }) => children,
@@ -121,17 +122,24 @@ describe('Home page pathways', () => {
   it('renders hero content and primary actions', () => {
     renderHomePage();
 
-    expect(screen.getByRole('heading', { name: /Keep what you earn/i })).toBeTruthy();
-    expect(screen.getByRole('link', { name: /Start selling/i }).getAttribute('href')).toBe('/merchant/setup');
-    expect(screen.getByRole('link', { name: /Browse marketplace/i }).getAttribute('href')).toBe('/marketplace');
+    // Copy sweep: H1 leads with the permanent zero-fee fact.
+    // The two-door CTA (Shop / Sell) is unchanged.
+    expect(screen.getByRole('heading', { name: /Payments for people/i })).toBeTruthy();
+    expect(screen.getByRole('link', { name: /Sell on VFIDE/i }).getAttribute('href')).toBe('/merchant/setup');
+    expect(screen.getByRole('link', { name: /Shop on VFIDE/i }).getAttribute('href')).toBe('/marketplace');
   });
 
   it('renders trust indicators and onboarding steps', () => {
     renderHomePage();
 
-    expect(screen.getAllByText(/Merchant Fees/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Max ProofScore/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Sanctum Fund/i).length).toBeGreaterThan(0);
+    // Clarity sweep: protocol-internal labels ("Burn Rate", "Sanctum
+    // Fund", "Max ProofScore") were replaced with plain-English ones.
+    // We assert on the new labels and on the plain-English jargon
+    // translator card that anchors the rewrite.
+    expect(screen.getAllByText(/Merchant fee/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Self-custody/i).length).toBeGreaterThan(0);
+    // PlainEnglishCard heading updated to "What does VFIDE actually do?"
+    expect(screen.getAllByText(/What does VFIDE actually do/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Get started in/i).length).toBeGreaterThan(0);
   });
 

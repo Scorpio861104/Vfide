@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
+import { m, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import { Shield, Search, CheckCircle2, X, AlertTriangle } from 'lucide-react';
 import { useThreatDetection } from '@/hooks/useThreatDetection';
 import { ThreatLevel, formatThreatType } from '@/config/security-advanced';
@@ -49,7 +49,7 @@ export function ThreatDetectionPanel({ className = '' }: ThreatDetectionPanelPro
       return controls.stop;
     }, [score]);
     
-    return <motion.span>{rounded}</motion.span>;
+    return <m.span>{rounded}</m.span>;
   };
 
   useEffect(() => {
@@ -72,7 +72,7 @@ export function ThreatDetectionPanel({ className = '' }: ThreatDetectionPanelPro
   return (
     <div className={`space-y-6 ${className}`}>
       {/* Threat Level Overview */}
-      <motion.div 
+      <m.div 
         className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -82,7 +82,7 @@ export function ThreatDetectionPanel({ className = '' }: ThreatDetectionPanelPro
             <Shield className="w-7 h-7 text-blue-500" />
             Threat Detection
           </h2>
-          <motion.button
+          <m.button
             onClick={handleScan}
             disabled={isScanning}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium flex items-center gap-2 disabled:opacity-50"
@@ -90,7 +90,7 @@ export function ThreatDetectionPanel({ className = '' }: ThreatDetectionPanelPro
             whileTap={{ scale: 0.95 }}
           >
             {isScanning ? (
-              <motion.div
+              <m.div
                 className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
@@ -99,12 +99,12 @@ export function ThreatDetectionPanel({ className = '' }: ThreatDetectionPanelPro
               <Search className="w-5 h-5" />
             )}
             {isScanning ? 'Scanning...' : 'Scan Now'}
-          </motion.button>
+          </m.button>
         </div>
 
         {/* Risk Score */}
         <div className="text-center mb-6">
-          <motion.div 
+          <m.div 
             className="inline-flex flex-col items-center p-6 bg-gray-50 dark:bg-gray-900 rounded-xl"
             whileHover={{ scale: 1.02 }}
           >
@@ -113,15 +113,15 @@ export function ThreatDetectionPanel({ className = '' }: ThreatDetectionPanelPro
               <AnimatedRiskScore score={threat.riskScore} />
             </div>
             <div className="text-sm text-gray-500 mt-1">out of 100</div>
-            <motion.div 
+            <m.div 
               className={`mt-3 px-4 py-2 rounded-full border-2 font-semibold ${getThreatLevelColor(threat.threatLevel)}`}
               initial={{ scale: 0.8 }}
               animate={{ scale: 1 }}
               key={threat.threatLevel}
             >
               {threat.threatLevel.toUpperCase()}
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         </div>
 
         {/* Metrics */}
@@ -132,7 +132,7 @@ export function ThreatDetectionPanel({ className = '' }: ThreatDetectionPanelPro
             { label: 'Failed Logins', value: threat.metrics.failedLoginAttempts },
             { label: 'Active Sessions', value: threat.metrics.activeSessions }
           ].map((item, index) => (
-            <motion.div 
+            <m.div 
               key={item.label}
               className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg text-center"
               initial={{ opacity: 0, y: 10 }}
@@ -144,7 +144,7 @@ export function ThreatDetectionPanel({ className = '' }: ThreatDetectionPanelPro
                 {item.value}
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">{item.label}</div>
-            </motion.div>
+            </m.div>
           ))}
         </div>
 
@@ -160,12 +160,12 @@ export function ThreatDetectionPanel({ className = '' }: ThreatDetectionPanelPro
             ))}
           </ul>
         </div>
-      </motion.div>
+      </m.div>
 
       {/* Active Threats */}
       <AnimatePresence>
       {threat.activeThreats.length > 0 && (
-        <motion.div 
+        <m.div 
           className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -177,7 +177,7 @@ export function ThreatDetectionPanel({ className = '' }: ThreatDetectionPanelPro
           </h3>
           <div className="space-y-3">
             {threat.activeThreats.map((t, index) => (
-              <motion.div
+              <m.div
                 key={t.id}
                 className={`p-4 rounded-lg border-2 ${getThreatLevelColor(t.severity)}`}
                 initial={{ opacity: 0, x: -20 }}
@@ -207,7 +207,7 @@ export function ThreatDetectionPanel({ className = '' }: ThreatDetectionPanelPro
                     )}
                   </div>
                   <div className="flex gap-2">
-                    <motion.button
+                    <m.button
                       onClick={() => {
                         threat.resolveThread(t.id);
                         playSuccess();
@@ -218,8 +218,8 @@ export function ThreatDetectionPanel({ className = '' }: ThreatDetectionPanelPro
                       whileTap={{ scale: 0.9 }}
                     >
                       <CheckCircle2 className="w-4 h-4" />
-                    </motion.button>
-                    <motion.button
+                    </m.button>
+                    <m.button
                       onClick={() => {
                         threat.dismissThreat(t.id);
                         playNotification();
@@ -230,13 +230,13 @@ export function ThreatDetectionPanel({ className = '' }: ThreatDetectionPanelPro
                       whileTap={{ scale: 0.9 }}
                     >
                       <X className="w-4 h-4" />
-                    </motion.button>
+                    </m.button>
                   </div>
                 </div>
-              </motion.div>
+              </m.div>
             ))}
           </div>
-        </motion.div>
+        </m.div>
       )}
       </AnimatePresence>
 
@@ -265,26 +265,26 @@ export function ThreatDetectionPanel({ className = '' }: ThreatDetectionPanelPro
       {/* No Threats */}
       <AnimatePresence>
       {threat.threats.length === 0 && (
-        <motion.div 
+        <m.div 
           className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-12 text-center"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.9 }}
         >
-          <motion.div 
+          <m.div 
             className="text-6xl mb-4"
             animate={{ rotate: [0, 10, -10, 0] }}
             transition={{ duration: 2, repeat: Infinity }}
           >
             🛡️
-          </motion.div>
+          </m.div>
           <h3 className="text-2xl font-bold text-green-900 dark:text-green-100 mb-2">
             All Clear!
           </h3>
           <p className="text-green-800 dark:text-green-200">
             No security threats detected. Your account is secure.
           </p>
-        </motion.div>
+        </m.div>
       )}
       </AnimatePresence>
     </div>

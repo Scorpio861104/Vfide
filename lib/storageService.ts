@@ -23,7 +23,8 @@ export const STORAGE_KEYS = {
   // User preferences
   SETTINGS: 'vfide:settings',
   THEME: 'vfide_theme',
-  LOCALE: 'vfide_locale',
+  LOCALE: 'vfide.user-locale',
+  LOCALE_LEGACY: 'vfide_locale',
   
   // Auth & session
   API_TOKEN: 'vfide_api_token',

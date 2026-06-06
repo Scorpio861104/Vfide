@@ -9,9 +9,12 @@
 
 import { ReactNode } from 'react';
 import { useAccount } from 'wagmi';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { Wallet } from 'lucide-react';
+// FIX UX-GATE-1: Use VfideConnectButton instead of raw RainbowKit ConnectButton.
+// The raw button renders in RainbowKit's default palette which clashes with
+// VFIDE's dark zinc + cyan design system.
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 
 export function WalletGate({ children }: { children: ReactNode }) {
   const { isConnected, isConnecting } = useAccount();
@@ -43,7 +46,7 @@ export function WalletGate({ children }: { children: ReactNode }) {
           <p className="text-gray-400 mb-6">
             Connect your wallet to access your dashboard, vault, and all VFIDE features.
           </p>
-          <ConnectButton />
+          <VfideConnectButton />
         </motion.div>
       </div>
     );

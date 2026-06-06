@@ -11,17 +11,13 @@ async function main() {
 
   const Placeholder = await ethers.getContractFactory('Placeholder');
   const vaultHub = await Placeholder.deploy();
-  const securityHub = await Placeholder.deploy();
   const ledger = await Placeholder.deploy();
-  const feeSink = await Placeholder.deploy();
   const router = await Placeholder.deploy();
   const stablecoin = await Placeholder.deploy();
 
   await Promise.all([
     vaultHub.waitForDeployment(),
-    securityHub.waitForDeployment(),
     ledger.waitForDeployment(),
-    feeSink.waitForDeployment(),
     router.waitForDeployment(),
     stablecoin.waitForDeployment(),
   ]);
@@ -31,9 +27,7 @@ async function main() {
     dao.address,
     await vaultHub.getAddress(),
     await seer.getAddress(),
-    await securityHub.getAddress(),
     await ledger.getAddress(),
-    await feeSink.getAddress(),
   );
   await portal.waitForDeployment();
 

@@ -118,14 +118,6 @@ function loadManifest(path: string): DeploymentManifest {
   return JSON.parse(raw) as DeploymentManifest;
 }
 
-function _requireAddress(book: AddressBook, key: string): string {
-  const value = book[key];
-  if (!value || !isAddress(value)) {
-    throw new Error(`Missing or invalid address for key "${key}" in manifest`);
-  }
-  return value;
-}
-
 async function readAddressGetter(provider: JsonRpcProvider, contractAddress: string, getter: string): Promise<string> {
   const c = new Contract(contractAddress, [`function ${getter}() view returns (address)`], provider);
    

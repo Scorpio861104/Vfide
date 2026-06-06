@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Loader2, Plus, Trash2, Users } from 'lucide-react';
 
 export interface Beneficiary {
@@ -102,7 +102,7 @@ export function BeneficiaryManager({ selectedId, onSelect }: BeneficiaryManagerP
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 text-white">
-        <Users size={18} className="text-cyan-400" />
+        <Users size={18} className="text-accent" />
         <h2 className="text-xl font-bold">Saved beneficiaries</h2>
       </div>
 
@@ -123,15 +123,15 @@ export function BeneficiaryManager({ selectedId, onSelect }: BeneficiaryManagerP
         <input value={form.relationship} onChange={(event) =>  setForm({ ...form, relationship: event.target.value })} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white" />
       </div>
 
-      <motion.button
+      <m.button
         whileTap={{ scale: 0.98 }}
         onClick={handleSave}
         disabled={saving || !form.name.trim() || !form.phone.trim()}
-        className="inline-flex items-center gap-2 rounded-xl bg-cyan-500 px-4 py-2 font-semibold text-white disabled:opacity-60"
+        className="inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2 font-semibold text-white disabled:opacity-60"
       >
         {saving ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
         Save beneficiary
-      </motion.button>
+      </m.button>
 
       {loading ? (
         <div className="flex items-center gap-2 text-sm text-gray-400"><Loader2 size={14} className="animate-spin" /> Loading beneficiaries…</div>
@@ -157,7 +157,7 @@ export function BeneficiaryManager({ selectedId, onSelect }: BeneficiaryManagerP
                     onSelect?.(beneficiary);
                   }
                 }}
-                className={`w-full rounded-xl border p-4 text-left transition-colors ${selected ? 'border-cyan-400 bg-cyan-500/10' : 'border-white/10 bg-white/5'}`}
+                className={`w-full rounded-xl border p-4 text-left transition-colors ${selected ? 'border-accent bg-accent/10' : 'border-white/10 bg-white/5'}`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>

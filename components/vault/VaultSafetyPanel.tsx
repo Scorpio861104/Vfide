@@ -25,7 +25,7 @@
  */
 
 import { useState } from 'react';
-import { useAccount, useReadContracts } from 'wagmi';
+import { useReadContracts } from 'wagmi';
 import type { Address } from 'viem';
 import { Shield, AlertCircle, Check, ChevronRight, ExternalLink } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
@@ -73,7 +73,6 @@ function describeChallengePeriod(seconds: bigint): string {
 }
 
 export function VaultSafetyPanel({ vaultAddress, compact = false }: Props) {
-  const { address: _userAddress } = useAccount();
   const [expanded, setExpanded] = useState<string | null>(null);
 
   const { data: safetyData, isLoading } = useReadContracts({
@@ -144,9 +143,9 @@ export function VaultSafetyPanel({ vaultAddress, compact = false }: Props) {
     items.push({
       id: 'trustees',
       title: 'Recovery starters (trustees)',
-      summary: 'Nobody can start a recovery on your behalf — you must do it yourself',
+      summary: 'No trustees set — a recovery can be started by anyone, not just you (your guardians must still approve, and you get a veto window to cancel)',
       explanation:
-        "Trustees are guardians you've granted a special power: the ability to START a recovery if you've lost your phone and can't start one yourself. Without any trustees, recovery has to be started by you from a new device — which works if you can reach the app, but is impossible if you can't. Designating 1-2 trustees lets a trusted family member or close friend kick off the recovery process for you. You always have a window to cancel if they start one inappropriately.",
+        "Trustees are guardians you've granted a special power: the ability to START a recovery if you've lost your phone and can't start one yourself. You haven't designated any. Because no trustees are configured, the recovery process can currently be started by anyone with your recovery details — not only you. That alone can't take your vault: your guardians still have to approve, and you have a veto window to cancel a recovery you didn't request. But designating 1-2 trustees restricts who can start a recovery to just those trusted people, closing off recovery attempts by anyone else.",
       status: 'warn',
       cta: { label: 'Designate a trustee', href: '/guardians' },
     });
@@ -186,7 +185,7 @@ export function VaultSafetyPanel({ vaultAddress, compact = false }: Props) {
   items.push({
     id: 'noncustodial',
     title: "VFIDE doesn't hold your money",
-    summary: 'The vault belongs to you alone — VFIDE, Anthropic, nobody can move your funds without your signature',
+    summary: 'The vault is yours alone — no VFIDE admin, no DAO, no third party can move your funds. The only way back into a lost vault is guardian-approved recovery.',
     explanation:
       "VFIDE is non-custodial. There is no admin key that can move your money, freeze your account, or reverse your transactions. Recovery is the only path back into a vault you've lost access to, and it requires your guardians to approve. The trade-off is real: if you lose your phone AND have no guardians, your vault is permanently inaccessible. The protection: no centralized party can ever take what you've earned.",
     status: 'ok',
@@ -222,7 +221,7 @@ export function VaultSafetyPanel({ vaultAddress, compact = false }: Props) {
   return (
     <GlassCard hover={false} className="p-5">
       <div className="mb-4 flex items-center gap-2">
-        <Shield className="text-cyan-400" size={20} />
+        <Shield className="text-accent" size={20} />
         <h2 className="text-lg font-bold text-white">Your vault&apos;s safety</h2>
       </div>
 
@@ -232,8 +231,10 @@ export function VaultSafetyPanel({ vaultAddress, compact = false }: Props) {
           return (
             <div key={item.id} className="glass-surface p-3">
               <button
+                type="button"
                 onClick={() => setExpanded(isExpanded ? null : item.id)}
-                className="w-full text-left flex items-start gap-3"
+                aria-expanded={isExpanded}
+                className="w-full text-left flex items-start gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
               >
                 <div className="mt-0.5 shrink-0">
                   {item.status === 'ok' && <Check className="text-emerald-400" size={16} />}
@@ -257,7 +258,7 @@ export function VaultSafetyPanel({ vaultAddress, compact = false }: Props) {
               {isExpanded && item.cta && (
                 <a
                   href={item.cta.href}
-                  className="mt-3 ml-7 inline-flex items-center gap-1.5 text-xs font-semibold text-cyan-300 hover:text-cyan-200"
+                  className="mt-3 ml-7 inline-flex items-center gap-1.5 text-xs font-semibold text-accent hover:text-accent"
                 >
                   {item.cta.label}
                   <ExternalLink size={11} />
@@ -270,7 +271,7 @@ export function VaultSafetyPanel({ vaultAddress, compact = false }: Props) {
 
       <a
         href="/vault/safety"
-        className="mt-4 inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-cyan-300 transition-colors"
+        className="mt-4 inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-accent transition-colors"
       >
         Learn more about how your vault is protected
         <ChevronRight size={11} />

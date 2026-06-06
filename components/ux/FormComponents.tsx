@@ -8,7 +8,7 @@
  */
 
 import React, { forwardRef, useState, useCallback, useId } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { 
   Eye, 
   EyeOff, 
@@ -116,7 +116,7 @@ export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(({
   const getBorderColor = () => {
     if (error) return 'border-red-500 focus-within:border-red-500';
     if (success) return 'border-green-500 focus-within:border-green-500';
-    return 'focus-within:border-cyan-500';
+    return 'focus-within:border-accent';
   };
 
   return (
@@ -131,7 +131,7 @@ export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(({
         </label>
       )}
 
-      <motion.div
+      <m.div
         animate={isFocused && !reducedMotion ? { scale: 1.01 } : { scale: 1 }}
         className={`
           relative flex items-center rounded-xl border transition-colors
@@ -185,7 +185,7 @@ export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(({
             {success !== undefined ? (
               <AnimatePresence mode="wait">
                 {success ? (
-                  <motion.div
+                  <m.div
                     key="success"
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
@@ -193,9 +193,9 @@ export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(({
                     className="text-green-400"
                   >
                     <Check className="w-5 h-5" />
-                  </motion.div>
+                  </m.div>
                 ) : error ? (
-                  <motion.div
+                  <m.div
                     key="error"
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
@@ -203,7 +203,7 @@ export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(({
                     className="text-red-400"
                   >
                     <X className="w-5 h-5" />
-                  </motion.div>
+                  </m.div>
                 ) : null}
               </AnimatePresence>
             ) : (
@@ -211,12 +211,12 @@ export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(({
             )}
           </div>
         )}
-      </motion.div>
+      </m.div>
 
       {/* Error or hint */}
       <AnimatePresence mode="wait">
         {error ? (
-          <motion.p
+          <m.p
             key="error"
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
@@ -226,9 +226,9 @@ export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(({
           >
             <AlertCircle className="w-4 h-4" />
             {error}
-          </motion.p>
+          </m.p>
         ) : hint ? (
-          <motion.p
+          <m.p
             key="hint"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -237,7 +237,7 @@ export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(({
             className="text-sm text-gray-500"
           >
             {hint}
-          </motion.p>
+          </m.p>
         ) : null}
       </AnimatePresence>
     </div>
@@ -290,7 +290,7 @@ export const FormTextarea = forwardRef<HTMLTextAreaElement, FormTextareaProps>((
             w-full min-h-25 px-4 py-3 bg-gray-900 border rounded-xl
             text-white 
             outline-none transition-colors resize-y
-            ${error ? 'border-red-500' : success ? 'border-green-500' : 'border-gray-700 focus:border-cyan-500'}
+            ${error ? 'border-red-500' : success ? 'border-green-500' : 'border-gray-700 focus:border-accent'}
             ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
           `}
           aria-invalid={!!error}
@@ -312,7 +312,7 @@ export const FormTextarea = forwardRef<HTMLTextAreaElement, FormTextareaProps>((
       {/* Error or hint */}
       <AnimatePresence mode="wait">
         {error ? (
-          <motion.p
+          <m.p
             key="error"
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
@@ -322,15 +322,15 @@ export const FormTextarea = forwardRef<HTMLTextAreaElement, FormTextareaProps>((
           >
             <AlertCircle className="w-4 h-4" />
             {error}
-          </motion.p>
+          </m.p>
         ) : hint ? (
-          <motion.p
+          <m.p
             key="hint"
             id={`${id}-hint`}
             className="text-sm text-gray-500"
           >
             {hint}
-          </motion.p>
+          </m.p>
         ) : null}
       </AnimatePresence>
     </div>
@@ -379,7 +379,7 @@ export const FormSelect = forwardRef<HTMLSelectElement, FormSelectProps>(({
             text-white pl-4 pr-10
             outline-none transition-colors cursor-pointer
             ${sizes[size]}
-            ${error ? 'border-red-500' : 'border-gray-700 focus:border-cyan-500'}
+            ${error ? 'border-red-500' : 'border-gray-700 focus:border-accent'}
             ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
           `}
           aria-invalid={!!error}
@@ -406,7 +406,7 @@ export const FormSelect = forwardRef<HTMLSelectElement, FormSelectProps>(({
       {/* Error or hint */}
       <AnimatePresence mode="wait">
         {error ? (
-          <motion.p
+          <m.p
             key="error"
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
@@ -416,11 +416,11 @@ export const FormSelect = forwardRef<HTMLSelectElement, FormSelectProps>(({
           >
             <AlertCircle className="w-4 h-4" />
             {error}
-          </motion.p>
+          </m.p>
         ) : hint ? (
-          <motion.p key="hint" id={`${id}-hint`} className="text-sm text-gray-500">
+          <m.p key="hint" id={`${id}-hint`} className="text-sm text-gray-500">
             {hint}
-          </motion.p>
+          </m.p>
         ) : null}
       </AnimatePresence>
     </div>
@@ -459,8 +459,8 @@ export const FormCheckbox = forwardRef<HTMLInputElement, FormCheckboxProps>(({
             disabled={disabled}
             className={`
               peer appearance-none bg-gray-900 border-2 border-gray-600 rounded
-              checked:bg-cyan-500 checked:border-cyan-500
-              focus:ring-2 focus:ring-cyan-500/50 focus:ring-offset-0
+              checked:bg-accent checked:border-accent
+              focus:ring-2 focus:ring-accent/50 focus:ring-offset-0
               transition-colors cursor-pointer
               ${sizes[size]}
               ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
@@ -558,13 +558,13 @@ export function FormToggle({
         className={`
           relative inline-flex shrink-0 rounded-full
           transition-colors duration-200
-          focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-gray-900
+          focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-gray-900
           ${sizes[size].track}
-          ${checked ? 'bg-cyan-500' : 'bg-gray-700'}
+          ${checked ? 'bg-accent' : 'bg-gray-700'}
           ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
         `}
       >
-        <motion.span
+        <m.span
           initial={false}
           animate={{ x: checked ? '100%' : '0%' }}
           transition={{ type: 'spring', stiffness: 500, damping: 30 }}
@@ -612,12 +612,12 @@ export function SearchInput({
         className="
           w-full h-11 pl-10 pr-10 bg-gray-900 border border-gray-700 rounded-xl
           text-white 
-          outline-none focus:border-cyan-500 transition-colors
+          outline-none focus:border-accent transition-colors
         "
       />
       <AnimatePresence>
         {value && (
-          <motion.button
+          <m.button
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
@@ -626,7 +626,7 @@ export function SearchInput({
             aria-label="Clear search"
           >
             <X className="w-4 h-4" />
-          </motion.button>
+          </m.button>
         )}
       </AnimatePresence>
     </div>
@@ -696,17 +696,17 @@ export function AddressInput({
             w-full h-11 px-4 pr-20 bg-gray-900 border rounded-xl
             text-white font-mono text-sm 
             outline-none transition-colors
-            ${error ? 'border-red-500' : isValidAddress ? 'border-green-500' : 'border-gray-700 focus:border-cyan-500'}
+            ${error ? 'border-red-500' : isValidAddress ? 'border-green-500' : 'border-gray-700 focus:border-accent'}
           `}
           {...props}
         />
 
         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
           {isResolving && (
-            <motion.div
+            <m.div
               animate={{ rotate: 360 }}
               transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-              className="w-4 h-4 border-2 border-cyan-500 border-t-transparent rounded-full"
+              className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full"
             />
           )}
 
@@ -737,7 +737,7 @@ export function AddressInput({
       {/* Error or hint */}
       <AnimatePresence mode="wait">
         {error ? (
-          <motion.p
+          <m.p
             key="error"
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
@@ -746,7 +746,7 @@ export function AddressInput({
           >
             <AlertCircle className="w-4 h-4" />
             {error}
-          </motion.p>
+          </m.p>
         ) : hint ? (
           <p className="text-sm text-gray-500">{hint}</p>
         ) : null}
@@ -810,7 +810,7 @@ export function AmountInput({
 
       <div className={`
         relative flex items-center bg-gray-900 border rounded-xl
-        ${error ? 'border-red-500' : 'border-gray-700 focus-within:border-cyan-500'}
+        ${error ? 'border-red-500' : 'border-gray-700 focus-within:border-accent'}
       `}>
         <input
           id={id}
@@ -830,7 +830,7 @@ export function AmountInput({
             <button
               type="button"
               onClick={handleMax}
-              className="px-2 py-1 text-xs font-medium text-cyan-400 hover:text-cyan-300 bg-cyan-500/10 rounded-lg transition-colors"
+              className="px-2 py-1 text-xs font-medium text-accent hover:text-accent-light bg-accent/10 rounded-lg transition-colors"
             >
               MAX
             </button>

@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { ReactNode } from "react";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
@@ -30,7 +30,7 @@ export function StatCard({
   trend
 }: StatCardProps) {
   const content = (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={href ? { y: -4, scale: 1.02 } : undefined}
@@ -94,7 +94,7 @@ export function StatCard({
           </>
         )}
       </div>
-    </motion.div>
+    </m.div>
   );
   
   if (href) {
@@ -115,7 +115,7 @@ interface QuickActionProps {
 export function QuickAction({ icon, label, href, color, isPrimary = false }: QuickActionProps) {
   return (
     <Link href={href}>
-      <motion.div
+      <m.div
         whileHover={{ y: -4, scale: 1.05 }}
         whileTap={{ scale: 0.98 }}
         className={`
@@ -148,7 +148,7 @@ export function QuickAction({ icon, label, href, color, isPrimary = false }: Qui
         >
           {label}
         </span>
-      </motion.div>
+      </m.div>
     </Link>
   );
 }
@@ -173,7 +173,7 @@ export function NotificationItem({
   isNew = false 
 }: NotificationItemProps) {
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
       className="relative p-4 rounded-xl flex items-start gap-4 transition-colors hover:bg-zinc-900"
@@ -210,7 +210,7 @@ export function NotificationItem({
           </Link>
         )}
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -225,7 +225,7 @@ interface ActivityItemProps {
 
 export function ActivityItem({ icon, action, details, value, time, color }: ActivityItemProps) {
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className="flex items-center justify-between p-4 rounded-xl bg-zinc-900 hover:bg-zinc-900 transition-colors"
@@ -248,6 +248,6 @@ export function ActivityItem({ icon, action, details, value, time, color }: Acti
         </div>
       </div>
       <div className="text-xs text-zinc-600">{time}</div>
-    </motion.div>
+    </m.div>
   );
 }

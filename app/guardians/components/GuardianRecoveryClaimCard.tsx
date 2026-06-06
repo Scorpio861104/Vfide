@@ -30,7 +30,7 @@
  */
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import {
   Shield,
   Clock,
@@ -119,7 +119,7 @@ export function GuardianRecoveryClaimCard({ entry }: { entry: WatchedVault }) {
 
   return (
     <>
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         className="bg-gradient-to-br from-purple-500/10 to-pink-500/5 border-2 border-purple-500/30 rounded-xl p-5 shadow-lg shadow-purple-500/10"
@@ -142,7 +142,7 @@ export function GuardianRecoveryClaimCard({ entry }: { entry: WatchedVault }) {
               isPending
                 ? 'bg-amber-500/20 text-amber-300'
                 : isApproved
-                  ? 'bg-cyan-500/20 text-cyan-300'
+                  ? 'bg-accent/20 text-accent'
                   : claim.status === RecoveryClaimStatus.Challenged
                     ? 'bg-red-500/20 text-red-300'
                     : 'bg-gray-500/20 text-gray-300'
@@ -187,7 +187,7 @@ export function GuardianRecoveryClaimCard({ entry }: { entry: WatchedVault }) {
               {claim.guardianApprovals}/{claim.guardianCountSnapshot}
             </span>
             {isApproved && (
-              <span className="text-cyan-300 ml-2">
+              <span className="text-accent ml-2">
                 · Challenge window: {formatTimeRemaining(challengeTimeRemaining)}
               </span>
             )}
@@ -197,7 +197,7 @@ export function GuardianRecoveryClaimCard({ entry }: { entry: WatchedVault }) {
         {/* Action area */}
         {isPending && !hasVoted && (
           <div className="flex gap-2">
-            <motion.button
+            <m.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => openVoteModal(true)}
@@ -205,8 +205,8 @@ export function GuardianRecoveryClaimCard({ entry }: { entry: WatchedVault }) {
             >
               <ThumbsUp className="h-4 w-4" />
               Approve
-            </motion.button>
-            <motion.button
+            </m.button>
+            <m.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => openVoteModal(false)}
@@ -214,7 +214,7 @@ export function GuardianRecoveryClaimCard({ entry }: { entry: WatchedVault }) {
             >
               <ThumbsDown className="h-4 w-4" />
               Reject
-            </motion.button>
+            </m.button>
           </div>
         )}
 
@@ -232,7 +232,7 @@ export function GuardianRecoveryClaimCard({ entry }: { entry: WatchedVault }) {
         )}
 
         {isApproved && !hasVoted && (
-          <div className="px-4 py-2.5 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-sm">
+          <div className="px-4 py-2.5 rounded-lg bg-accent/10 border border-accent/30 text-accent text-sm">
             Approvals threshold met. Claim is in the challenge window — your vote is no longer needed.
           </div>
         )}
@@ -242,25 +242,25 @@ export function GuardianRecoveryClaimCard({ entry }: { entry: WatchedVault }) {
             This claim was {RecoveryClaimStatus[claim.status].toLowerCase()}. No further action.
           </div>
         )}
-      </motion.div>
+      </m.div>
 
       {/* Vote confirmation modal */}
       <AnimatePresence>
         {showVoteModal && pendingVote !== null && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[60] flex items-center justify-center p-4"
             onClick={() => !isWritePending && setShowVoteModal(false)}
           >
-            <motion.div
+            <m.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="absolute inset-0 bg-black/80 backdrop-blur-md"
             />
 
-            <motion.div
+            <m.div
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -360,7 +360,7 @@ export function GuardianRecoveryClaimCard({ entry }: { entry: WatchedVault }) {
                 >
                   Cancel
                 </button>
-                <motion.button
+                <m.button
                   whileHover={{ scale: isWritePending ? 1 : 1.02 }}
                   whileTap={{ scale: isWritePending ? 1 : 0.98 }}
                   onClick={() => handleVote(pendingVote)}
@@ -382,10 +382,10 @@ export function GuardianRecoveryClaimCard({ entry }: { entry: WatchedVault }) {
                       Confirm {pendingVote ? 'Approve' : 'Reject'}
                     </>
                   )}
-                </motion.button>
+                </m.button>
               </div>
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         )}
       </AnimatePresence>
     </>

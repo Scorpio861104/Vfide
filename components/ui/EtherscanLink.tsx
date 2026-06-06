@@ -78,7 +78,7 @@ export function EtherscanLink({
         href={href}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex items-center gap-1 text-cyan-400 hover:text-cyan-400 transition-colors font-mono text-sm"
+        className="inline-flex items-center gap-1 text-accent hover:text-accent transition-colors font-mono text-sm"
       >
         {displayValue}
         <ExternalLink size={12} className="opacity-60" />

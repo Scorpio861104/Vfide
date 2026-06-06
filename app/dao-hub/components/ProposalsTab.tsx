@@ -29,17 +29,19 @@ export function ProposalsTab() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let _cancelled = false;
     fetch('/api/proposals?limit=50')
       .then((r) => r.json())
       .then((data) => setProposals(data.proposals ?? []))
       .catch(() => setError('Failed to load proposals'))
       .finally(() => setLoading(false));
-  }, []);
+    return () => { _cancelled = true; };
+    }, []);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 size={24} className="text-cyan-400 animate-spin" />
+        <Loader2 size={24} className="text-accent animate-spin" />
       </div>
     );
   }
@@ -82,7 +84,7 @@ export function ProposalsTab() {
             <div className="flex items-center gap-3 mt-4">
               <div className="flex-1 bg-white/5 rounded-full h-1.5 overflow-hidden">
                 <div
-                  className="h-full bg-cyan-400 rounded-full transition-all"
+                  className="h-full bg-accent rounded-full transition-all"
                   style={{ width: `${forPct}%` }}
                 />
               </div>

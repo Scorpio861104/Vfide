@@ -11,6 +11,18 @@ jest.mock('@/lib/auth/rateLimit', () => ({
 
 jest.mock('@/lib/auth/middleware', () => ({
   requireAuth: jest.fn(),
+  withAuth: (handler: (...args: any[]) => Promise<Response> | Response) => async (request: NextRequest, context?: unknown) => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { requireAuth } = require('@/lib/auth/middleware');
+    const auth = await requireAuth(request);
+    if (!auth?.user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    return handler(request, auth.user, context);
+  },
   isAdmin: jest.fn(),
   requireOwnership: jest.fn(async () => ({ user: { sub: 'test', address: '0x0000000000000000000000000000000000000000' } })),
   requireAdmin: jest.fn(async () => ({ user: { sub: 'test', address: '0x0000000000000000000000000000000000000000' } })),

@@ -96,7 +96,7 @@ const checkUnusualDevice = (currentDevice: DeviceFingerprint): boolean => {
       return false;
     }
 
-    const knownDevice: DeviceFingerprint = JSON.parse(stored);
+    let knownDevice: DeviceFingerprint; try { knownDevice = JSON.parse(stored); } catch { return false; }
     return knownDevice.hash !== currentDevice.hash;
   } catch (_error) {
     return false;

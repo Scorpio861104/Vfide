@@ -1,0 +1,404 @@
+{
+  "abi": [
+    {
+      "type": "constructor",
+      "inputs": [
+        {
+          "name": "dao",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "token",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "hub",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "merchants",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "executeFundEscrow",
+      "inputs": [
+        {
+          "name": "intent",
+          "type": "EscrowFundIntent",
+          "internalType": "EscrowFundIntent"
+        },
+        {
+          "name": "signature",
+          "type": "bytes",
+          "internalType": "bytes"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "setMinDisputeAmountForPenalty",
+      "inputs": [
+        {
+          "name": "amount",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "getRequiredApproval",
+      "inputs": [
+        {
+          "name": "buyerOwner",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "buyerVault",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "spender",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "open",
+      "inputs": [
+        {
+          "name": "merchantOwner",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "amount",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "metaHash",
+          "type": "bytes32",
+          "internalType": "bytes32"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "openAndFundWithIntent",
+      "inputs": [
+        {
+          "name": "intent",
+          "type": "ICardBoundVaultFundEscrow.EscrowFundIntent",
+          "internalType": "ICardBoundVaultFundEscrow.EscrowFundIntent"
+        },
+        {
+          "name": "signature",
+          "type": "bytes",
+          "internalType": "bytes"
+        },
+        {
+          "name": "merchantOwner",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "metaHash",
+          "type": "bytes32",
+          "internalType": "bytes32"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "markFunded",
+      "inputs": [
+        {
+          "name": "id",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "release",
+      "inputs": [
+        {
+          "name": "id",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "refund",
+      "inputs": [
+        {
+          "name": "id",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "settleByInheritance",
+      "inputs": [
+        {
+          "name": "id",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "cancelStaleOpen",
+      "inputs": [
+        {
+          "name": "id",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "dispute",
+      "inputs": [
+        {
+          "name": "id",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "internalType": "string"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "resolve",
+      "inputs": [
+        {
+          "name": "id",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "buyerWins",
+          "type": "bool",
+          "internalType": "bool"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "setSeer",
+      "inputs": [
+        {
+          "name": "_seer",
+          "type": "address"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "seer",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "escrowDisputedAt",
+      "inputs": [
+        {
+          "name": "id",
+          "type": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint64"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "escrowDeposited",
+      "inputs": [
+        {
+          "name": "id",
+          "type": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "escrowCount",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "escrows",
+      "inputs": [
+        {
+          "name": "id",
+          "type": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "buyerOwner",
+          "type": "address"
+        },
+        {
+          "name": "merchantOwner",
+          "type": "address"
+        },
+        {
+          "name": "buyerVault",
+          "type": "address"
+        },
+        {
+          "name": "sellerVault",
+          "type": "address"
+        },
+        {
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "name": "state",
+          "type": "uint8"
+        },
+        {
+          "name": "metaHash",
+          "type": "bytes32"
+        },
+        {
+          "name": "openedAt",
+          "type": "uint64"
+        },
+        {
+          "name": "fundedAt",
+          "type": "uint64"
+        },
+        {
+          "name": "isHighValue",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "error",
+      "name": "COM_LockActive",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "COM_HighValueTimelock",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "COM_NotInheritanceActive",
+      "inputs": []
+    },
+    {
+      "type": "event",
+      "name": "HighValueEscrowOpened",
+      "inputs": [
+        {
+          "name": "id",
+          "type": "uint256",
+          "indexed": true
+        },
+        {
+          "name": "amount",
+          "type": "uint256",
+          "indexed": false
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "SeerSet",
+      "inputs": [
+        {
+          "name": "seer",
+          "type": "address",
+          "indexed": true
+        }
+      ],
+      "anonymous": false
+    }
+  ]
+}

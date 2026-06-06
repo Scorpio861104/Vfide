@@ -1,11 +1,14 @@
 'use client';
 
-import { motion, useSpring, useTransform } from "framer-motion";
+import { getTier } from '@/lib/proofScore/tiers';
+import { m, useSpring, useTransform } from "framer-motion";
 import { useEffect, useState } from "react";
 import { xpLevelToProofScoreBonus } from "@/lib/gamification";
 
 interface ProofScoreRingProps {
   score: number;
+  /** When true, show a pulsing skeleton instead of the score ring */
+  isLoading?: boolean;
   size?: "sm" | "md" | "lg";
   showLabel?: boolean;
   className?: string;
@@ -18,16 +21,11 @@ const sizeConfig = {
 };
 
 function getTierInfo(score: number) {
-  if (score >= 8000) return { tier: 'ELITE',      color: '#00FF88', gradient: 'from-emerald-400 to-[#00CC6A]'  };
-  if (score >= 7000) return { tier: 'COUNCIL',    color: '#A78BFA', gradient: 'from-violet-400 to-violet-500'  };
-  if (score >= 5600) return { tier: 'TRUSTED',    color: '#34D399', gradient: 'from-emerald-400 to-green-500'  };
-  if (score >= 5400) return { tier: 'GOVERNANCE', color: '#60A5FA', gradient: 'from-blue-400 to-blue-500'      };
-  if (score >= 5000) return { tier: 'NEUTRAL',    color: '#FFD700', gradient: 'from-yellow-400 to-amber-500'   };
-  if (score >= 3500) return { tier: 'LOW TRUST',  color: '#FFA500', gradient: 'from-orange-400 to-orange-500'  };
-  return               { tier: 'RISKY',       color: '#FF4444', gradient: 'from-red-400 to-red-500'        };
+  const t = getTier(score);
+  return { tier: t.name.toUpperCase(), color: t.hex, gradient: `from-[${t.hex}] to-[${t.hex}]` };
 }
 
-export function ProofScoreRing({ score, size = "md", showLabel = true, className = "" }: ProofScoreRingProps) {
+export function ProofScoreRing({ score, isLoading: _isLoading = false, size = "md", showLabel = true, className = "" }: ProofScoreRingProps) {
   const config = sizeConfig[size];
   const radius = (config.outer - config.stroke) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -97,7 +95,7 @@ export function ProofScoreRing({ score, size = "md", showLabel = true, className
         </defs>
         
         {/* Progress arc */}
-        <motion.circle
+        <m.circle
           cx={config.outer / 2}
           cy={config.outer / 2}
           r={radius}
@@ -112,12 +110,12 @@ export function ProofScoreRing({ score, size = "md", showLabel = true, className
       
       {/* Center content */}
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <motion.div 
+        <m.div 
           className={`font-bold ${config.textSize}`}
           style={{ color: tierInfo.color }}
         >
           {displayScore.toLocaleString()}
-        </motion.div>
+        </m.div>
         
         {showLabel && (
           <div 
@@ -176,7 +174,7 @@ export function ProofScoreCard({ score, feeRate, xpLevel, className = "" }: Proo
         
         <div className="flex-1 space-y-3">
           {breakdown.map((item, idx) => (
-            <motion.div
+            <m.div
               key={idx}
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
@@ -190,7 +188,7 @@ export function ProofScoreCard({ score, feeRate, xpLevel, className = "" }: Proo
               <span className="font-medium text-zinc-50">
                 +{Math.round(Math.max(0, item.value)).toLocaleString()}
               </span>
-            </motion.div>
+            </m.div>
           ))}
         </div>
       </div>
@@ -206,7 +204,7 @@ export function ProofScoreCard({ score, feeRate, xpLevel, className = "" }: Proo
             className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#EF4444] via-[#FFD700] to-[#22C55E] rounded-full"
             style={{ width: `${(score / 10000) * 100}%` }}
           />
-          <motion.div
+          <m.div
             className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg"
             style={{ left: `calc(${(score / 10000) * 100}% - 6px)` }}
             animate={{ scale: [1, 1.2, 1] }}

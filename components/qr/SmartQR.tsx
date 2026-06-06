@@ -16,7 +16,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { QrCode, Download, Copy, Check, Share2, Printer } from 'lucide-react';
 import QRCode from 'qrcode';
 
@@ -182,7 +182,7 @@ export function SmartQR({
   return (
     <div className="flex flex-col items-center">
       {/* QR Code */}
-      <motion.div
+      <m.div
         ref={canvasRef}
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -199,10 +199,10 @@ export function SmartQR({
         {/* Center logo overlay */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="w-10 h-10 bg-zinc-950 rounded-lg flex items-center justify-center border border-white/10">
-            <span className="text-cyan-400 font-black text-xs">V</span>
+            <span className="text-accent font-black text-xs">V</span>
           </div>
         </div>
-      </motion.div>
+      </m.div>
 
       {/* Info below QR */}
       {data.amount && (

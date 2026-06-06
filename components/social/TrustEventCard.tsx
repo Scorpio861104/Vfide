@@ -17,7 +17,7 @@
  */
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Award, Shield, Banknote, Star, Flame, ShoppingCart, Heart, Check, TrendingUp } from 'lucide-react';
 
 export type TrustEventType =
@@ -72,7 +72,7 @@ const EVENT_CONFIG: Record<TrustEventType, {
   milestone: {
     icon: <TrendingUp size={20} />,
     color: '#06B6D4',
-    bgGradient: 'from-cyan-500/10 to-cyan-500/3',
+    bgGradient: 'from-accent/10 to-accent/3',
     verb: (e) => `reached ProofScore ${Number(e.data.score).toLocaleString()}`,
     detail: () => 'Trust built through consistent commerce and community participation',
   },
@@ -131,7 +131,7 @@ export function TrustEventCard({ event, onCelebrate, celebrated = false }: Trust
   const detail = config.detail?.(event);
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       className={`p-4 bg-gradient-to-r ${config.bgGradient} border border-white/5 rounded-2xl`}
@@ -166,7 +166,7 @@ export function TrustEventCard({ event, onCelebrate, celebrated = false }: Trust
             </div>
 
             {onCelebrate && (
-              <motion.button
+              <m.button
                 whileTap={{ scale: 0.9 }}
                 onClick={() => onCelebrate(event.id)}
                 className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
@@ -177,12 +177,12 @@ export function TrustEventCard({ event, onCelebrate, celebrated = false }: Trust
               >
                 {celebrated ? <Check size={12} /> : <span>🎉</span>}
                 {celebrated ? 'Celebrated' : 'Celebrate'}
-              </motion.button>
+              </m.button>
             )}
           </div>
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 

@@ -194,14 +194,14 @@ export const PROOF_SCORE_PERMISSIONS = {
 export const PROOF_SCORE_TIERS = {
   RISKY: {
     min: 0,
-    max: 3500,
+    max: 3999,
     label: 'Risky',
     color: 'red',
     canVote: false,
     canMerchant: false,
   },
   LOW_TRUST: {
-    min: 3500,
+    min: 4000,
     max: 5000,
     label: 'Low Trust',
     color: 'orange',

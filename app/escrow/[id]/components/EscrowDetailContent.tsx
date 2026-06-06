@@ -23,7 +23,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useAccount, useReadContract } from 'wagmi';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { formatUnits, type Address } from 'viem';
 import {
   ArrowLeft,
@@ -66,7 +66,7 @@ function stateStyle(state: EscrowState) {
     case EscrowState.Open:
       return { ring: 'ring-amber-500/30', text: 'text-amber-300', icon: Clock };
     case EscrowState.Funded:
-      return { ring: 'ring-cyan-500/30', text: 'text-cyan-300', icon: Lock };
+      return { ring: 'ring-accent/30', text: 'text-accent', icon: Lock };
     case EscrowState.Released:
       return { ring: 'ring-emerald-500/30', text: 'text-emerald-300', icon: CheckCircle2 };
     case EscrowState.Refunded:
@@ -219,7 +219,7 @@ export function EscrowDetailContent({ id }: Props) {
         <div className="container mx-auto px-4 max-w-3xl py-8">
           <button
             onClick={() => router.push('/escrow')}
-            className="text-cyan-400 hover:text-cyan-300 text-sm inline-flex items-center gap-1 mb-6"
+            className="text-accent hover:text-accent text-sm inline-flex items-center gap-1 mb-6"
           >
             <ArrowLeft size={14} /> Back to escrows
           </button>
@@ -242,12 +242,12 @@ export function EscrowDetailContent({ id }: Props) {
         <div className="container mx-auto px-4 max-w-3xl py-8">
           <button
             onClick={() => router.push('/escrow')}
-            className="text-cyan-400 hover:text-cyan-300 text-sm inline-flex items-center gap-1 mb-6"
+            className="text-accent hover:text-accent text-sm inline-flex items-center gap-1 mb-6"
           >
             <ArrowLeft size={14} /> Back to escrows
           </button>
           <div className="flex items-center justify-center py-20">
-            <Loader2 size={28} className="text-cyan-400 animate-spin" />
+            <Loader2 size={28} className="text-accent animate-spin" />
           </div>
         </div>
       </div>
@@ -261,7 +261,7 @@ export function EscrowDetailContent({ id }: Props) {
         <div className="container mx-auto px-4 max-w-3xl py-8">
           <button
             onClick={() => router.push('/escrow')}
-            className="text-cyan-400 hover:text-cyan-300 text-sm inline-flex items-center gap-1 mb-6"
+            className="text-accent hover:text-accent text-sm inline-flex items-center gap-1 mb-6"
           >
             <ArrowLeft size={14} /> Back to escrows
           </button>
@@ -294,13 +294,13 @@ export function EscrowDetailContent({ id }: Props) {
       <div className="container mx-auto px-4 max-w-3xl py-8">
         <button
           onClick={() => router.push('/escrow')}
-          className="text-cyan-400 hover:text-cyan-300 text-sm inline-flex items-center gap-1 mb-6"
+          className="text-accent hover:text-accent text-sm inline-flex items-center gap-1 mb-6"
         >
           <ArrowLeft size={14} /> Back to escrows
         </button>
 
         {/* Header */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           className={`bg-white/3 border border-white/10 rounded-2xl p-6 ring-1 ${style.ring}`}
@@ -322,7 +322,7 @@ export function EscrowDetailContent({ id }: Props) {
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-400">
               {viewerRole === 'buyer' && (
                 <>
-                  <ShoppingBag size={12} className="text-cyan-400" /> You are the buyer
+                  <ShoppingBag size={12} className="text-accent" /> You are the buyer
                 </>
               )}
               {viewerRole === 'merchant' && (
@@ -337,7 +337,7 @@ export function EscrowDetailContent({ id }: Props) {
               )}
             </div>
           )}
-        </motion.div>
+        </m.div>
 
         {/* Parties */}
         <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -396,14 +396,14 @@ export function EscrowDetailContent({ id }: Props) {
           </div>
         )}
         {actionMessage && !actionError && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             className="mt-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-200 flex items-start gap-2"
           >
             <CheckCircle2 size={12} className="shrink-0 mt-0.5" />
             <span>{actionMessage}</span>
-          </motion.div>
+          </m.div>
         )}
 
         {/* Primary actions (role-dependent) */}

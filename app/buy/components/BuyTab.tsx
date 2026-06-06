@@ -82,7 +82,7 @@ export function BuyTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 size={18} className="text-cyan-400 animate-spin" />
+        <Loader2 size={18} className="text-accent animate-spin" />
       </div>
     );
   }
@@ -91,7 +91,7 @@ export function BuyTab() {
     <div className="space-y-5">
       <div className="bg-white/3 border border-white/10 rounded-2xl p-5">
         <div className="flex items-center gap-2 mb-4">
-          <Calculator size={16} className="text-cyan-400" />
+          <Calculator size={16} className="text-accent" />
           <h3 className="text-sm font-semibold text-white">VFIDE Buy Planner</h3>
         </div>
 
@@ -103,7 +103,7 @@ export function BuyTab() {
               min="1"
               value={usdBudget}
               onChange={(e) => setUsdBudget(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/50"
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-accent/50"
             />
           </div>
           <div>
@@ -115,7 +115,7 @@ export function BuyTab() {
                   onClick={() => setFeeTier(tier)}
                   className={`rounded-lg px-2 py-2 text-xs font-semibold capitalize transition-colors ${
                     feeTier === tier
-                      ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                      ? 'bg-accent/20 text-accent border border-accent/30'
                       : 'bg-white/5 text-gray-400 border border-white/10 hover:text-white'
                   }`}
                 >
@@ -139,7 +139,7 @@ export function BuyTab() {
           </div>
           <div className="bg-white/5 border border-white/10 rounded-xl p-3">
             <p className="text-xs text-gray-400 mb-1">Estimated VFIDE</p>
-            <p className="text-sm font-semibold text-cyan-400">{quote.vfideNet.toFixed(2)} VFIDE</p>
+            <p className="text-sm font-semibold text-accent">{quote.vfideNet.toFixed(2)} VFIDE</p>
           </div>
         </div>
       </div>

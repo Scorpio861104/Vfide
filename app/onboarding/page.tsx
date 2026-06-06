@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic';
 
 import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { Sparkles, ArrowRight, Power } from 'lucide-react';
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { useAccount } from 'wagmi';
@@ -21,8 +21,12 @@ import { useAccount } from 'wagmi';
 import { Footer } from '@/components/layout/Footer';
 import { useWizardState } from '@/components/wizard';
 import { CHAPTERS } from '@/components/wizard';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function OnboardingPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isConnected } = useAccount();
@@ -80,9 +84,9 @@ export default function OnboardingPage() {
               </div>
               <div>
                 <div className="badge-live mb-1 w-fit"><Sparkles size={10} /> Setup Wizard</div>
-                <h1 className="text-2xl font-black text-white tracking-tight">Setup Wizard</h1>
+                <h1 className="text-2xl font-black text-white tracking-tight">Welcome to VFIDE</h1>
                 <p className="text-sm text-zinc-400">
-                  A chapter-by-chapter walk through everything your vault needs.
+                  A guided setup for wallet connection, vault protection, trusted recovery, and secure payments.
                 </p>
               </div>
             </div>

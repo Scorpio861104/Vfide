@@ -1,14 +1,16 @@
 'use client';
+import _dynamic from 'next/dynamic';
 
 export const dynamic = 'force-dynamic';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence , LazyMotion, domAnimation } from 'framer-motion';
 import { Footer } from '@/components/layout/Footer';
-import { BuyTab } from './components/BuyTab';
+const BuyTab = _dynamic(() => import('./components/BuyTab').then(m => ({ default: m.BuyTab })), { ssr: false });
 import { HistoryTab } from './components/HistoryTab';
-import { SwapTab } from './components/SwapTab';
+const SwapTab = _dynamic(() => import('./components/SwapTab').then(m => ({ default: m.SwapTab })), { ssr: false });
 import { ShoppingCart, ArrowLeftRight, Clock } from 'lucide-react';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 type TabId = 'buy' | 'swap' | 'history';
 
@@ -19,10 +21,14 @@ const TABS = [
 ];
 
 export default function BuyPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [activeTab, setActiveTab] = useState<TabId>('buy');
 
   return (
-    <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] pb-8 relative">
+    <LazyMotion features={domAnimation}>
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] pb-8 relative">
       {/* Ambient orbs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
@@ -34,17 +40,17 @@ export default function BuyPage() {
 
       <div className="relative container mx-auto max-w-5xl px-4">
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <div className="flex items-center gap-3 mb-3">
             <span className="badge-live"><span className="badge-live-dot" />On-Ramp</span>
           </div>
           <h1 className="text-4xl font-bold mb-2">
-            <span className="bg-gradient-to-r from-cyan-400 via-cyan-400 to-violet-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-accent via-accent to-violet-400 bg-clip-text text-transparent">
               Buy Crypto
             </span>
           </h1>
           <p className="text-white/50">Plan a VFIDE purchase, then execute via Uniswap on Base. Direct fiat on-ramp is a future release.</p>
-        </motion.div>
+        </m.div>
 
         {/* Sticky tab bar */}
         <div className="sticky top-7 md:top-[5.25rem] z-30 backdrop-blur-xl bg-zinc-950/80 border-b border-white/5 -mx-4 px-4 mb-8 py-3">
@@ -60,17 +66,18 @@ export default function BuyPage() {
 
         {/* Tab content */}
         <AnimatePresence mode="wait">
-          <motion.div key={activeTab}
+          <m.div key={activeTab}
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}>
             {activeTab === 'buy' && <BuyTab />}
             {activeTab === 'swap' && <SwapTab />}
             {activeTab === 'history' && <HistoryTab />}
-          </motion.div>
+          </m.div>
         </AnimatePresence>
       </div>
 
       <Footer />
     </div>
+    </LazyMotion>
   );
 }

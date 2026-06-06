@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { HelpCircle, X } from 'lucide-react';
 import { analytics } from '@/lib/socialAnalytics';
 
@@ -63,7 +63,7 @@ export function VaultInfoTooltip({
 
       <AnimatePresence>
         {isOpen && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, scale: 0.95, y: position === 'bottom' ? -10 : 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: position === 'bottom' ? -10 : 10 }}
@@ -94,7 +94,7 @@ export function VaultInfoTooltip({
                 </p>
 
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold text-cyan-400">With a vault, you can:</p>
+                  <p className="text-xs font-semibold text-accent">With a vault, you can:</p>
                   <ul className="text-xs text-zinc-400 space-y-1.5">
                     <li className="flex items-start gap-2">
                       <span className="text-emerald-500 mt-0.5">✓</span>
@@ -125,7 +125,7 @@ export function VaultInfoTooltip({
 
                 <a
                   href="/vault"
-                  className="block w-full text-center py-2 px-3 bg-gradient-to-r from-cyan-400 to-violet-400 text-zinc-950 font-semibold text-xs rounded-lg hover:opacity-90 transition-opacity"
+                  className="block w-full text-center py-2 px-3 bg-gradient-to-r from-accent to-violet-400 text-zinc-950 font-semibold text-xs rounded-lg hover:opacity-90 transition-opacity"
                 >
                   Create Vault →
                 </a>
@@ -141,7 +141,7 @@ export function VaultInfoTooltip({
                 }`}
               />
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

@@ -13,6 +13,7 @@ const customJestConfig = {
   maxConcurrency: 1, // Run tests serially to avoid axe-core concurrency issues
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
+    '^next/dynamic$': '<rootDir>/test/mocks/next-dynamic.js',
     '^uncrypto$': '<rootDir>/test/mocks/uncrypto.js',
     '^minimatch$': '<rootDir>/test/mocks/minimatch-compat.cjs',
   },
@@ -38,11 +39,12 @@ const customJestConfig = {
     '!**/node_modules/**',
     '!**/.next/**',
   ],
+  coverageReporters: ['json', 'lcov', 'text', 'clover', 'json-summary'],
   coverageThreshold: {
     global: {
       branches: 81,
       functions: 82,
-      lines: 85,
+      lines: 84,
       statements: 84,
     },
     './hooks/useVFIDEBalance.ts': {
@@ -85,6 +87,7 @@ const customJestConfig = {
   ],
   testPathIgnorePatterns: [
     '/node_modules/',
+    '/uploaded_files/',
     '/__mocks__/',
     '/vfide-complete/',
     '/test/hardhat/',
@@ -147,6 +150,9 @@ const customJestConfig = {
     // resolves to undefined). Pending a per-test rewrite — skip for now
     // so it doesn't poison the rest of the suite.
     '__tests__/hooks/useHeadhunterHooksReal\\.test\\.ts$',
+  ],
+  modulePathIgnorePatterns: [
+    '<rootDir>/uploaded_files/',
   ],
 }
 

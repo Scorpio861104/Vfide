@@ -1,6 +1,6 @@
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Loader2, ExternalLink, CheckCircle2, XCircle } from 'lucide-react';
 import { useChainId } from 'wagmi';
 
@@ -43,7 +43,7 @@ export function TransactionPending({
 
   const statusConfig = {
     pending: {
-      icon: <Loader2 className="animate-spin text-cyan-400" size={48} />,
+      icon: <Loader2 className="animate-spin text-accent" size={48} />,
       title: title || 'Confirm in Wallet',
       message: message || 'Please confirm the transaction in your wallet...',
       color: '#00F0FF',
@@ -73,14 +73,14 @@ export function TransactionPending({
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
           onClick={status === 'success' || status === 'error' ? onClose : undefined}
         >
-          <motion.div
+          <m.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
@@ -108,7 +108,7 @@ export function TransactionPending({
                 href={`${explorerUrl}/tx/${hash}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-400 transition-colors mb-6"
+                className="inline-flex items-center gap-2 text-accent hover:text-accent transition-colors mb-6"
               >
                 <span className="font-mono text-sm">
                   {hash.slice(0, 10)}...{hash.slice(-8)}
@@ -120,7 +120,7 @@ export function TransactionPending({
             {/* Progress indicator for pending/confirming */}
             {(status === 'pending' || status === 'confirming') && (
               <div className="w-full bg-zinc-800 rounded-full h-2 overflow-hidden">
-                <motion.div
+                <m.div
                   className="h-full rounded-full"
                   style={{ backgroundColor: config.color }}
                   initial={{ width: '0%' }}
@@ -134,13 +134,13 @@ export function TransactionPending({
             {(status === 'success' || status === 'error') && onClose && (
               <button
                 onClick={onClose}
-                className="mt-6 px-6 py-2 bg-zinc-800 border border-zinc-700 text-zinc-100 rounded-lg hover:border-cyan-400 transition-colors"
+                className="mt-6 px-6 py-2 bg-zinc-800 border border-zinc-700 text-zinc-100 rounded-lg hover:border-accent transition-colors"
               >
                 Close
               </button>
             )}
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       )}
     </AnimatePresence>
   );

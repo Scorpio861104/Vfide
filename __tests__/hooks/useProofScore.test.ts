@@ -33,8 +33,8 @@ describe('useProofScore', () => {
       expect(getScoreTier(5399)).toBe('Neutral')
     })
 
-    it('returns Low Trust for scores 3500-4999', () => {
-      expect(getScoreTier(3500)).toBe('Low Trust')
+    it('returns Low Trust for scores 4000-4999', () => {
+      expect(getScoreTier(4000)).toBe('Low Trust')
       expect(getScoreTier(4000)).toBe('Low Trust')
       expect(getScoreTier(4999)).toBe('Low Trust')
     })

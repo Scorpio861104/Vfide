@@ -8,6 +8,26 @@
  * confirmations (FeeDistributor → FraudRegistry → FlashLoan → EcosystemVault), applying
  * any other 48-hour token-module and Seer timelocks along the way.
  *
+ * ⚠️  DEPLOYMENT WINDOW — FIRST 48 HOURS (Finding 6 acknowledgement):
+ *
+ *   Between deploy-full.ts and the FIRST successful run of apply-full.ts,
+ *   two time-gated protections are NOT yet active:
+ *
+ *   1. Seer enforcement: applySeerAutonomous() has not yet been called.
+ *      All transfers proceed without Seer restriction checks until applied.
+ *
+ *   2. Burn sustainability floor: applySustainability() has not yet been called.
+ *      dailyBurnCap = 0 (unlimited) and minimumSupplyFloor = 0 (no floor)
+ *      until the pending proposal applies.
+ *
+ *   MITIGATION: On mainnet, deploy-full.ts and apply-full.ts MUST be run
+ *   back-to-back as a coordinated operator sequence with no public announcement
+ *   until AFTER this script completes successfully. The 48h window should not
+ *   be advertised or exposed to public trading activity.
+ *
+ *   This is an architectural consequence of the two-phase timelock design and
+ *   is documented here so it cannot be missed by any operator running this script.
+ *
  * Run:
  *   npx hardhat run scripts/apply-full.ts --network baseSepolia
  *
@@ -116,8 +136,17 @@ async function main() {
   //  Token module timelocks (setVaultHub / setBurnRouter / setFraudRegistry)
   // ══════════════════════════════════════════════════════════════════════════
   console.log("\n═══ Token Module Timelocks ═══");
-  for (const fn of ["applyVaultHub", "applyBurnRouter", "applyLedger", "applyFraudRegistry"]) {
+  for (const fn of ["applyVaultHub", "applyBurnRouter", "applyLedger", "applyFraudRegistry", "applySeerAutonomous", "applyEcosystemDistributor"]) {
     await call(fn, () => (token as any)[fn]());
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  //  BurnRouter sustainability apply (24h timelock, proposed in deploy-full.ts)
+  // ══════════════════════════════════════════════════════════════════════════
+  if (book.ProofScoreBurnRouter) {
+    console.log("\n═══ BurnRouter Sustainability Apply ═══");
+    const burnRouter = await ethers.getContractAt("ProofScoreBurnRouter", book.ProofScoreBurnRouter);
+    await call("BurnRouter.applySustainability", () => burnRouter.applySustainability());
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -159,6 +188,12 @@ async function main() {
     { name: "VFIDEFlashLoan", bookKey: "VFIDEFlashLoan", factoryName: "VFIDEFlashLoan", fn: "applyDAO" },
     { name: "VFIDETermLoan",  bookKey: "VFIDETermLoan",  factoryName: "VFIDETermLoan",  fn: "applyDAO" },
     { name: "FraudRegistry",  bookKey: "FraudRegistry",  factoryName: "FraudRegistry",  fn: "applyDAO_FR" },
+    // PL-GOV1: ProofLedger.applyDAO() confirms the 48h-timelocked DAO rotation
+    //           (proposed in transfer-governance.ts by ledgerAdmin).
+    { name: "ProofLedger",    bookKey: "ProofLedger",    factoryName: "ProofLedger",    fn: "applyDAO" },
+    // GOV-D2 FIX: CouncilSalary.setDAO() is queued in deploy-full.ts but applyDAO() was never called.
+    // Without this, CouncilSalary.dao remains the bootstrap EOA permanently.
+    { name: "CouncilSalary",  bookKey: "CouncilSalary",  factoryName: "CouncilSalary",  fn: "applyDAO" },
   ];
   for (const { name, bookKey, factoryName, fn } of moduleDaoTransfers) {
     const addr = book[bookKey];

@@ -1,24 +1,25 @@
 'use client';
+import dynamic from 'next/dynamic';
 
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Footer } from '@/components/layout/Footer';
 import { TransactionHistory } from '@/components/vault/TransactionHistory';
+import { VaultGuardianSetupBanner } from '@/components/vault/VaultGuardianSetupBanner';
+import { VaultPendingChangesBanner } from '@/components/vault/VaultPendingChangesBanner';
+import { IncomingRefunds } from '@/components/vault/IncomingRefunds';
 import { TrendingUp } from 'lucide-react';
 
 import { useVaultOperations } from './useVaultOperations';
 import { useVaultTransactions } from '@/hooks/useVaultTransactions';
 import { VaultHeader } from './VaultHeader';
 import { VaultOverviewStats } from './VaultOverviewStats';
-import { VaultQuickActions } from './VaultQuickActions';
-import { MerchantApprovalPanel } from './MerchantApprovalPanel';
 import { VaultSecuritySection } from './VaultSecuritySection';
-import { VaultRecoveryPanel } from './VaultRecoveryPanel';
+import { VaultQuickActions } from './VaultQuickActions';
 import { VaultInheritancePanel } from './VaultInheritancePanel';
-import { VaultQueueSection } from './VaultQueueSection';
 import { WithdrawModal } from './WithdrawModal';
-import { VaultPendingChangesBanner } from '@/components/vault/VaultPendingChangesBanner';
-import { VaultGuardianSetupBanner } from '@/components/vault/VaultGuardianSetupBanner';
-import { IncomingRefunds } from '@/components/vault/IncomingRefunds';
+const MerchantApprovalPanel = dynamic(() => import('./MerchantApprovalPanel').then(m => ({ default: m.MerchantApprovalPanel })), { ssr: false });
+const VaultRecoveryPanel = dynamic(() => import('./VaultRecoveryPanel').then(m => ({ default: m.VaultRecoveryPanel })), { ssr: false });
+const VaultQueueSection = dynamic(() => import('./VaultQueueSection').then(m => ({ default: m.VaultQueueSection })), { ssr: false });
 
 export function VaultContent() {
   const ops = useVaultOperations();
@@ -120,7 +121,7 @@ export function VaultContent() {
               <div className="container mx-auto px-4 max-w-6xl">
                 <GlassCard className="p-6" hover={false}>
                   <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                    <TrendingUp className="text-cyan-400" size={24} />
+                    <TrendingUp className="text-accent" size={24} />
                     Transaction History
                   </h2>
                   <TransactionHistory transactions={transactions} loading={txLoading} />

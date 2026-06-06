@@ -20,6 +20,7 @@ export function HistoryTab() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let _cancelled = false;
     if (!address) return;
     setLoading(true);
     setError(null);
@@ -33,7 +34,8 @@ export function HistoryTab() {
       })
       .catch(() => setError('Failed to load badge history'))
       .finally(() => setLoading(false));
-  }, [address]);
+    return () => { _cancelled = true; };
+    }, [address]);
 
   if (!address) {
     return (
@@ -50,7 +52,7 @@ export function HistoryTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 size={24} className="text-cyan-400 animate-spin" />
+        <Loader2 size={24} className="text-accent animate-spin" />
       </div>
     );
   }
@@ -76,7 +78,7 @@ export function HistoryTab() {
     <div className="space-y-3">
       {badges.map((badge, i) => (
         <div key={i} className="bg-white/3 border border-white/10 rounded-xl p-4 flex items-center gap-4">
-          <div className="w-10 h-10 bg-cyan-500/10 rounded-xl flex items-center justify-center text-xl flex-shrink-0">
+          <div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center text-xl flex-shrink-0">
             {badge.badge_icon ?? '🏅'}
           </div>
           <div className="min-w-0 flex-1">

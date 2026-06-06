@@ -3,11 +3,11 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import React, { useState } from 'react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
-import { parseUnits, maxUint256 } from 'viem';
+import { parseUnits } from 'viem';
 import { CONTRACT_ADDRESSES, VFIDETokenABI, isConfiguredContractAddress } from '@/lib/contracts';
 
 import { SubscriptionManagerABI } from '@/lib/abis/future';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
 import { Check, Sparkles, Crown, Zap, Star } from 'lucide-react';
 import { toast } from '@/lib/toast';
@@ -29,7 +29,7 @@ function SuccessConfetti() {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
       {particles.map((p) => (
-        <motion.div
+        <m.div
           key={p.id}
           className="absolute w-2 h-2 rounded-full"
           style={{ left: `${p.x}%`, top: '50%', backgroundColor: p.color }}
@@ -119,12 +119,14 @@ export function SubscriptionManager({
       const amountWei = parseUnits(tier.price, 18);
       const intervalSeconds = BigInt(tier.duration * 86400);
 
-      // Step 1: Approve SubscriptionManager to pull VFIDE for recurring payments
+      // Step 1: Approve SubscriptionManager for exactly one subscription payment.
+      // Granting maxUint256 would leave an open infinite allowance if step 2 fails.
+      // The contract pulls amountWei per interval; we grant exactly that per call.
       const approveHash = await writeContractAsync({
         address: CONTRACT_ADDRESSES.VFIDEToken,
         abi: VFIDETokenABI,
         functionName: 'approve',
-        args: [subscriptionManagerAddress!, maxUint256],
+        args: [subscriptionManagerAddress!, amountWei],
       });
       if (publicClient) {
         await publicClient.waitForTransactionReceipt({ hash: approveHash });
@@ -172,38 +174,38 @@ export function SubscriptionManager({
       {/* Success Celebration */}
       <AnimatePresence>
         {showSuccess && (
-          <motion.div
+          <m.div
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <motion.div
+            <m.div
               className="text-center relative"
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
             >
               <SuccessConfetti />
-              <motion.div
+              <m.div
                 className="text-8xl mb-4"
                 animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.2, 1] }}
                 transition={{ duration: 0.5, repeat: 3 }}
               >
                 🎉
-              </motion.div>
+              </m.div>
               <p className="text-3xl font-bold text-white">Subscribed!</p>
               <p className="text-gray-300 mt-2">Welcome to the community</p>
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         )}
       </AnimatePresence>
 
-      <motion.div 
+      <m.div 
         className="text-center mb-8"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <motion.h2 
+        <m.h2 
           className="text-2xl font-bold mb-2 flex items-center justify-center gap-2"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -211,15 +213,15 @@ export function SubscriptionManager({
         >
           <Crown className="w-6 h-6 text-purple-500" />
           Subscribe to {creatorName}
-        </motion.h2>
+        </m.h2>
         <p className="text-gray-600 dark:text-gray-400">
           Get exclusive access to premium content and perks
         </p>
-      </motion.div>
+      </m.div>
 
       <div className="grid md:grid-cols-3 gap-6">
         {SUBSCRIPTION_TIERS.map((tier, tierIndex) => (
-          <motion.div
+          <m.div
             key={tier.duration}
             className={`bg-white dark:bg-gray-800 rounded-xl border-2 p-6 relative overflow-hidden ${
               selectedTier?.duration === tier.duration
@@ -239,19 +241,19 @@ export function SubscriptionManager({
           >
             {/* Popular badge for annual */}
             {tier.duration === 365 && (
-              <motion.div
+              <m.div
                 className="absolute -top-1 -right-8 bg-gradient-to-r from-purple-500 to-blue-500 text-white text-xs font-bold px-10 py-1 rotate-45"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.5 }}
               >
                 BEST VALUE
-              </motion.div>
+              </m.div>
             )}
             
             {/* Shimmer effect on selected */}
             {selectedTier?.duration === tier.duration && (
-              <motion.div
+              <m.div
                 className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-500/10 to-transparent"
                 animate={{ x: ['-100%', '200%'] }}
                 transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
@@ -259,7 +261,7 @@ export function SubscriptionManager({
             )}
 
             <div className="text-center mb-4 relative z-10">
-              <motion.div
+              <m.div
                 className="inline-block mb-2"
                 animate={tier.duration === 365 ? { rotate: [0, 5, -5, 0] } : {}}
                 transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
@@ -267,9 +269,9 @@ export function SubscriptionManager({
                 {tier.duration === 30 && <Zap className="w-8 h-8 text-blue-500 mx-auto" />}
                 {tier.duration === 90 && <Star className="w-8 h-8 text-purple-500 mx-auto" />}
                 {tier.duration === 365 && <Crown className="w-8 h-8 text-yellow-500 mx-auto" />}
-              </motion.div>
+              </m.div>
               <h3 className="text-xl font-bold mb-2">{tier.label}</h3>
-              <motion.div 
+              <m.div 
                 className="flex items-baseline justify-center gap-1"
                 initial={{ scale: 0.8 }}
                 animate={{ scale: 1 }}
@@ -277,33 +279,33 @@ export function SubscriptionManager({
               >
                 <span className="text-3xl font-bold">{tier.price}</span>
                 <span className="text-gray-500">ETH</span>
-              </motion.div>
+              </m.div>
               <p className="text-sm text-gray-500 mt-1">{tier.duration} days</p>
             </div>
 
             <ul className="space-y-2 mb-6 relative z-10">
               {tier.features.map((feature, featureIndex) => (
-                <motion.li 
+                <m.li 
                   key={featureIndex} 
                   className="flex items-start gap-2 text-sm"
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.3 + tierIndex * 0.1 + featureIndex * 0.05 }}
                 >
-                  <motion.span 
+                  <m.span 
                     className="text-green-500 mt-0.5"
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ delay: 0.4 + tierIndex * 0.1 + featureIndex * 0.05, type: 'spring' }}
                   >
                     <Check className="w-4 h-4" />
-                  </motion.span>
+                  </m.span>
                   <span className="text-gray-700 dark:text-gray-300">{feature}</span>
-                </motion.li>
+                </m.li>
               ))}
             </ul>
 
-            <motion.button
+            <m.button
               onClick={() => {
                 handleSubscribe(tier);
                 playNotification();
@@ -315,7 +317,7 @@ export function SubscriptionManager({
             >
               {isProcessing && selectedTier?.duration === tier.duration ? (
                 <span className="flex items-center justify-center gap-2">
-                  <motion.div
+                  <m.div
                     className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
                     animate={{ rotate: 360 }}
                     transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
@@ -328,14 +330,14 @@ export function SubscriptionManager({
                   Subscribe
                 </span>
               )}
-            </motion.button>
-          </motion.div>
+            </m.button>
+          </m.div>
         ))}
       </div>
 
       <AnimatePresence>
         {!userAddress && (
-          <motion.div 
+          <m.div 
             className="text-center p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -347,7 +349,7 @@ export function SubscriptionManager({
               <div className="mt-6 flex justify-center">
                 <ConnectButton />
               </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

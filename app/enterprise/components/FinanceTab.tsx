@@ -285,7 +285,7 @@ function PoolRow({
         {note && <div className="text-xs text-zinc-500 mt-0.5">{note}</div>}
       </div>
       <div className="text-right">
-        <div className="text-cyan-400 font-bold tabular-nums" title={`${formatEther(amount)} VFIDE`}>
+        <div className="text-accent font-bold tabular-nums" title={`${formatEther(amount)} VFIDE`}>
           {formatVFIDECompact(amount)}
         </div>
         {paidLifetime !== undefined && (

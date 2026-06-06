@@ -26,13 +26,15 @@ export function DashboardTab() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    let _cancelled = false;
     if (!address) return;
     setLoading(true);
     fetch(`/api/streams?address=${address}&role=all`)
       .then((r) => r.json())
       .then((data) => setStreams(data.streams ?? []))
       .finally(() => setLoading(false));
-  }, [address]);
+    return () => { _cancelled = true; };
+    }, [address]);
 
   const activeStreams = streams.filter((s) => s.status === 'active' && !s.is_paused);
   const sending = streams.filter((s) => s.sender_address.toLowerCase() === address?.toLowerCase());
@@ -56,7 +58,7 @@ export function DashboardTab() {
     <div className="space-y-6">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: 'Active Streams', value: loading ? '—' : activeStreams.length, icon: <Zap size={14} className="text-cyan-400" /> },
+          { label: 'Active Streams', value: loading ? '—' : activeStreams.length, icon: <Zap size={14} className="text-accent" /> },
           { label: 'Total Streams', value: loading ? '—' : streams.length, icon: <Users size={14} className="text-purple-400" /> },
           { label: 'Total Sending', value: loading ? '—' : `${totalSending.toFixed(2)} VFIDE`, icon: <ArrowUpRight size={14} className="text-red-400" /> },
           { label: 'Total Receiving', value: loading ? '—' : `${totalReceiving.toFixed(2)} VFIDE`, icon: <ArrowDownLeft size={14} className="text-green-400" /> },
@@ -70,7 +72,7 @@ export function DashboardTab() {
 
       {loading ? (
         <div className="flex items-center justify-center py-10">
-          <Loader2 size={22} className="text-cyan-400 animate-spin" />
+          <Loader2 size={22} className="text-accent animate-spin" />
         </div>
       ) : activeStreams.length > 0 ? (
         <div className="bg-white/3 border border-white/10 rounded-2xl p-5">
@@ -91,7 +93,7 @@ export function DashboardTab() {
                     <p className="text-xs text-white font-semibold">{parseFloat(s.total_amount).toFixed(2)} {s.token}</p>
                   </div>
                   <div className="w-full bg-white/5 rounded-full h-1">
-                    <div className="h-1 rounded-full bg-cyan-500" style={{ width: `${progress}%` }} />
+                    <div className="h-1 rounded-full bg-accent" style={{ width: `${progress}%` }} />
                   </div>
                 </div>
               );

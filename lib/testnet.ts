@@ -43,6 +43,7 @@ export const NETWORK_INFO = {
 // NOTE: Contract addresses are centralized in contracts.ts
 // Import from '@/lib/contracts' for CONTRACT_ADDRESSES
 
+
 // Faucet URLs (testnet only) - Base Sepolia uses ETH from various faucets
 export const FAUCET_URLS = {
   // Official Coinbase faucet - best option!

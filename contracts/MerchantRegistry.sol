@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import {IERC20} from "./SharedInterfaces.sol";
+import "./SharedInterfaces.sol";
 
 // ─── Local-scoped interfaces (the _COM suffix keeps these distinct from the
 //     canonical interfaces under contracts/interfaces/). Imported by
@@ -83,6 +83,10 @@ error COM_BadState();
 error COM_NotAllowed();
 /// @notice R-4 — neither party's vault is in MEMORIAL state.
 error COM_NotInheritanceActive();
+/// @notice COM_LockActive — buyer attempted to dispute before their ProofScore-tiered lock period elapsed.
+error COM_LockActive();
+/// @notice COM_HighValueTimelock — DAO attempted to resolve a high-value escrow before ARBITER_TIMELOCK elapsed.
+error COM_HighValueTimelock();
 
 /// @title MerchantRegistry
 /// @notice On-chain merchant directory: registration, profile metadata,
@@ -122,12 +126,7 @@ contract MerchantRegistry {
     /// @param reason reason
     event AutoFlagged(address indexed owner, string reason);
 
-    enum Status {
-        NONE,
-        ACTIVE,
-        SUSPENDED,
-        DELISTED
-    }
+    enum Status { NONE, ACTIVE, SUSPENDED, DELISTED }
 
     /// @notice dao
     address public immutable dao;
@@ -143,9 +142,9 @@ contract MerchantRegistry {
     struct Merchant {
         address owner;
         address vault;
-        Status status;
-        uint32 refunds;
-        uint32 disputes;
+        Status  status;
+        uint32  refunds;
+        uint32  disputes;
         bytes32 metaHash;
     }
 
@@ -154,9 +153,9 @@ contract MerchantRegistry {
     /// @notice minScore
     uint16 public immutable minScore;
     /// @notice autoSuspendRefunds
-    uint8 public constant autoSuspendRefunds = 5;
+    uint8  public constant autoSuspendRefunds = 5;
     /// @notice autoSuspendDisputes
-    uint8 public constant autoSuspendDisputes = 3;
+    uint8  public constant autoSuspendDisputes = 3;
 
     // POW-1 decay tracking: per-merchant timestamp of most recent strike,
     // used by _applyRefundDecay / _applyDisputeDecay to subtract one from
@@ -171,10 +170,7 @@ contract MerchantRegistry {
     uint64 public constant STRIKE_DECAY_INTERVAL = 90 days;
 
     /// @notice onlyDAO
-    modifier onlyDAO() {
-        if (msg.sender != dao) revert COM_NotDAO();
-        _;
-    }
+    modifier onlyDAO() { if (msg.sender != dao) revert COM_NotDAO(); _; }
 
     /// @notice constructor
     /// @param _dao _dao
@@ -183,11 +179,8 @@ contract MerchantRegistry {
     /// @param _seer _seer
     /// @param _ledger _ledger
     constructor(address _dao, address _token, address _hub, address _seer, address _ledger) {
-        if (_dao == address(0) || _token == address(0) || _hub == address(0) || _seer == address(0)) revert COM_Zero();
-        dao = _dao;
-        token = IERC20(_token);
-        vaultHub = IVaultHub_COM(_hub);
-        seer = ISeer_COM(_seer);
+        if (_dao==address(0)||_token==address(0)||_hub==address(0)||_seer==address(0)) revert COM_Zero();
+        dao=_dao; token=IERC20(_token); vaultHub=IVaultHub_COM(_hub); seer=ISeer_COM(_seer);
         ledger = IProofLedger_COM(_ledger);
         minScore = ISeer_COM(_seer).minForMerchant();
         emit ModulesSet(_dao, _token, _hub, _seer, _ledger);
@@ -203,7 +196,14 @@ contract MerchantRegistry {
         uint16 score = seer.getCachedScore(msg.sender);
         if (score < minScore) revert COM_NotAllowed();
 
-        merchants[msg.sender] = Merchant({owner: msg.sender, vault: v, status: Status.ACTIVE, refunds: 0, disputes: 0, metaHash: metaHash});
+        merchants[msg.sender] = Merchant({
+            owner: msg.sender,
+            vault: v,
+            status: Status.ACTIVE,
+            refunds: 0,
+            disputes: 0,
+            metaHash: metaHash
+        });
 
         try ledger.logSystemEvent(msg.sender, "MerchantAdded", msg.sender) {} catch {}
         emit MerchantAdded(msg.sender, v, metaHash);
@@ -377,8 +377,5 @@ contract MerchantRegistry {
 
     /// @notice info
     /// @param owner owner
-    /// @return _arg _arg
-    function info(address owner) external view returns (Merchant memory) {
-        return merchants[owner];
-    }
+    function info(address owner) external view returns (Merchant memory) { return merchants[owner]; }
 }

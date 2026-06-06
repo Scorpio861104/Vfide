@@ -6,7 +6,7 @@ import { useState } from 'react'
 import { ZERO_ADDRESS, isConfiguredContractAddress } from '../lib/contracts'
 import { useContractAddresses } from './useContractAddresses'
 import { CURRENT_CHAIN_ID } from '../lib/testnet'
-import { MerchantPortalABI, VaultHubABI, CardBoundVaultABI } from '../lib/abis'
+import { MerchantPortalABI, MerchantPortalViewerABI, VaultHubABI, CardBoundVaultABI } from '../lib/abis'
 import { parseContractError, logError } from '@/lib/errorHandling';
 import { safeBigIntToNumber } from '@/lib/validation';
 import { useRequireAppLock } from './useRequireAppLock';
@@ -699,8 +699,9 @@ export function useCustomerTrustScore(customerAddress?: `0x${string}`) {
   const isAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.MerchantPortal)
 
   const { data, isLoading } = useReadContract({
-    address: CONTRACT_ADDRESSES.MerchantPortal,
-    abi: MerchantPortalABI,
+    // getCustomerTrustScore moved to MerchantPortalViewer (EIP-170 extraction)
+    address: CONTRACT_ADDRESSES.MerchantPortalViewer,
+    abi: MerchantPortalViewerABI,
     functionName: 'getCustomerTrustScore',
     args: customerAddress ? [customerAddress] : undefined,
     query: {

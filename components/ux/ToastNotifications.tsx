@@ -8,7 +8,7 @@
  */
 
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { 
   X, 
   CheckCircle, 
@@ -322,8 +322,8 @@ function ToastItem({
     error: <AlertCircle className="w-5 h-5 text-red-400" />,
     warning: <AlertTriangle className="w-5 h-5 text-yellow-400" />,
     info: <Info className="w-5 h-5 text-blue-400" />,
-    loading: <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />,
-    promise: <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />,
+    loading: <Loader2 className="w-5 h-5 text-accent animate-spin" />,
+    promise: <Loader2 className="w-5 h-5 text-accent animate-spin" />,
   };
 
   const bgColors = {
@@ -331,8 +331,8 @@ function ToastItem({
     error: 'bg-red-500/10 border-red-500/30',
     warning: 'bg-yellow-500/10 border-yellow-500/30',
     info: 'bg-blue-500/10 border-blue-500/30',
-    loading: 'bg-cyan-500/10 border-cyan-500/30',
-    promise: 'bg-cyan-500/10 border-cyan-500/30',
+    loading: 'bg-accent/10 border-accent/30',
+    promise: 'bg-accent/10 border-accent/30',
   };
 
   const progressColors = {
@@ -340,8 +340,8 @@ function ToastItem({
     error: 'bg-red-500',
     warning: 'bg-yellow-500',
     info: 'bg-blue-500',
-    loading: 'bg-cyan-500',
-    promise: 'bg-cyan-500',
+    loading: 'bg-accent',
+    promise: 'bg-accent',
   };
 
   // Progress bar animation
@@ -353,7 +353,7 @@ function ToastItem({
   }, [toast.progress, toast.duration]);
 
   return (
-    <motion.div
+    <m.div
       layout
       initial={reducedMotion ? { opacity: 0 } : { 
         opacity: 0, 
@@ -411,7 +411,7 @@ function ToastItem({
                     className={`
                       text-sm font-medium rounded-lg px-3 py-1.5 transition-colors
                       ${toast.action.variant === 'primary' 
-                        ? 'bg-cyan-500 text-white hover:bg-cyan-600' 
+                        ? 'bg-accent text-white hover:bg-accent' 
                         : toast.action.variant === 'ghost'
                         ? 'text-gray-300 hover:text-white'
                         : 'bg-gray-700 text-white hover:bg-gray-600'
@@ -426,7 +426,7 @@ function ToastItem({
                     href={toast.link.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm font-medium text-cyan-400 hover:text-cyan-300 flex items-center gap-1"
+                    className="text-sm font-medium text-accent hover:text-accent flex items-center gap-1"
                   >
                     {toast.link.label}
                     <ExternalLink className="w-3 h-3" />
@@ -458,7 +458,7 @@ function ToastItem({
           />
         </div>
       )}
-    </motion.div>
+    </m.div>
   );
 }
 

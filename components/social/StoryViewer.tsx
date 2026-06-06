@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Story, isStoryExpired as _isStoryExpired, getStoryTimeRemaining } from '@/lib/storiesSystem';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 
 interface StoryViewerProps {
   stories: Story[];
@@ -83,7 +83,7 @@ export function StoryViewer({
   if (!currentStory) return null;
 
   return (
-    <motion.div 
+    <m.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -93,7 +93,7 @@ export function StoryViewer({
       <div className="absolute top-4 left-4 right-4 flex gap-1 z-20">
         {stories.map((story, index) => (
           <div key={story.id} className="flex-1 h-1 bg-white/30 rounded-full overflow-hidden">
-            <motion.div
+            <m.div
               className="h-full bg-white"
               style={{
                 width:
@@ -111,7 +111,7 @@ export function StoryViewer({
       {/* Header */}
       <div className="absolute top-8 left-4 right-4 flex items-center justify-between z-20">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-cyan-400/20 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
             <span className="text-xl">{currentStory.userAvatar || '👤'}</span>
           </div>
           <div>
@@ -140,18 +140,18 @@ export function StoryViewer({
         <button
           type="button"
           aria-label="Previous story"
-          className="absolute left-0 top-0 bottom-0 w-1/3 z-10 cursor-pointer focus-visible:outline-2 focus-visible:outline-cyan-400 focus-visible:outline-offset-[-4px]"
+          className="absolute left-0 top-0 bottom-0 w-1/3 z-10 cursor-pointer focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-[-4px]"
           onClick={goToPrevious}
         />
         <button
           type="button"
           aria-label="Next story"
-          className="absolute right-0 top-0 bottom-0 w-1/3 z-10 cursor-pointer focus-visible:outline-2 focus-visible:outline-cyan-400 focus-visible:outline-offset-[-4px]"
+          className="absolute right-0 top-0 bottom-0 w-1/3 z-10 cursor-pointer focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-[-4px]"
           onClick={goToNext}
         />
 
         {currentStory.type === 'text' ? (
-          <motion.div
+          <m.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             className="w-full h-full flex items-center justify-center p-12"
@@ -165,9 +165,9 @@ export function StoryViewer({
             >
               {currentStory.content}
             </p>
-          </motion.div>
+          </m.div>
         ) : currentStory.type === 'image' ? (
-          <motion.div 
+          <m.div 
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             className="w-full h-full relative"
@@ -182,9 +182,9 @@ export function StoryViewer({
                 <p className="text-white text-xl text-center">{currentStory.caption}</p>
               </div>
             )}
-          </motion.div>
+          </m.div>
         ) : currentStory.type === 'video' ? (
-          <motion.div 
+          <m.div 
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             className="w-full h-full relative"
@@ -201,7 +201,7 @@ export function StoryViewer({
                 <p className="text-white text-xl text-center">{currentStory.caption}</p>
               </div>
             )}
-          </motion.div>
+          </m.div>
         ) : null}
       </div>
 
@@ -241,7 +241,7 @@ export function StoryViewer({
       {/* Reaction Picker */}
       <AnimatePresence>
         {showReactions && (
-          <motion.div 
+          <m.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
@@ -256,24 +256,24 @@ export function StoryViewer({
                 {emoji}
               </button>
             ))}
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 
       {/* Paused Indicator */}
       <AnimatePresence>
         {isPaused && (
-          <motion.div 
+          <m.div 
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 0.5, scale: 1 }}
             exit={{ opacity: 0 }}
             className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white text-6xl z-20"
           >
             ⏸️
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </m.div>
   );
 }
 

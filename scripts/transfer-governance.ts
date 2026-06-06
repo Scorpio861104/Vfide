@@ -197,6 +197,30 @@ async function main() {
   } catch (e: any) {
     console.log("  ⏭️  VaultHub.setDAO:", e.reason || e.message);
   }
+  // ProofLedger.setDAO → DAO contract (PL-GOV1: ledgerAdmin must rotate to DAO for future logger governance)
+  // PL-GOV1 FIX: ProofLedger.dao was permanently set to bootstrap.ledgerAdmin during deployment
+  // and was never handed to the DAO contract. Without this, the DAO cannot vote to add new
+  // authorized loggers post-launch — ledgerAdmin remains a permanent privileged hot key.
+  // ProofLedger.setDAO has a 48h timelock: applyDAO() is called from apply-full.ts after delay.
+  if (addrs.proofLedger && addrs.dao) {
+    try {
+      const ledgerAdmin = new ethers.Contract(addrs.proofLedger, [
+        "function setDAO(address) external",
+        "function dao() external view returns (address)",
+        "function pendingDAO() external view returns (address)",
+      ], deployer);
+      const currentDao = await ledgerAdmin.dao();
+      if (currentDao.toLowerCase() === deployer.address.toLowerCase()) {
+        await ledgerAdmin.setDAO(addrs.dao);
+        console.log("  ✅ ProofLedger.setDAO → DAO proposed (48h timelock)");
+      } else {
+        console.log("  ⏭️  ProofLedger.setDAO: caller is not current ledgerAdmin, skipping");
+      }
+    } catch (e: any) {
+      console.log("  ⏭️  ProofLedger.setDAO:", e.reason || e.message);
+    }
+  }
+
   // FraudRegistry.setDAO → DAO contract (immediate if deployer is current dao)
   const fraud = await ethers.getContractAt("FraudRegistry", addrs.fraudRegistry);
   try {

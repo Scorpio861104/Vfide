@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import {
   Send,
   DollarSign,
@@ -34,14 +34,14 @@ export function PaymentModal({ friend, type, onClose, onSubmit }: PaymentModalPr
   };
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
       onClick={onClose}
     >
-      <motion.div
+      <m.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
@@ -51,7 +51,7 @@ export function PaymentModal({ friend, type, onClose, onSubmit }: PaymentModalPr
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-accent to-violet-400 flex items-center justify-center">
               {type === 'send' ? <Send className="w-6 h-6 text-zinc-950" /> : <DollarSign className="w-6 h-6 text-zinc-950" />}
             </div>
             <div>
@@ -85,7 +85,7 @@ export function PaymentModal({ friend, type, onClose, onSubmit }: PaymentModalPr
                
                 value={amount}
                 onChange={(e) =>  setAmount(e.target.value)}
-                className="w-full px-4 py-3 pr-24 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 text-lg font-bold focus:border-cyan-400 focus:outline-none"
+                className="w-full px-4 py-3 pr-24 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 text-lg font-bold focus:border-accent focus:outline-none"
               />
               <select
                 value={token}
@@ -109,7 +109,7 @@ export function PaymentModal({ friend, type, onClose, onSubmit }: PaymentModalPr
               value={message}
               onChange={(e) =>  setMessage(e.target.value)}
               rows={3}
-              className="w-full px-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 focus:border-cyan-400 focus:outline-none resize-none"
+              className="w-full px-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 focus:border-accent focus:outline-none resize-none"
             />
           </div>
 
@@ -140,7 +140,7 @@ export function PaymentModal({ friend, type, onClose, onSubmit }: PaymentModalPr
           <div className="flex gap-3 pt-2">
             <button
               onClick={handleSubmit}
-              className="flex-1 py-3 bg-cyan-400 text-zinc-950 rounded-lg font-bold hover:bg-cyan-400 transition-colors flex items-center justify-center gap-2"
+              className="flex-1 py-3 bg-accent text-zinc-950 rounded-lg font-bold hover:bg-accent transition-colors flex items-center justify-center gap-2"
             >
               {type === 'send' ? <Send className="w-5 h-5" /> : <DollarSign className="w-5 h-5" />}
               {type === 'send' ? 'Send Payment' : 'Request Payment'}
@@ -153,8 +153,8 @@ export function PaymentModal({ friend, type, onClose, onSubmit }: PaymentModalPr
             </button>
           </div>
         </div>
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 }
 
@@ -172,7 +172,7 @@ export function TransactionButtons({ friend, onPaymentRequest, onPaymentSend }: 
       <div className="flex gap-2">
         <button
           onClick={() => setShowModal('send')}
-          className="flex-1 px-4 py-2 bg-cyan-400/20 text-cyan-400 border border-cyan-400/30 rounded-lg font-semibold hover:bg-cyan-400/30 transition-colors flex items-center justify-center gap-2"
+          className="flex-1 px-4 py-2 bg-accent/20 text-accent border border-accent/30 rounded-lg font-semibold hover:bg-accent/30 transition-colors flex items-center justify-center gap-2"
         >
           <Send className="w-4 h-4" />
           <span className="hidden sm:inline">Send Payment</span>

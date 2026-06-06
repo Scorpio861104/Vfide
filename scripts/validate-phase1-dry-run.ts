@@ -79,13 +79,38 @@ const PHASE1_CONTRACTS: ContractSpec[] = [
     description: "Trust Engine: Routes proves to burn/distribution sinks",
   },
   {
+    name: "CardBoundVaultAdminFacet",
+    layer: 2,
+    dependencies: [],
+    constructorArgs: () => [],
+    description: "Delegatecall target for low-frequency CBV admin functions (no-constructor, zero-arg)",
+  },
+  {
+    name: "CardBoundVaultSubManagerDeployer",
+    layer: 2,
+    dependencies: [],
+    constructorArgs: () => [],
+    description: "Deploys CBV sub-managers without embedding their initcode in CBVDeployer",
+  },
+  {
+    name: "CardBoundVaultDeployer",
+    layer: 2,
+    dependencies: ["CardBoundVaultSubManagerDeployer", "CardBoundVaultAdminFacet"],
+    constructorArgs: (deployed) => [
+      deployed.CardBoundVaultSubManagerDeployer,
+      deployed.CardBoundVaultAdminFacet,
+    ],
+    description: "Factory: deploys CardBoundVault instances via CREATE2",
+  },
+  {
     name: "VaultHub",
     layer: 3,
-    dependencies: ["VFIDEToken", "ProofLedger"],
+    dependencies: ["VFIDEToken", "ProofLedger", "CardBoundVaultDeployer"],
     constructorArgs: (deployed) => [
       deployed.VFIDEToken,
       deployed.ProofLedger,
       ZERO_ADDRESS, // _dao (temp)
+      deployed.CardBoundVaultDeployer, // _vaultDeployer (pre-deployed)
     ],
     description: "Vault System: Central hub orchestrating all vault operations",
   },
@@ -113,7 +138,6 @@ const PHASE1_CONTRACTS: ContractSpec[] = [
       deployed.VaultHub,
       deployed.Seer,
       deployed.ProofLedger,
-      ZERO_ADDRESS, // _feeSink (temp)
     ],
     description: "Commerce: Merchant onboarding & payment gateway",
   },
@@ -233,6 +257,7 @@ function validateConstructorArgs(): boolean {
       deployed.VFIDEToken || ZERO_ADDR,
       deployed.ProofLedger || ZERO_ADDR,
       ZERO_ADDR,
+      deployed.CardBoundVaultDeployer || ZERO_ADDR,  // _vaultDeployer (pre-deployed)
     ],
     FeeDistributor: (deployed) => [
       deployed.VFIDEToken || ZERO_ADDR,
@@ -248,7 +273,6 @@ function validateConstructorArgs(): boolean {
       deployed.VaultHub || ZERO_ADDR,
       deployed.Seer || ZERO_ADDR,
       deployed.ProofLedger || ZERO_ADDR,
-      ZERO_ADDR,
     ],
     DAOTimelock: (_deployed) => [ZERO_ADDR],
     GovernanceHooks: (deployed) => [

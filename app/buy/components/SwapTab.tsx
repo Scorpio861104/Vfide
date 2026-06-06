@@ -29,7 +29,9 @@ export function SwapTab() {
   const [toToken, setToToken] = useState<Token>('VFIDE');
   const [amount, setAmount] = useState('1');
   const [prices, setPrices] = useState<{ vfideUsd: number; ethUsd: number }>({ vfideUsd: 0.1, ethUsd: 2000 });
+  const [usingFallbackPrice, setUsingFallbackPrice] = useState(false);
   const [balances, setBalances] = useState<Record<string, number>>({});
+  const [routeSummary, setRouteSummary] = useState<string | null>(null);
 
   useEffect(() => {
     if (!address) return;
@@ -47,9 +49,12 @@ export function SwapTab() {
         if (!mounted) return;
         const vfideUsd = Number(priceData?.prices?.vfide?.usd ?? 0.1);
         const ethUsd = Number(priceData?.prices?.eth?.usd ?? 2000);
+        const vfideResolved = Number.isFinite(vfideUsd) && vfideUsd > 0 ? vfideUsd : null;
+        const ethResolved   = Number.isFinite(ethUsd)   && ethUsd   > 0 ? ethUsd   : null;
+        setUsingFallbackPrice(!vfideResolved || !ethResolved);
         setPrices({
-          vfideUsd: Number.isFinite(vfideUsd) && vfideUsd > 0 ? vfideUsd : 0.1,
-          ethUsd: Number.isFinite(ethUsd) && ethUsd > 0 ? ethUsd : 2000,
+          vfideUsd: vfideResolved ?? 0.1,
+          ethUsd:   ethResolved   ?? 2000,
         });
 
         const normalized: Record<string, number> = {};
@@ -58,6 +63,9 @@ export function SwapTab() {
           normalized[row.token_symbol.toUpperCase()] = Number(row.balance ?? 0);
         }
         setBalances(normalized);
+      })
+      .catch(() => {
+        if (mounted) setUsingFallbackPrice(true);
       })
       .finally(() => {
         if (mounted) setLoading(false);
@@ -82,12 +90,23 @@ export function SwapTab() {
   const flipTokens = () => {
     setFromToken(toToken);
     setToToken(fromToken);
+    setRouteSummary(null);
+  };
+
+  const prepareRoute = () => {
+    if (!canSubmit) return;
+    const input = Number(amount);
+    setRouteSummary(
+      `Route prepared: ${input.toFixed(4)} ${fromToken} → ${estimatedOut.toFixed(4)} ${toToken} ` +
+      `(spot ${(input > 0 ? estimatedOut / input : 0).toFixed(6)} ${toToken}/${fromToken}). ` +
+      `Execute via your preferred AMM router using this quote as a slippage reference.`
+    );
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 size={18} className="text-cyan-400 animate-spin" />
+        <Loader2 size={18} className="text-accent animate-spin" />
       </div>
     );
   }
@@ -95,7 +114,14 @@ export function SwapTab() {
   return (
     <div className="space-y-5">
       <div className="bg-white/3 border border-white/10 rounded-2xl p-5 space-y-3">
-        <h3 className="text-sm font-semibold text-white">Swap Planner</h3>
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="text-sm font-semibold text-white">Swap Planner</h3>
+          {usingFallbackPrice && (
+            <span className="text-xs text-amber-400 bg-amber-400/10 border border-amber-400/20 px-2 py-0.5 rounded-full">
+              ⚠ Using fallback prices — oracle unavailable
+            </span>
+          )}
+        </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -130,7 +156,7 @@ export function SwapTab() {
             step="0.0001"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/50"
+            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-accent/50"
           />
         </div>
 
@@ -144,7 +170,7 @@ export function SwapTab() {
 
         <div className="bg-white/5 border border-white/10 rounded-xl p-3">
           <p className="text-xs text-gray-400 mb-1">Estimated Output</p>
-          <p className="text-lg font-semibold text-cyan-400">{estimatedOut.toFixed(4)} {toToken}</p>
+          <p className="text-lg font-semibold text-accent">{estimatedOut.toFixed(4)} {toToken}</p>
           <p className="text-xs text-gray-500 mt-1">
             Pricing based on live protocol feed ({fromToken}/USD and {toToken}/USD)
           </p>
@@ -156,11 +182,21 @@ export function SwapTab() {
 
         <button
           type="button"
+          onClick={prepareRoute}
           disabled={!canSubmit}
-          className="w-full py-2.5 rounded-lg bg-cyan-500/20 text-cyan-400 font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full py-2.5 rounded-lg bg-accent/20 text-accent font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-accent/30 transition-colors"
         >
           Prepare Swap Route
         </button>
+
+        {routeSummary && (
+          <div
+            role="status"
+            className="bg-accent/10 border border-accent/30 rounded-lg p-3 text-xs text-accent"
+          >
+            {routeSummary}
+          </div>
+        )}
 
         <div className="flex items-center gap-2 text-xs text-gray-500">
           <RefreshCcw size={12} /> Route preparation validates pricing and pair direction before final execution.

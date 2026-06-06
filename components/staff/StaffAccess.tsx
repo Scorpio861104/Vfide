@@ -34,7 +34,7 @@ const ROLES: Record<StaffMember['role'], { label: string; permissions: string[];
   cashier: {
     label: 'Cashier',
     permissions: ['pos', 'orders'],
-    colorClass: 'bg-cyan-500/20 text-cyan-400',
+    colorClass: 'bg-accent/20 text-accent',
   },
 };
 
@@ -60,12 +60,12 @@ export function StaffManager({ staff = [], onAdd, onRemove }: StaffManagerProps)
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="flex items-center gap-2 text-xl font-bold text-white">
-          <Users className="text-cyan-400" />
+          <Users className="text-accent" />
           Staff
         </h2>
         <button
           onClick={() => setShowAdd((value) => !value)}
-          className="flex items-center gap-1.5 rounded-xl border border-cyan-500/30 bg-cyan-500/20 px-4 py-2 text-sm font-bold text-cyan-400"
+          className="flex items-center gap-1.5 rounded-xl border border-accent/30 bg-accent/20 px-4 py-2 text-sm font-bold text-accent"
         >
           <Plus size={14} />
           Add Staff
@@ -111,7 +111,7 @@ export function StaffManager({ staff = [], onAdd, onRemove }: StaffManagerProps)
             </button>
             <button
               onClick={handleAdd}
-              className="flex-1 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 py-2.5 font-bold text-white"
+              className="flex-1 rounded-xl bg-gradient-to-r from-accent to-blue-600 py-2.5 font-bold text-white"
             >
               Add
             </button>
@@ -129,7 +129,7 @@ export function StaffManager({ staff = [], onAdd, onRemove }: StaffManagerProps)
               className="flex items-center justify-between rounded-xl border border-white/5 bg-white/3 p-4"
             >
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500/10 text-sm font-bold text-white">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10 text-sm font-bold text-white">
                   {member.name[0] ?? 'S'}
                 </div>
                 <div>

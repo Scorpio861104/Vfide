@@ -1,5 +1,5 @@
 'use client';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Calendar, CheckCircle2 as CheckCircle, DollarSign } from 'lucide-react';
 import { SampleDataBanner } from '@/components/ui/SampleDataBanner';
 
@@ -11,9 +11,9 @@ export function SalaryTab({ isConnected: _isConnected }: { isConnected: boolean 
 
   return (
     <div className="space-y-8">
-      <SampleDataBanner label="Council salary distribution requires the CouncilSalary contract, which launches in a future release. The figures below are illustrative placeholders — no salary periods have run at V1." />
+      <SampleDataBanner label="Council salary runs once a council has been elected and the DAO funds salary cycles — it is part of V1, awaiting an election, not a future release. No salary periods have run yet; the figures below are illustrative." />
       {/* Salary Overview */}
-      <motion.div 
+      <m.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500/10 to-green-500/5 backdrop-blur-xl border border-emerald-500/20 p-4 sm:p-6 md:p-8"
@@ -31,7 +31,7 @@ export function SalaryTab({ isConnected: _isConnected }: { isConnected: boolean 
           {[
             { value: 'Variable', label: 'Funded by ecosystem fees', gradient: 'from-emerald-500/20 to-emerald-500/5', border: 'border-emerald-500/20', text: 'text-emerald-400' },
             { value: '120 Days', label: 'Distribution Interval', gradient: 'from-white/10 to-white/5', border: 'border-white/10', text: 'text-white' },
-            { value: 'Equal', label: 'Split among eligible', gradient: 'from-cyan-500/20 to-cyan-500/5', border: 'border-cyan-500/20', text: 'text-cyan-400' },
+            { value: 'Equal', label: 'Split among eligible', gradient: 'from-accent/20 to-accent/5', border: 'border-accent/20', text: 'text-accent' },
           ].map((stat) => (
             <div key={stat.label} className={`bg-gradient-to-br ${stat.gradient} border ${stat.border} rounded-xl p-4`}>
               <div className={`text-3xl font-bold ${stat.text}`}>{stat.value}</div>
@@ -39,10 +39,10 @@ export function SalaryTab({ isConnected: _isConnected }: { isConnected: boolean 
             </div>
           ))}
         </div>
-      </motion.div>
+      </m.div>
 
       {/* Distribution History */}
-      <motion.div 
+      <m.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.1 }}
@@ -71,10 +71,10 @@ export function SalaryTab({ isConnected: _isConnected }: { isConnected: boolean 
             </div>
           ))}
         </div>
-      </motion.div>
+      </m.div>
 
       {/* Trigger Distribution (Admin) */}
-      <motion.div 
+      <m.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
@@ -87,7 +87,7 @@ export function SalaryTab({ isConnected: _isConnected }: { isConnected: boolean 
         <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-4">
           <div className="flex items-center justify-between">
             <span className="text-gray-400">Next Distribution Available</span>
-            <span className="text-cyan-400 font-bold">January 1, 2026</span>
+            <span className="text-accent font-bold">January 1, 2026</span>
           </div>
         </div>
         <button 
@@ -96,7 +96,7 @@ export function SalaryTab({ isConnected: _isConnected }: { isConnected: boolean 
         >
           Distribution Not Available Yet
         </button>
-      </motion.div>
+      </m.div>
     </div>
   );
 }

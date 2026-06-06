@@ -8,10 +8,15 @@ import { ArrowLeft, Heart } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { Footer } from '@/components/layout/Footer';
 import { LoyaltyProgram, type LoyaltyConfig } from '@/components/loyalty/LoyaltyProgram';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 const DEFAULT_CONFIG: LoyaltyConfig = {
-  enabled: true,
-  programName: 'Coffee Club',
+  // Honest "not set up yet" default: a merchant who has never configured a
+  // loyalty program must see it disabled with no fabricated name, not a
+  // pre-filled active "Coffee Club" they didn't create. Real config from
+  // /api/merchant/loyalty overwrites this when a program exists.
+  enabled: false,
+  programName: '',
   tiers: [],
   pointsPerDollar: 1,
   redeemThreshold: 10,
@@ -19,6 +24,9 @@ const DEFAULT_CONFIG: LoyaltyConfig = {
 };
 
 export default function MerchantLoyaltyPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address } = useAccount();
   const [config, setConfig] = useState<LoyaltyConfig>(DEFAULT_CONFIG);
   const [members, setMembers] = useState(0);
@@ -110,7 +118,7 @@ export default function MerchantLoyaltyPage() {
         <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         <section className="py-16">
           <div className="container mx-auto max-w-6xl px-4">
-            <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200">
+            <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-accent hover:text-accent">
               <ArrowLeft size={16} /> Back to Merchant Hub
             </Link>
 

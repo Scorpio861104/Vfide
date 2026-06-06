@@ -1,12 +1,12 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import type { ReactNode } from 'react';
 
 /**
  * PageHeader — VFIDE's canonical page header primitive.
  *
- * Tier 3 Round 8 (2026-05-17). Built to consolidate the `<motion.h1>` + subtitle
+ * Tier 3 Round 8 (2026-05-17). Built to consolidate the `<m.h1>` + subtitle
  * pattern repeated verbatim across 20+ wrapper pages (governance, treasury,
  * sanctum, enterprise, escrow, badges, dao-hub, achievements, support, etc.).
  *
@@ -60,7 +60,7 @@ export function PageHeader({
   centered = false,
   noAnimation = false,
 }: PageHeaderProps) {
-  const Wrapper = noAnimation ? 'div' : motion.div;
+  const Wrapper = noAnimation ? 'div' : m.div;
   const animProps = noAnimation
     ? {}
     : {
@@ -75,7 +75,7 @@ export function PageHeader({
     <Wrapper {...animProps} className={`${SPACING_MAP[spacing]} ${layout}`.trim()}>
       <div className={alignment}>
         {eyebrow && (
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/5 px-3 py-1 text-xs uppercase tracking-widest text-cyan-300">
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/5 px-3 py-1 text-xs uppercase tracking-widest text-accent">
             {eyebrow}
           </div>
         )}

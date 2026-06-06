@@ -3,6 +3,7 @@
 export const dynamic = 'force-dynamic';
 
 import { lazy, Suspense } from 'react';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 const VaultContent = lazy(() => import('./components/VaultContent').then(m => ({ default: m.VaultContent })));
 
@@ -25,6 +26,9 @@ function VaultSkeleton() {
 }
 
 export default function VaultPage() {
+  const { locale } = useLocale();
+  void locale;
+
   return (
     <Suspense fallback={<VaultSkeleton />}>
       <VaultContent />

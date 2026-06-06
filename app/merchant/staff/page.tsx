@@ -10,6 +10,7 @@ import { ArrowLeft, Copy, ShieldCheck, Users } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 import { StaffManager, type StaffMember } from '@/components/staff';
 import { buildStaffPermissionsForRole, type StaffRole } from '@/lib/merchantStaff';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 interface StaffRecord {
   id: string;
@@ -30,6 +31,9 @@ interface StaffActivity {
 }
 
 export default function MerchantStaffPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address } = useAccount();
   const [staff, setStaff] = useState<StaffRecord[]>([]);
   const [activity, setActivity] = useState<StaffActivity[]>([]);
@@ -122,7 +126,7 @@ export default function MerchantStaffPage() {
         <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         <section className="py-16">
           <div className="container mx-auto max-w-6xl px-4">
-            <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200">
+            <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-accent hover:text-accent">
               <ArrowLeft size={16} /> Back to Merchant Hub
             </Link>
 
@@ -151,7 +155,7 @@ export default function MerchantStaffPage() {
                 <div className="space-y-6">
                   <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
                     <div className="mb-3 flex items-center gap-2 text-white">
-                      <ShieldCheck size={16} className="text-cyan-400" />
+                      <ShieldCheck size={16} className="text-accent" />
                       <h2 className="text-xl font-bold">Invite link / QR</h2>
                     </div>
 
@@ -159,7 +163,7 @@ export default function MerchantStaffPage() {
                       <div className="space-y-4 text-sm text-gray-300">
                         <div className="rounded-xl border border-white/10 bg-black/20 p-3">
                           <div className="font-semibold text-white">{selectedInvite.name}</div>
-                          <div className="mt-2 break-all text-xs text-cyan-200">{selectedInvite.posLink}</div>
+                          <div className="mt-2 break-all text-xs text-accent">{selectedInvite.posLink}</div>
                         </div>
                         <div className="inline-block rounded-xl bg-white p-3">
                           <QRCodeSVG value={selectedInvite.posLink} size={180} includeMargin />

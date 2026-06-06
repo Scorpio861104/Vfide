@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * PaymentInterface - Customer payment UI for paying merchants
  */
@@ -5,7 +7,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import {
   usePayMerchant,
   useCustomerTrustScore,
@@ -19,6 +21,8 @@ import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts
 import { CreditCard, AlertCircle, CheckCircle } from 'lucide-react'
 import { isAddress } from 'viem'
 
+const ESCROW_TRUST_THRESHOLD = 5000 // payee below neutral ⇒ default to protective escrow (payer-overridable)
+
 export function PaymentInterface() {
   const { address } = useAccount()
   const isVfideTokenAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.VFIDEToken)
@@ -30,7 +34,11 @@ export function PaymentInterface() {
   const { createEscrow, loading: isEscrowLoading, error: escrowError, isSuccess: escrowSuccess } = useEscrow()
   const merchantInfo = useIsMerchant(merchantAddress as `0x${string}` | undefined)
   const trustScore = useCustomerTrustScore(address)
-  const { score } = useProofScore(address)
+  const { score, tier: proofTier } = useProofScore(address)
+  // PAYEE (merchant) trust drives the protective default below (mirrors /pay). useProofScore tolerates
+  // undefined and returns a null score until a valid merchant address is entered.
+  const payeeAddrForScore = isAddress(merchantAddress) ? (merchantAddress as `0x${string}`) : undefined
+  const { score: payeeScore } = useProofScore(payeeAddrForScore)
   const { balance: vaultBalance } = useVaultBalance()
   const [isEscrowMode, setIsEscrowMode] = useState(true)
   const [hasSelectedMode, setHasSelectedMode] = useState(false)
@@ -85,10 +93,14 @@ export function PaymentInterface() {
   const combinedError = error || escrowError
 
   useEffect(() => {
-    if (!hasSelectedMode) {
-      setIsEscrowMode(!trustScore.highTrust)
-    }
-  }, [hasSelectedMode, trustScore.highTrust])
+    if (hasSelectedMode) return
+    // Trust-tiered payer protection: default to instant only when the buyer is eligible for instant
+    // AND the payee is known and at/above neutral trust; otherwise default to protective escrow.
+    // Preserves the pre-existing instant-eligibility gate (canUseInstant) so there is no stuck state,
+    // while letting an eligible payer opt out to instant for any payee via the toggle.
+    const payeeTrusted = payeeScore !== null && payeeScore !== undefined && payeeScore >= ESCROW_TRUST_THRESHOLD
+    setIsEscrowMode(!(trustScore.highTrust && payeeTrusted))
+  }, [hasSelectedMode, trustScore.highTrust, payeeScore])
 
   return (
     <div className="space-y-6">
@@ -110,7 +122,7 @@ export function PaymentInterface() {
             <div>
               <div className="text-sm text-gray-400">Your Trust Score</div>
               <div className="text-2xl font-bold" style={{ color: trustScore.highTrust ? '#00FF88' : trustScore.lowTrust ? '#FF4444' : '#FFD700' }}>
-                {score.toLocaleString()}
+                {(score ?? 0).toLocaleString()}
               </div>
             </div>
             <div className="text-right">
@@ -119,7 +131,7 @@ export function PaymentInterface() {
                 trustScore.lowTrust ? 'bg-red-900/30 text-red-400' :
                 'bg-yellow-900/30 text-yellow-400'
               }`}>
-                {trustScore.highTrust ? 'High Trust' : trustScore.lowTrust ? 'Low Trust' : 'Neutral'}
+                {proofTier?.label ?? '—'}
               </div>
             </div>
           </div>
@@ -164,7 +176,7 @@ export function PaymentInterface() {
                 disabled={!canUseInstant}
               >
                 <div className="font-semibold">Instant Settlement</div>
-                <div className="text-xs text-gray-400">High trust score required for trusted in-person or QR code payments.</div>
+                <div className="text-xs text-gray-400">Trusted tier (score ≥ 5,600) required for instant settlement.</div>
               </button>
             </div>
             {!canUseInstant && (
@@ -270,7 +282,7 @@ export function PaymentInterface() {
 
           {/* Error Display */}
           {combinedError && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               className="bg-red-900/20 border-2 border-red-500 rounded-xl p-4"
@@ -285,11 +297,11 @@ export function PaymentInterface() {
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </m.div>
           )}
 
           {(isSuccess || escrowSuccess) && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               className="bg-green-900/20 border-2 border-green-500 rounded-xl p-4 text-center"
@@ -300,7 +312,7 @@ export function PaymentInterface() {
                 {isEscrowMode ? 'Protected Checkout Submitted!' : 'Payment Successful!'}
               </div>
               <div className="text-sm text-gray-400 mt-1">Order ID: {orderId}</div>
-            </motion.div>
+            </m.div>
           )}
         </div>
       </div>

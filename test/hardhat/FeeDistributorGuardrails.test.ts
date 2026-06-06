@@ -12,8 +12,8 @@ async function getConnection() {
 describe('FeeDistributor (audit guardrails)', () => {
   async function distributorFixture() {
     const { ethers } = (await getConnection()) as any;
-    const [admin, burn, sanctum, dao, merchants, headhunters, replacement] =
-      await ethers.getSigners();
+    // 3-channel constructor: token, dao, merchants, headhunters, admin
+    const [admin, dao, merchants, headhunters, replacement] = await ethers.getSigners();
 
     const MockERC20 = await ethers.getContractFactory(
       'test/contracts/mocks/MockContracts.sol:MockERC20'
@@ -24,8 +24,6 @@ describe('FeeDistributor (audit guardrails)', () => {
     const FeeDistributor = await ethers.getContractFactory('FeeDistributor');
     const distributor = await FeeDistributor.deploy(
       await token.getAddress(),
-      burn.address,
-      sanctum.address,
       dao.address,
       merchants.address,
       headhunters.address,
@@ -36,19 +34,7 @@ describe('FeeDistributor (audit guardrails)', () => {
     const fee = ethers.parseEther('10000');
     await token.transfer(await distributor.getAddress(), fee);
 
-    return {
-      ethers,
-      distributor,
-      token,
-      fee,
-      burn,
-      sanctum,
-      dao,
-      merchants,
-      headhunters,
-      replacement,
-      admin,
-    };
+    return { ethers, distributor, token, fee, dao, merchants, headhunters, replacement, admin };
   }
 
   async function deployDistributor() {
@@ -56,58 +42,33 @@ describe('FeeDistributor (audit guardrails)', () => {
     return networkHelpers.loadFixture(distributorFixture);
   }
 
-  it('burns the burn allocation instead of transferring it to the burn sink', async () => {
-    const { distributor, token, fee, burn } = await deployDistributor();
+  it('distributes to all three ecosystem channels — no burn, no sanctum', async () => {
+    const { distributor, token, fee, dao, merchants, headhunters } = await deployDistributor();
 
-    const totalSupplyBefore = await token.totalSupply();
+    const supplyBefore = await token.totalSupply();
     await distributor.distribute();
 
-    const burned = (fee * 3500n) / 10000n;
-    assert.equal(await token.balanceOf(burn.address), 0n);
-    assert.equal(await distributor.totalBurned(), burned);
-    assert.equal(await token.totalSupply(), totalSupplyBefore - burned);
+    // Default split: 50/30/20
+    const toDAO       = (fee * 5000n) / 10000n;
+    const toMerchants = (fee * 3000n) / 10000n;
+    const toHeadhunters = fee - toDAO - toMerchants; // rounding remainder → headhunters
+
+    assert.equal(await token.balanceOf(dao.address),        toDAO,        'dao share wrong');
+    assert.equal(await token.balanceOf(merchants.address),  toMerchants,  'merchant share wrong');
+    assert.equal(await token.balanceOf(headhunters.address),toHeadhunters,'headhunter share wrong');
+
+    // Supply must NOT change — FeeDistributor never burns
+    assert.equal(await token.totalSupply(), supplyBefore, 'FeeDistributor must not burn tokens');
+
+    // totalBurned no longer exists on FeeDistributor — supply unchanged is the proof.
   });
 
   it('rejects untrusted receiveFee callers', async () => {
     const { distributor, replacement, fee } = await deployDistributor();
-
     await assert.rejects(
       () => distributor.connect(replacement).receiveFee(fee),
       /NotAuthorized|revert/
     );
-  });
-
-  it('falls back to the burn sink when token burn reverts', async () => {
-    const { ethers } = (await getConnection()) as any;
-    const [admin, burn, sanctum, dao, merchants, headhunters] = await ethers.getSigners();
-
-    const MockToken = await ethers.getContractFactory(
-      'test/contracts/mocks/MockContracts.sol:MockRevertingBurnERC20'
-    );
-    const token = await MockToken.deploy('VFIDE', 'VFD', ethers.parseEther('200000000'));
-    await token.waitForDeployment();
-
-    const FeeDistributor = await ethers.getContractFactory('FeeDistributor');
-    const distributor = await FeeDistributor.deploy(
-      await token.getAddress(),
-      burn.address,
-      sanctum.address,
-      dao.address,
-      merchants.address,
-      headhunters.address,
-      admin.address
-    );
-    await distributor.waitForDeployment();
-
-    const fee = ethers.parseEther('10000');
-    await token.transfer(await distributor.getAddress(), fee);
-    await token.setRevertBurn(true);
-
-    await distributor.distribute();
-
-    const expectedBurn = (fee * 3500n) / 10000n;
-    assert.equal(await token.balanceOf(burn.address), expectedBurn);
-    assert.equal(await distributor.totalBurned(), 0n);
   });
 
   it('delays destination changes until the timelock expires', async () => {
@@ -140,5 +101,21 @@ describe('FeeDistributor (audit guardrails)', () => {
     );
 
     assert.equal(await distributor.daoPayrollPool(), dao.address);
+  });
+
+  it('rejects split proposals that do not sum to 10000', async () => {
+    const { distributor, admin } = await deployDistributor();
+    await assert.rejects(
+      () => distributor.connect(admin).proposeSplitChange(5000, 3000, 1999), // 9999
+      /InvalidSplit|revert/
+    );
+  });
+
+  it('rejects split proposals where a single channel exceeds MAX_SINGLE_BPS (60%)', async () => {
+    const { distributor, admin } = await deployDistributor();
+    await assert.rejects(
+      () => distributor.connect(admin).proposeSplitChange(7000, 2000, 1000), // 70% dao
+      /SingleSinkTooHigh|revert/
+    );
   });
 });

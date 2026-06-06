@@ -7,7 +7,7 @@ import {
   useWatchContractEvent,
   useWriteContract,
 } from 'wagmi';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { isAddress, formatUnits } from 'viem';
 import {
   Lock,
@@ -91,7 +91,7 @@ export function LockVaultPanel() {
 
 function PanelShell({ children }: { children: React.ReactNode }) {
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       className="rounded-2xl border border-red-500/40 bg-gradient-to-br from-red-950/30 to-gray-900/60 backdrop-blur-xl p-6 space-y-6"
@@ -108,7 +108,7 @@ function PanelShell({ children }: { children: React.ReactNode }) {
         </div>
       </div>
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -308,7 +308,7 @@ function CancelQueueSection({ vault }: { vault: `0x${string}` }) {
         </div>
       )}
 
-      {progress && <div className="text-sm text-cyan-400">{progress}</div>}
+      {progress && <div className="text-sm text-accent">{progress}</div>}
       {error && <div className="text-sm text-red-400">{error}</div>}
 
       <button
@@ -475,7 +475,7 @@ function GuardianAlertSection({ vault }: { vault: `0x${string}` }) {
   return (
     <section className="space-y-3">
       <div className="flex items-center gap-2">
-        <MessageSquare className="w-5 h-5 text-cyan-400" />
+        <MessageSquare className="w-5 h-5 text-accent" />
         <h3 className="text-lg font-bold text-white">Step 3 — Alert your guardians</h3>
       </div>
       <p className="text-sm text-gray-300">
@@ -496,7 +496,7 @@ function GuardianAlertSection({ vault }: { vault: `0x${string}` }) {
 
       <button
         onClick={copyMessage}
-        className="w-full py-3 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-medium transition-colors flex items-center justify-center gap-2"
+        className="w-full py-3 rounded-lg bg-accent-dark hover:bg-accent text-white font-medium transition-colors flex items-center justify-center gap-2"
       >
         {copied ? <Check size={16} /> : <Copy size={16} />}
         {copied ? 'Copied' : 'Copy alert message'}

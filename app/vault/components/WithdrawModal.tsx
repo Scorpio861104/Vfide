@@ -13,7 +13,7 @@
  * but the user-facing copy is "Transfer to Vault" throughout.
  */
 
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { ArrowUpFromLine, X, Loader2 } from 'lucide-react';
 import { safeParseFloat } from '@/lib/validation';
 
@@ -38,14 +38,14 @@ export function WithdrawModal({
   return (
     <AnimatePresence>
       {show && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
           onClick={() => !isWithdrawing && onClose()}
         >
-          <motion.div
+          <m.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
@@ -83,7 +83,7 @@ export function WithdrawModal({
                 value={withdrawRecipient}
                 onChange={(e) => setWithdrawRecipient(e.target.value)}
                 placeholder="0x... destination vault address"
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white font-mono focus:outline-none focus:border-cyan-500/50"
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white font-mono focus:outline-none focus:border-accent/50"
               />
               <div className="text-white/50 text-xs mt-2">
                 Enter the recipient&apos;s vault address (not their wallet address). The destination
@@ -100,7 +100,7 @@ export function WithdrawModal({
                   type="number"
                   value={withdrawAmount}
                   onChange={(e) => setWithdrawAmount(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-cyan-500/50 pr-20"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-accent/50 pr-20"
                 />
                 <button
                   onClick={() => setWithdrawAmount(String(safeParseFloat(vaultBalance, 0)))}
@@ -111,15 +111,15 @@ export function WithdrawModal({
               </div>
             </div>
 
-            <div className="mb-4 p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-xl">
-              <div className="text-cyan-300 text-sm font-bold mb-1">CardBound Signed Transfer</div>
+            <div className="mb-4 p-3 bg-accent/10 border border-accent/30 rounded-xl">
+              <div className="text-accent text-sm font-bold mb-1">CardBound Signed Transfer</div>
               <div className="text-white/70 text-xs">
                 You&apos;ll sign a TransferIntent and execute a vault-to-vault transfer. Funds move
                 directly between the two vaults — no wallet round-trip required.
               </div>
             </div>
 
-            <motion.button
+            <m.button
               data-trail-source="vault-transfer"
               whileHover={{ scale: isWithdrawing ? 1 : 1.02 }}
               whileTap={{ scale: isWithdrawing ? 1 : 0.98 }}
@@ -138,9 +138,9 @@ export function WithdrawModal({
                   Transfer to Vault
                 </>
               )}
-            </motion.button>
-          </motion.div>
-        </motion.div>
+            </m.button>
+          </m.div>
+        </m.div>
       )}
     </AnimatePresence>
   );

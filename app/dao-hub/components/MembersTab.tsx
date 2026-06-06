@@ -31,6 +31,7 @@ export function MembersTab() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    let _cancelled = false;
     setLoading(true);
     Promise.all([
       fetch('/api/proposals?limit=200').then((r) => r.json()),
@@ -52,14 +53,15 @@ export function MembersTab() {
         setContributors(Object.values(map).sort((a, b) => b.proposals - a.proposals).slice(0, 20));
       })
       .finally(() => setLoading(false));
-  }, []);
+    return () => { _cancelled = true; };
+    }, []);
 
   return (
     <div className="space-y-5">
       {stats && (
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-white/3 border border-white/10 rounded-xl p-4">
-            <div className="flex items-center gap-2 mb-1"><Users size={14} className="text-cyan-400" /><p className="text-xs text-gray-400">Protocol Members</p></div>
+            <div className="flex items-center gap-2 mb-1"><Users size={14} className="text-accent" /><p className="text-xs text-gray-400">Protocol Members</p></div>
             <p className="text-2xl font-bold text-white">{stats.totalUsers.toLocaleString()}</p>
           </div>
           <div className="bg-white/3 border border-white/10 rounded-xl p-4">
@@ -76,7 +78,7 @@ export function MembersTab() {
         </div>
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 size={20} className="text-cyan-400 animate-spin" />
+            <Loader2 size={20} className="text-accent animate-spin" />
           </div>
         ) : contributors.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-center">
@@ -89,14 +91,14 @@ export function MembersTab() {
               const isMe = c.address.toLowerCase() === address?.toLowerCase();
               return (
                 <div key={c.address} className={`flex items-center gap-3 p-3 rounded-lg ${
-                  isMe ? 'bg-cyan-500/10 border border-cyan-500/20' : 'bg-white/3'
+                  isMe ? 'bg-accent/10 border border-accent/20' : 'bg-white/3'
                 }`}>
                   <span className="text-xs text-gray-600 w-5">{i + 1}</span>
                   <UserCircle size={22} className={i < 3 ? 'text-yellow-400' : 'text-gray-600'} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-white font-medium">
                       {c.username ?? `${c.address.slice(0, 10)}…`}
-                      {isMe && <span className="ml-1 text-xs text-cyan-400">(you)</span>}
+                      {isMe && <span className="ml-1 text-xs text-accent">(you)</span>}
                     </p>
                   </div>
                   <div className="text-right">

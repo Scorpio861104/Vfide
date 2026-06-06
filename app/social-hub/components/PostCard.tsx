@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import {
   Bookmark,
   Flag,
@@ -47,7 +47,7 @@ const formatTimeAgo = (value: string | number | Date | undefined) => {
   if (Number.isNaN(timestamp)) return 'just now';
   const diffMinutes = Math.max(0, Math.floor((Date.now() - timestamp) / 60000));
   if (diffMinutes < 1) return 'just now';
-  if (diffMinutes < 60) return `${diffMinutes}m ago`;
+  if (diffMinutes < 60) return `${diffMinutes}entry ago`;
   const diffHours = Math.floor(diffMinutes / 60);
   if (diffHours < 24) return `${diffHours}h ago`;
   return `${Math.floor(diffHours / 24)}d ago`;
@@ -85,7 +85,7 @@ export function PostCard({ post, onLike, onBookmark }: { post: SocialPost; onLik
   };
 
   return (
-    <motion.article
+    <m.article
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-2xl overflow-hidden"
@@ -93,16 +93,16 @@ export function PostCard({ post, onLike, onBookmark }: { post: SocialPost; onLik
       {/* Header */}
       <div className="p-4 flex items-start justify-between">
         <div className="flex gap-3">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-xl">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-accent to-violet-400 flex items-center justify-center text-xl">
             {post.author.avatar}
           </div>
           <div>
             <div className="flex items-center gap-2">
               <span className="font-semibold text-zinc-50">{post.author.name}</span>
               {post.author.verified && (
-                <Shield className="w-4 h-4 text-cyan-400" />
+                <Shield className="w-4 h-4 text-accent" />
               )}
-              <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-400/20 text-cyan-400">
+              <span className="text-xs px-2 py-0.5 rounded-full bg-accent/20 text-accent">
                 {post.author.proofScore} PS
               </span>
             </div>
@@ -147,7 +147,7 @@ export function PostCard({ post, onLike, onBookmark }: { post: SocialPost; onLik
         {post.tags && post.tags.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-2">
             {post.tags.map((tag) => (
-              <span key={tag} className="text-cyan-400 text-sm hover:underline cursor-pointer">
+              <span key={tag} className="text-accent text-sm hover:underline cursor-pointer">
                 #{tag}
               </span>
             ))}
@@ -158,10 +158,10 @@ export function PostCard({ post, onLike, onBookmark }: { post: SocialPost; onLik
       {/* Media */}
       {post.media && post.media.length > 0 && (
         <div className={`grid ${post.media.length === 1 ? 'grid-cols-1' : 'grid-cols-2'} gap-0.5`}>
-          {post.media.map((m, index) => (
+          {post.media.map((entry, index) => (
             <img
-              key={m.url}
-              src={m.url}
+              key={entry.url}
+              src={entry.url}
               alt={`Post image ${index + 1}`}
               className="w-full h-64 object-cover"
             />
@@ -207,7 +207,7 @@ export function PostCard({ post, onLike, onBookmark }: { post: SocialPost; onLik
         <button
           onClick={onBookmark}
           className={`p-2 rounded-lg transition-colors ${
-            post.bookmarked ? 'text-cyan-400 bg-cyan-400/10' : 'text-zinc-400 hover:bg-zinc-700'
+            post.bookmarked ? 'text-accent bg-accent/10' : 'text-zinc-400 hover:bg-zinc-700'
           }`}
         >
           <Bookmark className={`w-5 h-5 ${post.bookmarked ? 'fill-current' : ''}`} />
@@ -222,6 +222,6 @@ export function PostCard({ post, onLike, onBookmark }: { post: SocialPost; onLik
           <Share2 className="w-5 h-5" />
         </button>
       </div>
-    </motion.article>
+    </m.article>
   );
 }

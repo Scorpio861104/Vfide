@@ -7,13 +7,17 @@ import { Footer } from '@/components/layout/Footer'
 import { useAccount, useReadContract } from 'wagmi'
 import { Calendar, Users, Star, Award } from 'lucide-react'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
+import { m as motion } from 'framer-motion'
 import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts'
 import { SeerSocialABI, SeerViewABI } from '@/lib/abis'
 import { formatDistanceToNow } from 'date-fns'
 import { safeBigIntToNumber, ensureArray } from '@/lib/validation'
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function EndorsementsPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { address } = useAccount()
   const isSeerViewAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.SeerView)
   const isSeerSocialAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.SeerSocial)

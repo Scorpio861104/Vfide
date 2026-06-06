@@ -241,8 +241,6 @@ export function useRefundHistory(role: RefundRole, viewerAddress?: Address) {
     setIsLoading(true);
     setError(null);
     try {
-      const _initiatedTopic =
-        '0x' /* keccak256 hash of RefundInitiated(address,address,string,uint256) */;
       // Use getLogs with event signatures rather than precomputed topics, so
       // viem handles topic encoding for us.
 
@@ -320,8 +318,10 @@ export function useRefundHistory(role: RefundRole, viewerAddress?: Address) {
   }, [portalConfigured, target, publicClient, portalAddress, role]);
 
   useEffect(() => {
+    let _cancelled = false;
     void refetch();
-  }, [refetch]);
+    return () => { _cancelled = true; };
+    }, [refetch]);
 
   // Watch for new events while the page is mounted.
   useWatchContractEvent({

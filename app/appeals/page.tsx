@@ -3,12 +3,13 @@
 export const dynamic = 'force-dynamic';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence , LazyMotion, domAnimation } from 'framer-motion';
 import { Footer } from '@/components/layout/Footer';
 import { ActiveTab } from './components/ActiveTab';
 import { ResolvedTab } from './components/ResolvedTab';
 import { SubmitTab } from './components/SubmitTab';
 import { AlertCircle, PlusCircle, CheckCircle2 } from 'lucide-react';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 type TabId = 'active' | 'submit' | 'resolved';
 
@@ -19,10 +20,14 @@ const TABS = [
 ];
 
 export default function AppealsPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const [activeTab, setActiveTab] = useState<TabId>('submit');
 
   return (
-    <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] pb-8 relative">
+    <LazyMotion features={domAnimation}>
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] pb-8 relative">
       {/* Ambient orbs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
@@ -34,7 +39,7 @@ export default function AppealsPage() {
 
       <div className="relative container mx-auto max-w-5xl px-4">
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <div className="flex items-center gap-3 mb-3">
             <span className="badge-live"><span className="badge-live-dot" />Dispute Resolution</span>
           </div>
@@ -44,7 +49,7 @@ export default function AppealsPage() {
             </span>
           </h1>
           <p className="text-white/50">Dispute review and trusted appeal handling for flagged actions.</p>
-        </motion.div>
+        </m.div>
 
         {/* Sticky tab bar */}
         <div className="sticky top-7 md:top-[5.25rem] z-30 backdrop-blur-xl bg-zinc-950/80 border-b border-white/5 -mx-4 px-4 mb-8 py-3">
@@ -60,17 +65,18 @@ export default function AppealsPage() {
 
         {/* Tab content */}
         <AnimatePresence mode="wait">
-          <motion.div key={activeTab}
+          <m.div key={activeTab}
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}>
             {activeTab === 'active' && <ActiveTab />}
             {activeTab === 'submit' && <SubmitTab />}
             {activeTab === 'resolved' && <ResolvedTab />}
-          </motion.div>
+          </m.div>
         </AnimatePresence>
       </div>
 
       <Footer />
     </div>
+    </LazyMotion>
   );
 }

@@ -21,7 +21,7 @@
  * page — they apply to edge-case states and benefit from richer UI than a card.
  */
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import Link from 'next/link';
 import {
   Lock,
@@ -58,7 +58,7 @@ function stateBadgeStyle(state: EscrowState): { bg: string; text: string; border
     case EscrowState.Open:
       return { bg: 'bg-amber-500/10', text: 'text-amber-300', border: 'border-amber-500/30', Icon: Clock };
     case EscrowState.Funded:
-      return { bg: 'bg-cyan-500/10', text: 'text-cyan-300', border: 'border-cyan-500/30', Icon: Lock };
+      return { bg: 'bg-accent/10', text: 'text-accent', border: 'border-accent/30', Icon: Lock };
     case EscrowState.Released:
       return { bg: 'bg-emerald-500/10', text: 'text-emerald-300', border: 'border-emerald-500/30', Icon: CheckCircle2 };
     case EscrowState.Refunded:
@@ -106,7 +106,7 @@ export function EscrowCard({
   const showActions = canBuyerRelease || canBuyerDispute || canMerchantRefund || canMerchantDispute;
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       className="bg-white/3 border border-white/10 rounded-xl p-4 space-y-3"
@@ -123,7 +123,7 @@ export function EscrowCard({
             </span>
             <Link
               href={`/escrow/${escrow.id.toString()}`}
-              className="ml-auto text-xs text-cyan-400 hover:text-cyan-300 inline-flex items-center gap-1"
+              className="ml-auto text-xs text-accent hover:text-accent inline-flex items-center gap-1"
             >
               Details
               <ExternalLink size={10} />
@@ -185,6 +185,6 @@ export function EscrowCard({
           <span>Awaiting DAO resolution. Funds remain held in escrow.</span>
         </div>
       )}
-    </motion.div>
+    </m.div>
   );
 }

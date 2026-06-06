@@ -18,7 +18,7 @@
 
 import Link from 'next/link';
 import { GlassCard } from '@/components/ui/GlassCard';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import {
   DollarSign,
   Shield,
@@ -53,7 +53,7 @@ export function OverviewTab() {
       </GlassCard>
 
       {/* What's parameterized but not yet deployed */}
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
@@ -64,9 +64,9 @@ export function OverviewTab() {
             value: 'TBD',
             label: 'Council Seats',
             sub: 'set at contract deploy',
-            gradient: 'from-cyan-500/20 to-blue-500/10',
-            border: 'border-cyan-500/20',
-            text: 'text-cyan-400',
+            gradient: 'from-accent/20 to-blue-500/10',
+            border: 'border-accent/20',
+            text: 'text-accent',
           },
           {
             value: '—',
@@ -93,7 +93,7 @@ export function OverviewTab() {
             text: 'text-purple-400',
           },
         ].map((stat) => (
-          <motion.div
+          <m.div
             key={stat.label}
             whileHover={{ scale: 1.02, y: -2 }}
             className={`bg-gradient-to-br ${stat.gradient} backdrop-blur-xl border ${stat.border} rounded-2xl p-6 text-center`}
@@ -101,9 +101,9 @@ export function OverviewTab() {
             <div className={`text-3xl font-bold ${stat.text} tabular-nums`}>{stat.value}</div>
             <div className="text-sm text-gray-400 mt-1">{stat.label}</div>
             <div className="text-xs text-gray-500 mt-1">{stat.sub}</div>
-          </motion.div>
+          </m.div>
         ))}
-      </motion.div>
+      </m.div>
 
       {/* How governance works at V1 */}
       <GlassCard className="p-6">
@@ -121,7 +121,7 @@ export function OverviewTab() {
           </p>
           <Link
             href="/governance"
-            className="text-cyan-400 hover:text-cyan-300 inline-flex items-center gap-1 transition-colors"
+            className="text-accent hover:text-accent inline-flex items-center gap-1 transition-colors"
           >
             See active proposals <ArrowRight size={12} />
           </Link>
@@ -140,9 +140,9 @@ export function OverviewTab() {
           {[
             {
               icon: Shield,
-              color: 'text-cyan-400',
-              bg: 'from-cyan-500/20 to-cyan-500/5',
-              border: 'border-cyan-500/20',
+              color: 'text-accent',
+              bg: 'from-accent/20 to-accent/5',
+              border: 'border-accent/20',
               title: 'Protocol Security',
               desc: 'Monitor and respond to security incidents, manage emergency controls',
             },
@@ -160,7 +160,7 @@ export function OverviewTab() {
               bg: 'from-emerald-500/20 to-emerald-500/5',
               border: 'border-emerald-500/20',
               title: 'Treasury Oversight',
-              desc: 'Approve multi-sig transactions and manage fund allocations',
+              desc: 'Approve Guardian Approval transactions and manage fund allocations',
             },
             {
               icon: TrendingUp,
@@ -171,7 +171,7 @@ export function OverviewTab() {
               desc: 'Drive partnerships, integrations, and community expansion',
             },
           ].map((item) => (
-            <motion.div
+            <m.div
               key={item.title}
               whileHover={{ scale: 1.02 }}
               className={`flex items-start gap-4 p-4 rounded-xl bg-gradient-to-br ${item.bg} border ${item.border}`}
@@ -181,7 +181,7 @@ export function OverviewTab() {
                 <h4 className="text-white font-bold mb-1">{item.title}</h4>
                 <p className="text-gray-400 text-sm">{item.desc}</p>
               </div>
-            </motion.div>
+            </m.div>
           ))}
         </div>
       </GlassCard>

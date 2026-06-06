@@ -22,7 +22,7 @@ import { Shield, Clock, CheckCircle, AlertTriangle, FileText, ExternalLink, Copy
 // v19.10 BCOMPAT-1 FIX: cross-browser clipboard helper.
 import { copyToClipboardSafe } from '@/lib/clipboardSafe';
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
-import { ConfirmModal } from '@/components/ui/ConfirmModal';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 interface InvoiceItem {
   description: string;
@@ -70,6 +70,9 @@ const LOCAL_CURRENCY_LOCALES: Record<string, string> = {
   BRL: 'pt-BR',
 };
 
+// Static reference rates used only to generate an "Estimated local value" hint.
+// These are approximate and NOT live FX rates — actual payment is settled in VFIDE/stablecoin.
+// Rates last updated: 2026-05-25. Update when > 30% drift is observed.
 const ESTIMATED_USD_TO_LOCAL: Record<string, number> = {
   USD: 1,
   EUR: 0.92,
@@ -116,6 +119,9 @@ function formatEstimatedLocalCurrency(amount: number, currency: string): string 
 }
 
 export default function CheckoutPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const params = useParams();
   const paymentLinkId = params?.id as string;
   const { address, isConnected, chainId } = useAccount();
@@ -127,7 +133,6 @@ export default function CheckoutPage() {
   const [errorMessage, setErrorMessage] = useState('');
   const [txHash, setTxHash] = useState('');
   const [isFirstTimeMerchant, setIsFirstTimeMerchant] = useState(false);
-  const [highValueConfirmOpen, setHighValueConfirmOpen] = useState(false);
 
   // Fetch invoice data
   useEffect(() => {
@@ -155,7 +160,7 @@ export default function CheckoutPage() {
         if (typeof window !== 'undefined' && inv.merchant_address) {
           const normalized = inv.merchant_address.toLowerCase();
           const raw = window.localStorage.getItem(CHECKOUT_KNOWN_MERCHANTS_KEY);
-          const knownMerchants: string[] = raw ? JSON.parse(raw) as string[] : [];
+          let knownMerchants: string[] = []; try { knownMerchants = raw ? (JSON.parse(raw) as string[]) : []; } catch { knownMerchants = []; }
           setIsFirstTimeMerchant(!knownMerchants.includes(normalized));
         }
 
@@ -189,12 +194,19 @@ export default function CheckoutPage() {
   }, [paymentLinkId]);
 
   // Handle payment
-  // High-value payments (>= HIGH_VALUE_CONFIRM_THRESHOLD) require an explicit
-  // in-app confirmation before submission. We split the flow into:
-  //   handlePay()        — entry point. For high-value, opens modal; otherwise executes.
-  //   executePayment()   — the actual transaction submission.
-  const executePayment = useCallback(async () => {
+  const handlePay = useCallback(async () => {
     if (!invoice || !address || !isConnected) return;
+
+    const total = Number(invoice.total);
+    if (Number.isFinite(total) && total >= HIGH_VALUE_CONFIRM_THRESHOLD) {
+      const confirmed = window.confirm(
+        `You are about to pay ${total.toFixed(4)} ${invoice.currency_display} to ${invoice.merchant_name || 'merchant'} at ${invoice.merchant_address}. This payment cannot be reversed.`
+      );
+      if (!confirmed) {
+        return;
+      }
+    }
+
     setStatus('paying');
 
     try {
@@ -215,16 +227,29 @@ export default function CheckoutPage() {
       const hash = result.hash;
       setTxHash(hash);
 
-      await fetch(`/api/merchant/checkout/${paymentLinkId}`, {
+      const patchRes = await fetch(`/api/merchant/checkout/${paymentLinkId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'pay', tx_hash: hash }),
       });
 
+      // Even if backend recording fails the on-chain payment succeeded.
+      // We still show 'paid' so the user isn't alarmed, but we log a warning
+      // so the merchant can reconcile manually via the tx hash.
+      if (!patchRes.ok) {
+        const patchErr = await patchRes.json().catch(() => ({})) as { error?: string };
+        // Duplicate submission — backend already recorded this hash, treat as success.
+        if (patchRes.status === 409) {
+          // no-op: already in pending_confirmation
+        } else {
+          logger.warn(`[checkout] invoice status update failed: ${patchErr.error ?? patchRes.status} tx: ${hash}`);
+        }
+      }
+
       if (typeof window !== 'undefined' && invoice.merchant_address) {
         const normalized = invoice.merchant_address.toLowerCase();
         const raw = window.localStorage.getItem(CHECKOUT_KNOWN_MERCHANTS_KEY);
-        const knownMerchants: string[] = raw ? JSON.parse(raw) as string[] : [];
+        let knownMerchants: string[] = []; try { knownMerchants = raw ? (JSON.parse(raw) as string[]) : []; } catch { knownMerchants = []; }
         if (!knownMerchants.includes(normalized)) {
           knownMerchants.push(normalized);
           window.localStorage.setItem(CHECKOUT_KNOWN_MERCHANTS_KEY, JSON.stringify(knownMerchants));
@@ -237,17 +262,6 @@ export default function CheckoutPage() {
       setErrorMessage(err instanceof Error ? err.message : 'Payment failed');
     }
   }, [invoice, address, isConnected, payMerchant, paymentLinkId]);
-
-  const handlePay = useCallback(async () => {
-    if (!invoice || !address || !isConnected) return;
-
-    const total = Number(invoice.total);
-    if (Number.isFinite(total) && total >= HIGH_VALUE_CONFIRM_THRESHOLD) {
-      setHighValueConfirmOpen(true);
-      return;
-    }
-    await executePayment();
-  }, [invoice, address, isConnected, executePayment]);
 
   const preferredCurrency = (preferences.preferredCurrency || 'USD').toUpperCase();
   const estimatedLocalTotal = invoice && isUsdAnchoredDisplay(invoice.currency_display)
@@ -412,7 +426,7 @@ export default function CheckoutPage() {
                   </div>
                   {estimatedLocalTotal && (
                     <div className="flex justify-between gap-3 text-xs text-blue-800/80 dark:text-blue-200/80">
-                      <span>Estimated local value ({preferredCurrency})</span>
+                      <span>Approx. local value ({preferredCurrency}) <span title="Indicative only — uses a static reference rate, not a live FX feed.">ⓘ</span></span>
                       <span>{estimatedLocalTotal}</span>
                     </div>
                   )}
@@ -494,27 +508,6 @@ export default function CheckoutPage() {
           Payments are processed on-chain via VFIDE MerchantPortal. No card details required.
         </p>
       </div>
-
-      <ConfirmModal
-        isOpen={highValueConfirmOpen}
-        onClose={() => setHighValueConfirmOpen(false)}
-        onConfirm={() => { setHighValueConfirmOpen(false); void executePayment(); }}
-        title="Confirm high-value payment"
-        message={
-          invoice ? (
-            <span>
-              You are about to pay <strong>{Number(invoice.total).toFixed(4)} {invoice.currency_display}</strong>
-              {' '}to <strong>{invoice.merchant_name || 'this merchant'}</strong>
-              {' '}at <code className="text-xs">{invoice.merchant_address}</code>.
-              <br /><br />
-              <span className="text-red-300">This payment cannot be reversed once confirmed on-chain.</span>
-            </span>
-          ) : ''
-        }
-        confirmText="Confirm payment"
-        cancelText="Cancel"
-        variant="warning"
-      />
     </div>
   );
 }

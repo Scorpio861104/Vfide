@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { UserAnalytics } from '@/config/performance-dashboard';
 import { Users, TrendingUp, Eye, Clock, LogOut, Target } from 'lucide-react';
 
@@ -27,13 +27,13 @@ export function UserAnalyticsDashboard({ analytics }: UserAnalyticsDashboardProp
   return (
     <div className="space-y-6">
       {/* Key Metrics Grid */}
-      <motion.div
+      <m.div
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
         variants={containerVariants}
         initial="hidden"
         animate="show"
       >
-        <motion.div
+        <m.div
           variants={itemVariants}
           className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-6"
         >
@@ -46,9 +46,9 @@ export function UserAnalyticsDashboard({ analytics }: UserAnalyticsDashboardProp
             </div>
             <Users className="w-8 h-8 text-blue-400 opacity-50" />
           </div>
-        </motion.div>
+        </m.div>
 
-        <motion.div
+        <m.div
           variants={itemVariants}
           className="bg-green-500/10 border border-green-500/20 rounded-lg p-6"
         >
@@ -61,9 +61,9 @@ export function UserAnalyticsDashboard({ analytics }: UserAnalyticsDashboardProp
             </div>
             <TrendingUp className="w-8 h-8 text-green-400 opacity-50" />
           </div>
-        </motion.div>
+        </m.div>
 
-        <motion.div
+        <m.div
           variants={itemVariants}
           className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-6"
         >
@@ -76,25 +76,25 @@ export function UserAnalyticsDashboard({ analytics }: UserAnalyticsDashboardProp
             </div>
             <Eye className="w-8 h-8 text-purple-400 opacity-50" />
           </div>
-        </motion.div>
+        </m.div>
 
-        <motion.div
+        <m.div
           variants={itemVariants}
-          className="bg-cyan-500/10 border border-cyan-500/20 rounded-lg p-6"
+          className="bg-accent/10 border border-accent/20 rounded-lg p-6"
         >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-400 mb-1">Avg Session Duration</p>
-              <p className="text-3xl font-bold text-cyan-400">
+              <p className="text-3xl font-bold text-accent">
                 {(analytics.averageSessionDuration / 60000).toFixed(1)}
               </p>
               <p className="text-xs text-slate-400">minutes</p>
             </div>
-            <Clock className="w-8 h-8 text-cyan-400 opacity-50" />
+            <Clock className="w-8 h-8 text-accent opacity-50" />
           </div>
-        </motion.div>
+        </m.div>
 
-        <motion.div
+        <m.div
           variants={itemVariants}
           className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-6"
         >
@@ -107,9 +107,9 @@ export function UserAnalyticsDashboard({ analytics }: UserAnalyticsDashboardProp
             </div>
             <LogOut className="w-8 h-8 text-yellow-400 opacity-50" />
           </div>
-        </motion.div>
+        </m.div>
 
-        <motion.div
+        <m.div
           variants={itemVariants}
           className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-6"
         >
@@ -122,12 +122,12 @@ export function UserAnalyticsDashboard({ analytics }: UserAnalyticsDashboardProp
             </div>
             <Target className="w-8 h-8 text-orange-400 opacity-50" />
           </div>
-        </motion.div>
-      </motion.div>
+        </m.div>
+      </m.div>
 
       {/* Top Pages */}
       {analytics.topPages.length > 0 && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-slate-900/50 border border-slate-800 rounded-lg p-6"
@@ -143,19 +143,19 @@ export function UserAnalyticsDashboard({ analytics }: UserAnalyticsDashboardProp
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-bold text-cyan-400">
+                  <p className="text-sm font-bold text-accent">
                     {page.views} views
                   </p>
                 </div>
               </div>
             ))}
           </div>
-        </motion.div>
+        </m.div>
       )}
 
       {/* Top Events */}
       {analytics.topEvents.length > 0 && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
@@ -172,7 +172,7 @@ export function UserAnalyticsDashboard({ analytics }: UserAnalyticsDashboardProp
               </div>
             ))}
           </div>
-        </motion.div>
+        </m.div>
       )}
     </div>
   );

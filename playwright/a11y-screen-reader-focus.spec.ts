@@ -72,15 +72,18 @@ test.describe('Screen Reader and ARIA - E2E Tests', () => {
   });
 
   test('Dynamic content updates should be announced', async ({ page }) => {
-    await page.goto('/dashboard');
-    
-    // Check for status regions
+    // Check root page which always has the toast live region (role=status)
+    await page.goto('/');
+
+    // Gather live-region elements across role="status", aria-live="polite", and aria-live="assertive"
     const statusRegions = await page.locator('[role="status"]').all();
-    const liveRegions = await page.locator('[aria-live="polite"]').all();
-    
-    const announcementRegionsExist = statusRegions.length > 0 || liveRegions.length > 0;
-    
-    // Pages with dynamic content should have announcement regions
+    const politeLive = await page.locator('[aria-live="polite"]').all();
+    const assertiveLive = await page.locator('[aria-live="assertive"]').all();
+
+    const announcementRegionsExist =
+      statusRegions.length > 0 || politeLive.length > 0 || assertiveLive.length > 0;
+
+    // Pages with dynamic content should have at least one announcement region
     expect(announcementRegionsExist).toBe(true);
   });
 

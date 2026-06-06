@@ -3,7 +3,7 @@
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { useState, useMemo } from 'react';
 import { useAccount } from 'wagmi';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Shield } from 'lucide-react';
 import { useGuardianWatchlist, useGuardianAttestations, mergeInboxEntries } from './hooks';
 import { GuardianPendingRecoveryCard } from './GuardianPendingRecoveryCard';
@@ -30,24 +30,24 @@ export function PendingActionsTab({ isConnected }: { isConnected: boolean }) {
 
   if (!isConnected) {
     return (
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-16">
-        <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }}>
+      <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-16">
+        <m.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }}>
           <Shield className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-        </motion.div>
+        </m.div>
         <h2 className="text-2xl font-bold text-white mb-4">Connect Wallet</h2>
         <p className="text-gray-400">Connect your wallet to see pending guardian actions</p>
         <div className="mt-6 flex justify-center">
           <VfideConnectButton size="md" />
         </div>
-      </motion.div>
+      </m.div>
     );
   }
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 max-w-4xl mx-auto">
-      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-        className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-2xl p-6">
-        <h2 className="text-xl font-bold text-cyan-400 mb-4 flex items-center gap-3">
+    <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 max-w-4xl mx-auto">
+      <m.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+        className="bg-gradient-to-br from-accent/10 to-blue-500/10 border border-accent/30 rounded-2xl p-6">
+        <h2 className="text-xl font-bold text-accent mb-4 flex items-center gap-3">
           <Shield size={24} />
           Guardian Inbox
         </h2>
@@ -55,24 +55,24 @@ export function PendingActionsTab({ isConnected }: { isConnected: boolean }) {
           As a guardian, you may be asked to approve pending wallet rotations on CardBound vaults.
           Track vault addresses you guard and act when needed.
         </p>
-      </motion.div>
+      </m.div>
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+      <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
         className="bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
         <h3 className="text-xl font-bold text-white mb-2">Guardian Watchlist</h3>
         <p className="text-gray-400 text-sm mb-4">Add vault addresses you guard. This is local and private.</p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <input type="text" value={vaultInput} onChange={(e) => setVaultInput(e.target.value)}
-            className="md:col-span-2 px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-white focus:outline-none focus:border-cyan-500/50 font-mono" />
+            className="md:col-span-2 px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-white focus:outline-none focus:border-accent/50 font-mono" />
           <input type="text" value={vaultLabel} onChange={(e) => setVaultLabel(e.target.value)}
-            className="px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-white focus:outline-none focus:border-cyan-500/50" />
+            className="px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-white focus:outline-none focus:border-accent/50" />
         </div>
         <button onClick={handleAddVault}
-          className="mt-3 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold">
+          className="mt-3 px-4 py-2 bg-gradient-to-r from-accent to-blue-500 text-white rounded-xl font-bold">
           Add Vault to Watchlist
         </button>
-        {notice && <p className="text-sm text-cyan-200 mt-3">{notice}</p>}
+        {notice && <p className="text-sm text-accent mt-3">{notice}</p>}
 
         {inboxEntries.length === 0 ? (
           <div className="mt-4 p-6 bg-black/30 border border-white/10 rounded-xl text-center">
@@ -95,11 +95,11 @@ export function PendingActionsTab({ isConnected }: { isConnected: boolean }) {
             ))}
           </div>
         )}
-      </motion.div>
+      </m.div>
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+      <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
         <GuardianPendingQueueWidget />
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 }

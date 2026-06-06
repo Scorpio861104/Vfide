@@ -1,9 +1,10 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
 
 // TYPE-2: Explicit React type import for React.ElementType usage in MAIN_TABS definition
 import type React from 'react';
+import { useLocale } from '@/lib/locale/LocaleProvider';
+import { TabTrigger } from '@/components/ui/TabTrigger';
 
 /**
  * Social Hub — consolidated social surface.
@@ -25,7 +26,7 @@ import type React from 'react';
  */
 
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m as motion } from 'framer-motion';
 import {
   Hash,
   MessageCircle,
@@ -34,7 +35,7 @@ import {
   Sparkles,
   Users,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAccount } from 'wagmi';
 import { Footer } from '@/components/layout/Footer';
@@ -97,16 +98,17 @@ const ANALYTICS_TABS: { id: AnalyticsTab; label: string }[] = [
 // UX-1: Valid tab IDs for type-safe URL parsing
 const VALID_MAIN_TABS = new Set<MainTab>(['feed', 'messages', 'pay', 'analytics']);
 
-export default function SocialHubPage() {
-  const { isConnected, address } = useAccount();
-  // UX-1: Read initial tab from URL search params so ?tab= links work correctly
-  // and browser Back/Forward preserves the active tab context
-  const searchParams = useSearchParams();
-  const tabParam = searchParams.get('tab') as MainTab | null;
+function useInitialMainTab(tabParam: MainTab | null): MainTab {
+  return tabParam && VALID_MAIN_TABS.has(tabParam) ? tabParam : 'feed';
+}
 
-  const [mainTab, setMainTab]           = useState<MainTab>(
-    tabParam && VALID_MAIN_TABS.has(tabParam) ? tabParam : 'feed'
-  );
+function SocialHubContent({ initialTab }: { initialTab: MainTab }) {
+  const { locale } = useLocale();
+  void locale;
+
+  const { isConnected, address } = useAccount();
+
+  const [mainTab, setMainTab]           = useState<MainTab>(initialTab);
   const [feedFilter, setFeedFilter]     = useState<FeedFilter>('all');
   const [msgTab, setMsgTab]             = useState<MsgTab>('messages');
   const [analyticsTab, setAnalyticsTab] = useState<AnalyticsTab>('overview');
@@ -214,14 +216,12 @@ export default function SocialHubPage() {
           {/* A11Y-1: role=tablist so AT announces this as a tab widget */}
           <div role="tablist" aria-label="Social Hub sections" className="flex gap-2 overflow-x-auto scrollbar-hide">
             {MAIN_TABS.map(({ id, label, icon: Icon }) => (
-              <button key={id} onClick={() => setMainTab(id)}
-                role="tab"
-                aria-selected={mainTab === id}
+              <TabTrigger key={id} active={mainTab === id} onClick={() => setMainTab(id)}
                 aria-controls={"social-panel-" + id}
                 id={"social-tab-" + id}
                 className={mainTab === id ? 'tab-pill-active' : 'tab-pill-inactive'}>
                 <Icon size={14} />{label}
-              </button>
+              </TabTrigger>
             ))}
           </div>
         </div>
@@ -345,5 +345,20 @@ export default function SocialHubPage() {
       </div>
       <Footer />
     </div>
+  );
+}
+
+
+function SocialHubSearchParamsBoundary() {
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab') as MainTab | null;
+  return <SocialHubContent initialTab={useInitialMainTab(tabParam)} />;
+}
+
+export default function SocialHubPage() {
+  return (
+    <Suspense fallback={<SocialHubContent initialTab="feed" />}>
+      <SocialHubSearchParamsBoundary />
+    </Suspense>
   );
 }

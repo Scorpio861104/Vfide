@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Zap } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { LEVEL_PERKS, useGamification } from '@/lib/gamification';
@@ -11,12 +11,12 @@ export function PerksTab() {
 
   return (
     <div className="space-y-6">
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+      <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
         <div className="mb-4 rounded-xl border border-zinc-700 bg-zinc-900 p-6">
           <h3 className="mb-2 text-xl font-bold text-zinc-100">Level Perks</h3>
           <p className="text-sm text-zinc-400">
             Every level you earn unlocks real platform benefits — fee discounts, governance voting weight, and feature access.
-            These perks are yours because of <span className="font-semibold text-cyan-400">your own activity</span>, not investment returns.
+            These perks are yours because of <span className="font-semibold text-accent">your own activity</span>, not investment returns.
           </p>
           {progress && (
             <div className="mt-3 flex items-center gap-2 text-sm">
@@ -34,7 +34,7 @@ export function PerksTab() {
             const categoryColors: Record<string, string> = {
               fee: 'border-emerald-500/40 bg-emerald-500/5',
               governance: 'border-violet-500/40 bg-violet-500/5',
-              feature: 'border-cyan-500/40 bg-cyan-500/5',
+              feature: 'border-accent/40 bg-accent/5',
               status: 'border-amber-400/40 bg-amber-400/5',
             };
             const categoryLabels: Record<string, string> = {
@@ -45,7 +45,7 @@ export function PerksTab() {
             };
 
             return (
-              <motion.div
+              <m.div
                 key={idx}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -84,7 +84,7 @@ export function PerksTab() {
                     <span className="text-xs text-zinc-600">Locked</span>
                   )}
                 </div>
-              </motion.div>
+              </m.div>
             );
           })}
         </div>
@@ -99,7 +99,7 @@ export function PerksTab() {
             </span>
           </div>
         </div>
-      </motion.div>
+      </m.div>
     </div>
   );
 }

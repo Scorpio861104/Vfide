@@ -4,6 +4,8 @@ export const dynamic = 'force-dynamic';
 
 // TYPE-2: Explicit React type import for React.ElementType usage in MAIN_TABS definition
 import type React from 'react';
+import { useLocale } from '@/lib/locale/LocaleProvider';
+import { TabTrigger } from '@/components/ui/TabTrigger';
 
 /**
  * Governance — consolidated DAO surface (R90 T1-2).
@@ -22,7 +24,7 @@ import type React from 'react';
  * The old routes redirect here.
  */
 
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m as motion } from 'framer-motion';
 import {
   Vote, PlusCircle, Users, BarChart2, Clock,
   Crown, ScrollText, Gavel, Landmark, LayoutDashboard,
@@ -80,6 +82,9 @@ const VALID_MAIN_TABS = new Set<MainTab>(['proposals', 'dao', 'council', 'electi
 const VALID_DAO_SUBS  = new Set<DaoSub>(['overview', 'members', 'treasury']);
 
 export default function GovernancePage() {
+  const { locale } = useLocale();
+  void locale;
+
   const { isConnected } = useAccount();
   // UX-1: Read initial tab from URL search params so ?tab= links work correctly
   // and browser Back/Forward preserves the active tab context
@@ -152,14 +157,12 @@ export default function GovernancePage() {
           {/* A11Y-1: role=tablist so AT announces this as a tab widget */}
           <div role="tablist" aria-label="Governance sections" className="flex gap-2 overflow-x-auto scrollbar-hide">
             {MAIN_TABS.map(({ id, label, icon: Icon }) => (
-              <button key={id} onClick={() => setMainTab(id)}
-                role="tab"
-                aria-selected={mainTab === id}
+              <TabTrigger key={id} active={mainTab === id} onClick={() => setMainTab(id)}
                 aria-controls={`gov-panel-${id}`}
                 id={`gov-tab-${id}`}
                 className={mainTab === id ? 'tab-pill-active' : 'tab-pill-inactive'}>
                 <Icon size={14} />{label}
-              </button>
+              </TabTrigger>
             ))}
           </div>
         </div>
@@ -180,13 +183,11 @@ export default function GovernancePage() {
                   { id: 'stats',   label: 'Stats',         icon: BarChart2  },
                   { id: 'history', label: 'History',       icon: Clock      },
                 ] as { id: ProposalSub; label: string; icon: React.ElementType }[]).map(({ id, label, icon: Icon }) => (
-                  <button key={id} onClick={() => setProposalSub(id)}
-                    role="tab"
-                    aria-selected={proposalSub === id}
+                  <TabTrigger key={id} active={proposalSub === id} onClick={() => setProposalSub(id)}
                     aria-controls={`proposals-panel-${id}`}
                     className={proposalSub === id ? 'tab-pill-active' : 'tab-pill-inactive'}>
                     <Icon size={13} />{label}
-                  </button>
+                  </TabTrigger>
                 ))}
               </div>
               <AnimatePresence mode="wait">

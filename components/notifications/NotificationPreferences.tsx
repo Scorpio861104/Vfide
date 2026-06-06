@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { NotificationPreference, NotificationType, NotificationFrequency, DeliveryChannel, DEFAULT_NOTIFICATION_PREFERENCES as _DEFAULT_NOTIFICATION_PREFERENCES } from '@/config/notification-hub';
 import { Bell, Mail, MessageSquare, Send, Smartphone, ToggleLeft, ToggleRight } from 'lucide-react';
 import { useState } from 'react';
@@ -41,7 +41,7 @@ export function NotificationPreferences({
       [NotificationType.GOVERNANCE]: 'text-purple-400',
       [NotificationType.REWARD]: 'text-yellow-400',
       [NotificationType.ALERT]: 'text-orange-400',
-      [NotificationType.SYSTEM]: 'text-cyan-400',
+      [NotificationType.SYSTEM]: 'text-accent',
       [NotificationType.SOCIAL]: 'text-pink-400',
       [NotificationType.MARKET]: 'text-blue-400',
     };
@@ -64,7 +64,7 @@ export function NotificationPreferences({
       {/* Preferences List */}
       <div className="space-y-2">
         {Object.entries(preferences).map(([type, pref]) => (
-          <motion.div
+          <m.div
             key={type}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -99,18 +99,18 @@ export function NotificationPreferences({
                   )}
                 </button>
 
-                <motion.div
+                <m.div
                   animate={{ rotate: expandedType === type ? 180 : 0 }}
                   className="text-slate-400"
                 >
                   <ChevronDownIcon />
-                </motion.div>
+                </m.div>
               </div>
             </button>
 
             {/* Expanded Content */}
             {expandedType === type && (
-              <motion.div
+              <m.div
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
@@ -222,9 +222,9 @@ export function NotificationPreferences({
                     </div>
                   )}
                 </div>
-              </motion.div>
+              </m.div>
             )}
-          </motion.div>
+          </m.div>
         ))}
       </div>
     </div>

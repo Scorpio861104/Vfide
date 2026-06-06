@@ -16,17 +16,19 @@ export function InsightsTab() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let _cancelled = false;
     fetch('/api/analytics?limit=50')
       .then((r) => r.json())
       .then((data) => setEvents(data.events ?? data.data ?? []))
       .catch(() => setError('Failed to load insights'))
       .finally(() => setLoading(false));
-  }, []);
+    return () => { _cancelled = true; };
+    }, []);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 size={24} className="text-cyan-400 animate-spin" />
+        <Loader2 size={24} className="text-accent animate-spin" />
       </div>
     );
   }
@@ -60,14 +62,14 @@ export function InsightsTab() {
         {Object.entries(byType).map(([type, count]) => (
           <div key={type} className="bg-white/3 border border-white/10 rounded-xl p-4">
             <p className="text-gray-400 text-xs mb-1 capitalize">{type.replace(/_/g, ' ')}</p>
-            <p className="text-2xl font-bold text-cyan-400">{count}</p>
+            <p className="text-2xl font-bold text-accent">{count}</p>
           </div>
         ))}
       </div>
       <div className="space-y-2">
         {events.slice(0, 20).map((e) => (
           <div key={e.id} className="bg-white/3 border border-white/10 rounded-lg p-3 flex items-center gap-3">
-            <p className="text-xs text-cyan-400 capitalize font-medium min-w-0 truncate flex-1">
+            <p className="text-xs text-accent capitalize font-medium min-w-0 truncate flex-1">
               {e.event_type.replace(/_/g, ' ')}
             </p>
             <p className="text-gray-500 text-xs whitespace-nowrap flex-shrink-0">

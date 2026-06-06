@@ -26,7 +26,7 @@ export function ProductGallery({ images, name, compareAtPrice, price }: {
         <div className="flex gap-2 mt-3 overflow-x-auto">
           {images.map((img, i) => (
             <button key={i} onClick={() => setCurrent(i)}
-              className={`w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border-2 ${i === current ? 'border-cyan-400' : 'border-transparent'}`}>
+              className={`w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border-2 ${i === current ? 'border-accent' : 'border-transparent'}`}>
               <img src={img.url} alt="" className="w-full h-full object-cover" />
             </button>
           ))}

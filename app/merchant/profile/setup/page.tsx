@@ -7,8 +7,12 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 import { MerchantProfileWizard } from '@/components/merchant/MerchantProfileWizard';
+import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function MerchantProfileSetupPage() {
+  const { locale } = useLocale();
+  void locale;
+
   const router = useRouter();
 
   return (
@@ -17,7 +21,7 @@ export default function MerchantProfileSetupPage() {
         <div className="container mx-auto max-w-4xl px-4 pb-16">
           <Link
             href="/merchant"
-            className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200"
+            className="mb-6 inline-flex items-center gap-2 text-accent hover:text-accent"
           >
             <ArrowLeft size={16} /> Back to Merchant Hub
           </Link>

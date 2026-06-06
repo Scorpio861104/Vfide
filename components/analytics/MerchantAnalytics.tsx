@@ -10,7 +10,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { TrendingUp, DollarSign, ShoppingCart, Package, Calendar, ArrowUp, ArrowDown } from 'lucide-react';
 import { ExportCSVButton } from '@/components/export/ExportCSVButton';
 import { Numeric } from '@/components/ui/Numeric';
@@ -34,12 +34,14 @@ export function MerchantAnalytics({ merchantAddress }: MerchantAnalyticsProps) {
   const [period, setPeriod] = useState<'7d' | '30d' | '90d'>('30d');
 
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
     fetch(`/api/merchant/analytics?address=${merchantAddress}&period=${period}`)
       .then(r => r.ok ? r.json() : null)
-      .then(d => { setData(d); setLoading(false); })
+      .then(d => { if (cancelled) return; setData(d); setLoading(false); })
       .catch(() => setLoading(false));
-  }, [merchantAddress, period]);
+    return () => { cancelled = true; };
+    }, [merchantAddress, period]);
 
   const exportRows = useMemo(() => {
     if (!data) return [];
@@ -74,7 +76,7 @@ export function MerchantAnalytics({ merchantAddress }: MerchantAnalyticsProps) {
           {(['7d', '30d', '90d'] as const).map(p => (
             <button key={p} onClick={() => setPeriod(p)}
               className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${
-                period === p ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'bg-white/5 text-gray-400 border border-white/10 hover:text-white'
+                period === p ? 'bg-accent/20 text-accent border border-accent/30' : 'bg-white/5 text-gray-400 border border-white/10 hover:text-white'
               }`}>
               {p === '7d' ? '7 Days' : p === '30d' ? '30 Days' : '90 Days'}
             </button>
@@ -114,7 +116,7 @@ export function MerchantAnalytics({ merchantAddress }: MerchantAnalyticsProps) {
       {data.topProducts.length > 0 && (
         <div className="bg-white/3 border border-white/10 rounded-2xl p-6">
           <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-            <Package size={20} className="text-cyan-400" />
+            <Package size={20} className="text-accent" />
             Top Products
           </h3>
           <div className="space-y-3">
@@ -146,7 +148,7 @@ export function MerchantAnalytics({ merchantAddress }: MerchantAnalyticsProps) {
       {data.dailyRevenue.length > 0 && (
         <div className="bg-white/3 border border-white/10 rounded-2xl p-6">
           <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-            <Calendar size={20} className="text-cyan-400" />
+            <Calendar size={20} className="text-accent" />
             Daily Revenue
           </h3>
           <div className="flex items-end gap-1 h-32">
@@ -154,12 +156,12 @@ export function MerchantAnalytics({ merchantAddress }: MerchantAnalyticsProps) {
               const maxAmount = Math.max(...data.dailyRevenue.map(d => d.amount), 1);
               const heightPct = (day.amount / maxAmount) * 100;
               return (
-                <motion.div
+                <m.div
                   key={day.date}
                   initial={{ height: 0 }}
                   animate={{ height: `${heightPct}%` }}
                   transition={{ delay: i * 0.02 }}
-                  className="flex-1 bg-gradient-to-t from-cyan-500/40 to-cyan-400/80 rounded-t min-h-[2px]"
+                  className="flex-1 bg-gradient-to-t from-accent/40 to-accent/80 rounded-t min-h-[2px]"
                   title={`${day.date}: $${day.amount.toFixed(2)}`}
                 />
               );
@@ -183,14 +185,14 @@ function StatCard({ label, value, change, icon: Icon, color }: {
   color: 'cyan' | 'emerald' | 'amber';
 }) {
   const colorMap = {
-    cyan: { bg: 'bg-cyan-500/20', text: 'text-cyan-400' },
+    cyan: { bg: 'bg-accent/20', text: 'text-accent' },
     emerald: { bg: 'bg-emerald-500/20', text: 'text-emerald-400' },
     amber: { bg: 'bg-amber-500/20', text: 'text-amber-400' },
   };
   const c = colorMap[color];
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="bg-white/3 border border-white/10 rounded-2xl p-5"
@@ -209,6 +211,6 @@ function StatCard({ label, value, change, icon: Icon, color }: {
           <span className="text-gray-500 font-normal ml-1">vs prior period</span>
         </div>
       )}
-    </motion.div>
+    </m.div>
   );
 }

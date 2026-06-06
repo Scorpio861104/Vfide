@@ -9,10 +9,10 @@
  *  - M-18 (Seer): Circular delta guard
  *  - L-08 (VFIDEAccessControl): Atomic admin transfer
  */
+import { deployVaultHub } from './utils/deployVaultHub';
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { network } from 'hardhat';
-import { deployVaultHubStack } from './utils/deployVaultHubStack';
 
 let connectionPromise: Promise<any> | null = null;
 
@@ -20,6 +20,10 @@ async function getConnection() {
   connectionPromise ??= network.connect({
     override: {
       allowUnlimitedContractSize: true,
+      // Prague hardfork avoids the EIP-7825 per-tx gas cap of 16M (Osaka default).
+      // Large contract deployments (CardBoundVaultBytecodeProvider ~33KB) require
+      // ~32M+ gas and will fail the cap without this override.
+      hardfork: 'prague',
     },
   });
   return connectionPromise;
@@ -37,12 +41,22 @@ describe('VaultHub (M-11: non-custodial recovery guard)', { concurrency: 1 }, ()
     const token = await TokenStub.deploy();
     await token.waitForDeployment();
 
-    const { vaultHub: hub } = await deployVaultHubStack(
-      ethers,
+    // M-11 uses a RecoveryStubVaultDeployer so ensureVault returns a
+    // RecoveryAcceptingVaultStub that bypasses the vault-internal guardian
+    // preconditions — the test is verifying HUB-layer quorum/delay, not CBV internals.
+    const StubDeployerFact = await ethers.getContractFactory('RecoveryStubVaultDeployer');
+    const stubDeployer = await StubDeployerFact.deploy();
+    await stubDeployer.waitForDeployment();
+
+    const HubFact = await ethers.getContractFactory('VaultHub');
+    const hub = await HubFact.deploy(
       await token.getAddress(),
       ethers.ZeroAddress,
-      dao.address
+      dao.address,
+      await stubDeployer.getAddress()
     );
+    await hub.waitForDeployment();
+    await (await stubDeployer.initHub(await hub.getAddress())).wait();
 
     await (await hub.connect(vaultOwner).ensureVault(vaultOwner.address)).wait();
     const vaultAddr = await hub.vaultOf(vaultOwner.address);
@@ -100,12 +114,20 @@ describe('VaultHub (M-11: non-custodial recovery guard)', { concurrency: 1 }, ()
     const token = await TokenStub.deploy();
     await token.waitForDeployment();
 
-    const { vaultHub: hub } = await deployVaultHubStack(
-      ethers,
+    // Use stub deployer — this test covers hub-layer quorum/delay, not CBV guardian internals
+    const StubDeployerFact = await ethers.getContractFactory('RecoveryStubVaultDeployer');
+    const stubDeployer = await StubDeployerFact.deploy();
+    await stubDeployer.waitForDeployment();
+
+    const HubFact = await ethers.getContractFactory('VaultHub');
+    const hub = await HubFact.deploy(
       await token.getAddress(),
       ethers.ZeroAddress,
-      dao.address
+      dao.address,
+      await stubDeployer.getAddress()
     );
+    await hub.waitForDeployment();
+    await (await stubDeployer.initHub(await hub.getAddress())).wait();
 
     await (await hub.connect(vaultOwner).ensureVault(vaultOwner.address)).wait();
     const vaultAddr = await hub.vaultOf(vaultOwner.address);
@@ -300,20 +322,32 @@ describe('Seer (M-18: circular delta guard)', { concurrency: 1 }, () => {
     const seer = await Seer.deploy(dao.address, ethers.ZeroAddress, ethers.ZeroAddress);
     await seer.waitForDeployment();
 
+    const SeerAutonomousAdminFacetFact = await ethers.getContractFactory('SeerAutonomousAdminFacet');
+    const saAdminFacet = await SeerAutonomousAdminFacetFact.deploy();
+    await saAdminFacet.waitForDeployment();
+
     const SeerAutonomous = await ethers.getContractFactory('SeerAutonomous');
     const autonomous = await SeerAutonomous.deploy(
       dao.address,
       await seer.getAddress(),
-      ethers.ZeroAddress
+      ethers.ZeroAddress,
+      await saAdminFacet.getAddress()
     );
     await autonomous.waitForDeployment();
+
+    // ProofScoreBurnRouter requires non-zero _token (BURN_Zero guard).
+    // Deploy a minimal token stub — the M-18 tests don't actually transfer tokens.
+    const TokenStubFact = await ethers.getContractFactory('TokenStub');
+    const routerToken = await TokenStubFact.deploy();
+    await routerToken.waitForDeployment();
 
     const Router = await ethers.getContractFactory('ProofScoreBurnRouter');
     const router = await Router.deploy(
       await seer.getAddress(),
       sanctum.address,
       burn.address,
-      eco.address
+      eco.address,
+      await routerToken.getAddress()
     );
     await router.waitForDeployment();
 
@@ -368,7 +402,11 @@ describe('Seer (M-18: circular delta guard)', { concurrency: 1 }, () => {
   it('does not punish again when auto restriction is triggered by low score', async () => {
     const { ethers, dao, operator, user, seer, autonomous } = await deploySeerHarness();
 
+    // setOperator has a 48-hour timelock — queue → fast-forward → apply
     await autonomous.connect(dao).setOperator(operator.address, true);
+    await ethers.provider.send('evm_increaseTime', [48 * 60 * 60 + 1]);
+    await ethers.provider.send('evm_mine', []);
+    await autonomous.connect(dao).applyOperatorChange();
     await seer.connect(dao).setOperator(operator.address, true);
 
     // Bring score down to 2900 using bounded DAO updates and cooldown advances.
@@ -404,9 +442,13 @@ describe('Seer (M-18: circular delta guard)', { concurrency: 1 }, () => {
   });
 
   it('does not reduce Seer score when pattern escalation reaches restricted', async () => {
-    const { dao, operator, user, counterparty, seer, autonomous } = await deploySeerHarness();
+    const { ethers, dao, operator, user, counterparty, seer, autonomous } = await deploySeerHarness();
 
+    // setOperator has a 48-hour timelock — queue → fast-forward → apply
     await autonomous.connect(dao).setOperator(operator.address, true);
+    await ethers.provider.send('evm_increaseTime', [48 * 60 * 60 + 1]);
+    await ethers.provider.send('evm_mine', []);
+    await autonomous.connect(dao).applyOperatorChange();
     // Keep score above restrict threshold but below auto-lift threshold so pattern restriction persists.
     await seer.connect(dao).setScore(user.address, 4500, 'stable');
 
