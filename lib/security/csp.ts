@@ -50,6 +50,9 @@ export function getConnectSrcAllowlist(env: NodeJS.ProcessEnv = process.env): st
     'https://*.walletconnect.org',
     'wss://*.walletconnect.com',
     'wss://*.walletconnect.org',
+    // Keep CSP in sync with the public RPC transports configured in lib/wagmi.ts.
+    // Without these origins, Wagmi/RainbowKit can render but chain reads are blocked
+    // by connect-src, making wallet interactions appear unreliable or dead.
     ...DEFAULT_RPC_ORIGINS,
   ]);
 

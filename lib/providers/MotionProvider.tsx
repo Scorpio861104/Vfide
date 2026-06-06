@@ -13,8 +13,13 @@
  * domAnimation covers all patterns used in the shell: HTML/SVG animation,
  * layout, drag, hover, tap, AnimatePresence, useMotionValue, useSpring.
  *
- * `strict` mode enforces that no child accidentally imports `motion` back
- * (it will throw in dev to catch regressions).
+ * NOTE: This provider intentionally does not enable LazyMotion `strict` mode.
+ * The app still contains many route-level imports of `motion` from
+ * framer-motion. Strict mode throws a runtime exception for those imports,
+ * which can put entire interactive pages behind the global error boundary and
+ * make controls such as wallet connect buttons appear dead. Keeping strict off
+ * preserves LazyMotion for components that use `m` while avoiding app-wide
+ * crashes until every legacy `motion` import is migrated.
  */
 'use client';
 
@@ -22,9 +27,5 @@ import { LazyMotion, domAnimation } from 'framer-motion';
 import type { ReactNode } from 'react';
 
 export function MotionProvider({ children }: { children: ReactNode }) {
-  return (
-    <LazyMotion features={domAnimation} strict>
-      {children}
-    </LazyMotion>
-  );
+  return <LazyMotion features={domAnimation}>{children}</LazyMotion>;
 }
