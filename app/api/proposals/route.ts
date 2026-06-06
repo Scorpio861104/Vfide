@@ -80,6 +80,8 @@ function isDatabaseUnavailableError(error: unknown): boolean {
       code === '42703' ||
       message.includes('econnrefused') ||
       message.includes('database query failed') ||
+      message.includes('database_url is required') ||
+      message.includes('allow_dev_db=true') ||
       message.includes('password authentication failed') ||
       message.includes('connect') ||
       message.includes('connection terminated') ||
@@ -293,12 +295,16 @@ export async function GET(request: NextRequest) {
 
     // Graceful degradation for local/offline environments where DB is unavailable.
     if (isDatabaseUnavailableError(error)) {
+      const searchParams = request.nextUrl.searchParams;
+      const parsedLimit = parseStrictIntegerParam(searchParams.get('limit'));
+      const parsedOffset = parseStrictIntegerParam(searchParams.get('offset'));
       return NextResponse.json({
         proposals: [],
         total: 0,
-        limit: 50,
-        offset: 0,
+        limit: parsedLimit === null ? 50 : Math.min(Math.max(1, parsedLimit), MAX_PROPOSALS_LIMIT),
+        offset: parsedOffset === null ? 0 : Math.min(Math.max(0, parsedOffset), MAX_PROPOSALS_OFFSET),
         degraded: true,
+        reason: 'database_unavailable',
       });
     }
 
