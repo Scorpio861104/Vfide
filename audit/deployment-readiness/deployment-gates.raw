@@ -1,0 +1,759 @@
+### package deployment scripts
+build=next build
+typecheck=tsc --noEmit
+typecheck:contracts=tsc -p tsconfig.contracts.json --noEmit
+lint=eslint . --ext .ts,.tsx --cache --cache-location .eslintcache
+validate:env=tsx lib/validateProduction.ts
+validate:production=npm run typecheck && npm run typecheck:contracts && npm run contract:verify:all && npm run check:abi-parity && npm run lint && npm run test:security:all && npm run test:integration && npm run validate:env && npm run check:eip1271
+prebuild=npm run validate:env
+contract:verify:deployment-graph=tsx scripts/verify-full-deployment-graph.ts
+deploy:start-vesting:sepolia=hardhat run contracts/scripts/start-vesting.ts --network sepolia
+deploy:start-vesting:mainnet=hardhat run contracts/scripts/start-vesting.ts --network mainnet
+deploy:arm-handover:sepolia=hardhat run contracts/scripts/arm-handover.ts --network sepolia
+deploy:arm-handover:mainnet=hardhat run contracts/scripts/arm-handover.ts --network mainnet
+deploy:full=hardhat run scripts/deploy-full.ts --network
+deploy:phase1=hardhat run contracts/scripts/deploy-phase1.ts --network
+deploy:phase2=hardhat run scripts/future/deploy-phase2.ts --network
+deploy:phase3=hardhat run scripts/future/deploy-phase3.ts --network
+deploy:phase4=hardhat run scripts/future/deploy-phase4.ts --network
+deploy:phase5=hardhat run scripts/future/deploy-phase5.ts --network
+validate:phase1:deploy=hardhat run scripts/validate-phase1-dry-run.ts
+test:onchain:deploy-integration=VFIDE_RUN_DEPLOY_INTEGRATION=true HARDHAT_ALLOW_UNLIMITED_CONTRACT_SIZE=true npx hardhat test test/contracts/DeployFullIntegration.test.ts
+test:ci=jest --coverage --ci && npm run -s test:signatures && npm run -s contract:verify:frontend-guardrails && npm run -s contract:verify:frontend-abi-parity
+build:storybook=storybook build
+ops:release:stop-go=tsx scripts/verify-release-stop-go.ts
+security:gate=bash scripts/security-gate.sh
+validate:deploy=tsx scripts/validate-deployment.ts --force-continue
+deploy:full:apply=hardhat run scripts/apply-full.ts --network
+validate:testnet=hardhat run scripts/validate-testnet-ready.ts --network
+validate:frontend=tsx scripts/validate-frontend-ready.ts
+\n### env validator refs
+.env.example:70:# NEXT_PUBLIC_MOONPAY_API_KEY=pk_live_...
+.env.example:71:# NEXT_PUBLIC_TRANSAK_API_KEY=...
+.env.example:72:# NEXT_PUBLIC_RAMP_API_KEY=...
+.env.example:81:# NEXT_PUBLIC_VAPID_PUBLIC_KEY=your_vapid_public_key
+.env.example:101:# Council Members (exactly 5 required for AdminMultiSig)
+.env.example:111:# Pre-deployed contract addresses required by VFIDEToken constructor.
+.env.example:166:NEXT_PUBLIC_WEBSOCKET_URL=ws://localhost:8080
+.env.example:169:NEXT_PUBLIC_FAUCET_ADDRESS=0x_DEPLOYED_FAUCET_CONTRACT_ADDRESS
+.env.example:170:NEXT_PUBLIC_FRAUD_REGISTRY_ADDRESS=0x_DEPLOYED_FRAUD_REGISTRY_ADDRESS
+.env.example:180:NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS=0x_DEPLOYED_VFIDE_TOKEN_ADDRESS
+.env.example:181:NEXT_PUBLIC_VAULT_HUB_ADDRESS=0x_DEPLOYED_VAULT_HUB_ADDRESS
+.env.example:182:NEXT_PUBLIC_SEER_ADDRESS=0x_DEPLOYED_SEER_ADDRESS
+.env.example:183:NEXT_PUBLIC_MERCHANT_PORTAL_ADDRESS=0x_DEPLOYED_MERCHANT_PORTAL_ADDRESS
+.env.example:184:NEXT_PUBLIC_MERCHANT_PORTAL_VIEWER_ADDRESS=0x_DEPLOYED_MERCHANT_PORTAL_VIEWER_ADDRESS
+.env.example:185:NEXT_PUBLIC_ADMIN_MULTISIG_ADDRESS=0x_DEPLOYED_ADMIN_MULTISIG_ADDRESS
+.env.example:186:NEXT_PUBLIC_BURN_ROUTER_ADDRESS=0x_DEPLOYED_BURN_ROUTER_ADDRESS
+.env.example:187:NEXT_PUBLIC_DAO_ADDRESS=0x_DEPLOYED_DAO_ADDRESS
+.env.example:188:NEXT_PUBLIC_DAO_TIMELOCK_ADDRESS=0x_DEPLOYED_DAO_TIMELOCK_ADDRESS
+.env.example:189:NEXT_PUBLIC_FEE_DISTRIBUTOR_ADDRESS=0x_DEPLOYED_FEE_DISTRIBUTOR_ADDRESS
+.env.example:190:NEXT_PUBLIC_PROOF_LEDGER_ADDRESS=0x_DEPLOYED_PROOF_LEDGER_ADDRESS
+.env.example:192:NEXT_PUBLIC_FLASH_LOAN_ADDRESS=0x_DEPLOYED_FLASH_LOAN_ADDRESS
+.env.example:193:NEXT_PUBLIC_TERM_LOAN_ADDRESS=0x_DEPLOYED_TERM_LOAN_ADDRESS
+.env.example:195:NEXT_PUBLIC_GOVERNANCE_HOOKS_ADDRESS=0x_DEPLOYED_GOVERNANCE_HOOKS_ADDRESS
+.env.example:196:NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS=0x_DEPLOYED_ECOSYSTEM_VAULT_ADDRESS
+.env.example:213:NEXT_PUBLIC_COMMERCE_ESCROW_ADDRESS=0x_DEPLOYED_COMMERCE_ESCROW_ADDRESS
+.env.example:214:NEXT_PUBLIC_DEV_VAULT_ADDRESS=0x_DEPLOYED_DEV_VAULT_ADDRESS
+.env.example:215:NEXT_PUBLIC_DUTY_DISTRIBUTOR_ADDRESS=0x_DEPLOYED_DUTY_DISTRIBUTOR_ADDRESS
+.env.example:216:NEXT_PUBLIC_ECOSYSTEM_VAULT_VIEW_ADDRESS=0x_DEPLOYED_ECOSYSTEM_VAULT_VIEW_ADDRESS
+.env.example:217:NEXT_PUBLIC_ECO_TREASURY_VAULT_ADDRESS=0x_DEPLOYED_ECO_TREASURY_VAULT_ADDRESS
+.env.example:218:NEXT_PUBLIC_EMERGENCY_BREAKER_ADDRESS=0x_DEPLOYED_EMERGENCY_BREAKER_ADDRESS
+.env.example:219:NEXT_PUBLIC_GUARDIAN_LOCK_ADDRESS=0x_DEPLOYED_GUARDIAN_LOCK_ADDRESS
+.env.example:220:NEXT_PUBLIC_GUARDIAN_REGISTRY_ADDRESS=0x_DEPLOYED_GUARDIAN_REGISTRY_ADDRESS
+.env.example:221:NEXT_PUBLIC_LIQUIDITY_INCENTIVES_ADDRESS=0x_DEPLOYED_LIQUIDITY_INCENTIVES_ADDRESS
+.env.example:222:NEXT_PUBLIC_MERCHANT_REGISTRY_ADDRESS=0x_DEPLOYED_MERCHANT_REGISTRY_ADDRESS
+.env.example:223:NEXT_PUBLIC_VFIDE_ACCESS_CONTROL_ADDRESS=0x_DEPLOYED_VFIDE_ACCESS_CONTROL_ADDRESS
+.env.example:224:NEXT_PUBLIC_OWNER_CONTROL_PANEL_ADDRESS=0x_DEPLOYED_OWNER_CONTROL_PANEL_ADDRESS
+.env.example:225:NEXT_PUBLIC_PANIC_GUARD_ADDRESS=0x_DEPLOYED_PANIC_GUARD_ADDRESS
+.env.example:226:NEXT_PUBLIC_PAYROLL_MANAGER_ADDRESS=0x_DEPLOYED_PAYROLL_MANAGER_ADDRESS
+.env.example:227:NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS=0x_DEPLOYED_SANCTUM_VAULT_ADDRESS
+.env.example:228:NEXT_PUBLIC_SEER_SOCIAL_ADDRESS=0x_DEPLOYED_SEER_SOCIAL_ADDRESS
+.env.example:229:NEXT_PUBLIC_SEER_VIEW_ADDRESS=0x_DEPLOYED_SEER_VIEW_ADDRESS
+.env.example:230:NEXT_PUBLIC_STABLECOIN_REGISTRY_ADDRESS=0x_DEPLOYED_STABLECOIN_REGISTRY_ADDRESS
+.env.example:231:NEXT_PUBLIC_TRUST_GATEWAY_ADDRESS=0x_DEPLOYED_TRUST_GATEWAY_ADDRESS
+.env.example:232:NEXT_PUBLIC_VAULT_RECOVERY_CLAIM_ADDRESS=0x_DEPLOYED_VAULT_RECOVERY_CLAIM_ADDRESS
+.env.example:233:NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS=0x_DEPLOYED_VAULT_REGISTRY_ADDRESS
+.env.example:239:NEXT_PUBLIC_ENABLE_AGENT=false
+.env.example:240:NEXT_PUBLIC_ENABLE_BRIDGE=false
+.env.example:241:NEXT_PUBLIC_ENABLE_ANALYTICS=false
+.env.example:242:NEXT_PUBLIC_ENABLE_CHAT=false
+.env.example:243:NEXT_PUBLIC_ENABLE_DEMO_MODE=false
+.env.example:244:NEXT_PUBLIC_ENABLE_FAUCET=false
+.env.example:245:NEXT_PUBLIC_ENABLE_GOVERNANCE=false
+.env.example:246:NEXT_PUBLIC_ENABLE_ESCROW=false
+.env.example:247:NEXT_PUBLIC_ENABLE_FLASHLOANS=false
+.env.example:248:NEXT_PUBLIC_ENABLE_LENDING=false
+.env.example:249:NEXT_PUBLIC_ENABLE_MULTISIG=false
+.env.example:250:NEXT_PUBLIC_ENABLE_PAPER_WALLET=false
+.env.example:251:NEXT_PUBLIC_ENABLE_PERSISTENT_SESSION_KEYS=false
+.env.example:252:NEXT_PUBLIC_ENABLE_REPORTING=false
+.env.example:253:NEXT_PUBLIC_ENABLE_STREAMING=false
+.env.example:254:NEXT_PUBLIC_ENABLE_SW=false
+.env.example:255:NEXT_PUBLIC_ENABLE_SUBSCRIPTIONS=false
+.env.example:256:NEXT_PUBLIC_ENABLE_TIME_LOCKS=false
+.env.example:257:NEXT_PUBLIC_ENABLE_BETA_FEATURES=false
+.env.example:258:NEXT_PUBLIC_FUTURE_FEATURES_ENABLED=false
+.env.example:259:NEXT_PUBLIC_ENABLE_SANCTUM=false
+.env.example:263:NEXT_PUBLIC_ENABLE_SOCIAL_FEED=false
+.env.example:264:NEXT_PUBLIC_ENABLE_SOCIAL_MESSAGING=false
+.env.example:265:NEXT_PUBLIC_ENABLE_SOCIAL_PAYMENTS=false
+.env.example:266:NEXT_PUBLIC_ENABLE_STORIES=false
+.env.example:267:NEXT_PUBLIC_ENABLE_ENDORSEMENTS=false
+.env.example:268:NEXT_PUBLIC_ENABLE_MARKETPLACE=false
+.env.example:269:NEXT_PUBLIC_ENABLE_STOREFRONT=false
+.env.example:270:NEXT_PUBLIC_ENABLE_OFFLINE_POS=false
+.env.example:271:NEXT_PUBLIC_ENABLE_BUDGETS=false
+.env.example:272:NEXT_PUBLIC_ENABLE_TAXES=false
+.env.example:273:NEXT_PUBLIC_ENABLE_STEALTH_ADDRESSES=false
+.env.example:274:NEXT_PUBLIC_ENABLE_HARDWARE_WALLET=false
+.env.example:275:NEXT_PUBLIC_ENABLE_SEER_SERVICE=false
+.env.example:276:NEXT_PUBLIC_ENABLE_SEER_ACADEMY=false
+.env.example:277:NEXT_PUBLIC_ENABLE_FLASHLOAN=false
+.env.example:278:NEXT_PUBLIC_ENABLE_WHATSAPP_RECEIPTS=false
+.env.example:279:NEXT_PUBLIC_ENABLE_CSV_EXPORT=false
+.env.example:280:NEXT_PUBLIC_ENABLE_THEME_MANAGER=false
+.env.example:281:NEXT_PUBLIC_ENABLE_THEME_SHOWCASE=false
+.env.example:282:NEXT_PUBLIC_ENABLE_PIE_MENU=false
+.env.example:285:# NEXT_PUBLIC_FRONTEND_ONLY=false
+.env.example:287:# WalletConnect Project ID (required for mobile wallet connections)
+.env.example:289:NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_walletconnect_project_id_here
+.env.production.example:11:# Canonical server-side flag: FRONTEND_SELF_CONTAINED (read by lib/contracts.ts and lib/validateProduction.ts)
+.env.production.example:16:NEXT_PUBLIC_APP_NAME=VFIDE
+.env.production.example:17:NEXT_PUBLIC_APP_URL=https://vfide.io
+.env.production.example:21:NEXT_PUBLIC_CHAIN_ID=8453
+.env.production.example:22:NEXT_PUBLIC_RPC_URL=https://mainnet.base.org
+.env.production.example:23:NEXT_PUBLIC_EXPLORER_URL=https://basescan.org
+.env.production.example:24:NEXT_PUBLIC_IS_TESTNET=false
+.env.production.example:45:# WalletConnect/Wagmi (Web3 Wallet Integration)
+.env.production.example:47:NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_walletconnect_project_id
+.env.production.example:55:NEXT_PUBLIC_DAO_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:56:# DEPRECATED: use NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS (below) — kept for backwards compatibility
+.env.production.example:57:NEXT_PUBLIC_TOKEN_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:58:# DEPRECATED: use NEXT_PUBLIC_DAO_TIMELOCK_ADDRESS (below) — kept for backwards compatibility
+.env.production.example:59:NEXT_PUBLIC_TIMELOCK_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:61:NEXT_PUBLIC_GOVERNOR_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:62:NEXT_PUBLIC_TREASURY_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:63:# DEPRECATED: use NEXT_PUBLIC_COUNCIL_MANAGER_ADDRESS (below) — kept for backwards compatibility
+.env.production.example:64:NEXT_PUBLIC_COUNCIL_MANAGER_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:65:NEXT_PUBLIC_OWNER_CONTROL_PANEL_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:66:NEXT_PUBLIC_PROOF_LEDGER_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:67:NEXT_PUBLIC_ESCROW_MANAGER_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:68:NEXT_PUBLIC_FEE_DISTRIBUTOR_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:69:# NEXT_PUBLIC_WITHDRAWAL_QUEUE_ADDRESS removed: WithdrawalQueue.sol deleted per B-11 (dead code cleanup)
+.env.production.example:72:NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:73:NEXT_PUBLIC_VAULT_HUB_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:74:NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:75:NEXT_PUBLIC_VAULT_RECOVERY_CLAIM_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:76:NEXT_PUBLIC_VAULT_IMPLEMENTATION=cardbound
+.env.production.example:79:NEXT_PUBLIC_SEER_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:80:NEXT_PUBLIC_SEER_AUTONOMOUS_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:81:NEXT_PUBLIC_SEER_GUARDIAN_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:82:NEXT_PUBLIC_SEER_SOCIAL_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:83:NEXT_PUBLIC_SEER_VIEW_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:86:NEXT_PUBLIC_DAO_TIMELOCK_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:87:NEXT_PUBLIC_COUNCIL_ELECTION_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:88:NEXT_PUBLIC_COUNCIL_SALARY_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:91:NEXT_PUBLIC_BADGE_REGISTRY_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:92:NEXT_PUBLIC_BADGE_NFT_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:95:NEXT_PUBLIC_VFIDE_COMMERCE_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:96:NEXT_PUBLIC_MERCHANT_PORTAL_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:97:NEXT_PUBLIC_COMMERCE_ESCROW_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:98:NEXT_PUBLIC_TRUST_GATEWAY_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:99:NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:102:NEXT_PUBLIC_TERM_LOAN_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:103:NEXT_PUBLIC_FLASH_LOAN_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:106:NEXT_PUBLIC_GUARDIAN_REGISTRY_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:107:NEXT_PUBLIC_GUARDIAN_LOCK_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:108:NEXT_PUBLIC_PANIC_GUARD_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:109:NEXT_PUBLIC_EMERGENCY_BREAKER_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:110:NEXT_PUBLIC_FRAUD_REGISTRY_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:113:NEXT_PUBLIC_BURN_ROUTER_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:114:NEXT_PUBLIC_DUTY_DISTRIBUTOR_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:115:NEXT_PUBLIC_LIQUIDITY_INCENTIVES_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:116:NEXT_PUBLIC_STABLECOIN_REGISTRY_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:119:NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:120:NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:121:NEXT_PUBLIC_ECOSYSTEM_VAULT_VIEW_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:122:NEXT_PUBLIC_DEV_VAULT_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:125:NEXT_PUBLIC_PAYROLL_MANAGER_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:128:NEXT_PUBLIC_FAUCET_ADDRESS=0x0000000000000000000000000000000000000000
+.env.production.example:131:# Both are read by lib/contracts.ts and lib/validateProduction.ts via `?? process.env.NEXT_PUBLIC_FRONTEND_ONLY`.
+.env.production.example:132:NEXT_PUBLIC_FRONTEND_ONLY=false
+.env.production.example:151:NEXT_PUBLIC_SENTRY_DSN=https://your-sentry-dsn@sentry.io/project-id
+.env.production.example:152:NEXT_PUBLIC_SENTRY_ENVIRONMENT=production
+.env.production.example:157:NEXT_PUBLIC_GA_MEASUREMENT_ID=G-XXXXXXXXXX
+.env.production.example:177:NEXT_PUBLIC_WEBSOCKET_URL=wss://ws.vfide.io
+.env.production.example:178:NEXT_PUBLIC_WEBSOCKET_PATH=/socket.io
+.env.production.example:181:NEXT_PUBLIC_API_URL=https://api.vfide.io
+.env.production.example:182:NEXT_PUBLIC_API_TIMEOUT=30000
+.env.production.example:185:NEXT_PUBLIC_ENABLE_CHAT=true
+.env.production.example:186:NEXT_PUBLIC_ENABLE_GOVERNANCE=true
+.env.production.example:187:NEXT_PUBLIC_ENABLE_COUNCIL=true
+.env.production.example:188:NEXT_PUBLIC_ENABLE_BADGES=true
+.env.production.example:189:NEXT_PUBLIC_ENABLE_ANALYTICS=true
+.env.production.example:192:NEXT_PUBLIC_GA_MEASUREMENT_ID=
+.env.production.example:193:NEXT_PUBLIC_SENTRY_ENVIRONMENT=production
+.env.production.example:196:NEXT_PUBLIC_DISCORD_URL=https://discord.gg/vfide
+.env.production.example:197:NEXT_PUBLIC_TWITTER_URL=https://twitter.com/vfide
+.env.production.example:198:NEXT_PUBLIC_GITHUB_URL=https://github.com/Scorpio861104/Vfide
+.env.production.example:201:NEXT_PUBLIC_ENABLE_PWA=true
+.env.production.example:202:NEXT_PUBLIC_ENABLE_SERVICE_WORKER=true
+.env.production.example:205:NEXT_PUBLIC_CSP_ENABLED=true
+.env.production.example:206:NEXT_PUBLIC_RATE_LIMIT_ENABLED=true
+.env.staging.example:11:NEXT_PUBLIC_APP_NAME=VFIDE (Staging)
+.env.staging.example:12:NEXT_PUBLIC_APP_URL=https://staging.vfide.io
+.env.staging.example:15:NEXT_PUBLIC_CHAIN_ID=84532
+.env.staging.example:16:NEXT_PUBLIC_RPC_URL=https://sepolia.base.org
+.env.staging.example:17:NEXT_PUBLIC_EXPLORER_URL=https://sepolia.basescan.org
+.env.staging.example:18:NEXT_PUBLIC_IS_TESTNET=true
+.env.staging.example:38:# WalletConnect/Wagmi (Web3 Wallet Integration)
+.env.staging.example:40:NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_walletconnect_project_id
+.env.staging.example:47:NEXT_PUBLIC_DAO_ADDRESS=0x0000000000000000000000000000000000000000
+.env.staging.example:48:NEXT_PUBLIC_TOKEN_ADDRESS=0x0000000000000000000000000000000000000000
+.env.staging.example:49:NEXT_PUBLIC_TIMELOCK_ADDRESS=0x0000000000000000000000000000000000000000
+.env.staging.example:50:NEXT_PUBLIC_GOVERNOR_ADDRESS=0x0000000000000000000000000000000000000000
+.env.staging.example:51:NEXT_PUBLIC_TREASURY_ADDRESS=0x0000000000000000000000000000000000000000
+.env.staging.example:52:NEXT_PUBLIC_BADGE_REGISTRY_ADDRESS=0x0000000000000000000000000000000000000000
+.env.staging.example:53:NEXT_PUBLIC_COUNCIL_MANAGER_ADDRESS=0x0000000000000000000000000000000000000000
+.env.staging.example:54:NEXT_PUBLIC_OWNER_CONTROL_PANEL_ADDRESS=0x0000000000000000000000000000000000000000
+.env.staging.example:55:NEXT_PUBLIC_PROOF_LEDGER_ADDRESS=0x0000000000000000000000000000000000000000
+.env.staging.example:56:NEXT_PUBLIC_ESCROW_MANAGER_ADDRESS=0x0000000000000000000000000000000000000000
+.env.staging.example:57:NEXT_PUBLIC_FEE_DISTRIBUTOR_ADDRESS=0x0000000000000000000000000000000000000000
+.env.staging.example:58:# NEXT_PUBLIC_WITHDRAWAL_QUEUE_ADDRESS removed: WithdrawalQueue.sol deleted per B-11 (dead code cleanup)
+.env.staging.example:60:NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS=0x0000000000000000000000000000000000000000
+.env.staging.example:61:NEXT_PUBLIC_DAO_TIMELOCK_ADDRESS=0x0000000000000000000000000000000000000000
+.env.staging.example:62:NEXT_PUBLIC_VAULT_HUB_ADDRESS=0x0000000000000000000000000000000000000000
+.env.staging.example:63:NEXT_PUBLIC_SEER_ADDRESS=0x0000000000000000000000000000000000000000
+.env.staging.example:64:NEXT_PUBLIC_SEER_VIEW_ADDRESS=0x0000000000000000000000000000000000000000
+.env.staging.example:65:NEXT_PUBLIC_SEER_AUTONOMOUS_ADDRESS=0x0000000000000000000000000000000000000000
+.env.staging.example:66:NEXT_PUBLIC_SEER_GUARDIAN_ADDRESS=0x0000000000000000000000000000000000000000
+.env.staging.example:67:NEXT_PUBLIC_SEER_SOCIAL_ADDRESS=0x0000000000000000000000000000000000000000
+.env.staging.example:68:NEXT_PUBLIC_MERCHANT_PORTAL_ADDRESS=0x0000000000000000000000000000000000000000
+.env.staging.example:69:NEXT_PUBLIC_BURN_ROUTER_ADDRESS=0x0000000000000000000000000000000000000000
+.env.staging.example:70:NEXT_PUBLIC_FRAUD_REGISTRY_ADDRESS=0x0000000000000000000000000000000000000000
+.env.staging.example:71:NEXT_PUBLIC_FAUCET_ADDRESS=0x0000000000000000000000000000000000000000
+.env.staging.example:72:NEXT_PUBLIC_FLASH_LOAN_ADDRESS=0x0000000000000000000000000000000000000000
+.env.staging.example:73:NEXT_PUBLIC_TERM_LOAN_ADDRESS=0x0000000000000000000000000000000000000000
+.env.staging.example:75:NEXT_PUBLIC_GOVERNANCE_HOOKS_ADDRESS=0x0000000000000000000000000000000000000000
+.env.staging.example:94:NEXT_PUBLIC_SENTRY_DSN=https://your-sentry-dsn@sentry.io/project-id
+.env.staging.example:95:NEXT_PUBLIC_SENTRY_ENVIRONMENT=staging
+.env.staging.example:100:NEXT_PUBLIC_GA_MEASUREMENT_ID=G-XXXXXXXXXX
+.env.staging.example:120:NEXT_PUBLIC_WEBSOCKET_URL=wss://ws-staging.vfide.io
+.env.staging.example:121:NEXT_PUBLIC_WEBSOCKET_PATH=/socket.io
+.env.staging.example:124:NEXT_PUBLIC_API_URL=https://api-staging.vfide.io
+.env.staging.example:125:NEXT_PUBLIC_API_TIMEOUT=30000
+.env.staging.example:128:NEXT_PUBLIC_ENABLE_CHAT=true
+.env.staging.example:129:NEXT_PUBLIC_ENABLE_GOVERNANCE=true
+.env.staging.example:130:NEXT_PUBLIC_ENABLE_COUNCIL=true
+.env.staging.example:131:NEXT_PUBLIC_ENABLE_BADGES=true
+.env.staging.example:132:NEXT_PUBLIC_ENABLE_ANALYTICS=true
+.env.staging.example:133:NEXT_PUBLIC_ENABLE_DEBUG_TOOLS=true
+.env.staging.example:136:NEXT_PUBLIC_DISCORD_URL=https://discord.gg/vfide
+.env.staging.example:137:NEXT_PUBLIC_TWITTER_URL=https://twitter.com/vfide
+.env.staging.example:138:NEXT_PUBLIC_GITHUB_URL=https://github.com/Scorpio861104/Vfide
+.env.staging.example:141:NEXT_PUBLIC_ENABLE_PWA=false
+.env.staging.example:142:NEXT_PUBLIC_ENABLE_SERVICE_WORKER=false
+.env.staging.example:145:NEXT_PUBLIC_CSP_ENABLED=true
+.env.staging.example:146:NEXT_PUBLIC_RATE_LIMIT_ENABLED=true
+README.md:44:NEXT_PUBLIC_IS_TESTNET=true
+README.md:45:NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id
+README.md:52:These values are required for a safe production deployment and are validated by startup and production checks:
+README.md:58:- `APP_ORIGIN` and `NEXT_PUBLIC_APP_URL` must be set to your canonical app origin.
+README.md:73:   - WalletConnect Project ID
+README.md:85:   # Fill in all required values
+README.md:96:   - If `APP_ORIGIN` / `NEXT_PUBLIC_APP_URL` are unset on Vercel, validation infers them from `VERCEL_PROJECT_PRODUCTION_URL`, then `VERCEL_BRANCH_URL`, then `VERCEL_URL`.
+README.md:97:   - Explicitly setting `APP_ORIGIN` and `NEXT_PUBLIC_APP_URL` is still recommended for canonical production domains.
+app/api/health/route.ts:23:  if (process.env.NODE_ENV === 'production') {
+app/api/health/route.ts:33:  const appVersion = process.env.npm_package_version || '1.2.0';
+app/api/health/route.ts:40:    environment: process.env.NODE_ENV || 'development',
+app/api/health/route.ts:57: * Check if required environment variables are set
+app/api/health/route.ts:60:  const required = [
+app/api/health/route.ts:61:    'NEXT_PUBLIC_CHAIN_ID',
+app/api/health/route.ts:62:    'NEXT_PUBLIC_CONTRACT_ADDRESS', // Added to .env.local.example - use 0x0 for dev
+app/api/health/route.ts:63:    'NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID'
+app/api/health/route.ts:66:  const missing = required.filter(key => {
+app/api/health/route.ts:67:    const value = process.env[key];
+docs/guides/VERCEL-DEPLOYMENT-GUIDE.md:17:# WalletConnect (REQUIRED)
+docs/guides/VERCEL-DEPLOYMENT-GUIDE.md:18:NEXT_PUBLIC_WAGMI_PROJECT_ID=<your_walletconnect_project_id>
+docs/guides/VERCEL-DEPLOYMENT-GUIDE.md:21:NEXT_PUBLIC_CHAIN_ID=84532
+docs/guides/VERCEL-DEPLOYMENT-GUIDE.md:22:NEXT_PUBLIC_RPC_URL=https://sepolia.base.org
+docs/guides/VERCEL-DEPLOYMENT-GUIDE.md:69:### Get WalletConnect Project ID
+docs/guides/VERCEL-DEPLOYMENT-GUIDE.md:75:5. Add to Vercel: `NEXT_PUBLIC_WAGMI_PROJECT_ID`
+docs/guides/VERCEL-DEPLOYMENT-GUIDE.md:81:NEXT_PUBLIC_CHAIN_ID=84532
+docs/guides/VERCEL-DEPLOYMENT-GUIDE.md:82:NEXT_PUBLIC_RPC_URL=https://sepolia.base.org
+docs/guides/VERCEL-DEPLOYMENT-GUIDE.md:87:NEXT_PUBLIC_CHAIN_ID=8453
+docs/guides/VERCEL-DEPLOYMENT-GUIDE.md:88:NEXT_PUBLIC_RPC_URL=https://mainnet.base.org
+docs/guides/VERCEL-DEPLOYMENT-GUIDE.md:102:- [ ] Set `NEXT_PUBLIC_WAGMI_PROJECT_ID` in Vercel
+docs/guides/VERCEL-DEPLOYMENT-GUIDE.md:103:- [ ] Set `NEXT_PUBLIC_CHAIN_ID` in Vercel
+docs/guides/VERCEL-DEPLOYMENT-GUIDE.md:104:- [ ] Set `NEXT_PUBLIC_RPC_URL` in Vercel
+docs/guides/VERCEL-DEPLOYMENT-GUIDE.md:176:   <script>self.__next_f.push([1,"...NEXT_PUBLIC_CHAIN_ID:\"84532\"..."])</script>
+docs/guides/VERCEL-DEPLOYMENT-GUIDE.md:179:### WalletConnect Not Working
+docs/guides/VERCEL-DEPLOYMENT-GUIDE.md:182:1. `NEXT_PUBLIC_WAGMI_PROJECT_ID` is set
+docs/guides/VERCEL-DEPLOYMENT-GUIDE.md:184:3. Domain is whitelisted in WalletConnect dashboard
+docs/guides/VERCEL-DEPLOYMENT-GUIDE.md:190:### Safe to Expose (NEXT_PUBLIC_*)
+docs/guides/VERCEL-DEPLOYMENT-GUIDE.md:194:✅ WalletConnect Project ID  
+docs/guides/VERCEL-DEPLOYMENT-GUIDE.md:204:**Rule:** Only use `NEXT_PUBLIC_*` prefix for public data. Browser can see all these values.
+docs/guides/VERCEL-DEPLOYMENT-GUIDE.md:233:- [WalletConnect Cloud](https://cloud.walletconnect.com/)
+docs/guides/VERCEL-DEPLOYMENT-GUIDE.md:242:2. Created `.env.local.example` with all required vars
+docs/guides/VERCEL-DEPLOYMENT-GUIDE.md:252:1. Set required env vars in Vercel dashboard
+lib/env.ts:17:// Define the schema for all required and optional environment variables
+lib/env.ts:20:  NEXT_PUBLIC_NETWORK: z.enum(['base-sepolia', 'base', 'zksync', 'localhost']).default('base-sepolia'),
+lib/env.ts:21:  NEXT_PUBLIC_CHAIN_ID: z.coerce.number().int().positive().default(84532),
+lib/env.ts:22:  NEXT_PUBLIC_DEPLOYMENT_CHAIN_ID: z.coerce.number().int().positive().optional(),
+lib/env.ts:23:  NEXT_PUBLIC_RPC_URL: z.string().url().default('https://sepolia.base.org'),
+lib/env.ts:24:  NEXT_PUBLIC_IS_TESTNET: z.string().default('true').transform(v => v !== 'false'),
+lib/env.ts:25:  NEXT_PUBLIC_DEFAULT_CHAIN: z.string().default('base-sepolia'),
+lib/env.ts:26:  NEXT_PUBLIC_BASE_SEPOLIA_RPC: z.string().url().default('https://sepolia.base.org'),
+lib/env.ts:29:  NEXT_PUBLIC_API_BASE_URL: z.string().url().optional(),
+lib/env.ts:30:  NEXT_PUBLIC_APP_URL: z.string().url().optional(),
+lib/env.ts:31:  NEXT_PUBLIC_DOCS_URL: z.string().url().optional(),
+lib/env.ts:32:  NEXT_PUBLIC_EXPLORER_URL: z.string().url().default('https://sepolia.basescan.org'),
+lib/env.ts:35:  NEXT_PUBLIC_WS_URL: z.string().optional(),
+lib/env.ts:38:  NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS: optionalEthAddress,
+lib/env.ts:41:  NEXT_PUBLIC_DAO_ADDRESS: optionalEthAddress,
+lib/env.ts:42:  NEXT_PUBLIC_DAO_TIMELOCK_ADDRESS: optionalEthAddress,
+lib/env.ts:43:  NEXT_PUBLIC_COUNCIL_ELECTION_ADDRESS: optionalEthAddress,
+lib/env.ts:44:  NEXT_PUBLIC_COUNCIL_SALARY_ADDRESS: optionalEthAddress,
+lib/env.ts:47:  NEXT_PUBLIC_VAULT_HUB_ADDRESS: optionalEthAddress,
+lib/env.ts:48:  NEXT_PUBLIC_VAULT_IMPLEMENTATION: z.literal('cardbound').default('cardbound'),
+lib/env.ts:49:  NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS: optionalEthAddress,
+lib/env.ts:50:  NEXT_PUBLIC_DEV_VAULT_ADDRESS: optionalEthAddress,
+lib/env.ts:51:  NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS: optionalEthAddress,
+lib/env.ts:52:  NEXT_PUBLIC_ECOSYSTEM_VAULT_VIEW_ADDRESS: optionalEthAddress,
+lib/env.ts:53:  NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS: optionalEthAddress,
+lib/env.ts:54:  NEXT_PUBLIC_VAULT_RECOVERY_CLAIM_ADDRESS: optionalEthAddress,
+lib/env.ts:58:  NEXT_PUBLIC_SEER_ADDRESS: optionalEthAddress,
+lib/env.ts:59:  NEXT_PUBLIC_PROOF_SCORE_ADDRESS: optionalEthAddress,
+lib/env.ts:60:  NEXT_PUBLIC_PROOF_LEDGER_ADDRESS: optionalEthAddress,
+lib/env.ts:61:  NEXT_PUBLIC_TRUST_GATEWAY_ADDRESS: optionalEthAddress,
+lib/env.ts:66:  NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS_8453: optionalEthAddress,
+lib/env.ts:67:  NEXT_PUBLIC_VAULT_HUB_ADDRESS_8453: optionalEthAddress,
+lib/env.ts:68:  NEXT_PUBLIC_SEER_ADDRESS_8453: optionalEthAddress,
+lib/env.ts:71:  NEXT_PUBLIC_SECURITY_HUB_ADDRESS: optionalEthAddress,
+lib/env.ts:72:  NEXT_PUBLIC_GUARDIAN_REGISTRY_ADDRESS: optionalEthAddress,
+lib/env.ts:73:  NEXT_PUBLIC_GUARDIAN_LOCK_ADDRESS: optionalEthAddress,
+lib/env.ts:74:  NEXT_PUBLIC_PANIC_GUARD_ADDRESS: optionalEthAddress,
+lib/env.ts:75:  NEXT_PUBLIC_EMERGENCY_BREAKER_ADDRESS: optionalEthAddress,
+lib/env.ts:76:  NEXT_PUBLIC_OWNER_CONTROL_PANEL_ADDRESS: optionalEthAddress,
+lib/env.ts:79:  NEXT_PUBLIC_BURN_ROUTER_ADDRESS: optionalEthAddress,
+lib/env.ts:80:  NEXT_PUBLIC_PAYROLL_MANAGER_ADDRESS: optionalEthAddress,
+lib/env.ts:81:  NEXT_PUBLIC_LIQUIDITY_INCENTIVES_ADDRESS: optionalEthAddress,
+lib/env.ts:82:  NEXT_PUBLIC_DUTY_DISTRIBUTOR_ADDRESS: optionalEthAddress,
+lib/env.ts:83:  NEXT_PUBLIC_FEE_DISTRIBUTOR_ADDRESS: optionalEthAddress,
+lib/env.ts:86:  NEXT_PUBLIC_VFIDE_ETH_LP: optionalEthAddress,
+lib/env.ts:87:  NEXT_PUBLIC_VFIDE_USDC_LP: optionalEthAddress,
+lib/env.ts:88:  NEXT_PUBLIC_VFIDE_WETH_POOL_ADDRESS: optionalEthAddress,
+lib/env.ts:91:  NEXT_PUBLIC_VFIDE_COMMERCE_ADDRESS: optionalEthAddress,
+lib/env.ts:92:  NEXT_PUBLIC_MERCHANT_PORTAL_ADDRESS: optionalEthAddress,
+lib/env.ts:93:  NEXT_PUBLIC_STABLECOIN_REGISTRY_ADDRESS: optionalEthAddress,
+lib/env.ts:94:  NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS: optionalEthAddress,
+lib/env.ts:95:  NEXT_PUBLIC_ESCROW_MANAGER_ADDRESS: optionalEthAddress,
+lib/env.ts:96:  NEXT_PUBLIC_FRAUD_REGISTRY_ADDRESS: optionalEthAddress,
+lib/env.ts:99:  NEXT_PUBLIC_BADGE_NFT_ADDRESS: optionalEthAddress,
+lib/env.ts:102:  NEXT_PUBLIC_ENABLE_FAUCET: z.string().default('true').transform(v => v !== 'false'),
+lib/env.ts:103:  NEXT_PUBLIC_ENABLE_DEMO_MODE: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:104:  NEXT_PUBLIC_ENABLE_ANALYTICS: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:105:  NEXT_PUBLIC_ENABLE_CHAT: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:106:  NEXT_PUBLIC_ENABLE_GOVERNANCE: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:107:  NEXT_PUBLIC_ENABLE_SANCTUM: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:108:  NEXT_PUBLIC_ENABLE_BETA_FEATURES: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:109:  NEXT_PUBLIC_ENABLE_SW: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:110:  NEXT_PUBLIC_ENABLE_PERSISTENT_SESSION_KEYS: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:112:  // declared + validated here; lib/features.ts reads process.env directly for inlining).
+lib/env.ts:113:  NEXT_PUBLIC_ENABLE_LENDING: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:114:  NEXT_PUBLIC_ENABLE_TIME_LOCKS: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:115:  NEXT_PUBLIC_ENABLE_MULTISIG: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:116:  NEXT_PUBLIC_ENABLE_REPORTING: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:117:  NEXT_PUBLIC_ENABLE_STREAMING: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:118:  NEXT_PUBLIC_ENABLE_AGENT: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:119:  NEXT_PUBLIC_ENABLE_ESCROW: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:120:  NEXT_PUBLIC_ENABLE_SUBSCRIPTIONS: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:121:  NEXT_PUBLIC_ENABLE_FLASHLOANS: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:122:  NEXT_PUBLIC_ENABLE_BRIDGE: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:123:  NEXT_PUBLIC_ENABLE_SOCIAL_FEED: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:124:  NEXT_PUBLIC_ENABLE_SOCIAL_MESSAGING: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:125:  NEXT_PUBLIC_ENABLE_SOCIAL_PAYMENTS: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:126:  NEXT_PUBLIC_ENABLE_STORIES: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:127:  NEXT_PUBLIC_ENABLE_ENDORSEMENTS: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:128:  NEXT_PUBLIC_ENABLE_MARKETPLACE: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:129:  NEXT_PUBLIC_ENABLE_STOREFRONT: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:130:  NEXT_PUBLIC_ENABLE_OFFLINE_POS: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:131:  NEXT_PUBLIC_ENABLE_BUDGETS: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:132:  NEXT_PUBLIC_ENABLE_TAXES: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:133:  NEXT_PUBLIC_ENABLE_STEALTH_ADDRESSES: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:134:  NEXT_PUBLIC_ENABLE_PAPER_WALLET: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:135:  NEXT_PUBLIC_ENABLE_HARDWARE_WALLET: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:136:  NEXT_PUBLIC_ENABLE_SEER_SERVICE: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:137:  NEXT_PUBLIC_ENABLE_SEER_ACADEMY: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:138:  NEXT_PUBLIC_ENABLE_FLASHLOAN: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:139:  NEXT_PUBLIC_ENABLE_WHATSAPP_RECEIPTS: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:140:  NEXT_PUBLIC_ENABLE_CSV_EXPORT: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:141:  NEXT_PUBLIC_ENABLE_THEME_MANAGER: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:142:  NEXT_PUBLIC_ENABLE_THEME_SHOWCASE: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:143:  NEXT_PUBLIC_ENABLE_PIE_MENU: z.string().default('false').transform(v => v === 'true'),
+lib/env.ts:147:  NEXT_PUBLIC_GA_ID: z.string().optional(),
+lib/env.ts:148:  NEXT_PUBLIC_POSTHOG_KEY: z.string().optional(),
+lib/env.ts:149:  NEXT_PUBLIC_SENTRY_DSN: z.string().optional(),
+lib/env.ts:152:  NEXT_PUBLIC_COINGECKO_API_URL: z.string().url().default('https://api.coingecko.com/api/v3/simple/price'),
+lib/env.ts:153:  NEXT_PUBLIC_SUBGRAPH_URL: z.string().url().optional(),
+lib/env.ts:154:  NEXT_PUBLIC_IPFS_GATEWAY: z.string().url().default('https://ipfs.io/ipfs/'),
+lib/env.ts:157:  NEXT_PUBLIC_VAPID_PUBLIC_KEY: z.string().optional(),
+lib/env.ts:159:  // Wagmi / WalletConnect Configuration
+lib/env.ts:160:  // Canonical key: NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
+lib/env.ts:161:  // NEXT_PUBLIC_WAGMI_PROJECT_ID is accepted as a legacy fallback in lib/wagmi.ts
+lib/env.ts:163:  NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: z.string().default(''),
+lib/env.ts:166:  NEXT_PUBLIC_BUILD_ID: z.string().optional(),
+lib/env.ts:167:  NEXT_PUBLIC_BUILD_TIME: z.string().optional(),
+lib/env.ts:168:  NEXT_PUBLIC_APP_VERSION: z.string().default('1.0.0'),
+lib/env.ts:172:  NEXT_PUBLIC_SUPPORTED_CHAIN_IDS: z.string().optional(),
+lib/env.ts:173:  NEXT_PUBLIC_DEFAULT_CHAIN_ID: z.coerce.number().int().positive().optional(),
+lib/env.ts:176:  NEXT_PUBLIC_POLYGON_VFIDE_TOKEN_ADDRESS: optionalEthAddress,
+lib/env.ts:177:  NEXT_PUBLIC_POLYGON_VAULT_HUB_ADDRESS: optionalEthAddress,
+lib/env.ts:178:  NEXT_PUBLIC_POLYGON_SEER_ADDRESS: optionalEthAddress,
+lib/env.ts:181:  NEXT_PUBLIC_POLYGON_AMOY_VFIDE_TOKEN_ADDRESS: optionalEthAddress,
+lib/env.ts:182:  NEXT_PUBLIC_POLYGON_AMOY_VAULT_HUB_ADDRESS: optionalEthAddress,
+lib/env.ts:183:  NEXT_PUBLIC_POLYGON_AMOY_SEER_ADDRESS: optionalEthAddress,
+lib/env.ts:186:  NEXT_PUBLIC_ZKSYNC_SEPOLIA_VFIDE_TOKEN_ADDRESS: optionalEthAddress,
+lib/env.ts:187:  NEXT_PUBLIC_ZKSYNC_SEPOLIA_VAULT_HUB_ADDRESS: optionalEthAddress,
+lib/env.ts:188:  NEXT_PUBLIC_ZKSYNC_SEPOLIA_SEER_ADDRESS: optionalEthAddress,
+lib/env.ts:191:  NEXT_PUBLIC_TRANSAK_KEY: z.string().optional(),
+lib/env.ts:192:  NEXT_PUBLIC_MOONPAY_KEY: z.string().optional(),
+lib/env.ts:193:  NEXT_PUBLIC_RAMP_KEY: z.string().optional(),
+lib/env.ts:198:  NEXT_PUBLIC_USDC_ADDRESS: optionalEthAddress,
+lib/env.ts:199:  NEXT_PUBLIC_USDT_ADDRESS: optionalEthAddress,
+lib/env.ts:200:  NEXT_PUBLIC_DAI_ADDRESS: optionalEthAddress,
+lib/env.ts:203:  NEXT_PUBLIC_MERCHANT_REGISTRY_ADDRESS: optionalEthAddress,
+lib/env.ts:204:  NEXT_PUBLIC_COMMERCE_ESCROW_ADDRESS: optionalEthAddress,
+lib/env.ts:205:  NEXT_PUBLIC_ECO_TREASURY_VAULT_ADDRESS: optionalEthAddress,
+lib/env.ts:206:  NEXT_PUBLIC_SEER_VIEW_ADDRESS: optionalEthAddress,
+lib/env.ts:207:  NEXT_PUBLIC_SEER_SOCIAL_ADDRESS: optionalEthAddress,
+lib/env.ts:208:  NEXT_PUBLIC_FAUCET_ADDRESS: optionalEthAddress,
+lib/env.ts:209:  NEXT_PUBLIC_TERM_LOAN_ADDRESS: optionalEthAddress,
+lib/env.ts:210:  NEXT_PUBLIC_FLASH_LOAN_ADDRESS: optionalEthAddress,
+lib/env.ts:211:  NEXT_PUBLIC_MERCHANT_PORTAL_VIEWER_ADDRESS: optionalEthAddress,
+lib/env.ts:212:  NEXT_PUBLIC_ADMIN_MULTISIG_ADDRESS: optionalEthAddress,
+lib/env.ts:213:  NEXT_PUBLIC_VFIDE_ACCESS_CONTROL_ADDRESS: optionalEthAddress,
+lib/env.ts:216:  NEXT_PUBLIC_FUTURE_FEATURES_ENABLED: z.string().optional(),
+lib/env.ts:217:  NEXT_PUBLIC_DEMO_MODE: z.string().optional(),
+lib/env.ts:220:  NEXT_PUBLIC_FRONTEND_ONLY: z.string().optional(),
+lib/env.ts:223:  // Legacy alias for NEXT_PUBLIC_WS_URL — accepted for backwards compat.
+lib/env.ts:224:  NEXT_PUBLIC_WEBSOCKET_URL: z.string().optional(),
+lib/env.ts:228:  NEXT_PUBLIC_VFIDE_AVATAR_HOST: z.string().optional(),
+lib/env.ts:240:    NEXT_PUBLIC_NETWORK: process.env.NEXT_PUBLIC_NETWORK,
+lib/env.ts:241:    NEXT_PUBLIC_CHAIN_ID: process.env.NEXT_PUBLIC_CHAIN_ID,
+lib/env.ts:242:    NEXT_PUBLIC_DEPLOYMENT_CHAIN_ID: process.env.NEXT_PUBLIC_DEPLOYMENT_CHAIN_ID,
+lib/env.ts:243:    NEXT_PUBLIC_RPC_URL: process.env.NEXT_PUBLIC_RPC_URL,
+lib/env.ts:244:    NEXT_PUBLIC_IS_TESTNET: process.env.NEXT_PUBLIC_IS_TESTNET,
+lib/env.ts:245:    NEXT_PUBLIC_DEFAULT_CHAIN: process.env.NEXT_PUBLIC_DEFAULT_CHAIN,
+lib/env.ts:246:    NEXT_PUBLIC_BASE_SEPOLIA_RPC: process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC,
+lib/env.ts:249:    NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
+lib/env.ts:250:    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+lib/env.ts:251:    NEXT_PUBLIC_DOCS_URL: process.env.NEXT_PUBLIC_DOCS_URL,
+lib/env.ts:252:    NEXT_PUBLIC_EXPLORER_URL: process.env.NEXT_PUBLIC_EXPLORER_URL,
+lib/env.ts:253:    NEXT_PUBLIC_WS_URL: process.env.NEXT_PUBLIC_WS_URL,
+lib/env.ts:256:    NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS: process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS,
+lib/env.ts:259:    NEXT_PUBLIC_DAO_ADDRESS: process.env.NEXT_PUBLIC_DAO_ADDRESS,
+lib/env.ts:260:    NEXT_PUBLIC_DAO_TIMELOCK_ADDRESS: process.env.NEXT_PUBLIC_DAO_TIMELOCK_ADDRESS,
+lib/env.ts:261:    NEXT_PUBLIC_COUNCIL_ELECTION_ADDRESS: process.env.NEXT_PUBLIC_COUNCIL_ELECTION_ADDRESS,
+lib/env.ts:262:    NEXT_PUBLIC_COUNCIL_SALARY_ADDRESS: process.env.NEXT_PUBLIC_COUNCIL_SALARY_ADDRESS,
+lib/env.ts:265:    NEXT_PUBLIC_VAULT_HUB_ADDRESS: process.env.NEXT_PUBLIC_VAULT_HUB_ADDRESS,
+lib/env.ts:266:    NEXT_PUBLIC_VAULT_IMPLEMENTATION: process.env.NEXT_PUBLIC_VAULT_IMPLEMENTATION,
+lib/env.ts:267:    NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS: process.env.NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS,
+lib/env.ts:268:    NEXT_PUBLIC_DEV_VAULT_ADDRESS: process.env.NEXT_PUBLIC_DEV_VAULT_ADDRESS,
+lib/env.ts:269:    NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS: process.env.NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS,
+lib/env.ts:270:    NEXT_PUBLIC_ECOSYSTEM_VAULT_VIEW_ADDRESS: process.env.NEXT_PUBLIC_ECOSYSTEM_VAULT_VIEW_ADDRESS,
+lib/env.ts:271:    NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS: process.env.NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS,
+lib/env.ts:272:    NEXT_PUBLIC_VAULT_RECOVERY_CLAIM_ADDRESS: process.env.NEXT_PUBLIC_VAULT_RECOVERY_CLAIM_ADDRESS,
+lib/env.ts:275:    NEXT_PUBLIC_SEER_ADDRESS: process.env.NEXT_PUBLIC_SEER_ADDRESS,
+lib/env.ts:276:    NEXT_PUBLIC_PROOF_SCORE_ADDRESS: process.env.NEXT_PUBLIC_PROOF_SCORE_ADDRESS,
+lib/env.ts:277:    NEXT_PUBLIC_PROOF_LEDGER_ADDRESS: process.env.NEXT_PUBLIC_PROOF_LEDGER_ADDRESS,
+lib/env.ts:278:    NEXT_PUBLIC_TRUST_GATEWAY_ADDRESS: process.env.NEXT_PUBLIC_TRUST_GATEWAY_ADDRESS,
+lib/env.ts:281:    NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS_8453: process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS_8453,
+lib/env.ts:282:    NEXT_PUBLIC_VAULT_HUB_ADDRESS_8453: process.env.NEXT_PUBLIC_VAULT_HUB_ADDRESS_8453,
+lib/env.ts:283:    NEXT_PUBLIC_SEER_ADDRESS_8453: process.env.NEXT_PUBLIC_SEER_ADDRESS_8453,
+lib/env.ts:286:    NEXT_PUBLIC_SECURITY_HUB_ADDRESS: process.env.NEXT_PUBLIC_SECURITY_HUB_ADDRESS,
+lib/env.ts:287:    NEXT_PUBLIC_GUARDIAN_REGISTRY_ADDRESS: process.env.NEXT_PUBLIC_GUARDIAN_REGISTRY_ADDRESS,
+lib/env.ts:288:    NEXT_PUBLIC_GUARDIAN_LOCK_ADDRESS: process.env.NEXT_PUBLIC_GUARDIAN_LOCK_ADDRESS,
+lib/env.ts:289:    NEXT_PUBLIC_PANIC_GUARD_ADDRESS: process.env.NEXT_PUBLIC_PANIC_GUARD_ADDRESS,
+lib/env.ts:290:    NEXT_PUBLIC_EMERGENCY_BREAKER_ADDRESS: process.env.NEXT_PUBLIC_EMERGENCY_BREAKER_ADDRESS,
+lib/env.ts:291:    NEXT_PUBLIC_OWNER_CONTROL_PANEL_ADDRESS: process.env.NEXT_PUBLIC_OWNER_CONTROL_PANEL_ADDRESS,
+lib/env.ts:294:    NEXT_PUBLIC_BURN_ROUTER_ADDRESS: process.env.NEXT_PUBLIC_BURN_ROUTER_ADDRESS,
+lib/env.ts:295:    NEXT_PUBLIC_PAYROLL_MANAGER_ADDRESS: process.env.NEXT_PUBLIC_PAYROLL_MANAGER_ADDRESS,
+lib/env.ts:296:    NEXT_PUBLIC_LIQUIDITY_INCENTIVES_ADDRESS: process.env.NEXT_PUBLIC_LIQUIDITY_INCENTIVES_ADDRESS,
+lib/env.ts:297:    NEXT_PUBLIC_DUTY_DISTRIBUTOR_ADDRESS: process.env.NEXT_PUBLIC_DUTY_DISTRIBUTOR_ADDRESS,
+lib/env.ts:298:    NEXT_PUBLIC_FEE_DISTRIBUTOR_ADDRESS: process.env.NEXT_PUBLIC_FEE_DISTRIBUTOR_ADDRESS,
+lib/env.ts:301:    NEXT_PUBLIC_VFIDE_ETH_LP: process.env.NEXT_PUBLIC_VFIDE_ETH_LP,
+lib/env.ts:302:    NEXT_PUBLIC_VFIDE_USDC_LP: process.env.NEXT_PUBLIC_VFIDE_USDC_LP,
+lib/env.ts:303:    NEXT_PUBLIC_VFIDE_WETH_POOL_ADDRESS: process.env.NEXT_PUBLIC_VFIDE_WETH_POOL_ADDRESS,
+lib/env.ts:306:    NEXT_PUBLIC_VFIDE_COMMERCE_ADDRESS: process.env.NEXT_PUBLIC_VFIDE_COMMERCE_ADDRESS,
+lib/env.ts:307:    NEXT_PUBLIC_MERCHANT_PORTAL_ADDRESS: process.env.NEXT_PUBLIC_MERCHANT_PORTAL_ADDRESS,
+lib/env.ts:308:    NEXT_PUBLIC_STABLECOIN_REGISTRY_ADDRESS: process.env.NEXT_PUBLIC_STABLECOIN_REGISTRY_ADDRESS,
+lib/env.ts:309:    NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS: process.env.NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS,
+lib/env.ts:310:    NEXT_PUBLIC_ESCROW_MANAGER_ADDRESS: process.env.NEXT_PUBLIC_ESCROW_MANAGER_ADDRESS,
+lib/env.ts:311:    NEXT_PUBLIC_FRAUD_REGISTRY_ADDRESS: process.env.NEXT_PUBLIC_FRAUD_REGISTRY_ADDRESS,
+lib/env.ts:314:    NEXT_PUBLIC_BADGE_NFT_ADDRESS: process.env.NEXT_PUBLIC_BADGE_NFT_ADDRESS,
+lib/env.ts:317:    NEXT_PUBLIC_ENABLE_FAUCET: process.env.NEXT_PUBLIC_ENABLE_FAUCET,
+lib/env.ts:318:    NEXT_PUBLIC_ENABLE_DEMO_MODE: process.env.NEXT_PUBLIC_ENABLE_DEMO_MODE,
+lib/env.ts:319:    NEXT_PUBLIC_ENABLE_ANALYTICS: process.env.NEXT_PUBLIC_ENABLE_ANALYTICS,
+lib/env.ts:320:    NEXT_PUBLIC_ENABLE_CHAT: process.env.NEXT_PUBLIC_ENABLE_CHAT,
+lib/env.ts:321:    NEXT_PUBLIC_ENABLE_GOVERNANCE: process.env.NEXT_PUBLIC_ENABLE_GOVERNANCE,
+lib/env.ts:322:    NEXT_PUBLIC_ENABLE_SANCTUM: process.env.NEXT_PUBLIC_ENABLE_SANCTUM,
+lib/env.ts:323:    NEXT_PUBLIC_ENABLE_BETA_FEATURES: process.env.NEXT_PUBLIC_ENABLE_BETA_FEATURES,
+lib/env.ts:324:    NEXT_PUBLIC_ENABLE_SW: process.env.NEXT_PUBLIC_ENABLE_SW,
+lib/env.ts:325:    NEXT_PUBLIC_ENABLE_PERSISTENT_SESSION_KEYS: process.env.NEXT_PUBLIC_ENABLE_PERSISTENT_SESSION_KEYS,
+lib/env.ts:326:    SESSION_KEY_MAX_DURATION_SECONDS: process.env.SESSION_KEY_MAX_DURATION_SECONDS,
+lib/env.ts:329:    NEXT_PUBLIC_GA_ID: process.env.NEXT_PUBLIC_GA_ID,
+lib/env.ts:330:    NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
+lib/env.ts:331:    NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
+lib/env.ts:334:    NEXT_PUBLIC_COINGECKO_API_URL: process.env.NEXT_PUBLIC_COINGECKO_API_URL,
+lib/env.ts:335:    NEXT_PUBLIC_SUBGRAPH_URL: process.env.NEXT_PUBLIC_SUBGRAPH_URL,
+lib/env.ts:336:    NEXT_PUBLIC_IPFS_GATEWAY: process.env.NEXT_PUBLIC_IPFS_GATEWAY,
+lib/env.ts:339:    NEXT_PUBLIC_VAPID_PUBLIC_KEY: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+lib/env.ts:341:    // Wagmi / WalletConnect Configuration
+lib/env.ts:342:    NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
+lib/env.ts:343:      ?? process.env.NEXT_PUBLIC_WAGMI_PROJECT_ID,
+lib/env.ts:346:    NEXT_PUBLIC_BUILD_ID: process.env.NEXT_PUBLIC_BUILD_ID,
+lib/env.ts:347:    NEXT_PUBLIC_BUILD_TIME: process.env.NEXT_PUBLIC_BUILD_TIME,
+lib/env.ts:348:    NEXT_PUBLIC_APP_VERSION: process.env.NEXT_PUBLIC_APP_VERSION,
+lib/env.ts:351:    NEXT_PUBLIC_SUPPORTED_CHAIN_IDS: process.env.NEXT_PUBLIC_SUPPORTED_CHAIN_IDS,
+lib/env.ts:352:    NEXT_PUBLIC_DEFAULT_CHAIN_ID: process.env.NEXT_PUBLIC_DEFAULT_CHAIN_ID,
+lib/env.ts:353:    NEXT_PUBLIC_POLYGON_VFIDE_TOKEN_ADDRESS: process.env.NEXT_PUBLIC_POLYGON_VFIDE_TOKEN_ADDRESS,
+lib/env.ts:354:    NEXT_PUBLIC_POLYGON_VAULT_HUB_ADDRESS: process.env.NEXT_PUBLIC_POLYGON_VAULT_HUB_ADDRESS,
+lib/env.ts:355:    NEXT_PUBLIC_POLYGON_SEER_ADDRESS: process.env.NEXT_PUBLIC_POLYGON_SEER_ADDRESS,
+lib/env.ts:356:    NEXT_PUBLIC_POLYGON_AMOY_VFIDE_TOKEN_ADDRESS: process.env.NEXT_PUBLIC_POLYGON_AMOY_VFIDE_TOKEN_ADDRESS,
+lib/env.ts:357:    NEXT_PUBLIC_POLYGON_AMOY_VAULT_HUB_ADDRESS: process.env.NEXT_PUBLIC_POLYGON_AMOY_VAULT_HUB_ADDRESS,
+lib/env.ts:358:    NEXT_PUBLIC_POLYGON_AMOY_SEER_ADDRESS: process.env.NEXT_PUBLIC_POLYGON_AMOY_SEER_ADDRESS,
+lib/env.ts:359:    NEXT_PUBLIC_ZKSYNC_SEPOLIA_VFIDE_TOKEN_ADDRESS: process.env.NEXT_PUBLIC_ZKSYNC_SEPOLIA_VFIDE_TOKEN_ADDRESS,
+lib/env.ts:360:    NEXT_PUBLIC_ZKSYNC_SEPOLIA_VAULT_HUB_ADDRESS: process.env.NEXT_PUBLIC_ZKSYNC_SEPOLIA_VAULT_HUB_ADDRESS,
+lib/env.ts:361:    NEXT_PUBLIC_ZKSYNC_SEPOLIA_SEER_ADDRESS: process.env.NEXT_PUBLIC_ZKSYNC_SEPOLIA_SEER_ADDRESS,
+lib/env.ts:364:    NEXT_PUBLIC_TRANSAK_KEY: process.env.NEXT_PUBLIC_TRANSAK_KEY,
+lib/env.ts:365:    NEXT_PUBLIC_MOONPAY_KEY: process.env.NEXT_PUBLIC_MOONPAY_KEY,
+lib/env.ts:366:    NEXT_PUBLIC_RAMP_KEY: process.env.NEXT_PUBLIC_RAMP_KEY,
+lib/env.ts:369:    NEXT_PUBLIC_USDC_ADDRESS: process.env.NEXT_PUBLIC_USDC_ADDRESS,
+lib/env.ts:370:    NEXT_PUBLIC_USDT_ADDRESS: process.env.NEXT_PUBLIC_USDT_ADDRESS,
+lib/env.ts:371:    NEXT_PUBLIC_DAI_ADDRESS: process.env.NEXT_PUBLIC_DAI_ADDRESS,
+lib/env.ts:374:    NEXT_PUBLIC_MERCHANT_REGISTRY_ADDRESS: process.env.NEXT_PUBLIC_MERCHANT_REGISTRY_ADDRESS,
+lib/env.ts:375:    NEXT_PUBLIC_COMMERCE_ESCROW_ADDRESS: process.env.NEXT_PUBLIC_COMMERCE_ESCROW_ADDRESS,
+lib/env.ts:376:    NEXT_PUBLIC_ECO_TREASURY_VAULT_ADDRESS: process.env.NEXT_PUBLIC_ECO_TREASURY_VAULT_ADDRESS,
+lib/env.ts:377:    NEXT_PUBLIC_SEER_VIEW_ADDRESS: process.env.NEXT_PUBLIC_SEER_VIEW_ADDRESS,
+lib/env.ts:378:    NEXT_PUBLIC_SEER_SOCIAL_ADDRESS: process.env.NEXT_PUBLIC_SEER_SOCIAL_ADDRESS,
+lib/env.ts:379:    NEXT_PUBLIC_FAUCET_ADDRESS: process.env.NEXT_PUBLIC_FAUCET_ADDRESS,
+lib/env.ts:380:    NEXT_PUBLIC_TERM_LOAN_ADDRESS: process.env.NEXT_PUBLIC_TERM_LOAN_ADDRESS,
+lib/env.ts:381:    NEXT_PUBLIC_FLASH_LOAN_ADDRESS: process.env.NEXT_PUBLIC_FLASH_LOAN_ADDRESS,
+lib/env.ts:384:    NEXT_PUBLIC_FUTURE_FEATURES_ENABLED: process.env.NEXT_PUBLIC_FUTURE_FEATURES_ENABLED,
+lib/env.ts:385:    NEXT_PUBLIC_DEMO_MODE: process.env.NEXT_PUBLIC_DEMO_MODE,
+lib/env.ts:386:    NEXT_PUBLIC_FRONTEND_ONLY: process.env.NEXT_PUBLIC_FRONTEND_ONLY,
+lib/env.ts:389:    NEXT_PUBLIC_WEBSOCKET_URL: process.env.NEXT_PUBLIC_WEBSOCKET_URL,
+lib/env.ts:390:    NEXT_PUBLIC_VFIDE_AVATAR_HOST: process.env.NEXT_PUBLIC_VFIDE_AVATAR_HOST,
+lib/env.ts:396:    if (process.env.NODE_ENV === 'production') {
+lib/env.ts:403:      logger.warn('For production, set these in Vercel: NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID, NEXT_PUBLIC_CHAIN_ID, NEXT_PUBLIC_RPC_URL');
+lib/env.ts:409:  if (process.env.NODE_ENV === 'production') {
+lib/env.ts:410:    const requiredExplicit = [
+lib/env.ts:411:      'NEXT_PUBLIC_NETWORK',
+lib/env.ts:412:      'NEXT_PUBLIC_CHAIN_ID',
+lib/env.ts:413:      'NEXT_PUBLIC_RPC_URL',
+lib/env.ts:414:      'NEXT_PUBLIC_IS_TESTNET',
+lib/env.ts:415:      'NEXT_PUBLIC_EXPLORER_URL',
+lib/env.ts:416:      'NEXT_PUBLIC_ENABLE_FAUCET',
+lib/env.ts:419:    const missingExplicit = requiredExplicit.filter((key) => {
+lib/env.ts:420:      const raw = process.env[key];
+lib/env.ts:430:    const chainId = result.data.NEXT_PUBLIC_CHAIN_ID;
+lib/env.ts:431:    const isTestnet = result.data.NEXT_PUBLIC_IS_TESTNET;
+lib/env.ts:432:    const faucetEnabled = result.data.NEXT_PUBLIC_ENABLE_FAUCET;
+lib/env.ts:436:      throw new Error('NEXT_PUBLIC_ENABLE_FAUCET must be false when NEXT_PUBLIC_IS_TESTNET is false in production');
+lib/env.ts:440:      throw new Error('NEXT_PUBLIC_CHAIN_ID is testnet while NEXT_PUBLIC_IS_TESTNET is false in production');
+lib/env.ts:485: * @param feature - Feature flag key (without NEXT_PUBLIC_ENABLE_ prefix)
+lib/env.ts:492:  const key = `NEXT_PUBLIC_ENABLE_${feature}` as const;
+lib/env.ts:502:  const key = `NEXT_PUBLIC_${contractName.toUpperCase()}_ADDRESS` as keyof Environment;
+lib/validateProduction.ts:4: * Validates that all required environment variables are set for production deployment.
+lib/validateProduction.ts:15:  required: boolean;
+lib/validateProduction.ts:17:  production?: boolean; // Only required in production
+lib/validateProduction.ts:22:  { name: 'NEXT_PUBLIC_CHAIN_ID', required: true, category: 'blockchain' },
+lib/validateProduction.ts:23:  { name: 'NEXT_PUBLIC_DEPLOYMENT_CHAIN_ID', required: false, category: 'blockchain', production: true },
+lib/validateProduction.ts:24:  // T-CHAIN-3-VARS FIX: NEXT_PUBLIC_DEFAULT_CHAIN_ID is read by lib/testnet.ts and the
+lib/validateProduction.ts:28:  { name: 'NEXT_PUBLIC_DEFAULT_CHAIN_ID', required: false, category: 'blockchain', production: true },
+lib/validateProduction.ts:29:  { name: 'NEXT_PUBLIC_RPC_URL', required: true, category: 'blockchain' },
+lib/validateProduction.ts:30:  { name: 'NEXT_PUBLIC_EXPLORER_URL', required: true, category: 'blockchain' },
+lib/validateProduction.ts:31:  { name: 'NEXT_PUBLIC_IS_TESTNET', required: true, category: 'blockchain' },
+lib/validateProduction.ts:34:  { name: 'NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS', required: false, category: 'blockchain', production: true },
+lib/validateProduction.ts:38:  { name: 'NEXT_PUBLIC_STABLECOIN_REGISTRY_ADDRESS', required: false, category: 'blockchain' },
+lib/validateProduction.ts:39:  { name: 'NEXT_PUBLIC_VAULT_HUB_ADDRESS', required: false, category: 'blockchain', production: true },
+lib/validateProduction.ts:40:  { name: 'NEXT_PUBLIC_VAULT_IMPLEMENTATION', required: false, category: 'blockchain' },
+lib/validateProduction.ts:41:  { name: 'NEXT_PUBLIC_DAO_ADDRESS', required: false, category: 'blockchain', production: true },
+lib/validateProduction.ts:42:  { name: 'NEXT_PUBLIC_SEER_ADDRESS', required: false, category: 'blockchain', production: true },
+lib/validateProduction.ts:43:  { name: 'NEXT_PUBLIC_VFIDE_COMMERCE_ADDRESS', required: false, category: 'blockchain', production: true },
+lib/validateProduction.ts:44:  { name: 'NEXT_PUBLIC_PROOF_LEDGER_ADDRESS', required: false, category: 'blockchain' },
+lib/validateProduction.ts:45:  { name: 'NEXT_PUBLIC_VFIDE_ACCESS_CONTROL_ADDRESS', required: false, category: 'blockchain' },
+lib/validateProduction.ts:46:  { name: 'NEXT_PUBLIC_OWNER_CONTROL_PANEL_ADDRESS', required: false, category: 'blockchain' },
+lib/validateProduction.ts:47:  { name: 'NEXT_PUBLIC_PAYROLL_MANAGER_ADDRESS', required: false, category: 'blockchain', production: true },
+lib/validateProduction.ts:50:  { name: 'NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS', required: false, category: 'blockchain' },
+lib/validateProduction.ts:51:  { name: 'NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS', required: false, category: 'blockchain', production: true },
+lib/validateProduction.ts:52:  { name: 'NEXT_PUBLIC_DEV_VAULT_ADDRESS', required: false, category: 'blockchain', production: true },
+lib/validateProduction.ts:53:  { name: 'NEXT_PUBLIC_ECOSYSTEM_VAULT_VIEW_ADDRESS', required: false, category: 'blockchain' },
+lib/validateProduction.ts:54:  { name: 'NEXT_PUBLIC_ECO_TREASURY_VAULT_ADDRESS', required: false, category: 'blockchain', production: true },
+lib/validateProduction.ts:55:  { name: 'NEXT_PUBLIC_ESCROW_MANAGER_ADDRESS', required: false, category: 'blockchain' },
+lib/validateProduction.ts:56:  { name: 'NEXT_PUBLIC_FEE_DISTRIBUTOR_ADDRESS', required: false, category: 'blockchain', production: true },
+lib/validateProduction.ts:62:  { name: 'NEXT_PUBLIC_BURN_ROUTER_ADDRESS', required: false, category: 'blockchain', production: true },
+lib/validateProduction.ts:63:  { name: 'NEXT_PUBLIC_DAO_TIMELOCK_ADDRESS', required: false, category: 'blockchain', production: true },
+lib/validateProduction.ts:64:  { name: 'NEXT_PUBLIC_FRAUD_REGISTRY_ADDRESS', required: false, category: 'blockchain', production: true },
+lib/validateProduction.ts:65:  { name: 'NEXT_PUBLIC_GOVERNANCE_HOOKS_ADDRESS', required: false, category: 'blockchain', production: true },
+lib/validateProduction.ts:66:  { name: 'NEXT_PUBLIC_FLASH_LOAN_ADDRESS', required: false, category: 'blockchain', production: true },
+lib/validateProduction.ts:67:  { name: 'NEXT_PUBLIC_TERM_LOAN_ADDRESS', required: false, category: 'blockchain', production: true },
+lib/validateProduction.ts:68:  { name: 'NEXT_PUBLIC_MERCHANT_PORTAL_ADDRESS', required: false, category: 'blockchain', production: true },
+lib/validateProduction.ts:69:  { name: 'NEXT_PUBLIC_MERCHANT_PORTAL_VIEWER_ADDRESS', required: false, category: 'blockchain', production: true },
+lib/validateProduction.ts:70:  { name: 'NEXT_PUBLIC_MERCHANT_REGISTRY_ADDRESS', required: false, category: 'blockchain', production: true },
+lib/validateProduction.ts:71:  { name: 'NEXT_PUBLIC_COMMERCE_ESCROW_ADDRESS', required: false, category: 'blockchain', production: true },
+lib/validateProduction.ts:72:  { name: 'NEXT_PUBLIC_LIQUIDITY_INCENTIVES_ADDRESS', required: false, category: 'blockchain', production: true },
+lib/validateProduction.ts:73:  { name: 'NEXT_PUBLIC_VAULT_RECOVERY_CLAIM_ADDRESS', required: false, category: 'blockchain', production: true },
+lib/validateProduction.ts:74:  { name: 'NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS', required: false, category: 'blockchain', production: true },
+lib/validateProduction.ts:75:  { name: 'NEXT_PUBLIC_PROOF_LEDGER_ADDRESS', required: false, category: 'blockchain', production: true },
+lib/validateProduction.ts:76:  { name: 'NEXT_PUBLIC_VFIDE_ACCESS_CONTROL_ADDRESS', required: false, category: 'blockchain', production: true },
+lib/validateProduction.ts:77:  { name: 'NEXT_PUBLIC_OWNER_CONTROL_PANEL_ADDRESS', required: false, category: 'blockchain', production: true },
+lib/validateProduction.ts:78:  { name: 'NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS', required: false, category: 'blockchain', production: true },
+lib/validateProduction.ts:79:  { name: 'NEXT_PUBLIC_ECOSYSTEM_VAULT_VIEW_ADDRESS', required: false, category: 'blockchain', production: true },
+lib/validateProduction.ts:80:  { name: 'NEXT_PUBLIC_CARD_BOUND_VAULT_DEPLOYER_ADDRESS', required: false, category: 'blockchain', production: true },
+lib/validateProduction.ts:83:  // WalletConnect (optional but recommended)
+lib/validateProduction.ts:84:  { name: 'NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID', required: false, category: 'blockchain' },
+lib/validateProduction.ts:85:  { name: 'NEXT_PUBLIC_WAGMI_PROJECT_ID', required: false, category: 'blockchain' },
+lib/validateProduction.ts:88:  { name: 'APP_ORIGIN', required: true, category: 'api', production: true },
+lib/validateProduction.ts:89:  { name: 'NEXT_PUBLIC_APP_URL', required: true, category: 'api', production: true },
+lib/validateProduction.ts:90:  { name: 'NEXT_PUBLIC_API_URL', required: false, category: 'api' },
+lib/validateProduction.ts:91:  { name: 'NEXT_PUBLIC_WEBSOCKET_URL', required: false, category: 'api' },
+lib/validateProduction.ts:94:  { name: 'DATABASE_URL', required: true, category: 'api', production: true },
+lib/validateProduction.ts:97:  { name: 'UPSTASH_REDIS_REST_URL', required: false, category: 'security', production: true },
+lib/validateProduction.ts:98:  { name: 'UPSTASH_REDIS_REST_TOKEN', required: false, category: 'security', production: true },
+lib/validateProduction.ts:99:  { name: 'JWT_SECRET', required: true, category: 'security', production: true },
+lib/validateProduction.ts:102:  { name: 'NEXT_PUBLIC_SENTRY_DSN', required: false, category: 'monitoring' },
+lib/validateProduction.ts:103:  { name: 'SENTRY_AUTH_TOKEN', required: false, category: 'monitoring' },
+lib/validateProduction.ts:104:  { name: 'NEXT_PUBLIC_GA_MEASUREMENT_ID', required: false, category: 'monitoring' },
+lib/validateProduction.ts:107:  { name: 'S3_BUCKET', required: false, category: 'feature' },
+lib/validateProduction.ts:108:  { name: 'S3_ACCESS_KEY_ID', required: false, category: 'feature' },
+lib/validateProduction.ts:109:  { name: 'S3_SECRET_ACCESS_KEY', required: false, category: 'feature' },
+lib/validateProduction.ts:110:  { name: 'S3_REGION', required: false, category: 'feature' },
+lib/validateProduction.ts:111:  { name: 'S3_PUBLIC_BASE_URL', required: false, category: 'feature' },
+lib/validateProduction.ts:114:  { name: 'SENDGRID_API_KEY', required: false, category: 'feature' },
+lib/validateProduction.ts:115:  { name: 'SENDGRID_FROM_EMAIL', required: false, category: 'feature' },
+lib/validateProduction.ts:118:  { name: 'TWILIO_ACCOUNT_SID', required: false, category: 'feature' },
+lib/validateProduction.ts:119:  { name: 'TWILIO_AUTH_TOKEN', required: false, category: 'feature' },
+lib/validateProduction.ts:120:  { name: 'TWILIO_FROM_NUMBER', required: false, category: 'feature' },
+lib/validateProduction.ts:123:  { name: 'NEXT_PUBLIC_ENABLE_ANALYTICS', required: false, category: 'feature' },
+lib/validateProduction.ts:124:  { name: 'NEXT_PUBLIC_ENABLE_CHAT', required: false, category: 'feature' },
+lib/validateProduction.ts:125:  { name: 'NEXT_PUBLIC_ENABLE_GOVERNANCE', required: false, category: 'feature' },
+lib/validateProduction.ts:126:  { name: 'NEXT_PUBLIC_ENABLE_SW', required: false, category: 'feature' },
+lib/validateProduction.ts:127:  { name: 'NEXT_PUBLIC_ENABLE_PERSISTENT_SESSION_KEYS', required: false, category: 'feature' },
+lib/validateProduction.ts:128:  { name: 'SESSION_KEY_MAX_DURATION_SECONDS', required: false, category: 'feature' },
+lib/validateProduction.ts:140:  const value = process.env[name];
+lib/validateProduction.ts:143:  const fileBacked = process.env[`${name}_FILE`];
+lib/validateProduction.ts:164:    normalizeOrigin(process.env.VERCEL_PROJECT_PRODUCTION_URL) ||
+lib/validateProduction.ts:165:    normalizeOrigin(process.env.VERCEL_BRANCH_URL) ||
+lib/validateProduction.ts:166:    normalizeOrigin(process.env.VERCEL_URL);
+lib/validateProduction.ts:167:  const isProduction = process.env.NODE_ENV === 'production';
+lib/validateProduction.ts:170:    NEXT_PUBLIC_IS_TESTNET: isProduction ? undefined : 'true',
+lib/validateProduction.ts:171:    NEXT_PUBLIC_CHAIN_ID: isProduction ? undefined : '84532',
+lib/validateProduction.ts:172:    NEXT_PUBLIC_RPC_URL: isProduction ? undefined : 'https://sepolia.base.org',
+lib/validateProduction.ts:173:    NEXT_PUBLIC_EXPLORER_URL: isProduction ? undefined : 'https://sepolia.basescan.org',
+lib/validateProduction.ts:175:    NEXT_PUBLIC_APP_URL: inferredAppOrigin || (isProduction ? undefined : 'http://localhost:3000'),
+lib/validateProduction.ts:181:export function validateProductionEnvironment(): ValidationResult {
+lib/validateProduction.ts:190:  const isProduction = process.env.NODE_ENV === 'production';
+lib/validateProduction.ts:191:  const frontendOnlyEnv = process.env.FRONTEND_SELF_CONTAINED ?? process.env.NEXT_PUBLIC_FRONTEND_ONLY;
+lib/validateProduction.ts:192:  const missingServerSecrets = !process.env.DATABASE_URL || !process.env.JWT_SECRET;
+lib/validateProduction.ts:197:  // NEXT_PUBLIC_IS_TESTNET defaults to "treat as testnet" (true) unless
+lib/validateProduction.ts:199:  // NEXT_PUBLIC_IS_TESTNET=false in the deploy environment.
+lib/validateProduction.ts:200:  const isTestnet = process.env.NEXT_PUBLIC_IS_TESTNET !== 'false';
+lib/validateProduction.ts:204:  // operator copies them back into Vercel. Once NEXT_PUBLIC_IS_TESTNET
+lib/validateProduction.ts:216:  // Check each required environment variable
+lib/validateProduction.ts:221:    // Check if required
+lib/validateProduction.ts:229:    if (config.required && isEmpty && !treatAsOptional) {
+lib/validateProduction.ts:230:      result.errors.push(`❌ ${config.name} is required but not set`);
+lib/validateProduction.ts:234:      result.errors.push(`❌ ${config.name} is required for production but not set`);
+lib/validateProduction.ts:239:    } else if (!config.required && isEmpty) {
+lib/validateProduction.ts:241:        result.warnings.push(`⚠️  ${config.name} is not set (required in production; optional for ${config.category} in local/dev)`);
+lib/validateProduction.ts:246:      if (!process.env[config.name] && config.name.startsWith('NEXT_PUBLIC_')) {
+lib/validateProduction.ts:256:    const runtimeChainRaw = getEnvValue('NEXT_PUBLIC_CHAIN_ID') || '';
+lib/validateProduction.ts:257:    const deploymentChainRaw = getEnvValue('NEXT_PUBLIC_DEPLOYMENT_CHAIN_ID') || '';
+lib/validateProduction.ts:260:      result.errors.push(`❌ NEXT_PUBLIC_CHAIN_ID must be a positive integer, got "${runtimeChainRaw}"`);
+lib/validateProduction.ts:265:      result.errors.push(`❌ NEXT_PUBLIC_DEPLOYMENT_CHAIN_ID must be a positive integer, got "${deploymentChainRaw}"`);
+lib/validateProduction.ts:273:        `❌ NEXT_PUBLIC_CHAIN_ID (${runtimeChainId}) does not match NEXT_PUBLIC_DEPLOYMENT_CHAIN_ID (${deploymentChainId})`
+lib/validateProduction.ts:278:    const vaultImplementation = (process.env.NEXT_PUBLIC_VAULT_IMPLEMENTATION || 'cardbound').toLowerCase();
+lib/validateProduction.ts:280:      result.errors.push('❌ NEXT_PUBLIC_VAULT_IMPLEMENTATION must be either "cardbound" or "uservault"');
+lib/validateProduction.ts:284:    if (vaultImplementation === 'cardbound' && !getEnvValue('NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS')) {
+lib/validateProduction.ts:285:      result.errors.push('❌ NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS is required when NEXT_PUBLIC_VAULT_IMPLEMENTATION=cardbound in production');
+lib/validateProduction.ts:289:    if (getEnvValue('NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS') && !getEnvValue('NEXT_PUBLIC_ECOSYSTEM_VAULT_VIEW_ADDRESS')) {
+lib/validateProduction.ts:290:      result.warnings.push('⚠️  NEXT_PUBLIC_ECOSYSTEM_VAULT_VIEW_ADDRESS is not set; extracted EcosystemVault read-only hooks will fail unless the view contract is deployed and configured');
+lib/validateProduction.ts:293:    if (vaultImplementation === 'uservault' && !getEnvValue('NEXT_PUBLIC_VAULT_RECOVERY_CLAIM_ADDRESS')) {
+lib/validateProduction.ts:294:      result.warnings.push('⚠️  NEXT_PUBLIC_VAULT_RECOVERY_CLAIM_ADDRESS is not set for uservault mode; recovery claim flows may be unavailable');
+lib/validateProduction.ts:299:      result.warnings.push('⚠️  NEXT_PUBLIC_IS_TESTNET is true in production mode');
+lib/validateProduction.ts:302:    if (!isTestnet && process.env.FAUCET_OPERATOR_PRIVATE_KEY && process.env.FAUCET_OPERATOR_PRIVATE_KEY.trim() !== '') {
+lib/validateProduction.ts:303:      result.errors.push('❌ FAUCET_OPERATOR_PRIVATE_KEY must not be set when NEXT_PUBLIC_IS_TESTNET=false in production');
+lib/validateProduction.ts:308:    const appUrl = getEnvValue('NEXT_PUBLIC_APP_URL');
+lib/validateProduction.ts:311:      result.errors.push('❌ NEXT_PUBLIC_APP_URL must use HTTPS in production');
+lib/validateProduction.ts:322:      result.errors.push('❌ NEXT_PUBLIC_APP_URL cannot be localhost in production');
+lib/validateProduction.ts:335:          result.errors.push(`❌ APP_ORIGIN (${appOrigin}) does not match NEXT_PUBLIC_APP_URL origin (${appUrlOrigin})`);
+lib/validateProduction.ts:339:        result.errors.push('❌ NEXT_PUBLIC_APP_URL must be a valid absolute URL in production');
+lib/validateProduction.ts:345:    if (!process.env.NEXT_PUBLIC_SENTRY_DSN) {
+lib/validateProduction.ts:349:    // Redis presence is enforced above via required production variables.
+lib/validateProduction.ts:354:  const s3Configured = s3Vars.filter(v => process.env[v]);
+lib/validateProduction.ts:357:    result.errors.push(`   Missing: ${s3Vars.filter(v => !process.env[v]).join(', ')}`);
+lib/validateProduction.ts:364:  const sendgridConfigured = sendgridVars.filter(v => process.env[v]);
+lib/validateProduction.ts:367:    result.errors.push(`   Missing: ${sendgridVars.filter(v => !process.env[v]).join(', ')}`);
+lib/validateProduction.ts:374:  const twilioConfigured = twilioVars.filter(v => process.env[v]);
+lib/validateProduction.ts:377:    result.errors.push(`   Missing: ${twilioVars.filter(v => !process.env[v]).join(', ')}`);
+lib/validateProduction.ts:384:  const redisConfigured = redisVars.filter(v => process.env[v]);
+lib/validateProduction.ts:387:    result.errors.push(`   Missing: ${redisVars.filter(v => !process.env[v]).join(', ')}`);
+lib/validateProduction.ts:400:      result.errors.push('❌ Redis is required in production - distributed rate limiting and token revocation cannot run safely without it');
+lib/validateProduction.ts:424:  if (result.info.length > 0 && process.env.VERBOSE) {
+lib/validateProduction.ts:434:    console.log('Missing required variables:');
+lib/validateProduction.ts:449:  const prodRequired: string[] = [];      // "required in production; optional for X in local/dev"
+lib/validateProduction.ts:456:    const prodMatch = w.match(/^(\S+) is not set \(required in production/);
+lib/validateProduction.ts:479:  // Production-required (highest priority — these become ERRORS in a true mainnet build)
+lib/validateProduction.ts:481:    console.log(`\n  ── Production-required, currently unset (${prodRequired.length}) ──`);
+lib/validateProduction.ts:482:    console.log('     (These become build errors when NEXT_PUBLIC_IS_TESTNET=false + DATABASE_URL set.)');
+lib/validateProduction.ts:526:  const result = validateProductionEnvironment();
+lib/validateProduction.ts:530:  const isCI = process.env.CI === 'true' || process.env.VERCEL === '1';
+lib/validateProduction.ts:531:  const frontendOnly = process.env.FRONTEND_SELF_CONTAINED === 'true' || process.env.NEXT_PUBLIC_FRONTEND_ONLY === 'true';
+lib/validateProduction.ts:541:    console.log('❌ Configure all required environment variables in your deployment platform');
+lib/validateProduction.ts:546:    const isProduction = process.env.NODE_ENV === 'production';
+lib/validateProduction.ts:549:      console.log('❌ Configure all required environment variables before deploying');
+scripts/validate-deployment.ts:69:  const explicit = process.env.DEPLOYMENT_FILE?.trim();
+scripts/validate-deployment.ts:100:  const network = process.env.HARDHAT_NETWORK ?? 'hardhat';
+scripts/validate-deployment.ts:112:  const rpcUrl = process.env.RPC_URL?.trim();
+scripts/validate-deployment.ts:113:  const deployer = process.env.DEPLOYER_ADDRESS?.trim();
+scripts/validate-deployment.ts:119:      ['RPC_URL and DEPLOYER_ADDRESS are required for on-chain ownership validation (skipped)']
+scripts/validate-frontend-ready.ts:19: *   7. NEXT_PUBLIC_* and FAUCET_* env vars relevant to the API routes are
+scripts/validate-frontend-ready.ts:22: * Exits non-zero on any required-check failure.
+scripts/validate-frontend-ready.ts:35:  level: "required" | "warn";
+scripts/validate-frontend-ready.ts:41:function check(name: string, ok: boolean, detail: string, level: "required" | "warn" = "required"): void {
+scripts/validate-frontend-ready.ts:43:  const icon = ok ? "✅" : level === "required" ? "❌" : "⚠️ ";
+scripts/validate-frontend-ready.ts:204:  { name: "NEXT_PUBLIC_IS_TESTNET",          expected: process.env.NEXT_PUBLIC_IS_TESTNET === "true" },
+scripts/validate-frontend-ready.ts:205:  { name: "NEXT_PUBLIC_DEFAULT_CHAIN_ID",    expected: !!process.env.NEXT_PUBLIC_DEFAULT_CHAIN_ID },
+scripts/validate-frontend-ready.ts:206:  { name: "NEXT_PUBLIC_FAUCET_ADDRESS",      expected: /^0x[0-9a-fA-F]{40}$/.test(process.env.NEXT_PUBLIC_FAUCET_ADDRESS ?? "") },
+scripts/validate-frontend-ready.ts:207:  { name: "FAUCET_OPERATOR_PRIVATE_KEY",     expected: /^0x[0-9a-fA-F]{64}$/.test(process.env.FAUCET_OPERATOR_PRIVATE_KEY ?? "") },
+scripts/validate-frontend-ready.ts:208:  { name: "DATABASE_URL",                    expected: !!process.env.DATABASE_URL },
+scripts/validate-frontend-ready.ts:209:  { name: "NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS", expected: /^0x[0-9a-fA-F]{40}$/.test(process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS ?? "") },
+scripts/validate-frontend-ready.ts:216:const required = results.filter((r) => r.level === "required");
+scripts/validate-frontend-ready.ts:217:const requiredFailed = required.filter((r) => !r.ok);
+scripts/validate-frontend-ready.ts:221:if (requiredFailed.length === 0) {
+scripts/validate-frontend-ready.ts:224:  console.log(`║  ❌  ${requiredFailed.length} required check(s) failed                       ║`);
+scripts/validate-frontend-ready.ts:231:if (requiredFailed.length > 0) {
+scripts/validate-frontend-ready.ts:232:  console.error("Failed required checks:");
+scripts/validate-frontend-ready.ts:233:  for (const f of requiredFailed) console.error(`  - ${f.name}: ${f.detail}`);
+\n### CI release/deploy gates
+.github/workflows/codecov.yml:25:        run: npm run test:coverage
+.github/workflows/governance-safety.yml:40:        # deployment are expected and acceptable; only ocp-guardrails and feature9:governance
+.github/workflows/mainnet-readiness.yml:5:    branches: [main, "release/**"]
+.github/workflows/mainnet-readiness.yml:7:    branches: [main, "release/**"]
+.github/workflows/release-gate.yml:63:      - name: Validate environment
+.github/workflows/release-gate.yml:79:        run: npm run -s ops:release:stop-go
+.github/workflows/release-gate.yml:84:        # the gate is therefore informational in CI — it must not block deployments.
+.github/workflows/release-gate.yml:86:        continue-on-error: true
+.github/workflows/security.yml:104:        continue-on-error: true
+.github/workflows/security.yml:191:        continue-on-error: true
+.github/workflows/security.yml:257:        continue-on-error: true
+.github/workflows/seer-watcher.yml:3:# Reusable workflow — called by governance-safety.yml, security.yml, and release-gate.yml
+.github/workflows/testing-pipeline.yml:51:      # (matches codecov.yml which runs npm run test:coverage successfully)
+.github/workflows/testing-pipeline.yml:52:      - run: npm run test:coverage
+.github/workflows/testing-pipeline.yml:111:          echo "Size check passed (compiler size warnings are informational for proxy-deployed contracts)"
+.github/workflows/testing-pipeline.yml:178:        continue-on-error: true
+.github/workflows/testing-pipeline.yml:225:    continue-on-error: true  # Next.js startup time varies; findings reported as warning
+.github/workflows/testing-pipeline.yml:290:      - run: npm run test:ci
+.github/workflows/testing-pipeline.yml:364:          npm run build

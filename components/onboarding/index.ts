@@ -1,2 +1,3 @@
-export { OnboardingProvider, useOnboarding, OnboardingPathChooser, OnboardingProgressBar, OnboardingComplete } from './OnboardingSystem';
-export type { UserPath } from './OnboardingSystem';
+export { OnboardingProvider, useOnboarding } from './OnboardingContext';
+export type { UserPath } from './OnboardingContext';
+export { OnboardingPathChooser, OnboardingProgressBar, OnboardingComplete } from './OnboardingSystem';

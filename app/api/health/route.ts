@@ -59,17 +59,11 @@ export async function GET(_request: NextRequest) {
 function checkEnvironmentVariables(): boolean {
   const required = [
     'NEXT_PUBLIC_CHAIN_ID',
-    'NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS',
-    'NEXT_PUBLIC_VAULT_HUB_ADDRESS',
+    'NEXT_PUBLIC_CONTRACT_ADDRESS', // Added to .env.local.example - use 0x0 for dev
+    // WalletConnect is optional: when no valid project id is configured the
+    // wallet picker disables that connector while keeping MetaMask/Coinbase
+    // and injected wallets available.
   ];
-
-  const walletConnectProjectId =
-    process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ||
-    process.env.NEXT_PUBLIC_WAGMI_PROJECT_ID;
-
-  if (walletConnectProjectId === undefined || walletConnectProjectId.trim() === '') {
-    required.push('NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID');
-  }
 
   const missing = required.filter(key => {
     const value = process.env[key];
@@ -78,7 +72,7 @@ function checkEnvironmentVariables(): boolean {
 
   if (missing.length > 0) {
     logger.warn('⚠️ Missing environment variables:', missing);
-    logger.warn('💡 For local dev, copy .env.local.example. For vault-capable deployments, configure WalletConnect and canonical contract env vars.');
+    logger.warn('💡 For local dev, see REALITY_CHECK.md or copy .env.local.example');
   }
 
   return missing.length === 0;

@@ -67,8 +67,15 @@ function _loadSentryClient(): typeof import('@sentry/nextjs') | null {
     return null;
   }
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    _sentryClientCache = require('@sentry/nextjs');
+    // Keep this runtime-only. Client error boundaries import logger, and a
+    // statically analyzable require('@sentry/nextjs') here pulls the full
+    // server Sentry/Prisma/OpenTelemetry tree into page/error compilation.
+    // That made local frontend pages OOM before rendering. In Node runtime
+    // with a configured DSN, still load Sentry for warning/error forwarding.
+    // eslint-disable-next-line no-eval, @typescript-eslint/no-implied-eval, @typescript-eslint/no-require-imports
+    const runtimeRequire = (0, eval)('require') as NodeRequire;
+    const packageName = '@sentry/' + 'nextjs';
+    _sentryClientCache = runtimeRequire(packageName) as typeof import('@sentry/nextjs');
   } catch {
     _sentryClientCache = null;
   }

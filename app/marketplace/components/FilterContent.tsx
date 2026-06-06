@@ -30,6 +30,7 @@ export function FilterContent({ filters, setFilters, onClose }: FilterContentPro
 
   return (
     <m.aside
+      id="marketplace-filters"
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
@@ -44,8 +45,9 @@ export function FilterContent({ filters, setFilters, onClose }: FilterContentPro
 
       <div className="grid gap-4 md:grid-cols-4">
         <div>
-          <label className="mb-2 block text-sm text-gray-300">Category</label>
+          <label htmlFor="marketplace-category-filter" className="mb-2 block text-sm text-gray-300">Category</label>
           <select
+            id="marketplace-category-filter"
             value={filters.category}
             onChange={(event) =>  updateFilter('category', event.target.value === 'all' ? '' : event.target.value)}
             className="w-full rounded-xl border border-white/10 bg-zinc-900 px-3 py-2 text-sm"
@@ -59,8 +61,9 @@ export function FilterContent({ filters, setFilters, onClose }: FilterContentPro
         </div>
 
         <div>
-          <label className="mb-2 block text-sm text-gray-300">Min price</label>
+          <label htmlFor="marketplace-min-price-filter" className="mb-2 block text-sm text-gray-300">Min price</label>
           <input
+            id="marketplace-min-price-filter"
             type="number"
             min="0"
             value={filters.minPrice}
@@ -71,8 +74,9 @@ export function FilterContent({ filters, setFilters, onClose }: FilterContentPro
         </div>
 
         <div>
-          <label className="mb-2 block text-sm text-gray-300">Max price</label>
+          <label htmlFor="marketplace-max-price-filter" className="mb-2 block text-sm text-gray-300">Max price</label>
           <input
+            id="marketplace-max-price-filter"
             type="number"
             min="0"
             value={filters.maxPrice}
@@ -83,8 +87,9 @@ export function FilterContent({ filters, setFilters, onClose }: FilterContentPro
         </div>
 
         <div>
-          <label className="mb-2 block text-sm text-gray-300">Sort</label>
+          <label htmlFor="marketplace-sort-filter" className="mb-2 block text-sm text-gray-300">Sort</label>
           <select
+            id="marketplace-sort-filter"
             value={filters.sort}
             onChange={(event) =>  updateFilter('sort', event.target.value)}
             className="w-full rounded-xl border border-white/10 bg-zinc-900 px-3 py-2 text-sm"

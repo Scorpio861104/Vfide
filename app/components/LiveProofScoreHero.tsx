@@ -370,16 +370,20 @@ function FeeCurve({ score, hex, reduce }: { score: number; hex: string; reduce: 
       <path d={path} fill="none" stroke={hex} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
       {/* Cursor */}
       <line x1={cursorX} x2={cursorX} y1={4} y2={H} stroke="rgba(255,255,255,0.2)" strokeDasharray="3 3" />
-      <m.circle
-        cx={cursorX}
-        cy={cursorY}
-        r={5}
-        fill={hex}
-        stroke="white"
-        strokeWidth={1.5}
-        animate={reduce ? undefined : { r: [5, 6, 5] }}
+      <m.g
+        animate={reduce ? undefined : { scale: [1, 1.18, 1] }}
         transition={reduce ? undefined : { duration: 1.6, repeat: Infinity }}
-      />
+        style={{ originX: cursorX, originY: cursorY }}
+      >
+        <circle
+          cx={cursorX}
+          cy={cursorY}
+          r={5}
+          fill={hex}
+          stroke="white"
+          strokeWidth={1.5}
+        />
+      </m.g>
     </svg>
   );
 }

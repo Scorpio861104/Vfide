@@ -11,6 +11,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { JWTPayload } from '@/lib/auth/jwt';
 import { withAuth } from '@/lib/auth/middleware';
+import { withRateLimit } from '@/lib/auth/rateLimit';
 import { query } from '@/lib/db';
 
 export const runtime = 'nodejs';
@@ -29,6 +30,9 @@ async function callerHasAccess(contentId: string, address: string): Promise<bool
 }
 
 export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
+  const rateLimit = await withRateLimit(request, 'api');
+  if (rateLimit) return rateLimit;
+
   const { searchParams } = new URL(request.url);
   const contentId = searchParams.get('contentId');
   if (!contentId) {
@@ -42,6 +46,9 @@ export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
 });
 
 export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
+  const rateLimit = await withRateLimit(request, 'write');
+  if (rateLimit) return rateLimit;
+
   let body: Record<string, unknown>;
   try {
     body = await request.json();

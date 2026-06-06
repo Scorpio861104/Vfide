@@ -14,8 +14,8 @@ Go to your Vercel project → **Settings** → **Environment Variables**
 **REQUIRED VARIABLES:**
 
 ```bash
-# WalletConnect (REQUIRED)
-NEXT_PUBLIC_WAGMI_PROJECT_ID=<your_walletconnect_project_id>
+# WalletConnect (OPTIONAL — enables QR/mobile pairing)
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=<your_walletconnect_project_id>
 
 # Network Configuration (REQUIRED)
 NEXT_PUBLIC_CHAIN_ID=84532
@@ -191,7 +191,7 @@ Route (app)                              Size     First Load JS
 ✅ Chain ID  
 ✅ RPC URL  
 ✅ Contract addresses  
-✅ WalletConnect Project ID  
+✅ WalletConnect Project ID (optional QR/mobile pairing)  
 ✅ Feature flags
 
 ### NEVER Expose
@@ -249,7 +249,7 @@ Route (app)                              Size     First Load JS
 - ✅ Vercel deployments now succeed
 
 **Next Steps:**
-1. Set required env vars in Vercel dashboard
+1. Set required env vars in Vercel dashboard; add `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` only if QR/mobile WalletConnect pairing is needed
 2. Push code changes
 3. Verify successful deployment
 4. Test app in production

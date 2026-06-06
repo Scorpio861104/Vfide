@@ -22,6 +22,7 @@ import {
 // MoreSheet (bottom nav drawer) and PieMenu can't drift out of sync.
 
 import { navigationItems, type NavItem } from './navigationItems';
+import { usePieMenuScore, PieMenuContextProvider } from './PieMenuContext';
 
 // ============================================================================
 // AUDIO SETTINGS
@@ -446,42 +447,10 @@ function TriggerButton({ isOpen, onClick, onLongPress, activeCategory, proofScor
 // MAIN PIE MENU - SLIDE OUT STYLE
 // ============================================================================
 
-/**
- * PieMenuContext — optional context for injecting a live ProofScore into the
- * PieMenu's ring. Place a <PieMenuContextProvider score={...}> high in your
- * app tree, populated by wagmi/Seer.getScore. Without a provider, the ring
- * defaults to 5000 (neutral / amber).
- *
- * Example:
- *   const { data: score } = useReadContract({
- *     ...SeerContract,
- *     functionName: 'getScore',
- *     args: [address],
- *   });
- *   <PieMenuContextProvider score={Number(score ?? 5000)}>
- *     <AppShell />
- *   </PieMenuContextProvider>
- */
-const PieMenuScoreContext = React.createContext<number>(5000);
-
-export function PieMenuContextProvider({
-  score,
-  children,
-}: {
-  score: number;
-  children: React.ReactNode;
-}) {
-  return (
-    <PieMenuScoreContext.Provider value={score}>
-      {children}
-    </PieMenuScoreContext.Provider>
-  );
-}
-
-function usePieMenuScore(): number {
-  return React.useContext(PieMenuScoreContext);
-}
-
+// PieMenuContextProvider/usePieMenuScore live in PieMenuContext.tsx so
+// lightweight global providers can set the score without importing this
+// full animated menu module. Re-export the provider to preserve the old API.
+export { PieMenuContextProvider };
 export function PieMenu() {
   const router = useRouter();
   const pathname = usePathname();
