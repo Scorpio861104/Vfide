@@ -111,14 +111,16 @@ export function NotificationsTabInline() {
             <div className="glass-card-premium p-5 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="relative">
-                  <Search size={16} className="absolute left-3 top-3 text-white/30" />
-                  <input type="text" placeholder="Search notifications…" value={searchQuery}
+                  <label htmlFor="settings-notification-search" className="sr-only">Search notifications</label>
+                  <Search size={16} className="absolute left-3 top-3 text-white/30" aria-hidden="true" />
+                  <input id="settings-notification-search" type="text" aria-label="Search notifications" placeholder="Search notifications…" value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
                     className="w-full pl-9 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-violet-500/50" />
                 </div>
                 <div className="relative">
-                  <Filter size={16} className="absolute left-3 top-3 text-white/30" />
-                  <select value={selectedFilter.types?.[0] || ''}
+                  <label htmlFor="settings-notification-type-filter" className="sr-only">Filter notifications by type</label>
+                  <Filter size={16} className="absolute left-3 top-3 text-white/30" aria-hidden="true" />
+                  <select id="settings-notification-type-filter" aria-label="Filter notifications by type" value={selectedFilter.types?.[0] || ''}
                     onChange={e => {
                       if (e.target.value) setSelectedFilter({ types: [e.target.value as NotificationType] });
                       else setSelectedFilter({});

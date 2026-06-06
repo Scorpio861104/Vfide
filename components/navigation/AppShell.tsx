@@ -41,9 +41,11 @@ function shouldShowChrome(pathname: string): boolean {
 
 interface AppShellProps {
   children: ReactNode;
+  walletEnabled?: boolean;
+  isConnected?: boolean;
 }
 
-export function AppShell({ children }: AppShellProps) {
+export function AppShell({ children, walletEnabled = true, isConnected = false }: AppShellProps) {
   const pathname = usePathname();
   const showChrome = shouldShowChrome(pathname);
 
@@ -63,16 +65,16 @@ export function AppShell({ children }: AppShellProps) {
           gives mobile users clearance below the 64px BottomTabBar so
           footers and page-bottom content aren't hidden under it. */}
       <TierAurora />
-      <OwnerChallengeBanner />
-      <TopNav />
+      {walletEnabled && <OwnerChallengeBanner />}
+      <TopNav walletEnabled={walletEnabled} isConnected={isConnected} />
       <ProtocolTicker />
-      <TimeLattice />
+      {walletEnabled && <TimeLattice />}
       <main id="main" role="main" className="pt-7 pb-20 md:pb-0 appshell-content" tabIndex={-1}>
         {children}
       </main>
       <BottomTabBar />
       <MonumentCorner />
-      <RecoveryBeacon />
+      {walletEnabled && <RecoveryBeacon />}
       <TransactionTrailLayer />
     </>
   );
