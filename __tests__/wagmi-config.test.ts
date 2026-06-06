@@ -1,4 +1,4 @@
-import { describe, expect, it,  beforeEach } from '@jest/globals'
+import { beforeEach, describe, expect, it } from '@jest/globals'
 
 // Mock all external dependencies first
 jest.mock('@rainbow-me/rainbowkit', () => ({
@@ -6,8 +6,10 @@ jest.mock('@rainbow-me/rainbowkit', () => ({
 }))
 
 jest.mock('@rainbow-me/rainbowkit/wallets', () => ({
-  walletConnectWallet: {},
-  metaMaskWallet: {},
+  walletConnectWallet: 'walletConnectWallet',
+  metaMaskWallet: 'metaMaskWallet',
+  coinbaseWallet: 'coinbaseWallet',
+  injectedWallet: 'injectedWallet',
 }))
 
 jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK_V2 */
@@ -62,10 +64,14 @@ jest.mock('@/lib/chains', () => ({
   IS_TESTNET: true,
 }))
 
+beforeEach(() => {
+  jest.resetModules()
+  jest.clearAllMocks()
+  delete process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
+  delete process.env.NEXT_PUBLIC_WAGMI_PROJECT_ID
+})
+
 describe('wagmi config', () => {
-  beforeEach(() => {
-    jest.resetModules()
-  })
 
   it('exports config', async () => {
     const { config } = await import('@/lib/wagmi')
@@ -116,21 +122,92 @@ describe('wagmi testnet chains', () => {
   })
 })
 
-describe('wagmi connectors', () => {
-  it('walletConnectWallet is available', async () => {
-    const { walletConnectWallet } = await import('@rainbow-me/rainbowkit/wallets')
-    expect(walletConnectWallet).toBeDefined()
+
+describe('WalletConnect project id resolution', () => {
+  it('enables WalletConnect when NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID is valid', async () => {
+    const { resolveWalletConnectProjectConfig } = await import('@/lib/walletConnectConfig')
+    expect(resolveWalletConnectProjectConfig({
+      NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: ' valid-walletconnect-project-id ',
+    })).toEqual({
+      projectId: 'valid-walletconnect-project-id',
+      hasWalletConnect: true,
+    })
   })
 
-  it('metaMaskWallet is available', async () => {
-    const { metaMaskWallet } = await import('@rainbow-me/rainbowkit/wallets')
+  it('falls back to the legacy WAGMI project id env var', async () => {
+    const { resolveWalletConnectProjectConfig } = await import('@/lib/walletConnectConfig')
+    expect(resolveWalletConnectProjectConfig({
+      NEXT_PUBLIC_WAGMI_PROJECT_ID: 'legacy-valid-project-id',
+    })).toEqual({
+      projectId: 'legacy-valid-project-id',
+      hasWalletConnect: true,
+    })
+  })
+
+  it('disables WalletConnect for missing and placeholder project ids', async () => {
+    const { resolveWalletConnectProjectConfig } = await import('@/lib/walletConnectConfig')
+    expect(resolveWalletConnectProjectConfig({})).toEqual({
+      projectId: '00000000000000000000000000000000',
+      hasWalletConnect: false,
+    })
+    expect(resolveWalletConnectProjectConfig({
+      NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: 'your_walletconnect_project_id_here',
+    })).toEqual({
+      projectId: '00000000000000000000000000000000',
+      hasWalletConnect: false,
+    })
+  })
+})
+
+describe('wagmi connectors', () => {
+  it('MetaMask, Coinbase Wallet, WalletConnect, and injected wallet factories are available', async () => {
+    const { walletConnectWallet, metaMaskWallet, coinbaseWallet, injectedWallet } = await import('@rainbow-me/rainbowkit/wallets')
     expect(metaMaskWallet).toBeDefined()
+    expect(coinbaseWallet).toBeDefined()
+    expect(walletConnectWallet).toBeDefined()
+    expect(injectedWallet).toBeDefined()
   })
 
   it('connectorsForWallets is called', async () => {
     const { connectorsForWallets } = await import('@rainbow-me/rainbowkit')
     await import('@/lib/wagmi')
     expect(connectorsForWallets).toHaveBeenCalled()
+  })
+
+  it('configures the desktop wallet picker with MetaMask, Coinbase Wallet, injected, and WalletConnect when project id is valid', async () => {
+    process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID = 'valid-walletconnect-project-id'
+    const { connectorsForWallets } = await import('@rainbow-me/rainbowkit')
+
+    await import('@/lib/wagmi')
+
+    const [walletGroups, options] = (connectorsForWallets as jest.Mock).mock.calls.at(-1)
+    expect(options).toMatchObject({
+      appName: 'VFIDE',
+      projectId: 'valid-walletconnect-project-id',
+    })
+    expect(walletGroups).toEqual([
+      {
+        groupName: 'Browser Extensions',
+        wallets: ['metaMaskWallet', 'coinbaseWallet', 'injectedWallet'],
+      },
+      {
+        groupName: 'Mobile & QR Code',
+        wallets: ['walletConnectWallet'],
+      },
+    ])
+  })
+
+  it('keeps WalletConnect out of the picker when its project id is missing or placeholder', async () => {
+    process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID = 'your_walletconnect_project_id_here'
+    const { connectorsForWallets } = await import('@rainbow-me/rainbowkit')
+
+    await import('@/lib/wagmi')
+
+    const [walletGroups, options] = (connectorsForWallets as jest.Mock).mock.calls.at(-1)
+    expect(options.projectId).toBe('00000000000000000000000000000000')
+    expect(JSON.stringify(walletGroups)).not.toContain('walletConnectWallet')
+    expect(JSON.stringify(walletGroups)).toContain('metaMaskWallet')
+    expect(JSON.stringify(walletGroups)).toContain('coinbaseWallet')
   })
 })
 

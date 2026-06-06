@@ -22,6 +22,27 @@ describe('selectPrimaryConnector', () => {
     expect(selectPrimaryConnector(connectors, false)).toEqual(connectors[1]);
   });
 
+
+  it('uses Coinbase Wallet as the explicit secondary option on desktop when MetaMask is unavailable', () => {
+    const connectors = [
+      { id: 'walletConnect', name: 'WalletConnect' },
+      { id: 'coinbaseWalletSDK', name: 'Coinbase Wallet' },
+      { id: 'injected', name: 'Injected Fallback' },
+    ];
+
+    expect(selectPrimaryConnector(connectors, false)).toEqual(connectors[1]);
+  });
+
+  it('uses Coinbase Wallet as the explicit mobile fallback when WalletConnect is unavailable', () => {
+    const connectors = [
+      { id: 'metaMask', name: 'MetaMask' },
+      { id: 'com.coinbase.wallet', name: 'Coinbase Wallet' },
+      { id: 'injected', name: 'Injected Fallback' },
+    ];
+
+    expect(selectPrimaryConnector(connectors, true)).toEqual(connectors[1]);
+  });
+
   it('falls back to injected when preferred wallet-specific connectors are unavailable', () => {
     const connectors = [
       { id: 'injected', name: 'Injected' },

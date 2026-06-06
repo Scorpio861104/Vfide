@@ -236,7 +236,7 @@
     "tailwind-merge": "^3.4.0",
     "tsx": "^4.22.4",
     "viem": "2.48.8",
-    "wagmi": "3.6.16",
+    "wagmi": "^2.19.5",
     "web-vitals": "4.2.4",
     "zod4": "npm:zod@^4.3.6",
     "zustand": "^5.0.14"
