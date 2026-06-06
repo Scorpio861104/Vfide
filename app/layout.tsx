@@ -48,11 +48,6 @@ import { headers } from 'next/headers';
 import { cookies } from 'next/headers';
 import './globals.css';
 import '@/lib/ssr-animations.css';
-// FIX PERF-2: RainbowKit CSS must be imported once at the root layout.
-// Without this import, the modal has no base styles and re-injects them
-// at runtime as inline <style> tags, causing a flash of unstyled content
-// and layout reflow on first wallet-connect click.
-import '@rainbow-me/rainbowkit/styles.css';
 import { CoreProviders } from '@/lib/providers/CoreProviders';
 import { getHtmlLang, normalizeLocale } from '@/lib/i18n';
 

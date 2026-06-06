@@ -373,12 +373,13 @@ export function FeeFlowRiver() {
             const isEntry = localT < 0.5;
             const u = isEntry ? localT * 2 : (localT - 0.5) * 2;
             const path = isEntry ? entryPathPoint(p.y0, u) : splitPathPoint(p.y1, u);
+            const radius = Number.isFinite(p.r) && p.r > 0 ? p.r : 2;
             return (
               <circle
                 key={p.id}
                 cx={path.x}
                 cy={path.y}
-                r={p.r}
+                r={radius}
                 fill={p.hex}
                 opacity={isEntry ? 0.6 : 0.95}
               />

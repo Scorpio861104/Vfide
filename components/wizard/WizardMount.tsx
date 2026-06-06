@@ -3,97 +3,67 @@
 /**
  * WizardMount — global mount point for the VaultSetupWizard.
  *
- * Two responsibilities:
- *
- *   1. Auto-show the wizard for first-time users (wallet connected, no
- *      vault yet, wizard enabled, no completed chapters).
- *
- *   2. Force-show the wizard if the URL has ?wizard=1, so a "Reopen
- *      wizard" link can pull the wizard back up after the user turned
- *      it off. When the user closes the wizard, we drop the ?wizard=1
- *      param so they don't get stuck in a "X doesn't actually close it"
- *      loop.
- *
- * Routes we never auto-show on (the user is mid-task on a specific page
- * or it's a public surface that should stay clean):
- *
- *   - /checkout/[id]   — payment in progress
- *   - /legal           — they're reading terms
- *   - /api/*           — server only, doesn't reach here anyway
- *
- * The wizard itself decides whether to render based on shared context
- * state (enabled, isComplete). This wrapper only governs the *initial*
- * show on first wallet connect and the forceOpen flag.
+ * Keep this wrapper lightweight. The full vault wizard imports many contract
+ * hooks and chapter components, so only load it when the user is connected and
+ * the wizard can actually render, or when a launch URL explicitly asks for it
+ * with ?wizard=1.
  */
 
+import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAccount } from 'wagmi';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
-import { VaultSetupWizard } from './VaultSetupWizard';
 import { useVaultHub } from '@/hooks/useVaultHub';
 import { useWizardState } from './useWizardState';
 
+const VaultSetupWizard = dynamic(
+  () => import('./VaultSetupWizard').then((mod) => mod.VaultSetupWizard),
+  { ssr: false },
+);
+
 const AUTO_SUPPRESS_PATHS = ['/checkout', '/legal', '/api'];
 
-export function WizardMount() {
-  const { isConnected } = useAccount();
+function WizardMountConnected({ forceOpen, onClose }: { forceOpen: boolean; onClose: () => void }) {
   const { hasVault, isLoadingVault, vaultHubConfigured } = useVaultHub();
   const wizard = useWizardState();
   const pathname = usePathname();
-  const router = useRouter();
-  const searchParams = useSearchParams();
 
-  // Force-open if the URL has ?wizard=1 — used by the launch button.
-  const forceOpen = (searchParams?.get('wizard') ?? '') === '1';
-
-  // Suppress auto-show on certain routes.
   const onSuppressedRoute = useMemo(
     () => AUTO_SUPPRESS_PATHS.some((p) => pathname?.startsWith(p) ?? false),
     [pathname],
   );
-
-  // We don't want the wizard to bounce back on every page navigation —
-  // only on the first wallet-connect moment per session.
   const [autoLaunchedThisSession, setAutoLaunchedThisSession] = useState(false);
 
+  const canAutoRender =
+    vaultHubConfigured &&
+    !isLoadingVault &&
+    !hasVault &&
+    !onSuppressedRoute &&
+    !autoLaunchedThisSession &&
+    wizard.state.enabled &&
+    wizard.state.completedChapters.length === 0 &&
+    wizard.state.skippedChapters.length === 0;
+
   useEffect(() => {
-    if (!isConnected) return;
-    if (!vaultHubConfigured) return;
-    if (isLoadingVault) return;
-    if (hasVault) return; // vault exists → user is past the required chapter
-    if (onSuppressedRoute) return;
-    if (autoLaunchedThisSession) return;
-
-    // Only auto-show if the user hasn't explicitly turned the wizard off
-    // and isn't already mid-flow (completed/skipped > 0 means they've
-    // engaged before — let them come back deliberately).
-    if (!wizard.state.enabled) return;
-    if (wizard.state.completedChapters.length > 0) return;
-    if (wizard.state.skippedChapters.length > 0) return;
-
-    // OK — show. Nothing to do; the wizard will render itself based on
-    // state.enabled. We just record that the auto-launch fired so we
-    // don't keep re-evaluating.
+    if (!canAutoRender) return;
     setAutoLaunchedThisSession(true);
-  }, [
-    isConnected,
-    hasVault,
-    isLoadingVault,
-    vaultHubConfigured,
-    onSuppressedRoute,
-    autoLaunchedThisSession,
-    wizard.state.enabled,
-    wizard.state.completedChapters.length,
-    wizard.state.skippedChapters.length,
-  ]);
+  }, [canAutoRender]);
 
-  // When the wizard closes, drop ?wizard=1 from the URL so forceOpen
-  // doesn't immediately re-show it.
+  if (!forceOpen && !canAutoRender) return null;
+
+  return <VaultSetupWizard forceOpen={forceOpen} onClose={onClose} />;
+}
+
+export function WizardMount() {
+  const { isConnected } = useAccount();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const forceOpen = (searchParams?.get('wizard') ?? '') === '1';
+
   const handleClose = useCallback(() => {
     if (!forceOpen) return;
     if (typeof window === 'undefined') return;
-    // Preserve any other query params; just remove wizard.
     const url = new URL(window.location.href);
     url.searchParams.delete('wizard');
     const qs = url.searchParams.toString();
@@ -101,5 +71,7 @@ export function WizardMount() {
     router.replace(newPath, { scroll: false });
   }, [forceOpen, router]);
 
-  return <VaultSetupWizard forceOpen={forceOpen} onClose={handleClose} />;
+  if (!isConnected && !forceOpen) return null;
+
+  return <WizardMountConnected forceOpen={forceOpen} onClose={handleClose} />;
 }

@@ -1,16 +1,18 @@
 'use client';
 
 import { ReactNode } from 'react';
+import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
 import { ProtocolTicker } from './ProtocolTicker';
-import { MonumentCorner } from './MonumentCorner';
 import { TopNav } from './TopNav';
 import { BottomTabBar } from './BottomTabBar';
-import { RecoveryBeacon } from '@/components/security/RecoveryBeacon';
-import { OwnerChallengeBanner } from '@/components/security/OwnerChallengeBanner';
-import { TierAurora } from '@/components/identity/TierAurora';
-import { TimeLattice } from '@/components/identity/TimeLattice';
-import { TransactionTrailLayer } from '@/components/payments/TransactionTrailLayer';
+
+const MonumentCorner = dynamic(() => import('./MonumentCorner').then((mod) => mod.MonumentCorner), { ssr: false });
+const RecoveryBeacon = dynamic(() => import('@/components/security/RecoveryBeacon').then((mod) => mod.RecoveryBeacon), { ssr: false });
+const OwnerChallengeBanner = dynamic(() => import('@/components/security/OwnerChallengeBanner').then((mod) => mod.OwnerChallengeBanner), { ssr: false });
+const TierAurora = dynamic(() => import('@/components/identity/TierAurora').then((mod) => mod.TierAurora), { ssr: false });
+const TimeLattice = dynamic(() => import('@/components/identity/TimeLattice').then((mod) => mod.TimeLattice), { ssr: false });
+const TransactionTrailLayer = dynamic(() => import('@/components/payments/TransactionTrailLayer').then((mod) => mod.TransactionTrailLayer), { ssr: false });
 
 // The shared chrome (top nav, bottom tab bar on mobile, ticker, monument
 // corner) shows on every page except truly chrome-free surfaces —
@@ -39,9 +41,11 @@ function shouldShowChrome(pathname: string): boolean {
 
 interface AppShellProps {
   children: ReactNode;
+  walletEnabled?: boolean;
+  isConnected?: boolean;
 }
 
-export function AppShell({ children }: AppShellProps) {
+export function AppShell({ children, walletEnabled = true, isConnected = false }: AppShellProps) {
   const pathname = usePathname();
   const showChrome = shouldShowChrome(pathname);
 
@@ -61,16 +65,16 @@ export function AppShell({ children }: AppShellProps) {
           gives mobile users clearance below the 64px BottomTabBar so
           footers and page-bottom content aren't hidden under it. */}
       <TierAurora />
-      <OwnerChallengeBanner />
-      <TopNav />
+      {walletEnabled && <OwnerChallengeBanner />}
+      <TopNav walletEnabled={walletEnabled} isConnected={isConnected} />
       <ProtocolTicker />
-      <TimeLattice />
+      {walletEnabled && <TimeLattice />}
       <main id="main" role="main" className="pt-7 pb-20 md:pb-0 appshell-content" tabIndex={-1}>
         {children}
       </main>
       <BottomTabBar />
       <MonumentCorner />
-      <RecoveryBeacon />
+      {walletEnabled && <RecoveryBeacon />}
       <TransactionTrailLayer />
     </>
   );
