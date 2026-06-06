@@ -261,15 +261,9 @@ describe('/api/crypto/payment-requests/[id]', () => {
       expect(data.error).toContain('Invalid request body');
     });
 
-    it('should update status and txHash when user is a party', async () => {
+    it('should reject non-completion transitions in PATCH', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockResolvedValue({ user: mockUser });
-      // First query: fetch existing payment request
-      query.mockResolvedValueOnce({ rows: [mockPaymentRequest] });
-      // Second query: user lookup (user is to_user_id=99)
-      query.mockResolvedValueOnce({ rows: [{ id: 99 }] });
-      // Third query: update
-      query.mockResolvedValueOnce({ rows: [{ ...mockPaymentRequest, status: 'accepted', tx_hash: '0x' + 'a'.repeat(64) }] });
 
       const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests/1', {
         method: 'PATCH',
@@ -279,8 +273,9 @@ describe('/api/crypto/payment-requests/[id]', () => {
       const response = await PATCH(request, { params: Promise.resolve({ id: '1' }) });
       const data = await response.json();
 
-      expect(response.status).toBe(200);
-      expect(data.success).toBe(true);
+      expect(response.status).toBe(400);
+      expect(data.error).toContain("PATCH only supports the 'completed' transition");
+      expect(query).not.toHaveBeenCalled();
     });
 
     it('should fail closed for completed status when txHash cannot be verified on-chain', async () => {

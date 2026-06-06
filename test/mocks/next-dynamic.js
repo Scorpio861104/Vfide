@@ -14,12 +14,13 @@ export default function dynamic(importFn, _options) {
     .catch(() => {});
 
   function DynamicWrapper(props) {
-    const [Comp, setComp] = useState(resolvedComponent);
+    const [Comp, setComp] = useState(() => resolvedComponent);
 
     useEffect(() => {
       if (!Comp) {
         void importFn().then((mod) => {
-          setComp(mod.default || mod);
+          const component = mod.default || mod;
+          setComp(() => component);
         });
       }
     }, [Comp]);
