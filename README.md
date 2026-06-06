@@ -42,14 +42,14 @@ Copy `.env.local.example` to `.env.local` and configure:
 
 ```bash
 NEXT_PUBLIC_IS_TESTNET=true
-NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id # optional; enables WalletConnect QR/mobile pairing
 ```
 
 For production, see `.env.production` for complete configuration.
 
 ### Production Security Prerequisites
 
-These values are required for a safe production deployment and are validated by startup and production checks:
+These values are required for a safe production deployment and are validated by startup and production checks. WalletConnect is optional and only enables QR/mobile pairing when configured:
 
 - `DATABASE_URL` must connect with the constrained `vfide_app` role (not superuser / BYPASSRLS role).
 - `JWT_SECRET` must be strong and unique per environment.
@@ -70,7 +70,7 @@ Feature-specific production variables:
    - PostgreSQL database
    - Redis (Upstash recommended for rate limiting)
    - Sentry account (for error tracking)
-   - WalletConnect Project ID
+   - WalletConnect Project ID (optional; QR/mobile pairing only)
    - Constrained Postgres app role (`vfide_app`, `NOBYPASSRLS`)
 
 2. **Smart Contracts:**

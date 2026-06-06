@@ -275,7 +275,7 @@ UPSTASH_REDIS_REST_URL=https://your-redis.upstash.io
 UPSTASH_REDIS_REST_TOKEN=your-token
 
 # Blockchain (required for contract interactions)
-NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your-project-id
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your-project-id # optional; enables WalletConnect QR/mobile pairing
 ```
 
 #### Validation

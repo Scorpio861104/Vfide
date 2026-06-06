@@ -1,0 +1,813 @@
+app/sanctum/charities/[id]/page.tsx:308:    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+app/sanctum/charities/[id]/page.tsx:309:      navigator.clipboard.writeText(address).catch(() => {});
+app/(marketing)/s/[slug]/LinkInBioClient.tsx:38:  const storeUrl = typeof window !== 'undefined' ? `${window.location.origin}/store/${slug}` : `/store/${slug}`;
+app/(marketing)/s/[slug]/LinkInBioClient.tsx:39:  const payUrl = typeof window !== 'undefined' ? `${window.location.origin}/pay/${slug}` : `/pay/${slug}`;
+app/(marketing)/s/[slug]/LinkInBioClient.tsx:43:    const url = typeof window !== 'undefined' ? window.location.href : '';
+app/(marketing)/s/[slug]/LinkInBioClient.tsx:140:        <button onClick={() => navigator.share?.({ url: window.location.href, title: merchant.display_name }).catch(() => {})}
+app/guardians/components/MyGuardiansTab.tsx:331:  // contract but is only callable during the pre-setup bootstrap window.
+app/guardians/components/hooks.ts:22:    const raw = window.localStorage.getItem(GUARDIAN_WATCHLIST_KEY);
+app/guardians/components/hooks.ts:44:      window.localStorage.setItem(GUARDIAN_WATCHLIST_KEY, JSON.stringify(next));
+app/not-found.tsx:84:              onClick={() => window.history.back()}
+app/global-error.tsx:58:                onClick={() => window.location.assign('/')}
+app/stories/components/StoriesContent.tsx:54:    const stored = localStorage.getItem(`vfide_my_stories_${address}`);
+app/stories/components/StoriesContent.tsx:65:    localStorage.setItem(`vfide_my_stories_${address}`, JSON.stringify(myStories));
+app/stories/page.tsx:59:    const stored = localStorage.getItem(`vfide_my_stories_${address}`);
+app/stories/page.tsx:70:    localStorage.setItem(`vfide_my_stories_${address}`, JSON.stringify(myStories));
+app/headhunter/components/DashboardTab.tsx:16:      await navigator.clipboard?.writeText(referralLink);
+app/dashboard/components/ScoreSimulatorTab.tsx:85:    // Apply decay toward NEUTRAL only for inactive users, after the grace window.
+app/support/page.tsx:173:    window.setTimeout(() => {
+app/stealth/page.tsx:120:              onClick={() => navigator.clipboard?.writeText('EIP-5564 readiness snapshot captured')}
+app/components/LiveProofScoreHero.tsx:257:                  const target = document.getElementById('fee-river');
+app/components/MonumentBackdrop.tsx:19: *               window.scrollY and dims the monument after the first viewport.
+app/components/MonumentBackdrop.tsx:71:      const vh = window.innerHeight;
+app/components/MonumentBackdrop.tsx:72:      const y = window.scrollY;
+app/components/MonumentBackdrop.tsx:77:    window.addEventListener('scroll', onScroll, { passive: true });
+app/components/MonumentBackdrop.tsx:79:    return () => window.removeEventListener('scroll', onScroll);
+app/paper-wallet/components/GenerateTab.tsx:31:    navigator.clipboard.writeText(value).then(() => {
+app/paper-wallet/components/GenerateTab.tsx:35:        navigator.clipboard.readText()
+app/paper-wallet/components/GenerateTab.tsx:38:              return navigator.clipboard.writeText('');
+app/settings/components/NotificationsTabInline.tsx:55:    const a = document.createElement('a');
+app/admin/AdminDashboardClient.tsx:483:        window.location.reload();
+app/admin/AdminDashboardClient.tsx:1081:    const a = document.createElement('a');
+app/admin/AdminDashboardClient.tsx:1129:    const a = document.createElement('a');
+app/admin/AdminDashboardClient.tsx:1178:    const a = document.createElement('a');
+app/admin/AdminDashboardClient.tsx:1229:    const a = document.createElement('a');
+app/admin/AdminDashboardClient.tsx:1272:    const a = document.createElement('a');
+app/admin/AdminDashboardClient.tsx:1455:                  <p className="text-gray-500 text-sm">No QR signature failures in this window.</p>
+app/admin/AdminDashboardClient.tsx:1520:                  <p className="text-gray-500 text-sm">No fraud reports in this window.</p>
+app/admin/AdminDashboardClient.tsx:1591:                    <p className="text-gray-500 text-sm">No active owner attestations in this window.</p>
+app/admin/AdminDashboardClient.tsx:1607:                    <p className="text-gray-500 text-sm">No active guardian attestations in this window.</p>
+app/admin/AdminDashboardClient.tsx:1673:                  <p className="text-gray-500 text-sm">No Next of Kin fraud reports in this window.</p>
+app/inheritance/claim/page.tsx:104:    const id = window.setInterval(() => setNowSec(Math.floor(Date.now() / 1000)), 60_000);
+app/inheritance/claim/page.tsx:105:    return () => window.clearInterval(id);
+app/inheritance/claim/page.tsx:329:            : 'No reveal was recorded for your address during the claim window.'}
+app/inheritance/status/page.tsx:58:    const id = window.setInterval(() => setNowSec(Math.floor(Date.now() / 1000)), 60_000);
+app/inheritance/status/page.tsx:59:    return () => window.clearInterval(id);
+app/inheritance/status/page.tsx:616:          Inheritance is in the claim window. Heirs reveal their secrets from
+app/inheritance/override/page.tsx:174:    const id = window.setInterval(() => setNowSec(Math.floor(Date.now() / 1000)), 60_000);
+app/inheritance/override/page.tsx:175:    return () => window.clearInterval(id);
+app/inheritance/override/page.tsx:277:              moved to the heir claim window. The proof-of-life override
+app/inheritance/memorial/page.tsx:398:          No heirs revealed during the claim window. The vault entered memorial
+app/inheritance/setup/page.tsx:27: *     own share until they reveal it during the claim window.
+app/inheritance/setup/page.tsx:228:      '     and then a 90-day claim window.',
+app/inheritance/setup/page.tsx:244:    const a = document.createElement('a');
+app/inheritance/setup/page.tsx:741:        can cancel during that window. After 30 days, return to this tab and
+app/checkout/[id]/page.tsx:162:          const raw = window.localStorage.getItem(CHECKOUT_KNOWN_MERCHANTS_KEY);
+app/checkout/[id]/page.tsx:202:      const confirmed = window.confirm(
+app/checkout/[id]/page.tsx:251:        const raw = window.localStorage.getItem(CHECKOUT_KNOWN_MERCHANTS_KEY);
+app/checkout/[id]/page.tsx:255:          window.localStorage.setItem(CHECKOUT_KNOWN_MERCHANTS_KEY, JSON.stringify(knownMerchants));
+app/scan/components/ScanContent.tsx:53:  if (parsed.origin !== window.location.origin) return null;
+app/scan/components/ScanContent.tsx:81:      const stream = await navigator.mediaDevices.getUserMedia({
+app/governance/proposal/[id]/page.tsx:388:    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+app/governance/proposal/[id]/page.tsx:389:      navigator.clipboard.writeText(address).catch(() => {});
+app/governance/components/CouncilTab.tsx:40:              (Guardian Approval) with timelocked execution and a community veto window. Live on-chain
+app/budgets/page.tsx:54:    if (typeof window !== 'undefined' && !window.confirm(`Delete budget for ${budget.category}?`)) return;
+app/roadmap/page.tsx:57:      'VFIDEFlashLoan ships at launch. Flash loans are single-transaction borrows: borrow, use, repay — all within one block. If the repayment fails, the entire transaction reverts. No risk to the protocol, no exposure window.',
+app/vault/components/VaultQueueSection.tsx:182:                  Transfers at or above this threshold are queued for the seven-day review window.
+app/vault/components/VaultQueueSection.tsx:238:                            <span>Queued transfer awaiting the seven-day review window.</span>
+app/vault/components/VaultInheritancePanel.tsx:317:    const a = document.createElement('a');
+app/vault/safety/window/error.tsx:17:      message="Something went wrong loading the safety window. Your vault state on-chain is unaffected."
+app/vault/recover/status/page.tsx:20: *   - GuardianApproved: in challenge window. Countdown display, no action
+app/vault/recover/components/VisualEffects.tsx:43:    const timer = window.setTimeout(() => {
+app/vault/recover/components/VisualEffects.tsx:54:    return () => window.clearTimeout(timer);
+app/api/crypto/payment-requests/[id]/route.ts:350:    // the request's sender). This narrows the exploit window.
+app/wallet/page.tsx:111:          onClick={() => navigator.clipboard?.writeText('EIP-5564 readiness snapshot captured')}
+app/taxes/page.tsx:130:                  const a = document.createElement('a');
+app/social-hub/components/PostCard.tsx:65:      ? `${window.location.origin}/social-hub/post/${post.id}`
+app/social-hub/components/PostCard.tsx:66:      : window.location.href;
+app/social-hub/components/PostCard.tsx:70:    if (typeof navigator !== 'undefined' && navigator.share) {
+app/social-hub/components/PostCard.tsx:72:        await navigator.share({ title, text, url });
+app/product/[id]/components/addProductToCart.tsx:6:    const existing = JSON.parse(localStorage.getItem('vfide_cart') || '[]') as Array<{
+app/product/[id]/components/addProductToCart.tsx:16:    localStorage.setItem('vfide_cart', JSON.stringify(existing));
+app/escrow/[id]/components/EscrowDetailContent.tsx:208:    navigator.clipboard.writeText(escrow.metaHash).catch(() => {});
+app/testnet/page.tsx:49:      const ref = new URLSearchParams(window.location.search).get('ref')
+app/marketplace/components/MarketplaceEmptyState.tsx:51:          onClick={() => window.location.reload()}
+app/merchant/payment-links/page.tsx:118:    const url = `${window.location.origin}/pay/link/${link.link_id}`;
+app/merchant/payment-links/page.tsx:120:      await navigator.clipboard.writeText(url);
+app/merchant/payment-links/page.tsx:229:  const fullUrl = typeof window !== 'undefined' ? `${window.location.origin}/pay/link/${link.link_id}` : `/pay/link/${link.link_id}`;
+app/merchant/gift-cards/page.tsx:103:      window.setTimeout(() => setCopiedCode(null), 1500);
+app/merchant/refunds/page.tsx:32: *   time and store it in localStorage. If a merchant clears browser data or
+app/merchant/refunds/page.tsx:388:                or when they&apos;re approaching the 30-day expiry window.
+app/merchant/refunds/page.tsx:447:                        Past the 30-day completion window. This refund can no longer be
+app/merchant/staff/page.tsx:173:                          onClick={() => navigator.clipboard?.writeText(selectedInvite.posLink)}
+app/(commerce)/store/[slug]/components/ShareStoreSheet.tsx:18:  const storeUrl = typeof window !== 'undefined' ? `${window.location.origin}/store/${slug}` : `/store/${slug}`;
+app/(commerce)/store/[slug]/components/ShareStoreSheet.tsx:31:    if (navigator.share) {
+app/(commerce)/store/[slug]/components/ShareStoreSheet.tsx:33:        await navigator.share({ title: storeName, text: `Shop at ${storeName} on VFIDE`, url: storeUrl });
+app/(commerce)/embed/[slug]/EmbedClient.tsx:39:  const storeUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/store/${slug}`;
+app/insights/components/TaxesContent.tsx:125:                  const a = document.createElement('a');
+app/price-alerts/components/ActiveTab.tsx:15: *     list in localStorage.
+app/price-alerts/components/ActiveTab.tsx:45:    return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]');
+app/price-alerts/components/ActiveTab.tsx:52:  localStorage.setItem(STORAGE_KEY, JSON.stringify(alerts));
+app/price-alerts/components/ActiveTab.tsx:71:      window.addEventListener('storage', refresh);
+app/price-alerts/components/ActiveTab.tsx:78:        window.removeEventListener('storage', refresh);
+app/price-alerts/components/CreateTab.tsx:19:    return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]');
+app/price-alerts/components/CreateTab.tsx:40:    localStorage.setItem(STORAGE_KEY, JSON.stringify([...existing, alert]));
+app/price-alerts/components/CreateTab.tsx:41:    window.dispatchEvent(new Event('storage'));
+app/price-alerts/components/HistoryTab.tsx:20:    return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]');
+app/price-alerts/components/HistoryTab.tsx:37:    window.addEventListener('storage', refresh);
+app/price-alerts/components/HistoryTab.tsx:38:    return () => window.removeEventListener('storage', refresh);
+app/price-alerts/components/HistoryTab.tsx:46:    localStorage.removeItem(STORAGE_KEY);
+components/notifications/NotificationUI.tsx:603:    window.addEventListener('keydown', handleKeyDown);
+components/notifications/NotificationUI.tsx:604:    return () => window.removeEventListener('keydown', handleKeyDown);
+components/notifications/NotificationUI.tsx:781:                            window.location.assign(safe);
+components/gestures/GestureComponents.tsx:289:  const windowHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
+components/gestures/GestureComponents.tsx:589:    document.addEventListener('click', handleClick);
+components/gestures/GestureComponents.tsx:590:    return () => document.removeEventListener('click', handleClick);
+components/gestures/GestureComponents.tsx:603:    document.addEventListener('keydown', handleKeyDown);
+components/gestures/GestureComponents.tsx:604:    return () => document.removeEventListener('keydown', handleKeyDown);
+components/receipts/WhatsAppReceipt.tsx:72:    navigator.clipboard.writeText(text);
+components/onboarding/OnboardingSystem.tsx:68:    const stored = localStorage.getItem(STORAGE_KEY);
+components/onboarding/OnboardingSystem.tsx:74:  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch { /* ignore */ }
+components/onboarding/OnboardingFlow.tsx:119:      action: { label: 'Connect', onClick: () => document.querySelector<HTMLButtonElement>('[data-wallet-connect]')?.click() },
+components/onboarding/__tests__/HelpCenter.mobile.test.tsx:57:      window.matchMedia = jest.fn().mockImplementation((query) => ({
+components/onboarding/__tests__/HelpCenter.mobile.test.tsx:79:      window.matchMedia = jest.fn().mockImplementation((query) => ({
+components/onboarding/__tests__/HelpCenter.mobile.test.tsx:110:      window.matchMedia = jest.fn().mockImplementation((query) => ({
+components/gamification/AchievementToast.tsx:105:  const shareUrl = typeof window !== 'undefined' ? window.location.origin : 'https://vfide.app';
+components/gamification/AchievementToast.tsx:109:      await navigator.clipboard.writeText(shareText);
+components/gamification/AchievementToast.tsx:125:    if (navigator.share) {
+components/gamification/AchievementToast.tsx:127:        await navigator.share({ title: notification.title, text: shareText, url: shareUrl });
+components/gamification/AchievementToast.tsx:419:    window.showAchievement = addNotification;
+components/gamification/AchievementToast.tsx:420:    return () => { delete window.showAchievement; };
+components/gamification/AchievementToast.tsx:462:    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+components/gamification/AchievementToast.tsx:515:  if (typeof window !== 'undefined' && window.showAchievement) {
+components/gamification/AchievementToast.tsx:516:    window.showAchievement({ type, title, description, reward, icon, rarity });
+components/payment-links/PaymentLinkGenerator.tsx:42:  const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://vfide.io';
+components/monitoring/__tests__/ErrorMonitoringProvider.mobile.test.tsx:54:      window.matchMedia = jest.fn().mockImplementation((query) => ({
+components/core/ServiceWorkerRegistration.tsx:20: * worker detects a new build. Replaces the old window.confirm() dialog
+components/core/ServiceWorkerRegistration.tsx:49:    window.addEventListener('vfide:sw-update-available', handler);
+components/core/ServiceWorkerRegistration.tsx:50:    return () => window.removeEventListener('vfide:sw-update-available', handler);
+components/theme/ThemeCustomizer.tsx:47:    navigator.clipboard.writeText(color);
+components/theme/SavedThemesManager.tsx:38:    const a = document.createElement('a');
+components/theme/SavedThemesManager.tsx:46:    const input = document.createElement('input');
+components/theme/SavedThemesManager.tsx:71:      navigator.clipboard.writeText(
+components/wizard/useWizardState.tsx:112:    const raw = window.localStorage.getItem(STORAGE_KEY);
+components/wizard/useWizardState.tsx:129:    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+components/wizard/useWizardState.tsx:175:    window.addEventListener('storage', onStorage);
+components/wizard/useWizardState.tsx:176:    return () => window.removeEventListener('storage', onStorage);
+components/wizard/WizardMount.tsx:97:    const url = new URL(window.location.href);
+components/common/LanguageSwitcher.tsx:41:    document.addEventListener('mousedown', handleClickOutside);
+components/common/LanguageSwitcher.tsx:42:    return () => document.removeEventListener('mousedown', handleClickOutside);
+components/ux/PageTransitions.tsx:250:    const handleScroll = () => setScrollY(window.scrollY);
+components/ux/PageTransitions.tsx:251:    window.addEventListener('scroll', handleScroll, { passive: true });
+components/ux/PageTransitions.tsx:252:    return () => window.removeEventListener('scroll', handleScroll);
+components/ux/Accessibility.tsx:59:    window.addEventListener('keydown', handleKeyDown);
+components/ux/Accessibility.tsx:60:    window.addEventListener('mousedown', handleMouseDown);
+components/ux/Accessibility.tsx:63:      window.removeEventListener('keydown', handleKeyDown);
+components/ux/Accessibility.tsx:64:      window.removeEventListener('mousedown', handleMouseDown);
+components/ux/Accessibility.tsx:73:      document.documentElement.classList.add('high-contrast');
+components/ux/Accessibility.tsx:90:        document.documentElement.classList.add('high-contrast');
+components/ux/Accessibility.tsx:92:        document.documentElement.classList.remove('high-contrast');
+components/ux/Accessibility.tsx:101:      document.body.classList.add('focus-visible');
+components/ux/Accessibility.tsx:103:      document.body.classList.remove('focus-visible');
+components/ux/Accessibility.tsx:288:    previouslyFocusedRef.current = document.activeElement as HTMLElement;
+components/ux/Accessibility.tsx:306:      if (e.shiftKey && document.activeElement === firstElement) {
+components/ux/Accessibility.tsx:309:      } else if (!e.shiftKey && document.activeElement === lastElement) {
+components/ux/Accessibility.tsx:315:    document.addEventListener('keydown', handleKeyDown);
+components/ux/Accessibility.tsx:318:      document.removeEventListener('keydown', handleKeyDown);
+components/ux/Accessibility.tsx:412:    document.addEventListener('keydown', handleEscape);
+components/ux/Accessibility.tsx:413:    return () => document.removeEventListener('keydown', handleEscape);
+components/ux/Accessibility.tsx:419:      document.body.style.overflow = 'hidden';
+components/ux/Accessibility.tsx:421:      document.body.style.overflow = '';
+components/ux/Accessibility.tsx:425:      document.body.style.overflow = '';
+components/ux/MediaComponents.tsx:410:    if (document.fullscreenElement) {
+components/ux/MediaComponents.tsx:411:      document.exitFullscreen();
+components/ux/SmartResponsive.tsx:49:    screenWidth: typeof window !== 'undefined' ? window.innerWidth : 1920,
+components/ux/SmartResponsive.tsx:50:    screenHeight: typeof window !== 'undefined' ? window.innerHeight : 1080,
+components/ux/SmartResponsive.tsx:57:      const width = window.innerWidth;
+components/ux/SmartResponsive.tsx:58:      const height = window.innerHeight;
+components/ux/SmartResponsive.tsx:59:      const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+components/ux/SmartResponsive.tsx:82:    window.addEventListener('resize', updateState);
+components/ux/SmartResponsive.tsx:83:    window.addEventListener('orientationchange', updateState);
+components/ux/SmartResponsive.tsx:86:      window.removeEventListener('resize', updateState);
+components/ux/SmartResponsive.tsx:87:      window.removeEventListener('orientationchange', updateState);
+components/ui/Address.tsx:64:      await navigator.clipboard.writeText(address);
+components/ui/dialog.test.tsx:27:    const closeButtons = document.querySelectorAll('button')
+components/ui/ParticleBackground.tsx:28:      canvas.width = window.innerWidth;
+components/ui/ParticleBackground.tsx:29:      canvas.height = window.innerHeight;
+components/ui/ParticleBackground.tsx:97:    window.addEventListener("resize", handleResize);
+components/ui/ParticleBackground.tsx:101:      window.removeEventListener("resize", handleResize);
+components/ui/FirstTimeUserBanner.tsx:30:    const dismissed = localStorage.getItem(storageKey);
+components/ui/FirstTimeUserBanner.tsx:38:    localStorage.setItem(storageKey, 'true');
+components/ui/NotificationCenter.tsx:459:    window.addEventListener('keydown', handleKeyDown);
+components/ui/NotificationCenter.tsx:460:    return () => window.removeEventListener('keydown', handleKeyDown);
+components/ui/EasterEggs.tsx:37:    window.addEventListener("keydown", handleKeyDown);
+components/ui/EasterEggs.tsx:38:    return () => window.removeEventListener("keydown", handleKeyDown);
+components/ui/EasterEggs.tsx:249:    const celebrated = localStorage.getItem("vfide_first_tx_celebrated");
+components/ui/EasterEggs.tsx:259:    localStorage.setItem("vfide_first_tx_celebrated", "true");
+components/ui/FormElements.tsx:56:      document.body.style.overflow = 'hidden'
+components/ui/FormElements.tsx:58:      document.body.style.overflow = 'unset'
+components/ui/FormElements.tsx:61:      document.body.style.overflow = 'unset'
+components/ui/TrustTheme.tsx:133:    const root = document.documentElement;
+components/ui/PromptModal.tsx:4: * PromptModal — async, accessible replacement for window.prompt().
+components/ui/PromptModal.tsx:6: * Why this exists: window.prompt() looks unprofessional, can't be styled,
+components/ui/PromptModal.tsx:118:    document.addEventListener('keydown', onKeyDown);
+components/ui/PromptModal.tsx:119:    return () => document.removeEventListener('keydown', onKeyDown);
+components/ui/__tests__/InfoTooltip.mobile.test.tsx:63:      window.matchMedia = jest.fn().mockImplementation((query) => ({
+components/ui/ConfirmModal.tsx:64:      document.addEventListener('keydown', handleKeyDown);
+components/ui/ConfirmModal.tsx:65:      return () => document.removeEventListener('keydown', handleKeyDown);
+components/security/OwnerChallengeBanner.tsx:35: *   the challenge window. The banner persists until the claim's status
+components/security/AppLockProvider.tsx:74:    window.addEventListener('storage', handler);
+components/security/AppLockProvider.tsx:75:    return () => window.removeEventListener('storage', handler);
+components/security/SecurityProvider.tsx:32:                location: window.location.href,
+components/security/SecurityProvider.tsx:39:      observer.observe(document.documentElement, {
+components/security/SecurityLogsDashboard.tsx:23:    const a = document.createElement('a');
+components/security/AppLockModal.tsx:50:    const id = window.setInterval(() => setNowTick(Date.now()), 1000);
+components/security/AppLockModal.tsx:51:    return () => window.clearInterval(id);
+components/security/QueueHourglass.tsx:58:  // don't need finer resolution for a 7-day window.
+components/security/QueueHourglass.tsx:61:    const id = window.setInterval(() => {
+components/security/QueueHourglass.tsx:64:    return () => window.clearInterval(id);
+components/nav/ProgressiveNav.tsx:139:      return localStorage.getItem(SHOW_ALL_KEY) === 'true';
+components/nav/ProgressiveNav.tsx:147:      localStorage.setItem(SHOW_ALL_KEY, String(next));
+components/connectivity/OfflineIndicator.tsx:12:    const syncStatus = () => setIsOnline(window.navigator.onLine);
+components/connectivity/OfflineIndicator.tsx:28:    window.addEventListener('online', handleOnline);
+components/connectivity/OfflineIndicator.tsx:29:    window.addEventListener('offline', handleOffline);
+components/connectivity/OfflineIndicator.tsx:32:      window.removeEventListener('online', handleOnline);
+components/connectivity/OfflineIndicator.tsx:33:      window.removeEventListener('offline', handleOffline);
+components/connectivity/OfflineIndicator.tsx:69:            onClick={() => window.location.reload()}
+components/identity/TierAurora.tsx:52:      const id = window.setTimeout(() => setIntensify(false), 1800);
+components/identity/TierAurora.tsx:53:      return () => window.clearTimeout(id);
+components/identity/TimeLattice.tsx:80:    const id = window.setInterval(() => setNowMs(Date.now()), 60_000);
+components/identity/TimeLattice.tsx:81:    return () => window.clearInterval(id);
+components/identity/TimeLattice.tsx:134:  // Estimate total window. We don't always know the original delay
+components/vault/LargePaymentThresholdPanel.tsx:84:    window.addEventListener('keydown', handler);
+components/vault/LargePaymentThresholdPanel.tsx:85:    return () => window.removeEventListener('keydown', handler);
+components/vault/LockVaultPanel.tsx:459:    ? `${window.location.origin}/guardians?watch=${vault}&alert=1`
+components/vault/LockVaultPanel.tsx:466:      await navigator.clipboard.writeText(message);
+components/vault/SpendLimitsConfigurator.tsx:348:          queue. Any guardian (or you) can cancel it during that window. This is
+components/vault/VaultSafetyPanel.tsx:180:      "If someone starts a recovery on your vault, your day-to-day business doesn't pause. Inbound payments still arrive. You can still send outbound transactions from your existing wallet. Only the ownership transfer itself is delayed by the veto window. This means recovery never costs you a week of revenue — which would be worse than losing the vault for many small merchants.",
+components/embed/EmbedCodeGenerator.tsx:23:  const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://vfide.io';
+components/embed/EmbedCodeGenerator.tsx:34:    navigator.clipboard.writeText(displayCode);
+components/wallet/QuickWalletConnect.tsx:87:    navigator.userAgent
+components/wallet/ChainSelector.tsx:63:    document.addEventListener('mousedown', handleOutside);
+components/wallet/ChainSelector.tsx:64:    document.addEventListener('touchstart', handleOutside);
+components/wallet/ChainSelector.tsx:66:      document.removeEventListener('mousedown', handleOutside);
+components/wallet/ChainSelector.tsx:67:      document.removeEventListener('touchstart', handleOutside);
+components/wallet/ChainSelector.tsx:77:    document.addEventListener('keydown', handleKey);
+components/wallet/ChainSelector.tsx:78:    return () => document.removeEventListener('keydown', handleKey);
+components/wallet/ChainSelector.tsx:145:              (window.location.hostname.includes('testnet') ||
+components/wallet/TransactionNotification.tsx:64:  //     setWindowSize({ width: window.innerWidth, height: window.innerHeight })
+components/wallet/TransactionNotification.tsx:66:  //       setWindowSize({ width: window.innerWidth, height: window.innerHeight })
+components/wallet/TransactionNotification.tsx:68:  //     window.addEventListener('resize', handleResize)
+components/wallet/TransactionNotification.tsx:69:  //     return () => window.removeEventListener('resize', handleResize)
+components/layout/ClientLayout.tsx:66:    const region = document.getElementById('global-live-region');
+components/layout/ClientLayout.tsx:73:    const timeout = window.setTimeout(() => {
+components/layout/ClientLayout.tsx:76:    return () => window.clearTimeout(timeout);
+components/navigation/PieMenu.tsx:519:      document.addEventListener('mousedown', handleClickOutside);
+components/navigation/PieMenu.tsx:522:    return () => document.removeEventListener('mousedown', handleClickOutside);
+components/navigation/PieMenu.tsx:553:      document.addEventListener('keydown', handleKeyDown);
+components/navigation/PieMenu.tsx:556:    return () => document.removeEventListener('keydown', handleKeyDown);
+components/navigation/PieMenuEnhancements.tsx:162:    if (canVibrate) navigator.vibrate(8);
+components/navigation/PieMenuEnhancements.tsx:166:    if (canVibrate) navigator.vibrate([10, 30, 10]);
+components/navigation/PieMenuEnhancements.tsx:170:    if (canVibrate) navigator.vibrate([30, 50, 30, 50, 30]);
+components/navigation/PieMenuEnhancements.tsx:174:    if (canVibrate) navigator.vibrate(25);
+components/navigation/PieMenuEnhancements.tsx:178:    if (canVibrate) navigator.vibrate(15);
+components/navigation/PieMenuEnhancements.tsx:205:      const stored = localStorage.getItem(RECENTS_KEY);
+components/navigation/PieMenuEnhancements.tsx:237:      try { localStorage.setItem(RECENTS_KEY, JSON.stringify(updated)); } catch {}
+components/navigation/PieMenuEnhancements.tsx:369:      const stored = localStorage.getItem(FAVORITES_KEY);
+components/navigation/PieMenuEnhancements.tsx:378:      try { localStorage.setItem(FAVORITES_KEY, JSON.stringify([...next])); } catch {}
+components/navigation/PieMenuAdvanced.tsx:160:      const stored = localStorage.getItem(STREAK_KEY);
+components/navigation/PieMenuAdvanced.tsx:175:      localStorage.setItem(STREAK_KEY, JSON.stringify(data));
+components/navigation/PieMenuAdvanced.tsx:372:    setOnline(navigator.onLine);
+components/navigation/PieMenuAdvanced.tsx:373:    window.addEventListener('online', goOnline);
+components/navigation/PieMenuAdvanced.tsx:374:    window.addEventListener('offline', goOffline);
+components/navigation/PieMenuAdvanced.tsx:376:      window.removeEventListener('online', goOnline);
+components/navigation/PieMenuAdvanced.tsx:377:      window.removeEventListener('offline', goOffline);
+components/navigation/MoreSheet.tsx:85:    window.addEventListener('keydown', onKey);
+components/navigation/MoreSheet.tsx:86:    return () => window.removeEventListener('keydown', onKey);
+components/navigation/TopNav.tsx:178:              document.dispatchEvent(event);
+components/search/useUnifiedSearch.ts:22:      const stored = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]') as string[];
+components/search/useUnifiedSearch.ts:32:    try { localStorage.setItem(RECENT_KEY, JSON.stringify(updated)); } catch { /* ignore */ }
+components/search/useUnifiedSearch.ts:40:    document.addEventListener('mousedown', handler);
+components/search/useUnifiedSearch.ts:41:    return () => document.removeEventListener('mousedown', handler);
+components/accessibility/AccessibilityProvider.tsx:24:        document.body.classList.add('user-is-tabbing');
+components/accessibility/AccessibilityProvider.tsx:29:      document.body.classList.remove('user-is-tabbing');
+components/accessibility/AccessibilityProvider.tsx:32:    document.addEventListener('keydown', handleKeyDown);
+components/accessibility/AccessibilityProvider.tsx:33:    document.addEventListener('mousedown', handleMouseDown);
+components/accessibility/AccessibilityProvider.tsx:36:      document.removeEventListener('keydown', handleKeyDown);
+components/accessibility/AccessibilityProvider.tsx:37:      document.removeEventListener('mousedown', handleMouseDown);
+components/qr/SmartQR.tsx:62:  const base = typeof window !== 'undefined' ? window.location.origin : 'https://vfide.io';
+components/qr/SmartQR.tsx:104:    navigator.clipboard.writeText(paymentUrl);
+components/qr/SmartQR.tsx:111:    const a = document.createElement('a');
+components/qr/SmartQR.tsx:118:    if (navigator.share) {
+components/qr/SmartQR.tsx:120:        await navigator.share({
+components/qr/SmartQR.tsx:134:    const printWindow = window.open('', '_blank', 'noopener,noreferrer');
+components/trust/LiveActivityFeed.tsx:53:    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return
+components/trust/LiveActivityFeed.tsx:55:    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+components/trust/LiveActivityFeed.tsx:228:    const handleVisibilityChange = () => setIsPageVisible(document.visibilityState !== 'hidden')
+components/trust/LiveActivityFeed.tsx:230:    document.addEventListener('visibilitychange', handleVisibilityChange)
+components/trust/LiveActivityFeed.tsx:232:    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+components/social/SocialNotifications.tsx:67:    window.addEventListener('vfide-notification', handleCustomNotification as EventListener);
+components/social/SocialNotifications.tsx:70:      window.removeEventListener('vfide-notification', handleCustomNotification as EventListener);
+components/social/SocialNotifications.tsx:102:    document.addEventListener('keydown', handleKeyDown);
+components/social/SocialNotifications.tsx:103:    return () => document.removeEventListener('keydown', handleKeyDown);
+components/social/SocialNotifications.tsx:311:    window.dispatchEvent(new CustomEvent('vfide-notification', { detail: newNotif }));
+components/social/MarketVibes.tsx:10: * ProofScore bonus for posting within the window.
+components/social/MarketVibes.tsx:49:      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing }, audio: false });
+components/social/MarketVibes.tsx:58:    const canvas = document.createElement('canvas');
+components/social/MessageActions.tsx:60:      document.addEventListener('mousedown', handleClickOutside);
+components/social/MessageActions.tsx:61:      return () => document.removeEventListener('mousedown', handleClickOutside);
+components/social/VoiceNote.tsx:33:      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+components/social/MessagingCenter.tsx:322:      await navigator.clipboard.writeText(content);
+components/social/AIProductListing.tsx:46:      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+components/social/AIProductListing.tsx:55:    const canvas = document.createElement('canvas');
+components/social/UserProfile.tsx:102:    navigator.clipboard.writeText(`https://vfide.app/profile/${user.username}`);
+components/social/ShoppablePost.tsx:25:    const url = `${window.location.origin}/store/${product.merchantSlug}`;
+components/social/ShoppablePost.tsx:29:    if (typeof navigator !== 'undefined' && navigator.share) {
+components/social/ShoppablePost.tsx:31:        await navigator.share({ title, text, url });
+components/social/__tests__/SocialNotifications.mobile.test.tsx:98:      window.matchMedia = jest.fn().mockImplementation((query) => ({
+components/merchant/SetupStepSuccess.tsx:16:    navigator.clipboard.writeText(`${window.location.origin}/store/${slug}`);
+components/merchant/SetupStepSuccess.tsx:35:            {typeof window !== 'undefined' ? window.location.origin : ''}/store/{slug}
+components/merchant/PaymentQR.tsx:60:  const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://vfide.com'
+components/merchant/PaymentQR.tsx:82:    navigator.clipboard.writeText(paymentUrl)
+components/merchant/PaymentQR.tsx:88:    navigator.clipboard.writeText(address)
+components/merchant/PaymentQR.tsx:126:    const svg = document.getElementById('payment-qr-code')
+components/merchant/PaymentQR.tsx:131:    const canvas = document.createElement('canvas')
+components/merchant/PaymentQR.tsx:144:      const link = document.createElement('a')
+components/merchant/PaymentQR.tsx:154:    if (navigator.share) {
+components/merchant/PaymentQR.tsx:156:        await navigator.share({
+components/merchant/SetupStepProducts.tsx:24:    const input = document.createElement('input');
+components/merchant/payouts/CashOutModal.tsx:88:    window.addEventListener('keydown', onKey);
+components/merchant/payouts/CashOutModal.tsx:89:    return () => window.removeEventListener('keydown', onKey);
+components/merchant/payouts/CashOutModal.tsx:154:    window.open(submitted.redirectUrl, '_blank', 'noopener,noreferrer');
+components/merchant/MerchantStatusCard.tsx:23: *   contract decays one strike per 90-day clean window. So a merchant
+components/merchant/MerchantStatusCard.tsx:245:            Strike counts decay one per clean 90-day window. The contract evaluates decay at the
+components/merchant/PayoutAddressManager.tsx:129:            review window. You can cancel before it applies.
+components/merchant/MerchantPortal.tsx:165:  if (typeof window !== 'undefined' && window.crypto?.getRandomValues) {
+components/merchant/MerchantPortal.tsx:167:    window.crypto.getRandomValues(bytes);
+components/merchant/MerchantPortal.tsx:199:      const storedKeys = localStorage.getItem(API_KEYS_STORAGE_KEY);
+components/merchant/MerchantPortal.tsx:204:      const storedJobs = localStorage.getItem(BULK_JOBS_STORAGE_KEY);
+components/merchant/MerchantPortal.tsx:218:      localStorage.setItem(API_KEYS_STORAGE_KEY, JSON.stringify(keysToStore));
+components/merchant/MerchantPortal.tsx:226:      localStorage.setItem(BULK_JOBS_STORAGE_KEY, JSON.stringify(bulkJobs));
+components/merchant/MerchantPortal.tsx:1059:            onClick={() => navigator.clipboard.writeText(request.id)}
+components/merchant/MerchantPortal.tsx:1219:    const timer = window.setTimeout(() => {
+components/merchant/MerchantPortal.tsx:1224:    return () => window.clearTimeout(timer);
+components/merchant/MerchantPortal.tsx:1269:      await navigator.clipboard.writeText(shownSecret);
+components/merchant/MerchantPortal.tsx:1273:      window.setTimeout(() => {
+components/merchant/MerchantPortal.tsx:1274:        void navigator.clipboard.writeText('').catch(() => undefined);
+components/merchant/MerchantPortal.tsx:1279:      window.setTimeout(() => {
+components/merchant/MerchantPortal.tsx:1588:                      onClick={() => navigator.clipboard.writeText(`${window.location.origin}/checkout/${inv.payment_link_id}`)}
+components/merchant/MerchantDashboard.tsx:482:            you&apos;ll be able to apply or cancel them after a brief review window.
+components/payments/TransactionTrailLayer.tsx:353:        const cardEl = document.querySelector<HTMLElement>(
+components/payments/TransactionTrailProvider.tsx:63:  /** Wall-clock ms when the click happened. Used for the freshness window. */
+components/payments/TransactionTrailProvider.tsx:135:    window.addEventListener('mousedown', handler, true);
+components/payments/TransactionTrailProvider.tsx:136:    window.addEventListener('touchstart', handler, true);
+components/payments/TransactionTrailProvider.tsx:138:      window.removeEventListener('mousedown', handler, true);
+components/payments/TransactionTrailProvider.tsx:139:      window.removeEventListener('touchstart', handler, true);
+components/mobile/MobileDrawer.tsx:32:  const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
+components/mobile/MobileDrawer.tsx:63:    window.addEventListener('keydown', handleKeyDown);
+components/mobile/MobileDrawer.tsx:64:    return () => window.removeEventListener('keydown', handleKeyDown);
+components/mobile/MobileDrawer.tsx:243:    const mediaQuery = window.matchMedia('(max-width: 768px)');
+components/commerce/simplified/SimplifiedPOS.tsx:80:    if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+components/commerce/simplified/SimplifiedPOS.tsx:88:      const stream = await navigator.mediaDevices.getUserMedia({
+components/commerce/MerchantPOS.tsx:411:    localStorage.setItem(`vfide:merchant:receipt:${sale.id}`, JSON.stringify(receiptPayload))
+components/commerce/MerchantPOS.tsx:463:    return `${window.location.origin}/pay?${params.toString()}`
+components/commerce/MerchantPOS.tsx:1278:                    onClick={() => window.print()}
+components/animation/TransactionTrailOverlay.tsx:58:  return { x: window.innerWidth - 40, y: Math.max(60, window.innerHeight / 2) };
+components/export/csv-export.ts:47:  const a = document.createElement('a');
+lib/i18n.ts:71:  const queryLocale = new URLSearchParams(window.location.search).get('lang');
+lib/i18n.ts:74:  const navigatorLocale = typeof navigator !== 'undefined' ? navigator.language : DEFAULT_LOCALE;
+lib/i18n.ts:87:    document.documentElement.lang = getHtmlLang(normalized);
+lib/i18n.ts:88:    document.documentElement.setAttribute('data-locale', normalized);
+lib/i18n.ts:89:    document.cookie = `${LOCALE_STORAGE_KEY}=${normalized}; path=/; max-age=31536000; samesite=lax`;
+lib/i18n.ts:90:    document.cookie = `${LEGACY_LOCALE_STORAGE_KEY}=${normalized}; path=/; max-age=31536000; samesite=lax`;
+lib/clipboardSafe.ts:5: *   navigator.clipboard.writeText() throws DOMException silently in
+lib/clipboardSafe.ts:37:  if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+lib/clipboardSafe.ts:39:      await navigator.clipboard.writeText(text);
+lib/clipboardSafe.ts:52:    const textarea = document.createElement('textarea');
+lib/clipboardSafe.ts:60:    document.body.appendChild(textarea);
+lib/clipboardSafe.ts:63:    const ok = document.execCommand('copy');
+lib/clipboardSafe.ts:64:    document.body.removeChild(textarea);
+lib/adaptive/index.tsx:51:  if (typeof navigator !== 'undefined' && navigator.hardwareConcurrency) {
+lib/adaptive/index.tsx:52:    return navigator.hardwareConcurrency;
+lib/adaptive/index.tsx:59:  if (!navigator.onLine) return 'offline';
+lib/adaptive/index.tsx:92:  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+lib/adaptive/index.tsx:97:  return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+lib/adaptive/index.tsx:178:      isOnline: navigator.onLine,
+lib/adaptive/index.tsx:193:    window.addEventListener('online', onOnline);
+lib/adaptive/index.tsx:194:    window.addEventListener('offline', onOffline);
+lib/adaptive/index.tsx:197:    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+lib/adaptive/index.tsx:204:      window.removeEventListener('online', onOnline);
+lib/adaptive/index.tsx:205:      window.removeEventListener('offline', onOffline);
+lib/storiesSystem.ts:199:    const stories: Story[] = JSON.parse(localStorage.getItem(key) || '[]');
+lib/storiesSystem.ts:201:    localStorage.setItem(key, JSON.stringify(stories));
+lib/storiesSystem.ts:206:    const stories: Story[] = JSON.parse(localStorage.getItem(key) || '[]');
+lib/storiesSystem.ts:212:    localStorage.setItem(key, JSON.stringify(active));
+lib/storiesSystem.ts:224:    localStorage.setItem('vfide_stories', JSON.stringify(filtered));
+lib/storiesSystem.ts:232:      localStorage.setItem('vfide_stories', JSON.stringify(stories));
+lib/storiesSystem.ts:248:    localStorage.setItem(key, JSON.stringify(status));
+lib/storiesSystem.ts:253:    const stored = localStorage.getItem(key);
+lib/storiesSystem.ts:270:    localStorage.removeItem(key);
+lib/storageService.ts:88:      return localStorage.length;
+lib/storageService.ts:98:      return localStorage.key(index);
+lib/storageService.ts:116:      localStorage.setItem(key, value);
+lib/storageService.ts:455:    window.addEventListener('storage', handleStorageChange);
+lib/storageService.ts:456:    return () => window.removeEventListener('storage', handleStorageChange);
+lib/hooks/useCopyToClipboard.ts:91:        if (navigator.clipboard && window.isSecureContext) {
+lib/hooks/useCopyToClipboard.ts:92:          await navigator.clipboard.writeText(text);
+lib/hooks/useCopyToClipboard.ts:95:          const textArea = document.createElement('textarea');
+lib/hooks/useCopyToClipboard.ts:100:          document.body.appendChild(textArea);
+lib/hooks/useCopyToClipboard.ts:104:          const successful = document.execCommand('copy');
+lib/hooks/useCopyToClipboard.ts:183:        if (navigator.clipboard && window.isSecureContext) {
+lib/hooks/useCopyToClipboard.ts:184:          await navigator.clipboard.writeText(text);
+lib/hooks/useCopyToClipboard.ts:186:          const textArea = document.createElement('textarea');
+lib/hooks/useCopyToClipboard.ts:190:          document.body.appendChild(textArea);
+lib/hooks/useCopyToClipboard.ts:193:          const successful = document.execCommand('copy');
+lib/hooks/useEscapeKey.ts:30:    document.addEventListener('keydown', onKey);
+lib/hooks/useEscapeKey.ts:31:    return () => document.removeEventListener('keydown', onKey);
+lib/hooks/useFocusTrap.ts:67:    // restoration" pattern. Falls back to document.body if there
+lib/hooks/useFocusTrap.ts:70:    const previouslyFocused = (document.activeElement as HTMLElement) ?? null;
+lib/hooks/useFocusTrap.ts:119:        if (document.activeElement === firstEl) {
+lib/hooks/useFocusTrap.ts:125:        if (document.activeElement === lastEl) {
+lib/barcode/index.ts:34:  if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+lib/barcode/index.ts:37:  if (typeof document === 'undefined' || typeof document.createElement !== 'function') {
+lib/barcode/index.ts:50:  const video = document.querySelector('video');
+lib/barcode/index.ts:101:    rafHandle = window.requestAnimationFrame(scanFrame);
+lib/barcode/index.ts:104:  rafHandle = window.requestAnimationFrame(scanFrame);
+lib/barcode/index.ts:115:    cachedCanvas = document.createElement('canvas');
+lib/barcode/index.ts:145:      rafHandle = window.requestAnimationFrame(scanFrame);
+lib/barcode/index.ts:152:      rafHandle = window.requestAnimationFrame(scanFrame);
+lib/barcode/index.ts:159:      rafHandle = window.requestAnimationFrame(scanFrame);
+lib/barcode/index.ts:179:    rafHandle = window.requestAnimationFrame(scanFrame);
+lib/barcode/index.ts:182:  rafHandle = window.requestAnimationFrame(scanFrame);
+lib/auth/jwt.ts:65: * Only present during a rolling rotation window.
+lib/auth/rateLimit.ts:209:    // Try current secret first, then prev for rotation window.
+lib/utils.test.ts:100:    localStorage.setItem('key', 'value')
+lib/utils.test.ts:103:    const original = window.localStorage
+lib/performance.ts:91:          url: window.location.href,
+lib/performance.ts:153:  const nav = window.navigator as Navigator & {
+lib/storage.ts:20:    if (typeof window === 'undefined' || !window.localStorage) {
+lib/storage.ts:23:    return localStorage.getItem(key) ?? defaultValue;
+lib/storage.ts:26:    logger.warn(`localStorage.getItem failed for key "${key}":`, error);
+lib/storage.ts:39:    if (typeof window === 'undefined' || !window.localStorage) {
+lib/storage.ts:42:    localStorage.setItem(key, value);
+lib/storage.ts:46:    logger.warn(`localStorage.setItem failed for key "${key}":`, error);
+lib/storage.ts:58:    if (typeof window === 'undefined' || !window.localStorage) {
+lib/storage.ts:61:    localStorage.removeItem(key);
+lib/storage.ts:64:    logger.warn(`localStorage.removeItem failed for key "${key}":`, error);
+lib/storage.ts:77:    if (typeof window === 'undefined' || !window.localStorage) {
+lib/storage.ts:80:    const item = localStorage.getItem(key);
+lib/storage.ts:87:    logger.warn(`localStorage.getItem/JSON.parse failed for key "${key}":`, error);
+lib/storage.ts:100:    if (typeof window === 'undefined' || !window.localStorage) {
+lib/storage.ts:103:    localStorage.setItem(key, JSON.stringify(value));
+lib/storage.ts:107:    logger.warn(`localStorage.setItem/JSON.stringify failed for key "${key}":`, error);
+lib/storage.ts:118:    if (typeof window === 'undefined' || !window.localStorage) {
+lib/storage.ts:121:    localStorage.clear();
+lib/storage.ts:124:    logger.warn('localStorage.clear failed:', error);
+lib/storage.ts:135:    if (typeof window === 'undefined' || !window.localStorage) {
+lib/storage.ts:139:    localStorage.setItem(testKey, 'test');
+lib/storage.ts:140:    localStorage.removeItem(testKey);
+lib/storage.ts:153:    if (typeof window === 'undefined' || !window.localStorage) {
+lib/storage.ts:160:      if (localStorage.hasOwnProperty(key)) {
+lib/monitoring/performanceMonitor.ts:120:    window.addEventListener('visibilitychange', () => {
+lib/monitoring/performanceMonitor.ts:121:      if (document.visibilityState === 'hidden') {
+lib/monitoring/performanceMonitor.ts:194:    if (typeof window !== 'undefined' && window.performance) {
+lib/monitoring/performanceMonitor.ts:276:    window.addEventListener('click', trackEvent, { passive: true });
+lib/monitoring/performanceMonitor.ts:277:    window.addEventListener('keydown', trackEvent, { passive: true });
+lib/monitoring/performanceMonitor.ts:278:    window.addEventListener('scroll', trackEvent, { passive: true });
+lib/storage/encryptedStorage.ts:30:    localStorage.setItem(key, value);
+lib/storage/encryptedStorage.ts:41:    return localStorage.getItem(key);
+lib/storage/encryptedStorage.ts:49:    localStorage.removeItem(key);
+lib/pushNotifications.ts:95:    const registration = await navigator.serviceWorker.register('/service-worker.js', {
+lib/pushNotifications.ts:116:    return await navigator.serviceWorker.ready;
+lib/pushNotifications.ts:257:  const rawData = window.atob(base64);
+lib/data/index.client.tsx:302:    window.addEventListener('focus', handler);
+lib/data/index.client.tsx:303:    return () => window.removeEventListener('focus', handler);
+lib/cryptoApprovals.ts:72:  if (typeof window === 'undefined' || !window.ethereum) {
+lib/cryptoApprovals.ts:75:  return window.ethereum;
+lib/serviceWorkerRegistration.ts:19:    const registration = await navigator.serviceWorker.register('/service-worker.js', {
+lib/serviceWorkerRegistration.ts:32:          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+lib/serviceWorkerRegistration.ts:38:            // instead of the old blocking window.confirm() dialog (which
+lib/serviceWorkerRegistration.ts:42:              window.dispatchEvent(
+lib/serviceWorkerRegistration.ts:47:                      window.location.reload();
+lib/serviceWorkerRegistration.ts:61:    navigator.serviceWorker.addEventListener('controllerchange', () => {
+lib/serviceWorkerRegistration.ts:81:    const registration = await navigator.serviceWorker.getRegistration();
+lib/serviceWorkerRegistration.ts:103:    const registration = await navigator.serviceWorker.getRegistration();
+lib/serviceWorkerRegistration.ts:121:  return navigator.serviceWorker.controller !== null;
+lib/serviceWorkerRegistration.ts:145:    const registration = await navigator.serviceWorker.getRegistration();
+lib/serviceWorkerRegistration.ts:173:    const registration = await navigator.serviceWorker.getRegistration();
+lib/device.ts:51:    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+lib/device.ts:95:  const containerHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
+lib/csrfClient.ts:15:  const match = document.cookie.match(new RegExp('(?:^|; )' + escaped + '=([^;]*)'));
+lib/mobile.tsx:126:    const mediaQuery = window.matchMedia(query);
+lib/nfc/index.ts:22:      ? `${window.location.origin}/pay?to=${encodeURIComponent(normalizedMerchantAddress)}&amount=${amount}&currency=${encodeURIComponent(currency)}&source=nfc`
+lib/nfc/index.ts:23:      : `${window.location.origin}/store/${encodeURIComponent(merchantSlug)}?amount=${amount}&currency=${encodeURIComponent(currency)}&source=nfc`;
+lib/optimization/seoOptimization.ts:244:    const link = document.createElement('link');
+lib/optimization/seoOptimization.ts:248:    document.head.appendChild(link);
+lib/optimization/monitoring.ts:182:      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+lib/optimization/monitoring.ts:317:  window.addEventListener('beforeunload', () => {
+lib/optimization/monitoring.ts:321:      navigator.sendBeacon('/api/analytics/metrics', data);
+lib/api-client.ts:52:    this.baseURL = baseURL || (typeof window !== 'undefined' ? window.location.origin : '');
+lib/gamification.ts:388:    for (let index = 0; index < localStorage.length; index += 1) {
+lib/gamification.ts:389:      const key = localStorage.key(index);
+lib/crypto.ts:522:      localStorage.setItem('vfide_wallet_address', connectedWallet.address);
+lib/crypto.ts:523:      localStorage.setItem('vfide_wallet_connected', 'true');
+lib/crypto.ts:539:    const wasConnected = localStorage.getItem('vfide_wallet_connected');
+lib/crypto.ts:547:    const ethereum = window.ethereum;
+lib/locale/index.ts:30:    return localStorage.getItem(LOCALE_STORAGE_KEY) || localStorage.getItem(LEGACY_LOCALE_STORAGE_KEY);
+lib/locale/index.ts:42:    localStorage.setItem(LOCALE_STORAGE_KEY, locale);
+lib/locale/index.ts:44:    localStorage.setItem(LEGACY_LOCALE_STORAGE_KEY, locale);
+lib/locale/index.ts:57:    cachedLocale = navigator.language || navigator.languages?.[0] || 'en-US';
+lib/locale/LocaleProvider.tsx:50:      return localStorage.getItem(CURRENCY_STORAGE_KEY) || getDefaultCurrency();
+lib/locale/LocaleProvider.tsx:57:    const stored = localStorage.getItem(LOCALE_STORAGE_KEY) || localStorage.getItem(LEGACY_LOCALE_STORAGE_KEY);
+lib/locale/LocaleProvider.tsx:61:      localStorage.setItem(LOCALE_STORAGE_KEY, stored);
+lib/locale/LocaleProvider.tsx:68:    localStorage.setItem(LOCALE_STORAGE_KEY, l);
+lib/locale/LocaleProvider.tsx:69:    localStorage.setItem(LEGACY_LOCALE_STORAGE_KEY, l);
+lib/locale/LocaleProvider.tsx:71:    if (!localStorage.getItem(CURRENCY_STORAGE_KEY)) {
+lib/locale/LocaleProvider.tsx:79:    localStorage.setItem(CURRENCY_STORAGE_KEY, c);
+lib/analytics.ts:577:      trackPageView(window.location.pathname, userId);
+lib/ux/uxUtils.ts:37:    navigator.vibrate(pattern);
+lib/ux/uxUtils.ts:80:      const audioContext = new (window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext)();
+lib/ux/uxUtils.ts:146:    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+lib/ux/uxUtils.ts:154:    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+lib/ux/uxUtils.ts:214:        if (document.activeElement === firstFocusable) {
+lib/ux/uxUtils.ts:219:        if (document.activeElement === lastFocusable) {
+lib/ux/uxUtils.ts:247:    const scrollY = window.scrollY;
+lib/ux/uxUtils.ts:248:    const body = document.body;
+lib/ux/uxUtils.ts:260:      window.scrollTo(0, scrollY);
+lib/ux/uxUtils.ts:267:    const element = document.getElementById(elementId);
+lib/ux/uxUtils.ts:270:    const top = element.getBoundingClientRect().top + window.scrollY - offset;
+lib/ux/uxUtils.ts:271:    window.scrollTo({ top, behavior: 'smooth' });
+lib/ux/uxUtils.ts:275:    window.scrollTo({ top: 0, behavior: 'smooth' });
+lib/ux/uxUtils.ts:286:      const scrollTop = window.scrollY;
+lib/ux/uxUtils.ts:287:      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+lib/ux/uxUtils.ts:291:    window.addEventListener('scroll', handleScroll, { passive: true });
+lib/ux/uxUtils.ts:292:    return () => window.removeEventListener('scroll', handleScroll);
+lib/ux/uxUtils.ts:391:    window.addEventListener('keydown', handleKeyDown);
+lib/ux/uxUtils.ts:392:    return () => window.removeEventListener('keydown', handleKeyDown);
+lib/ux/uxUtils.ts:403:      await navigator.clipboard.writeText(text);
+lib/ux/uxUtils.ts:411:      const textArea = document.createElement('textarea');
+lib/ux/uxUtils.ts:415:      document.body.appendChild(textArea);
+lib/ux/uxUtils.ts:420:        document.execCommand('copy');
+lib/ux/uxUtils.ts:429:        document.body.removeChild(textArea);
+lib/ux/designSystem.ts:439:  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+lib/ux/designSystem.ts:447:  document.documentElement.style.setProperty(name, value);
+lib/ux/performanceUtils.tsx:121:        const id = window.requestIdleCallback(() => setDeferredValue(value));
+lib/ux/performanceUtils.tsx:122:        return () => window.cancelIdleCallback(id);
+lib/monitoringService.tsx:217:        userAgent: navigator.userAgent,
+lib/monitoringService.tsx:219:          width: window.innerWidth,
+lib/monitoringService.tsx:220:          height: window.innerHeight,
+lib/monitoringService.tsx:222:        connection: navigator.connection?.effectiveType || 'unknown',
+lib/cryptoValidation.ts:156:      // v19.10 BCOMPAT-3 FIX: guard window.ethereum existence.
+lib/cryptoValidation.ts:157:      // Previously the non-null assertion `window.ethereum!.request`
+lib/cryptoValidation.ts:165:      if (typeof window === 'undefined' || !window.ethereum?.request) {
+lib/cryptoValidation.ts:173:      const balanceWei = await window.ethereum.request({
+lib/cryptoValidation.ts:249:    // v19.10 BCOMPAT-3 FIX: guard window.ethereum existence.
+lib/cryptoValidation.ts:250:    // estimateGas was previously asserting window.ethereum exists with
+lib/cryptoValidation.ts:251:    // `window.ethereum!`. In SSR / wallet-less browsers / pre-injection
+lib/cryptoValidation.ts:254:    if (typeof window === 'undefined' || !window.ethereum?.request) {
+lib/cryptoValidation.ts:262:    const gasLimit = await window.ethereum.request({
+lib/cryptoValidation.ts:272:    const gasPrice = await window.ethereum.request({
+lib/focusTrap.ts:61:        if (document.activeElement === firstElement) {
+lib/focusTrap.ts:68:        if (document.activeElement === lastElement) {
+lib/focusTrap.ts:89:  const element = document.getElementById(elementId);
+lib/focusTrap.ts:94:  const y = element.getBoundingClientRect().top + window.pageYOffset + offset;
+lib/focusTrap.ts:96:  window.scrollTo({
+lib/focusTrap.ts:106:  window.scrollTo({
+lib/financialIntelligence.ts:582:                localStorage.setItem(`vfide-tx-${userAddress}`, JSON.stringify(mapped));
+lib/financialIntelligence.ts:593:          const storedTx = localStorage.getItem(`vfide-tx-${userAddress}`);
+lib/financialIntelligence.ts:598:        const storedHoldings = localStorage.getItem(`vfide-holdings-${userAddress}`);
+lib/financialIntelligence.ts:599:        const storedBudgets = localStorage.getItem(`vfide-budgets-${userAddress}`);
+lib/financialIntelligence.ts:643:      localStorage.setItem(`vfide-tx-${userAddress}`, JSON.stringify(updated));
+lib/financialIntelligence.ts:650:    localStorage.setItem(`vfide-holdings-${userAddress}`, JSON.stringify(newHoldings));
+lib/financialIntelligence.ts:659:      localStorage.setItem(`vfide-budgets-${userAddress}`, JSON.stringify(updated));
+lib/financialIntelligence.ts:667:      localStorage.setItem(`vfide-budgets-${userAddress}`, JSON.stringify(updated));
+lib/security/appLock.ts:83:    const raw = window.localStorage.getItem(CONFIG_KEY);
+lib/security/appLock.ts:93:    window.localStorage.setItem(CONFIG_KEY, JSON.stringify(value));
+lib/security/appLock.ts:263:    window.sessionStorage.setItem(UNLOCK_KEY, String(until));
+lib/security/appLock.ts:274:    window.sessionStorage.removeItem(UNLOCK_KEY);
+lib/security/appLock.ts:283:    const raw = window.sessionStorage.getItem(UNLOCK_KEY);
+lib/security/appLock.ts:288:      window.sessionStorage.removeItem(UNLOCK_KEY);
+lib/security/appLock.ts:362:    window.localStorage.removeItem(CONFIG_KEY);
+lib/security/appLock.ts:363:    window.sessionStorage.removeItem(UNLOCK_KEY);
+lib/security/urlValidation.ts:51:    const parsed = new URL(url, typeof window !== 'undefined' ? window.location.origin : 'https://vfide.io');
+lib/security/urlValidation.ts:98:  window.location.href = targetUrl;
+lib/security/urlValidation.ts:102: * Safely assign a URL to window.location after validation
+lib/security/urlValidation.ts:118:  window.location.assign(targetUrl);
+lib/security/urlValidation.ts:146: * Validate if a URL is safe for opening in a new tab/window.
+lib/security/urlValidation.ts:162:    const parsed = new URL(url, typeof window !== 'undefined' ? window.location.origin : 'https://vfide.io');
+lib/security/urlValidation.ts:217:  const opened = window.open(url, target, features);
+lib/security/paymentStepUpChallenge.ts:158:      error: 'High-risk payment request requires delay acknowledgement window.',
+lib/security.ts:22:  const metaNonce = document.querySelector('meta[property="csp-nonce"]');
+lib/security.ts:75:  if (src.startsWith('/') || src.startsWith(window.location.origin)) {
+lib/security.ts:118:        userAgent: navigator.userAgent,
+lib/security.ts:132:  document.addEventListener('securitypolicyviolation', (e) => {
+lib/security.ts:274:    const input = document.createElement('input');
+lib/security.ts:302:      url: window.location.href,
+lib/preferences/userPreferences.tsx:221:    window.addEventListener('storage', handleStorageChange);
+lib/preferences/userPreferences.tsx:222:    return () => window.removeEventListener('storage', handleStorageChange);
+lib/preferences/userPreferences.tsx:311:  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+lib/preferences/userPreferences.tsx:320:    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+lib/preferences/userPreferences.tsx:321:    document.documentElement.classList.toggle('dark', isDark);
+lib/preferences/userPreferences.tsx:328:  const root = document.documentElement;
+lib/preferences/userPreferences.tsx:332:    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+lib/offline.ts:388:  return typeof navigator !== 'undefined' ? navigator.onLine : true;
+lib/offline.ts:401:      window.removeEventListener('online', handler);
+lib/offline.ts:404:    window.addEventListener('online', handler);
+lib/offline.ts:475:    window.addEventListener('online', handleOnline);
+lib/offline.ts:476:    window.addEventListener('offline', handleOffline);
+lib/offline.ts:479:      window.removeEventListener('online', handleOnline);
+lib/offline.ts:480:      window.removeEventListener('offline', handleOffline);
+lib/biometricAuth.ts:37:    window.PublicKeyCredential &&
+lib/biometricAuth.ts:38:    typeof window.PublicKeyCredential === 'function'
+lib/biometricAuth.ts:137:    const credential = await navigator.credentials.create({
+lib/biometricAuth.ts:142:          id: window.location.hostname,
+lib/biometricAuth.ts:190: * client-side, called navigator.credentials.get to surface the passkey UI,
+lib/sessionKeys/sessionKeyService.ts:116:  return window.sessionStorage;
+lib/sessionKeys/sessionKeyService.ts:125:    if (typeof window !== 'undefined' && storage === window.sessionStorage) {
+lib/sessionKeys/sessionKeyService.ts:127:        window.localStorage.removeItem(SESSION_STORAGE_KEY);
+lib/attachments.ts:82:  if (ALLOWED_MIME_TYPES.document.includes(mimeType)) return AttachmentType.DOCUMENT;
+lib/attachments.ts:322:      const canvas = document.createElement('canvas');
+lib/providers/Web3Providers.tsx:32:      const raw = getComputedStyle(document.documentElement)
+lib/providers/Web3Providers.tsx:41:    mo.observe(document.documentElement, {
+lib/websocket.ts:407:  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+lib/websocket.ts:411:  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+lib/websocket.ts:412:  return `${protocol}//${window.location.host}`;
+lib/wagmi.ts:33:      return window.localStorage.getItem(key);
+lib/wagmi.ts:42:      window.localStorage.setItem(key, value);
+lib/wagmi.ts:50:      window.localStorage.removeItem(key);
+lib/inviteLinks.ts:63:  const base = baseUrl || (typeof window !== 'undefined' ? window.location.origin : '');
+lib/offline/offlineQueue.ts:138:  window.addEventListener('online', handler);
+lib/offline/offlineQueue.ts:139:  return () => window.removeEventListener('online', handler);
+lib/presence.ts:117:    url: typeof window !== 'undefined' ? `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws` : '',
+lib/presence.ts:144:      window.addEventListener(event, handleActivity, { passive: true });
+lib/presence.ts:149:        window.removeEventListener(event, handleActivity);
+lib/presence.ts:222:      if (document.hidden) {
+lib/presence.ts:253:    document.addEventListener('visibilitychange', handleVisibilityChange);
+lib/presence.ts:254:    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+lib/presence.ts:271:    url: typeof window !== 'undefined' ? `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws` : '',
+lib/presence.ts:309:    url: typeof window !== 'undefined' ? `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws` : '',
+lib/__tests__/mobileDetection.test.ts:10:  const originalUserAgent = navigator.userAgent;
+lib/__tests__/utils.test.ts:90:    localStorage.clear()
+lib/__tests__/utils.test.ts:94:    localStorage.setItem('key', 'value')
+lib/__tests__/utils.test.ts:104:    expect(localStorage.getItem('key')).toBe('value')
+lib/__tests__/utils.test.ts:108:    localStorage.setItem('key', 'value')
+lib/__tests__/utils.test.ts:110:    expect(localStorage.getItem('key')).toBeNull()
+lib/__tests__/utils.test.ts:140:    sessionStorage.clear()
+lib/__tests__/utils.test.ts:144:    sessionStorage.setItem('key', 'value')
+lib/__tests__/utils.test.ts:150:    expect(sessionStorage.getItem('key')).toBe('value')
+lib/__tests__/utils.test.ts:154:    sessionStorage.setItem('key', 'value')
+lib/__tests__/utils.test.ts:156:    expect(sessionStorage.getItem('key')).toBeNull()
+lib/utils.ts:214:      return localStorage.getItem(key)
+lib/utils.ts:222:      localStorage.setItem(key, value)
+lib/utils.ts:231:      localStorage.removeItem(key)
+lib/utils.ts:243:      return sessionStorage.getItem(key)
+lib/utils.ts:251:      sessionStorage.setItem(key, value)
+lib/utils.ts:260:      sessionStorage.removeItem(key)
+lib/mobileDetection.ts:33:    navigator.userAgent
+lib/sw-register.ts:11:  window.addEventListener('load', async () => {
+lib/sw-register.ts:13:      const registration = await navigator.serviceWorker.register('/sw.js', {
+lib/sw-register.ts:22:          if (newWorker.state === 'activated' && navigator.serviceWorker.controller) {
+lib/contracts.ts:252:    const wagmiState = window.localStorage?.getItem('wagmi.store');
+lib/sdk.ts:147:    const button = document.createElement('button');
+lib/sdk.ts:150:    const icon = document.createElementNS(svgNs, 'svg');
+lib/sdk.ts:158:      const path = document.createElementNS(svgNs, 'path');
+lib/sdk.ts:164:    const label = document.createElement('span');
+lib/sdk.ts:218:    const widget = document.createElement('div');
+lib/sdk.ts:224:    const headerWrap = document.createElement('div');
+lib/sdk.ts:226:    const headerTitle = document.createElement('h3');
+lib/sdk.ts:231:    const amountWrap = document.createElement('div');
+lib/sdk.ts:234:      const amountButton = document.createElement('button');
+lib/sdk.ts:241:      const custom = document.createElement('input');
+lib/sdk.ts:251:    const donateButton = document.createElement('button');
+lib/sdk.ts:257:      const branding = document.createElement('div');
+lib/sdk.ts:406:    const widget = document.createElement('div');
+lib/sdk.ts:415:    const subHeader = document.createElement('div');
+lib/sdk.ts:418:    const subTitle = document.createElement('h3');
+lib/sdk.ts:422:    const subPrice = document.createElement('div');
+lib/sdk.ts:425:    const amountSpan = document.createElement('span');
+lib/sdk.ts:430:    const tokenSpan = document.createElement('span');
+lib/sdk.ts:435:    const intervalSpan = document.createElement('span');
+lib/sdk.ts:444:      const trial = document.createElement('div');
+lib/sdk.ts:450:    const subscribeButton = document.createElement('button');
+lib/sdk.ts:455:    const termsText = document.createElement('p');
+lib/sdk.ts:587:      const left = (window.innerWidth - width) / 2 + window.screenX;
+lib/sdk.ts:588:      const top = (window.innerHeight - height) / 2 + window.screenY;
+lib/sdk.ts:590:      const popup = window.open(
+lib/sdk.ts:606:          window.removeEventListener('message', handleMessage);
+lib/sdk.ts:609:          window.removeEventListener('message', handleMessage);
+lib/sdk.ts:615:      window.addEventListener('message', handleMessage);
+lib/sdk.ts:621:          window.removeEventListener('message', handleMessage);
+lib/sdk.ts:634:      return document.querySelector(container);
+lib/sdk.ts:668:// UMD build would also set window.VFIDE = vfide
+lib/accessibility.tsx:19:    liveRegion = document.createElement('div');
+lib/accessibility.tsx:24:    document.body.appendChild(liveRegion);
+lib/accessibility.tsx:68:    previousFocusRef.current = document.activeElement as HTMLElement;
+lib/accessibility.tsx:100:        if (document.activeElement === firstElement) {
+lib/accessibility.tsx:106:        if (document.activeElement === lastElement) {
+lib/accessibility.tsx:198:      const element = document.querySelector(selector) as HTMLElement;
+lib/accessibility.tsx:295:    document.addEventListener('keydown', handleKeyDown);
+lib/accessibility.tsx:296:    document.addEventListener('mousedown', handleMouseDown);
+lib/accessibility.tsx:299:      document.removeEventListener('keydown', handleKeyDown);
+lib/accessibility.tsx:300:      document.removeEventListener('mousedown', handleMouseDown);
+lib/accessibility.tsx:308:if (typeof document !== 'undefined' && !document.getElementById('sr-only-styles')) {
+lib/accessibility.tsx:309:  const style = document.createElement('style');
+lib/accessibility.tsx:342:  document.head.appendChild(style);
+lib/animation/transactionTrail.ts:91:    window.setTimeout(() => {
+hooks/useHeadhunterHooks.ts:338:  const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://vfide.com';
+hooks/useKeyboardShortcuts.ts:28:        const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+hooks/useKeyboardShortcuts.ts:51:    window.addEventListener('keydown', handleKeyDown);
+hooks/useKeyboardShortcuts.ts:52:    return () => window.removeEventListener('keydown', handleKeyDown);
+hooks/useUserAnalytics.ts:282:          page: window.location.pathname,
+hooks/useUserAnalytics.ts:284:            referrer: document.referrer,
+hooks/useUserAnalytics.ts:285:            title: document.title,
+hooks/useUserAnalytics.ts:290:      window.addEventListener('popstate', handlePageChange);
+hooks/useUserAnalytics.ts:291:      return () => window.removeEventListener('popstate', handlePageChange);
+hooks/useWalletPersistence.ts:322:    window.addEventListener('click', handleActivity, { passive: true });
+hooks/useWalletPersistence.ts:323:    window.addEventListener('keydown', handleActivity, { passive: true });
+hooks/useWalletPersistence.ts:324:    window.addEventListener('scroll', handleActivity, { passive: true });
+hooks/useWalletPersistence.ts:330:      window.removeEventListener('click', handleActivity);
+hooks/useWalletPersistence.ts:331:      window.removeEventListener('keydown', handleActivity);
+hooks/useWalletPersistence.ts:332:      window.removeEventListener('scroll', handleActivity);
+hooks/useSecurityLogs.ts:130:    userAgent: navigator.userAgent,
+hooks/useErrorTracking.ts:67:        window.dispatchEvent(
+hooks/useErrorTracking.ts:178:        userAgent: navigator.userAgent,
+hooks/useErrorTracking.ts:179:        url: window.location.href,
+hooks/useErrorTracking.ts:190:        userAgent: navigator.userAgent,
+hooks/useErrorTracking.ts:191:        url: window.location.href,
+hooks/useErrorTracking.ts:198:      window.addEventListener('error', handleError);
+hooks/useErrorTracking.ts:199:      window.addEventListener('unhandledrejection', handleUnhandledRejection);
+hooks/useErrorTracking.ts:202:        window.removeEventListener('error', handleError);
+hooks/useErrorTracking.ts:203:        window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+hooks/useNotifications.tsx:180:        window.focus();
+hooks/useNotifications.tsx:188:            window.location.href = safe;
+hooks/useNotifications.tsx:222:      navigator.vibrate([100, 50, 100]);
+hooks/useTimelocks.ts:27: * for the duration of the timelock window. This is a frontend convenience, not
+hooks/useOwnerActiveClaim.ts:77:  // This ensures the "Veto" button remains visible during the 1-day finalization grace window.
+hooks/useTheme.ts:85:  const root = document.documentElement;
+hooks/useTheme.ts:151:      const raw = localStorage.getItem(STORAGE_KEY);
+hooks/useTheme.ts:170:    localStorage.setItem(STORAGE_KEY, JSON.stringify({ presetId, customTokens: {} }));
+hooks/useTheme.ts:176:      localStorage.setItem(STORAGE_KEY, JSON.stringify({ presetId: activePresetId, customTokens: next }));
+hooks/useTheme.ts:183:    localStorage.setItem(STORAGE_KEY, JSON.stringify({ presetId: activePresetId, customTokens: {} }));
+hooks/useMobile.ts:62:  const userAgent = navigator.userAgent.toLowerCase();
+hooks/useMobile.ts:84:  return window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
+hooks/useMobile.ts:89:  return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+hooks/useMobile.ts:99:    const width = typeof window !== 'undefined' ? window.innerWidth : 1024;
+hooks/useMobile.ts:100:    const height = typeof window !== 'undefined' ? window.innerHeight : 768;
+hooks/useMobile.ts:115:      const width = window.innerWidth;
+hooks/useMobile.ts:116:      const height = window.innerHeight;
+hooks/useMobile.ts:128:    window.addEventListener('resize', updateMobileInfo);
+hooks/useMobile.ts:129:    window.addEventListener('orientationchange', updateMobileInfo);
+hooks/useMobile.ts:132:      window.removeEventListener('resize', updateMobileInfo);
+hooks/useMobile.ts:133:      window.removeEventListener('orientationchange', updateMobileInfo);
+hooks/useMobile.ts:181:    return window.matchMedia(query).matches;
+hooks/useMobile.ts:187:    const mediaQuery = window.matchMedia(query);
+hooks/useMobile.ts:203:    width: typeof window !== 'undefined' ? window.innerWidth : 0,
+hooks/useMobile.ts:204:    height: typeof window !== 'undefined' ? window.innerHeight : 0
+hooks/useMobile.ts:210:        width: window.innerWidth,
+hooks/useMobile.ts:211:        height: window.innerHeight
+hooks/useMobile.ts:215:    window.addEventListener('resize', handleResize);
+hooks/useMobile.ts:216:    return () => window.removeEventListener('resize', handleResize);
+hooks/useMobile.ts:237:    const computedStyle = getComputedStyle(document.documentElement);
+hooks/usePerformanceMetrics.ts:95:    if (typeof window !== 'undefined' && window.performance) {
+hooks/usePerformanceMetrics.ts:96:      const perfData = window.performance.timing;
+hooks/useBiometricAuth.ts:39:  if (typeof window === 'undefined' || !window.PublicKeyCredential) {
+hooks/useBiometricAuth.ts:98:      localStorage.removeItem(SECURITY_STORAGE_KEYS.biometric);
+hooks/useBiometricAuth.ts:174:          id: typeof window !== 'undefined' ? window.location.hostname : 'vfide.com'
+hooks/useBiometricAuth.ts:194:      const credential = await navigator.credentials.create({
+hooks/useBiometricAuth.ts:267:      const assertion = await navigator.credentials.get({
+hooks/useTransactionSounds.ts:81:    if (typeof window === 'undefined' || !(window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)) {
+hooks/useTransactionSounds.ts:86:      audioContextRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+hooks/useDAO.ts:360:  /** Expire a Queued proposal that wasn't executed within the timelock window. Anyone can call. */
+hooks/useDAO.ts:388:  /** Execute the timelock tx for a passed proposal. Permissionless after timelock window. */
+hooks/usePagePerformance.ts:39:      const stored = localStorage.getItem(STORAGE_KEY);
+hooks/usePagePerformance.ts:44:      const apiStored = localStorage.getItem(API_STORAGE_KEY);
+hooks/usePagePerformance.ts:59:      if (typeof window === 'undefined' || !window.performance) {
+hooks/usePagePerformance.ts:63:      const perfData = window.performance;
+hooks/usePagePerformance.ts:90:      const errorLogsStr = localStorage.getItem('error_logs_v1');
+hooks/usePagePerformance.ts:99:        page: window.location.pathname,
+hooks/usePagePerformance.ts:112:        localStorage.setItem(STORAGE_KEY, JSON.stringify(metrics));
+hooks/usePagePerformance.ts:160:            localStorage.setItem(API_STORAGE_KEY, JSON.stringify(updated));
+hooks/usePagePerformance.ts:182:            localStorage.setItem(API_STORAGE_KEY, JSON.stringify(updated));
+hooks/useThemeManager.ts:107:    const htmlElement = document.documentElement;
+hooks/useThemeManager.ts:141:      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+hooks/usePrefersReducedMotion.ts:23:    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+hooks/usePrefersReducedMotion.ts:25:    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+hooks/useThreatDetection.ts:345:  const hasFocusedWindow = typeof document !== 'undefined' ? document.hasFocus() : false;
+hooks/useThreatDetection.ts:346:  const visibilityActive = typeof document !== 'undefined' ? document.visibilityState === 'visible' : false;
+hooks/useVoicePOS.ts:41:    window.speechSynthesis.cancel();
+hooks/useVoicePOS.ts:42:    window.speechSynthesis.speak(utterance);
+hooks/useVoicePOS.ts:50:          window.speechSynthesis.cancel();
+hooks/useVoicePOS.ts:55:          window.speechSynthesis.speak(test);
+hooks/useInheritance.ts:90:  /** Hash of the off-chain reason document. */
+hooks/useInheritance.ts:329:    if (typeof window !== 'undefined' && window.crypto?.getRandomValues) {
+hooks/useInheritance.ts:331:      window.crypto.getRandomValues(arr);
+hooks/useGasPrice.ts:85:      // Use window.ethereum if available
+hooks/useGasPrice.ts:86:      if (!window.ethereum) {
+hooks/useGasPrice.ts:90:      const gasPriceHex = await window.ethereum!.request({
+hooks/useGasPrice.ts:147:    window.dispatchEvent(new CustomEvent('gas-alert', { detail: price }));
+hooks/useRefundHistory.ts:105:    const raw = window.localStorage.getItem(storageKey(viewerAddress, role));
+hooks/useRefundHistory.ts:124:    window.localStorage.setItem(storageKey(viewerAddress, role), JSON.stringify(next));
+hooks/useLocale.ts:21: * window.dispatchEvent(new StorageEvent(...)) is NOT delivered to
+hooks/useLocale.ts:22: * window.addEventListener('storage', ...) listeners in the SAME tab —
+hooks/useLocale.ts:32:  document.documentElement.lang = lang;
+hooks/useLocale.ts:33:  document.documentElement.dir = dir;
+hooks/useLocale.ts:34:  document.documentElement.setAttribute('data-locale', locale);
+hooks/useLocale.ts:41:      localStorage.getItem(STORAGE_KEY) ||
+hooks/useLocale.ts:42:      localStorage.getItem('locale');
+hooks/useLocale.ts:46:          typeof navigator !== 'undefined' ? navigator.language : undefined,
+hooks/useLocale.ts:84:    window.addEventListener(LOCALE_EVENT, onLocaleChanged);
+hooks/useLocale.ts:85:    return () => window.removeEventListener(LOCALE_EVENT, onLocaleChanged);
+hooks/useLocale.ts:94:    localStorage.setItem(STORAGE_KEY, next);
+hooks/useLocale.ts:98:    window.dispatchEvent(new CustomEvent<SupportedLocale>(LOCALE_EVENT, { detail: next }));
+hooks/useLocale.ts:105:      window.dispatchEvent(
+hooks/usePayroll.ts:444:  if (msg.includes('PM_PayeeUpdateNotReady'))  return 'Payee update is still in the timelock window.';

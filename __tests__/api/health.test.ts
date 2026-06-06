@@ -42,7 +42,21 @@ describe('/api/health', () => {
       expect(data.memory).toHaveProperty('external');
     });
 
-    it('should return 503 when environment variables are missing', async () => {
+    it('should remain healthy when WalletConnect project id is missing', async () => {
+      withRateLimit.mockResolvedValue(null);
+      delete process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
+
+      const request = new NextRequest('http://localhost:3000/api/health');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.ok).toBe(true);
+      expect(data.status).toBe('ok');
+      expect(data.checks.env).toBe(true);
+    });
+
+    it('should return 503 when required environment variables are missing', async () => {
       withRateLimit.mockResolvedValue(null);
       delete process.env.NEXT_PUBLIC_CHAIN_ID;
 
