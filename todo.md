@@ -23,6 +23,6 @@
 - [x] Run high-signal frontend tests for critical routes/components
 
 ## 5. Delivery
-- [ ] Produce deployment readiness report with pass/fail evidence and remaining risks
-- [ ] Commit changes to a dedicated branch
-- [ ] Push branch and open a PR if GitHub auth permits
+- [x] Produce deployment readiness report with pass/fail evidence and remaining risks
+- [x] Commit changes to a dedicated branch
+- [x] Push branch and open a PR if GitHub auth permits
