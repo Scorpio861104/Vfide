@@ -41,7 +41,7 @@ const SALES_MODULES: HubLink[] = [
   { href: '/merchant/invoices',       icon: FileText,    label: 'Invoices',       description: 'Itemized bills with payment links.' },
   { href: '/merchant/payment-links',  icon: Link2,       label: 'Payment links',  description: 'Share a URL for any product or amount.' },
   { href: '/merchant/bookings',       icon: CalendarDays,label: 'Bookings',       description: 'Appointments and availability slots.' },
-  { href: '/merchant/subscriptions',  icon: Repeat,      label: 'Subscriptions',  description: 'Weekly, monthly, quarterly, yearly plans.' },
+  { href: '/merchant/subscriptions',  icon: Repeat,      label: 'Subscriptions',  description: 'Weekly, monthly, quarterly, yearly plans.', badge: 'Coming' },
 ];
 
 const CUSTOMER_MODULES: HubLink[] = [
@@ -56,7 +56,7 @@ const OPS_MODULES: HubLink[] = [
   { href: '/merchant/expenses',       icon: Receipt,     label: 'Expenses',       description: 'Track outgoings against revenue.' },
   { href: '/merchant/tax',            icon: Percent,     label: 'Sales tax',      description: 'Per-jurisdiction tax configuration.' },
   { href: '/merchant/tips',           icon: DollarSign,  label: 'Tips',           description: 'Tip jar settings and history.' },
-  { href: '/merchant/installments',   icon: RotateCcw,   label: 'Installments',   description: 'Buy now, pay later plans.' },
+  { href: '/merchant/installments',   icon: RotateCcw,   label: 'Installments',   description: 'Buy now, pay later plans.', badge: 'Coming' },
   { href: '/merchant/staff',          icon: UserCog,     label: 'Staff',          description: 'Team access roles and activity.' },
 ];
 
