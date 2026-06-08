@@ -57,7 +57,7 @@ const FEATURES = [
   {
     icon: 'ArrowRight' as const,
     title: 'DAO Governance',
-    description: "Vote on protocol parameters, elect council members, and shape the future of decentralized commerce — governance that's actually on-chain.",
+    description: "Hold value, recover from loss, build trust, and trade — and help steward the protocol's parameters through on-chain governance as it opens up.",
     color: '#FB923C',
     delay: 0.5,
   },
@@ -131,9 +131,13 @@ export default function Home() {
                   </span>
                 </h1>
 
-                <p className="text-lg sm:text-xl text-zinc-400 mb-8 max-w-md leading-relaxed">
+                  <p className="text-lg sm:text-xl text-zinc-400 mb-8 max-w-md leading-relaxed">
                   {copy.heroDescription}
                 </p>
+
+                  <p className="text-sm text-zinc-500 mb-8 max-w-md leading-relaxed">
+                    VFIDE exists to help people hold value securely, recover from loss, build trust, and participate in commerce.
+                  </p>
 
                 {/* CTA buttons */}
                 <div className="flex flex-col gap-3 mb-8 sm:flex-row sm:flex-wrap">

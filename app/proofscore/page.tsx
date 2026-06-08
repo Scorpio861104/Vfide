@@ -7,13 +7,13 @@ import { ProofScoreVisualizer } from '@/components/trust/ProofScoreVisualizer'
 import { useLocale } from '@/lib/locale/LocaleProvider';
 
 const TIERS = [
-  { tier: 'Risky',      min: 0,   max: 299, color: 'bg-red-500',    desc: 'No verified identity. High risk.' },
-  { tier: 'Low Trust',  min: 300, max: 499, color: 'bg-orange-400', desc: 'Minimal proof. Unstable trust.' },
-  { tier: 'Neutral',    min: 500, max: 599, color: 'bg-yellow-400', desc: 'Basic address ownership verified.' },
-  { tier: 'Governance', min: 600, max: 699, color: 'bg-lime-400',   desc: 'Governance participation active.' },
-  { tier: 'Trusted',    min: 700, max: 799, color: 'bg-green-500',  desc: 'Multi-source trust. Recognised.' },
-  { tier: 'Council',    min: 800, max: 899, color: 'bg-cyan-500',   desc: 'Council-level governance.' },
-  { tier: 'Elite',      min: 900, max: 999, color: 'bg-violet-600', desc: 'Elite — top 1% verified wallets.' },
+  { tier: 'Risky',      min: 0,   max: 299, color: 'bg-red-500',    desc: 'No trust history yet. Everyone starts here.' },
+  { tier: 'Low Trust',  min: 300, max: 499, color: 'bg-orange-400', desc: 'Early trust history forming.' },
+  { tier: 'Neutral',    min: 500, max: 599, color: 'bg-yellow-400', desc: 'Basic on-chain trust established.' },
+  { tier: 'Governance', min: 600, max: 699, color: 'bg-lime-400',   desc: 'Trusted enough to participate in governance.' },
+  { tier: 'Trusted',    min: 700, max: 799, color: 'bg-green-500',  desc: 'A solid, multi-source record of honest dealing.' },
+  { tier: 'Council',    min: 800, max: 899, color: 'bg-cyan-500',   desc: 'Deep trust history; trusted with more responsibility.' },
+  { tier: 'Elite',      min: 900, max: 999, color: 'bg-violet-600', desc: 'Strongly established trust history; lowest fees, greatest responsibility.' },
 ]
 
 export default function ProofScorePage() {

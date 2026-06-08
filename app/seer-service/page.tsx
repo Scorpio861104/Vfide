@@ -38,12 +38,12 @@ export default function SeerServicePage() {
       <div className="relative container mx-auto px-4 max-w-6xl py-8">
         <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <div className="flex items-center gap-3 mb-3">
-            <span className="badge-live"><span className="badge-live-dot" />AI-Powered Intelligence</span>
+            <span className="badge-live"><span className="badge-live-dot" />Trust &amp; Risk Guide</span>
           </div>
           <h1 className="text-4xl font-bold mb-2">
             <span className="bg-gradient-to-r from-accent via-violet-400 to-pink-400 bg-clip-text text-transparent">Seer Service</span>
           </h1>
-          <p className="text-white/50 text-lg">AI-powered insights and predictive analytics for your DeFi activity.</p>
+          <p className="text-white/50 text-lg">Seer evaluates contextual trust and explains risk, using published rules and reason codes — your institutional guide to trust, risk, and participation.</p>
         </m.div>
         <div className="sticky top-7 md:top-[5.25rem] z-30 -mx-4 px-4 py-3 backdrop-blur-xl border-b border-white/5 mb-8"
           style={{ background: 'rgba(9,9,11,0.85)' }}>
