@@ -100,166 +100,88 @@ export interface NavItem {
   comingSoon?: boolean;
 }
 
+/**
+ * INSTITUTION NAVIGATION (Constitutional restructure).
+ * Reorganized from feature-groups (Vault/Merchant/Social/Governance/Rewards/
+ * Insights/Tools/Account) into the five institutions of Volume I §5.1 /
+ * Volume III: Citizens, Merchants, Builders, Stewards, Academy. Curated to the
+ * key destinations per the "reduce cognitive load" directive — the long tail
+ * (operational merchant tools, payment types, insights, recognition, etc.)
+ * remains reachable via institution hubs and direct routes, not the top nav.
+ * Internal/dev/demo surfaces (theme*, demo*, control-panel, admin, api-coverage,
+ * token-launch) are intentionally NOT top-level destinations. comingSoon flags
+ * mark future-tier routes (developer/SDK, council, elections) per the Veritas Law.
+ */
 export const navigationItems: NavItem[] = [
+  { id: 'home',      label: 'Home',      href: '/',          icon: Home,            color: '#F8F8FC' },
+  { id: 'dashboard', label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, color: '#00F0FF' },
+
+  // Citizens - personal ownership and protection
   {
-    id: 'home',
-    label: 'Home',
-    href: '/',
-    icon: Home,
-    color: '#F8F8FC',
-  },
-  {
-    id: 'dashboard',
-    label: 'Dashboard',
-    href: '/dashboard',
-    icon: LayoutDashboard,
-    color: '#00F0FF',
-  },
-  {
-    id: 'vault',
-    label: 'Vault',
-    icon: Shield,
-    color: '#8B5CF6',
+    id: 'citizens', label: 'Citizens', icon: Shield, color: '#8B5CF6',
     children: [
-      { id: 'vault-main', label: 'My Vault', href: '/vault', icon: Shield, color: '#8B5CF6' },
-      { id: 'wallet', label: 'Wallet', href: '/crypto', icon: Wallet, color: '#8B5CF6' },
-      { id: 'guardians', label: 'Guardians', href: '/guardians', icon: ShieldCheck, color: '#8B5CF6' },
-      { id: 'vault-recover', label: 'Recovery', href: '/vault/recover', icon: KeyRound, color: '#8B5CF6' },
-      { id: 'vault-settings', label: 'Settings', href: '/vault/settings', icon: Settings, color: '#8B5CF6' },
-      { id: 'time-locks', label: 'Time Locks', href: '/time-locks', icon: Clock, color: '#8B5CF6', comingSoon: true },
-      { id: 'vesting', label: 'Vesting', href: '/vesting', icon: Gift, color: '#8B5CF6' },
-      { id: 'inheritance', label: 'Inheritance', href: '/inheritance', icon: Users, color: '#8B5CF6' },
+      { id: 'vault',         label: 'My Vault',     href: '/vault',         icon: Shield,      color: '#8B5CF6', dataOnboarding: 'nav-vault' },
+      { id: 'proofscore',    label: 'ProofScore',   href: '/proofscore',    icon: TrendingUp,  color: '#8B5CF6' },
+      { id: 'guardians',     label: 'Guardians',    href: '/guardians',     icon: ShieldCheck, color: '#8B5CF6' },
+      { id: 'recovery',      label: 'Recovery',     href: '/vault/recover', icon: KeyRound,    color: '#8B5CF6' },
+      { id: 'inheritance',   label: 'Inheritance',  href: '/inheritance',   icon: Users,       color: '#8B5CF6' },
+      { id: 'pay',           label: 'Pay',          href: '/pay',           icon: Send,        color: '#8B5CF6' },
+      { id: 'wallet',        label: 'Wallet',       href: '/wallet',        icon: Wallet,      color: '#8B5CF6' },
+      { id: 'endorsements',  label: 'Endorsements', href: '/endorsements',  icon: Medal,       color: '#8B5CF6' },
+      { id: 'profile',       label: 'Profile',      href: '/me',            icon: User,        color: '#8B5CF6' },
+      { id: 'settings',      label: 'Settings',     href: '/settings',      icon: Settings,    color: '#8B5CF6' },
+      { id: 'notifications', label: 'Notifications',href: '/notifications', icon: Bell,        color: '#8B5CF6' },
     ],
   },
+
+  // Merchants - commerce and business participation
   {
-    id: 'merchant',
-    label: 'Merchant',
-    icon: Store,
-    color: '#10B981',
-    dataOnboarding: 'nav-merchant',
+    id: 'merchants', label: 'Merchants', icon: Store, color: '#10B981',
     children: [
-      { id: 'merchant-main', label: 'Merchant Hub',  href: '/merchant',      icon: Store,          color: '#10B981', dataOnboarding: 'nav-merchant' },
-      { id: 'pos',           label: 'POS Terminal',  href: '/pos',           icon: CreditCard,     color: '#10B981' },
-      { id: 'buy',           label: 'Buy Tokens',    href: '/buy',           icon: Globe,          color: '#10B981' },
-      // CODE-4: Distinct icons to avoid triple-Banknote confusion in the Merchant group
-      { id: 'flashloan',     label: 'Flashloans P2P',href: '/flashloans',    icon: Zap,            color: '#10B981', badge: 'P2P' },
-      { id: 'escrow',        label: 'Escrow',        href: '/escrow',        icon: Lock,           color: '#10B981' },
-      { id: 'payroll',       label: 'Payroll',       href: '/payroll',       icon: Calendar,       color: '#10B981' },
-      { id: 'streaming',     label: 'Streaming',     href: '/streaming',     icon: Zap,            color: '#10B981', comingSoon: true },
-      { id: 'cross-chain',   label: 'Cross-Chain',   href: '/cross-chain',   icon: ArrowLeftRight, color: '#10B981' },
-      { id: 'stealth',       label: 'Private Pay',   href: '/stealth',       icon: Eye,            color: '#10B981', comingSoon: true },
-      { id: 'pay',           label: 'Quick Pay',     href: '/pay',           icon: Send,           color: '#10B981' },
-      { id: 'remittance',    label: 'Remittance',    href: '/remittance',    icon: Plane,          color: '#10B981' },
-      { id: 'scan',          label: 'Scan to Pay',   href: '/scan',          icon: QrCode,         color: '#10B981' },
-      { id: 'splitter',      label: 'Bill Splitter', href: '/splitter',      icon: Split,          color: '#10B981' },
-      { id: 'subscriptions', label: 'Subscriptions', href: '/subscriptions', icon: Repeat,         color: '#10B981' },
-      { id: 'lending',       label: 'Lending',       href: '/lending',       icon: Scale,          color: '#10B981', comingSoon: true },
-      // NAV-10: Use merchant-prefixed IDs to avoid duplicate IDs with Vault group
-      { id: 'merchant-time-locks',  label: 'Time Locks',    href: '/time-locks',    icon: Clock,          color: '#10B981', comingSoon: true },
-      { id: 'agent',         label: 'AI Agent',      href: '/agent',         icon: Cpu,            color: '#10B981', comingSoon: true },
+      { id: 'merchant-hub',  label: 'Merchant Hub',  href: '/merchant',               icon: Store,      color: '#10B981', dataOnboarding: 'nav-merchant' },
+      { id: 'pos',           label: 'POS Terminal',  href: '/pos',                    icon: CreditCard, color: '#10B981' },
+      { id: 'payment-links', label: 'Payment Links', href: '/merchant/payment-links', icon: QrCode,     color: '#10B981' },
+      { id: 'invoices',      label: 'Invoices',      href: '/merchant/invoices',      icon: FileText,   color: '#10B981' },
+      { id: 'inventory',     label: 'Inventory',     href: '/merchant/inventory',     icon: Tag,        color: '#10B981' },
+      { id: 'customers',     label: 'Customers',     href: '/merchant/customers',     icon: User,       color: '#10B981' },
+      { id: 'payouts',       label: 'Payouts',       href: '/merchant/payouts',       icon: Banknote,   color: '#10B981' },
+      { id: 'marketplace',   label: 'Marketplace',   href: '/marketplace',            icon: Globe,      color: '#10B981' },
     ],
   },
+
+  // Builders - infrastructure creation
   {
-    id: 'social',
-    label: 'Social',
-    icon: MessageCircle,
-    color: '#F59E0B',
-    dataOnboarding: 'nav-social',
+    id: 'builders', label: 'Builders', icon: Code, color: '#64748B',
     children: [
-      // T1-1: All social routes now consolidated under /social-hub with tabs
-      { id: 'social-hub',  label: 'Social Hub',   href: '/social-hub',              icon: Rss,      color: '#F59E0B', dataOnboarding: 'nav-social' },
-      // NAV-11: Removed duplicate 'feed' entry — both pointed to /social-hub (Feed is the default tab)
-      { id: 'stories',     label: 'Stories',      href: '/stories',                  icon: Camera,   color: '#F59E0B' },
-      // NAV-3/NAV-11: Use tab-specific hrefs so clicking opens the right tab directly
-      { id: 'messages',    label: 'Messages',     href: '/social-hub?tab=messages',  icon: Mail,     color: '#F59E0B' },
-      { id: 'social-pay',  label: 'Pay Friends',  href: '/social-hub?tab=pay',       icon: Banknote, color: '#F59E0B' },
+      { id: 'developer', label: 'Developer', href: '/developer', icon: Code,         color: '#64748B', comingSoon: true },
+      { id: 'docs',      label: 'Docs',      href: '/docs',      icon: FileText,     color: '#64748B' },
+      { id: 'explorer',  label: 'Explorer',  href: '/explorer',  icon: Compass,      color: '#64748B' },
+      { id: 'testnet',   label: 'Testnet',   href: '/testnet',   icon: FlaskConical, color: '#64748B' },
     ],
   },
+
+  // Stewards - institutional responsibility
   {
-    id: 'governance',
-    label: 'Governance',
-    icon: Vote,
-    color: '#6366F1',
-    dataOnboarding: 'nav-governance',
+    id: 'stewards', label: 'Stewards', icon: Vote, color: '#6366F1',
     children: [
-      // T1-2: /governance is now the single consolidated hub (Proposals | DAO | Council | Elections | Treasury | Disputes)
-      { id: 'governance-main', label: 'Governance Hub', href: '/governance', icon: Vote, color: '#6366F1', dataOnboarding: 'nav-governance', badge: 'DAO' },
-      { id: 'appeals',         label: 'Appeals',         href: '/appeals',   icon: AlertTriangle, color: '#6366F1' },
-      { id: 'fraud',           label: 'Fraud Reporting', href: '/fraud',     icon: ShieldCheck,   color: '#6366F1' },
-      { id: 'treasury',        label: 'Treasury',        href: '/treasury',  icon: Landmark,      color: '#6366F1' },
-      // T1-4: Sanctum moved from Account to Governance (it's protocol finance, not account settings)
-      // CODE-3: Heart is semantically correct for Sanctum (charity/community giving) vs Cpu (AI/hardware)
-      { id: 'sanctum',         label: 'Sanctum',         href: '/sanctum',   icon: Heart,         color: '#6366F1' },
+      { id: 'governance', label: 'Governance',      href: '/governance', icon: Vote,          color: '#6366F1', badge: 'DAO', dataOnboarding: 'nav-governance' },
+      { id: 'treasury',   label: 'Treasury',        href: '/treasury',   icon: Landmark,      color: '#6366F1' },
+      { id: 'appeals',    label: 'Appeals',         href: '/appeals',    icon: AlertTriangle, color: '#6366F1' },
+      { id: 'fraud',      label: 'Fraud Reporting', href: '/fraud',      icon: ShieldCheck,   color: '#6366F1' },
+      { id: 'sanctum',    label: 'Sanctum',         href: '/sanctum',    icon: Heart,         color: '#6366F1' },
+      { id: 'council',    label: 'Council',         href: '/council',    icon: Crown,         color: '#6366F1', comingSoon: true },
+      { id: 'elections',  label: 'Elections',       href: '/elections',  icon: Vote,          color: '#6366F1', comingSoon: true },
     ],
   },
+
+  // Academy - capability development
   {
-    id: 'rewards',
-    label: 'Rewards',
-    icon: Trophy,
-    color: '#EC4899',
+    id: 'academy', label: 'Academy', icon: GraduationCap, color: '#F59E0B',
     children: [
-      { id: 'quests', label: 'Quests', href: '/quests', icon: Target, color: '#EC4899' },
-      { id: 'achievements', label: 'Achievements', href: '/achievements', icon: Award, color: '#EC4899' },
-      { id: 'leaderboard', label: 'Leaderboard', href: '/leaderboard', icon: Crown, color: '#EC4899' },
-      { id: 'headhunter', label: 'Referrals', href: '/headhunter', icon: Search, color: '#EC4899' },
-      { id: 'endorsements', label: 'Endorsements', href: '/endorsements', icon: Medal, color: '#EC4899' },
-      { id: 'badges', label: 'Badges', href: '/badges', icon: Star, color: '#EC4899' },
-      { id: 'benefits', label: 'Benefits', href: '/benefits', icon: Tag, color: '#EC4899' },
-      // NAV-10: Use rewards-hub ID to avoid duplicate with the parent group ID 'rewards'
-      { id: 'rewards-hub', label: 'Rewards Hub', href: '/rewards', icon: Sparkles, color: '#EC4899' },
-      { id: 'invite', label: 'Invite Friends', href: '/invite', icon: UserPlus, color: '#EC4899' },
-    ],
-  },
-  {
-    id: 'insights',
-    label: 'Insights',
-    icon: TrendingUp,
-    color: '#14B8A6',
-    children: [
-      { id: 'insights-main', label: 'Analytics',    href: '/insights',      icon: TrendingUp,  color: '#14B8A6' },
-      { id: 'taxes',         label: 'Tax Report',   href: '/taxes',         icon: FileText,    color: '#14B8A6' },
-      { id: 'budgets',       label: 'Budgets',      href: '/budgets',       icon: PiggyBank,   color: '#14B8A6' },
-      { id: 'performance',   label: 'Performance',  href: '/performance',   icon: BarChart3,   color: '#14B8A6' },
-      { id: 'reporting',     label: 'Reports',      href: '/reporting',     icon: ClipboardList, color: '#14B8A6', comingSoon: true },
-      { id: 'price-alerts',  label: 'Price Alerts', href: '/price-alerts',  icon: Bell,        color: '#14B8A6' },
-    ],
-  },
-  {
-    id: 'developer',
-    label: 'Tools',
-    icon: Code,
-    color: '#64748B',
-    children: [
-      { id: 'explorer', label: 'Explorer', href: '/explorer', icon: Compass, color: '#64748B' },
-      { id: 'paper-wallet', label: 'Paper Wallet', href: '/paper-wallet', icon: FileText, color: '#64748B' },
-      { id: 'hardware-wallet', label: 'Hardware Wallet', href: '/hardware-wallet', icon: HardDrive, color: '#64748B' },
-      { id: 'enterprise', label: 'Enterprise', href: '/enterprise', icon: Landmark, color: '#64748B' },
-      { id: 'token-launch', label: 'Token Launch', href: '/token-launch', icon: Rocket, color: '#64748B' },
-      { id: 'dev-portal',   label: 'Developer',      href: '/developer',     icon: Code,          color: '#64748B' },
-      { id: 'testnet',      label: 'Testnet Faucet', href: '/testnet',       icon: FlaskConical,  color: '#64748B' },
-      { id: 'seer-academy', label: 'Seer Academy',   href: '/seer-academy',  icon: GraduationCap, color: '#64748B' },
-      { id: 'seer-service', label: 'Seer Oracle',    href: '/seer-service',  icon: Eye,           color: '#64748B' },
-    ],
-  },
-  {
-    id: 'account',
-    label: 'Account',
-    icon: User,
-    color: '#94A3B8',
-    children: [
-      // T1-3: /settings is now the single config hub (Account | Vault | Security | Notifications)
-      { id: 'settings',      label: 'Settings',     href: '/settings',        icon: Settings,  color: '#94A3B8' },
-      { id: 'profile',       label: 'Profile',      href: '/profile',         icon: User,      color: '#94A3B8' },
-      { id: 'security',      label: 'Security',     href: '/security-center', icon: ShieldCheck, color: '#94A3B8' },
-      // T1-4: Theme merged — one entry for /theme (the canonical theme page)
-      { id: 'theme',         label: 'Theme',        href: '/theme',           icon: Palette,   color: '#94A3B8' },
-      { id: 'help',          label: 'Help & Docs',  href: '/docs',            icon: HelpCircle, color: '#94A3B8' },
-      { id: 'legal',         label: 'Legal',        href: '/legal',           icon: Scale,     color: '#94A3B8' },
-      { id: 'about',         label: 'About',        href: '/about',           icon: Info,      color: '#94A3B8' },
-      { id: 'support',       label: 'Support',      href: '/support',         icon: LifeBuoy,  color: '#94A3B8' },
-      { id: 'roadmap',       label: 'Roadmap',      href: '/roadmap',         icon: Map,       color: '#94A3B8' },
-      // T1-4: Admin/Control Panel removed from public nav; they still exist at their routes
-      //       but are not listed here so regular users don't see them.
+      { id: 'learn',       label: 'Learn',              href: '/seer-academy', icon: GraduationCap, color: '#F59E0B' },
+      { id: 'get-started', label: 'Get Started',        href: '/onboarding',   icon: Map,           color: '#F59E0B' },
+      { id: 'seer',        label: 'Seer - Trust Guide', href: '/seer-service', icon: Eye,           color: '#F59E0B' },
+      { id: 'support',     label: 'Help & Support',     href: '/support',      icon: LifeBuoy,      color: '#F59E0B' },
     ],
   },
 ];

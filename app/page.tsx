@@ -325,6 +325,46 @@ export default function Home() {
         </section>
 
         {/* ════════════════════════════════════════
+            FOUR PROMISES (constitutional: promises before features)
+        ════════════════════════════════════════ */}
+        <section className="py-24 relative">
+          <div className="ui-container-breathing relative">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="mb-14 text-center"
+            >
+              <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-3">Why VFIDE exists</p>
+              <h2 className="text-3xl sm:text-4xl font-bold text-white">Four promises.</h2>
+            </motion.div>
+
+            <div className="grid gap-5 sm:grid-cols-2">
+              {[
+                { Icon: Lock,         title: 'Own what is yours.',      body: 'Your funds are yours. No bank, no middleman, and no one - not even VFIDE - who can freeze or seize them.' },
+                { Icon: ArrowRight,   title: 'Recover from loss.',      body: 'Lose your phone? Guardians, recovery, and inheritance mean losing access does not have to mean losing everything.' },
+                { Icon: CheckCircle2, title: 'Build trust.',            body: 'Trust is earned through honest dealing over time - and as it grows, your fees fall. It is responsibility, not status.' },
+                { Icon: Wallet,       title: 'Participate in commerce.', body: 'Get paid, sell, and grow a business. Zero merchant fees - the protocol takes nothing from sellers.' },
+              ].map(({ Icon, title, body }, i) => (
+                <motion.div
+                  key={title}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: i * 0.08 }}
+                  className="rounded-2xl border border-white/10 bg-white/5 p-6"
+                >
+                  <Icon size={22} className="text-cyan-400 mb-3" aria-hidden="true" />
+                  <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
+                  <p className="text-sm text-zinc-400 leading-relaxed">{body}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ════════════════════════════════════════
             FEATURES GRID
         ════════════════════════════════════════ */}
         <section className="py-24 relative">
