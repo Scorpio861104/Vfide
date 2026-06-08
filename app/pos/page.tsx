@@ -23,6 +23,9 @@ export default function POSPage() {
         <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         <div className="relative">
           <h1 className="sr-only">Point of Sale</h1>
+          <p className="text-center text-sm text-zinc-400 mb-4 px-4">
+            Payments arrive straight in your vault — yours, and impossible for anyone (including VFIDE) to freeze or seize.
+          </p>
           <MerchantPOS />
         </div>
       </div>

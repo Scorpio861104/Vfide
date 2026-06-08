@@ -11,6 +11,7 @@ import { m, AnimatePresence } from 'framer-motion';
 import { Vote, Users, Shield, Star, Award, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
 import { isConfiguredContractAddress, ZERO_ADDRESS } from '@/lib/contracts';
 import { CouncilElectionABI } from '@/lib/abis/future';
+import { FutureReleaseBanner } from '@/components/feedback/FutureReleaseBanner';
 
 
 interface Candidate {
@@ -113,6 +114,19 @@ export function ElectionsTabContent() {
   const termEndDate = electionInfo.currentTermEnd > 0
     ? new Date(electionInfo.currentTermEnd * 1000).toLocaleDateString()
     : 'TBD';
+
+  // Council elections are a future-tier capability (CouncilElection ships behind
+  // NEXT_PUBLIC_FUTURE_FEATURES_ENABLED, which is off in production). When the
+  // feature is disabled, present an honest future-release state rather than an
+  // "awaiting an election" UI that implies a live-but-idle system.
+  if (process.env.NEXT_PUBLIC_FUTURE_FEATURES_ENABLED !== 'true') {
+    return (
+      <FutureReleaseBanner
+        title="Council elections"
+        description="Elected council representation is a future-tier capability and is not yet active. Governance today runs through proposals and voting on the Governance hub."
+      />
+    );
+  }
 
   return (
     <div className="space-y-8">

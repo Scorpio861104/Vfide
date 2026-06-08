@@ -149,7 +149,7 @@ export default function MerchantPaymentLinksPage() {
                 </div>
                 <h1 className="text-4xl font-black tracking-tight">Shareable checkout links</h1>
                 <p className="mt-3 max-w-3xl text-gray-400">
-                  Generate a URL for a specific product, service, or open amount. Share by text, email, DM, or paste into a bio.
+                  Generate a URL for a specific product, service, or open amount. Share by text, email, DM, or paste into a bio. Payments go straight to your vault — VFIDE never holds, delays, or freezes your money.
                 </p>
               </div>
               <button onClick={() => setShowCreate(true)} disabled={!address} className="px-5 py-3 bg-gradient-to-r from-accent to-blue-500 rounded-xl font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90">

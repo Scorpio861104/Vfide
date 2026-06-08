@@ -409,6 +409,10 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
+              <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+                Your payment goes straight to the merchant&apos;s vault. VFIDE never holds, delays, or freezes funds — and this payment cannot be reversed once sent.
+              </p>
+
               {/* Memo */}
               {invoice.memo && (
                 <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 mt-3">

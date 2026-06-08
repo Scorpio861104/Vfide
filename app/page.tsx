@@ -76,7 +76,6 @@ export default function Home() {
     { label: copy.maxProofScoreLabel, value: '10,000', icon: '🏆' },
     { label: copy.burnRateLabel, value: '40%', icon: '🔥' },
     { label: copy.sanctumFundLabel, value: '10%', icon: '🛡️' },
-    { label: 'Avg Settlement', value: '<3s', icon: '⚡' },
     { label: 'Guardian Nodes', value: '3-of-5', icon: '🔐' },
     { label: 'ProofScore Tiers', value: '7 Tiers', icon: '🎯' },
     { label: 'Self-Custody', value: '100%', icon: '🗝️' },
@@ -250,7 +249,6 @@ export default function Home() {
             <div className="marquee-track">
               {[...protocolMetrics, ...protocolMetrics].map((m, i) => (
                 <div key={i} className="metric-chip mx-3">
-                  <span>{m.icon}</span>
                   <span className="metric-chip-value">{m.value}</span>
                   <span className="text-zinc-500">{m.label}</span>
                 </div>
