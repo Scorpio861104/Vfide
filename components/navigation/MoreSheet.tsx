@@ -34,6 +34,7 @@ import { Search, X, ArrowUpRight } from 'lucide-react';
 import {
   flattenNavItems,
   navigationItems,
+  utilityNavigationItems,
   type NavItem,
 } from './navigationItems';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
@@ -94,7 +95,7 @@ export function MoreSheet({ open, onClose, variant = 'bottom' }: MoreSheetProps)
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return null;
-    const flat = flattenNavItems(navigationItems);
+    const flat = flattenNavItems([...utilityNavigationItems, ...navigationItems]);
     return flat.filter((item) =>
       [item.label, item.id, item.badge]
         .filter(Boolean)
@@ -216,6 +217,7 @@ export function MoreSheet({ open, onClose, variant = 'bottom' }: MoreSheetProps)
               ) : (
                 <GroupedList
                   groups={navigationItems}
+                  utilityItems={utilityNavigationItems}
                   pathname={pathname ?? ''}
                   onPick={onClose}
                 />
@@ -249,15 +251,42 @@ export function MoreSheet({ open, onClose, variant = 'bottom' }: MoreSheetProps)
 
 function GroupedList({
   groups,
+  utilityItems,
   pathname,
   onPick,
 }: {
   groups: NavItem[];
+  utilityItems: NavItem[];
   pathname: string;
   onPick: () => void;
 }) {
   return (
     <div className="space-y-4">
+      {utilityItems.length > 0 && (
+        <section className="px-2">
+          <div className="mb-1.5 flex items-center gap-2 px-2">
+            <span
+              className="h-1.5 w-1.5 rounded-full"
+              style={{ background: '#94A3B8' }}
+              aria-hidden="true"
+            />
+            <h3 className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">
+              Utility
+            </h3>
+          </div>
+          <div className="space-y-0.5">
+            {utilityItems.map((item) => (
+              <ItemRow
+                key={item.id}
+                item={item}
+                pathname={pathname}
+                onPick={onPick}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
       {groups.map((group) => {
         // Render top-level items that have an `href` directly (Home,
         // Dashboard), or render groups with children as a labeled

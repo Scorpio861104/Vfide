@@ -27,6 +27,9 @@ import {
   MessageCircle,
   MoreHorizontal,
   Search,
+  User,
+  Settings,
+  HelpCircle,
 } from 'lucide-react';
 import { NotificationBell } from '@/lib/notifications';
 // FIX UX-1: Use VfideConnectButton instead of raw RainbowKit ConnectButton.
@@ -82,6 +85,12 @@ const MORE_MATCH = [
   // NAV-MATCH: seer routes (Tools group)
   '/seer-service', '/seer-academy',
 ];
+
+const UTILITY_LINKS = [
+  { href: '/me', label: 'Profile', icon: User },
+  { href: '/settings', label: 'Settings', icon: Settings },
+  { href: '/support', label: 'Support', icon: HelpCircle },
+] as const;
 
 interface TopNavProps {
   walletEnabled?: boolean;
@@ -191,6 +200,21 @@ export function TopNav({ walletEnabled = true, isConnected = false }: TopNavProp
           </button>
 
           <NotificationBell />
+
+          {UTILITY_LINKS.map((link) => {
+            const Icon = link.icon;
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="hidden lg:inline-flex items-center justify-center rounded-lg border border-white/8 bg-white/4 p-2 text-zinc-300 hover:bg-white/8 hover:text-white transition-all"
+                aria-label={link.label}
+                title={link.label}
+              >
+                <Icon size={14} />
+              </Link>
+            );
+          })}
 
           {isConnected && (
             <Link
