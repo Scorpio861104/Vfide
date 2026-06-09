@@ -153,7 +153,7 @@ export function TrustChallenges({ userScore = 0 }: { userScore?: number }) {
           <Zap size={18} className="text-yellow-400" />
           <h3 className="font-semibold text-zinc-200">Trust Challenges</h3>
         </div>
-        <span className="text-xs text-zinc-400">{completed}/{sorted.length} done</span>
+        <span className="text-xs text-zinc-400">{completed} of {sorted.length} complete</span>
       </div>
 
       <div className="w-full bg-white/10 rounded-full h-1.5 mb-4">
