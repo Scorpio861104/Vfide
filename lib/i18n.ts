@@ -344,7 +344,7 @@ const homeEnglish: HomeCopy = {
     { title: 'Social Commerce', description: 'Buy, sell, share, endorse. Every transaction builds trust on-chain and grows your reputation across the ecosystem.' },
     { title: 'Instant Merchant Portal', description: 'Launch your store in 60 seconds. One link, any stablecoin, any device — no bank account, no approval, no gatekeeping.' },
     { title: 'ProofScore Reputation', description: 'On-chain reputation that compounds over time. Build trust across payments, commerce, and social — your score earns you lower fees.' },
-    { title: 'DAO Governance', description: 'Vote on protocol parameters, elect council members, and help steer where the protocol goes — governance that\'s actually on-chain.' },
+    { title: 'DAO Governance', description: 'Hold value, recover from loss, build trust, and trade — and help steward protocol parameters through on-chain governance as it opens up.' },
   ],
   calcKicker: 'Savings calculator',
   calcTitlePrefix: 'See how much you',

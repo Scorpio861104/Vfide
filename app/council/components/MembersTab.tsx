@@ -65,7 +65,7 @@ export function MembersTab() {
 
   return (
     <div className="space-y-8">
-      <SampleDataBanner label="Council members appear here once the community elects a council — CouncilElection ships in V1 and is awaiting an election, not a future release. No election has been held yet; the entries below are illustrative." />
+      <SampleDataBanner label="Council members appear here once council elections are activated. Until then, entries below are illustrative and shown for structure only." />
       {/* Members List */}
       <m.div 
         initial={{ opacity: 0 }}
@@ -76,7 +76,7 @@ export function MembersTab() {
           <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-500/20 to-indigo-500/5">
             <Crown className="w-5 h-5 text-indigo-400" />
           </div>
-          Current Council Members
+          Council Member Layout (Illustrative)
         </h3>
         <div className="space-y-4">
           {members.map((member, idx) => (
