@@ -13,6 +13,10 @@ import { OnboardingProgressBar } from '@/components/onboarding';
 import { NonCustodialNotice } from '@/components/compliance';
 import { GetTestVfideBanner } from '@/components/testnet/GetTestVfideBanner';
 import { useProofScore } from '@/hooks/useProofScore';
+import { useCivilizationStatus } from '@/hooks/useCivilizationStatus';
+import { CitizenStatusGrid } from '@/components/civilization/CitizenStatusGrid';
+import { RecommendedActions } from '@/components/civilization/RecommendedActions';
+import { CivilizationRelationships } from '@/components/civilization/CivilizationRelationships';
 import { OverviewTab } from './components/OverviewTab';
 import { BadgesTab } from './components/BadgesTab';
 import { ScoreSimulatorTab } from './components/ScoreSimulatorTab';
@@ -72,6 +76,7 @@ export default function DashboardPage() {
   const { locale } = useLocale();
   const copy = (DASHBOARD_COPY as Record<string, typeof DASHBOARD_COPY['en-US']>)[locale] ?? DASHBOARD_COPY['en-US'];
   const { score: proofScore, burnFee: feeRate } = useProofScore();
+  const civ = useCivilizationStatus();
   const proofScoreValue = proofScore ?? 0;
   const feeRateValue = feeRate ?? 0;
   const [txCount, setTxCount] = useState(0);
@@ -174,6 +179,12 @@ export default function DashboardPage() {
         <div className="ui-container-breathing py-8">
 
           <GetTestVfideBanner className="mb-6" />
+
+          <div className="mb-8 space-y-6">
+            <RecommendedActions recommendations={civ.recommendations} />
+            <CitizenStatusGrid institutions={civ.institutions} />
+            <CivilizationRelationships />
+          </div>
 
           {/* Score + Fee row */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
