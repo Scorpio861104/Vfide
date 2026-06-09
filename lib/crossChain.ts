@@ -11,17 +11,15 @@ import { useState, useCallback, useEffect } from 'react';
 import { logger } from '@/lib/logger';
 
 import {
-  createConfig,
-  EVM,
+  createClient,
   getRoutes as lifiGetRoutes,
-  executeRoute as lifiExecuteRoute,
   getTokenBalancesByChain,
 } from '@lifi/sdk';
 import type { Route as LifiRoute } from '@lifi/types';
 import type { WalletClient } from 'viem';
 
-// Initialize Li.Fi SDK at module load
-createConfig({ integrator: 'VFIDE', preloadChains: false });
+// Initialize Li.Fi SDK once with the v4 client API.
+const lifiClient = createClient({ integrator: 'VFIDE', preloadChains: false });
 
 // Cache raw Li.Fi routes by ID so executeTransfer can look them up
 const lifiRouteCache = new Map<string, LifiRoute>();
@@ -271,7 +269,7 @@ export async function findRoutes(request: TransferRequest): Promise<Route[]> {
     throw new Error('Unsupported token pair');
   }
 
-  const lifiResponse = await lifiGetRoutes({
+  const lifiResponse = await lifiGetRoutes(lifiClient, {
     fromChainId: request.fromChain,
     fromAmount: request.amount,
     fromTokenAddress: fromToken.address,
@@ -365,7 +363,7 @@ const transferStatuses = new Map<string, TransferStatus>();
 export async function executeTransfer(
   route: Route,
   _request: TransferRequest,
-  walletClient: WalletClient
+  _walletClient: WalletClient
 ): Promise<string> {
   const lifiRoute = lifiRouteCache.get(route.id);
   if (!lifiRoute) {
@@ -374,64 +372,10 @@ export async function executeTransfer(
     );
   }
 
-  // Configure Li.Fi EVM provider with the current wallet client before execution
-  createConfig({
-    integrator: 'VFIDE',
-    preloadChains: false,
-    providers: [EVM({ getWalletClient: () => Promise.resolve(walletClient as never) })],
-  });
-
-  const transferId = `transfer-${Date.now()}-${crypto.randomUUID()}`;
-  const status: TransferStatus = {
-    id: transferId,
-    status: 'pending',
-    currentStep: 0,
-    totalSteps: lifiRoute.steps.length || 1,
-  };
-  transferStatuses.set(transferId, status);
-
-  (async () => {
-    try {
-      status.status = 'processing';
-
-      const executedRoute = await lifiExecuteRoute(lifiRoute, {
-        updateRouteHook(updatedRoute) {
-          const activeIdx = updatedRoute.steps.findIndex(
-            (s) =>
-              s.execution?.status === 'PENDING' ||
-              s.execution?.status === 'ACTION_REQUIRED'
-          );
-          if (activeIdx >= 0) status.currentStep = activeIdx + 1;
-
-          const firstProcs = updatedRoute.steps[0]?.execution?.process ?? [];
-          const srcTx = firstProcs.find((p) => p.txHash);
-          if (srcTx?.txHash) status.fromTxHash = srcTx.txHash;
-
-          const lastProcs =
-            updatedRoute.steps[updatedRoute.steps.length - 1]?.execution?.process ?? [];
-          const dstTx = [...lastProcs].reverse().find((p) => p.txHash);
-          if (dstTx?.txHash) status.toTxHash = dstTx.txHash;
-        },
-      });
-
-      const firstProcs = executedRoute.steps[0]?.execution?.process ?? [];
-      const srcTx = firstProcs.find((p) => p.txHash);
-      if (srcTx?.txHash) status.fromTxHash = srcTx.txHash;
-
-      const lastProcs =
-        executedRoute.steps[executedRoute.steps.length - 1]?.execution?.process ?? [];
-      const dstTx = [...lastProcs].reverse().find((p) => p.txHash);
-      if (dstTx?.txHash) status.toTxHash = dstTx.txHash;
-
-      status.status = 'completed';
-      status.currentStep = status.totalSteps;
-    } catch (error) {
-      status.status = 'failed';
-      status.error = error instanceof Error ? error.message : 'Unknown error';
-    }
-  })();
-
-  return transferId;
+  // LI.FI SDK v4 uses a client/provider model. This repo currently exposes
+  // route discovery only; transfer execution is still intentionally gated in
+  // the UI until a v4 execution provider is wired in.
+  throw new Error('Cross-chain transfer execution is not configured yet.');
 }
 
 export function getTransferStatus(transferId: string): TransferStatus | undefined {
@@ -453,6 +397,7 @@ export async function getAggregatedBalances(address: string): Promise<Aggregated
   let balancesByChain: Record<number, import('@lifi/types').TokenAmount[]>;
   try {
     balancesByChain = await getTokenBalancesByChain(
+      lifiClient,
       address,
       tokensByChain as Record<number, import('@lifi/types').Token[]>
     );
