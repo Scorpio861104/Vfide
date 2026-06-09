@@ -18,9 +18,9 @@ import { useLocale } from '@/lib/locale/LocaleProvider'
 // Names, descriptions, and dot colors are presentation; mechanics live in the
 // contract / constants and are not defined here.
 const TIERS = [
-  { tier: 'Risky',      min: 0,    max: 3999,  color: 'bg-red-500',    desc: 'No trust history yet. Everyone starts here.' },
+  { tier: 'Risky',      min: 0,    max: 3999,  color: 'bg-red-500',    desc: 'No trust history on record yet.' },
   { tier: 'Low Trust',  min: 4000, max: 4999,  color: 'bg-orange-400', desc: 'Early trust history forming.' },
-  { tier: 'Neutral',    min: 5000, max: 5399,  color: 'bg-yellow-400', desc: 'Basic on-chain trust established.' },
+  { tier: 'Neutral',    min: 5000, max: 5399,  color: 'bg-yellow-400', desc: 'Basic on-chain trust established. New accounts begin here.' },
   { tier: 'Governance', min: 5400, max: 5599,  color: 'bg-lime-400',   desc: 'Trusted enough to participate in governance.' },
   { tier: 'Trusted',    min: 5600, max: 6999,  color: 'bg-green-500',  desc: 'A solid, multi-source record of honest dealing.' },
   { tier: 'Council',    min: 7000, max: 7999,  color: 'bg-cyan-500',   desc: 'Deep trust history; trusted with more responsibility.' },
@@ -68,13 +68,13 @@ export default function ProofScorePage() {
   ]
 
   const TrustSummary = (
-    <div className="glass-card-premium ui-card-sheen flex w-full items-stretch gap-px overflow-hidden rounded-2xl md:w-auto">
+    <div className="glass-card-premium ui-card-sheen flex w-full flex-col items-stretch overflow-hidden rounded-2xl sm:flex-row md:w-auto">
       {summaryCells.map(({ Icon, label, value, valueClass, dot }, i) => (
         <div
           key={label}
-          className={`flex flex-1 items-center gap-2.5 px-3 py-3 sm:px-5 md:min-w-[8rem] ${i > 0 ? 'border-l border-white/10' : ''}`}
+          className={`flex flex-1 items-center gap-2.5 px-4 py-3 sm:px-5 md:min-w-[8rem] ${i > 0 ? 'border-t border-white/10 sm:border-l sm:border-t-0' : ''}`}
         >
-          <Icon size={15} className="hidden flex-shrink-0 text-cyan-400 sm:block" aria-hidden="true" />
+          <Icon size={15} className="flex-shrink-0 text-cyan-400" aria-hidden="true" />
           <div className="min-w-0">
             <p className="text-[10px] uppercase tracking-widest text-zinc-500">{label}</p>
             <p className={`mt-0.5 flex items-center gap-1.5 text-base font-bold leading-none sm:text-lg ${valueClass}`}>
