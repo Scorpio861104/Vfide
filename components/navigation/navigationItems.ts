@@ -118,9 +118,9 @@ export const navigationItems: NavItem[] = [
   { id: 'home',      label: 'Home',      href: '/',          icon: Home,            color: '#F8F8FC', tier: 1 },
   { id: 'dashboard', label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, color: '#00F0FF', tier: 1 },
 
-  // Citizens - personal ownership and protection
+  // Personal - your ownership, trust, and protection
   {
-    id: 'citizens', label: 'Citizens', icon: Shield, color: '#8B5CF6',
+    id: 'citizens', label: 'Personal', icon: Shield, color: '#8B5CF6',
     children: [
       { id: 'vault',         label: 'My Vault',     href: '/vault',         icon: Shield,      color: '#8B5CF6', dataOnboarding: 'nav-vault' },
       { id: 'proofscore',    label: 'ProofScore',   href: '/proofscore',    icon: TrendingUp,  color: '#8B5CF6', tier: 1 },

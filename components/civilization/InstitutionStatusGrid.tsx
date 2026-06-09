@@ -90,12 +90,12 @@ function InstitutionCard({ s }: { s: InstitutionStatus }) {
   );
 }
 
-export function CitizenStatusGrid({ institutions }: { institutions: InstitutionStatus[] }) {
+export function InstitutionStatusGrid({ institutions }: { institutions: InstitutionStatus[] }) {
   return (
-    <section aria-label="Citizen status by institution">
+    <section aria-label="Your institutions">
       <div className="mb-4 flex items-baseline justify-between">
-        <h2 className="text-lg font-semibold text-white">Citizen Status</h2>
-        <p className="text-xs text-zinc-500">Your standing across the six institutions</p>
+        <h2 className="text-lg font-semibold text-white">Your institutions</h2>
+        <p className="text-xs text-zinc-500">What each one does for you</p>
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {institutions.map((s) => (

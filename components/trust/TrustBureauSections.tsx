@@ -49,7 +49,7 @@ export function TrustStatusPanel({ t }: { t: TrustStatus }) {
         </div>
       </div>
       <div>
-        <p className="mb-2 text-xs font-bold uppercase tracking-widest text-zinc-500">Participation standing</p>
+        <p className="mb-2 text-xs font-bold uppercase tracking-widest text-zinc-500">Participation record</p>
         <div className="flex flex-wrap gap-2">
           {t.standing.map((s) => (
             <span

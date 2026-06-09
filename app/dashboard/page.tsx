@@ -14,7 +14,7 @@ import { NonCustodialNotice } from '@/components/compliance';
 import { GetTestVfideBanner } from '@/components/testnet/GetTestVfideBanner';
 import { useProofScore } from '@/hooks/useProofScore';
 import { useCivilizationStatus } from '@/hooks/useCivilizationStatus';
-import { CitizenStatusGrid } from '@/components/civilization/CitizenStatusGrid';
+import { InstitutionStatusGrid } from '@/components/civilization/InstitutionStatusGrid';
 import { RecommendedActions } from '@/components/civilization/RecommendedActions';
 import { CivilizationRelationships } from '@/components/civilization/CivilizationRelationships';
 import { ContinuitySummaryCard } from '@/components/continuity/ContinuitySummaryCard';
@@ -185,12 +185,12 @@ export default function DashboardPage() {
 
           <div className="mb-8 space-y-6">
             <RecommendedActions recommendations={civ.recommendations} />
+            <InstitutionStatusGrid institutions={civ.institutions} />
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               <TrustSummaryCard />
               <ContinuitySummaryCard />
               <MerchantSummaryCard />
             </div>
-            <CitizenStatusGrid institutions={civ.institutions} />
             <CivilizationRelationships />
           </div>
 

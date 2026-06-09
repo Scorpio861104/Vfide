@@ -107,7 +107,7 @@ export default function AddressPage() {
             <div className="bg-gradient-to-br from-amber-900/20 to-orange-900/20 border border-amber-500/30 rounded-lg p-4">
               <div className="text-sm space-y-2">
                 <div>
-                  <span className="text-gray-400">Trust standing:</span>
+                  <span className="text-gray-400">Trust record:</span>
                   <span className="ml-2 font-bold text-amber-300">{tierName || 'Loading...'}</span>
                 </div>
                 {!isLoading && (

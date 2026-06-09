@@ -86,7 +86,7 @@ export function ProofScoreChapter({ onComplete, onSkip }: ProofScoreChapterProps
         <div className="rounded-xl border border-accent/30 bg-accent/5 p-4 text-sm text-accent">
           <p className="font-semibold text-white">Your first payment</p>
           <p className="mt-1 text-white/80">
-            Positive participation improves your standing over time. Complete payments, build trusted
+            Positive participation improves your trust record over time. Complete payments, build trusted
             interactions, and use protocol features responsibly to strengthen your score.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">

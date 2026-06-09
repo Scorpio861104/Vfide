@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * TrustSummaryCard - V28 Part 10. Compact trust readout for the Citizen Command
+ * TrustSummaryCard - V28 Part 10. Compact trust readout for the Command
  * Center: trust status, fee impact, primary opportunity, next action, and a
  * link into the Trust Bureau.
  */
