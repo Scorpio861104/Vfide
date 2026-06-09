@@ -18,6 +18,7 @@ import { CitizenStatusGrid } from '@/components/civilization/CitizenStatusGrid';
 import { RecommendedActions } from '@/components/civilization/RecommendedActions';
 import { CivilizationRelationships } from '@/components/civilization/CivilizationRelationships';
 import { ContinuitySummaryCard } from '@/components/continuity/ContinuitySummaryCard';
+import { MerchantSummaryCard } from '@/components/merchant/MerchantSummaryCard';
 import { OverviewTab } from './components/OverviewTab';
 import { BadgesTab } from './components/BadgesTab';
 import { ScoreSimulatorTab } from './components/ScoreSimulatorTab';
@@ -183,7 +184,10 @@ export default function DashboardPage() {
 
           <div className="mb-8 space-y-6">
             <RecommendedActions recommendations={civ.recommendations} />
-            <ContinuitySummaryCard />
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <ContinuitySummaryCard />
+              <MerchantSummaryCard />
+            </div>
             <CitizenStatusGrid institutions={civ.institutions} />
             <CivilizationRelationships />
           </div>

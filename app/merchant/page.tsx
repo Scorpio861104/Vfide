@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 import { HubSection, type HubLink } from '@/components/navigation/HubGrid';
+import { MerchantHQ } from '@/components/merchant/MerchantHQ';
 
 // Import merchant components
 import { MerchantDashboard } from '@/components/merchant/MerchantDashboard';
@@ -119,6 +120,11 @@ export default function MerchantPage() {
                 </Link>
               )}
             </motion.div>
+
+            {/* Merchant Headquarters: the command center (V27) */}
+            <div className="mb-12">
+              <MerchantHQ />
+            </div>
 
             {/* Always show these sections */}
             <h2 className="text-2xl font-bold text-white mb-6">Merchant Portal</h2>
