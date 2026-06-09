@@ -147,18 +147,18 @@ export function TrustChallenges({ userScore = 0 }: { userScore?: number }) {
   const completed = sorted.filter(c => c.checkCompleted(context)).length;
 
   return (
-    <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
+    <div className="analytics-card p-4">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Zap size={18} className="text-yellow-400" />
-          <h3 className="font-semibold text-slate-200">Trust Challenges</h3>
+          <h3 className="font-semibold text-zinc-200">Trust Challenges</h3>
         </div>
-        <span className="text-xs text-slate-400">{completed}/{sorted.length} done</span>
+        <span className="text-xs text-zinc-400">{completed}/{sorted.length} done</span>
       </div>
 
-      <div className="w-full bg-slate-700 rounded-full h-1.5 mb-4">
+      <div className="w-full bg-white/10 rounded-full h-1.5 mb-4">
         <div
-          className="bg-gradient-to-r from-blue-500 to-emerald-500 h-1.5 rounded-full transition-all"
+          className="bg-gradient-to-r from-cyan-500 to-emerald-500 h-1.5 rounded-full transition-all"
           style={{ width: `${(completed / sorted.length) * 100}%` }}
         />
       </div>
@@ -175,36 +175,36 @@ export function TrustChallenges({ userScore = 0 }: { userScore?: number }) {
               disabled={isLocked}
               className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-all text-left
                 ${isDone ? 'border-emerald-700/50 bg-emerald-900/20 opacity-70' : ''}
-                ${isLocked ? 'border-slate-700/50 bg-slate-800/30 opacity-50 cursor-not-allowed' : ''}
-                ${!isDone && !isLocked ? 'border-slate-700 bg-slate-700/30 hover:bg-slate-700/60 cursor-pointer' : ''}
+                ${isLocked ? 'border-white/8 bg-white/[0.02] opacity-50 cursor-not-allowed' : ''}
+                ${!isDone && !isLocked ? 'border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer' : ''}
               `}
             >
               <div className="shrink-0">
                 {isDone ? (
                   <CheckCircle size={18} className="text-emerald-400" />
                 ) : isLocked ? (
-                  <Lock size={18} className="text-slate-500" />
+                  <Lock size={18} className="text-zinc-500" />
                 ) : (
-                  <Shield size={18} className="text-blue-400" />
+                  <Shield size={18} className="text-cyan-400" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-slate-200">{c.title}</span>
+                  <span className="text-sm font-medium text-zinc-200">{c.title}</span>
                   <span className={`text-xs px-1.5 py-0.5 rounded ${DIFFICULTY_COLORS[c.difficulty]}`}>
                     {c.difficulty}
                   </span>
                 </div>
-                <p className="text-xs text-slate-400 mt-0.5">{c.description}</p>
+                <p className="text-xs text-zinc-400 mt-0.5">{c.description}</p>
                 {isLocked && c.minScore && (
-                  <p className="text-xs text-slate-500 mt-0.5">
+                  <p className="text-xs text-zinc-500 mt-0.5">
                     Requires score ≥ {c.minScore.toLocaleString()}
                   </p>
                 )}
               </div>
               <div className="shrink-0 text-right">
                 <span className="text-xs font-bold text-yellow-400">+{c.reward}</span>
-                <div className="text-xs text-slate-500">pts</div>
+                <div className="text-xs text-zinc-500">pts</div>
               </div>
             </button>
           );

@@ -7,14 +7,14 @@ import { formatDistanceToNow } from 'date-fns';
 
 const KIND_META: Record<string, { label: string; color: string; icon: string }> = {
   payment:     { label: 'Payment',         color: 'text-emerald-400', icon: '💳' },
-  loan_repaid: { label: 'Loan Repaid',     color: 'text-blue-400',    icon: '🏦' },
+  loan_repaid: { label: 'Loan Repaid',     color: 'text-cyan-400',    icon: '🏦' },
   endorsement: { label: 'Endorsement',     color: 'text-purple-400',  icon: '🤝' },
   identity:    { label: 'Identity Verify', color: 'text-yellow-400',  icon: '🪪' },
   dispute:     { label: 'Dispute',         color: 'text-orange-400',  icon: '⚠️' },
   fraud_flag:  { label: 'Fraud Flag',      color: 'text-red-500',     icon: '🚩' },
-  decay:       { label: 'Score Decay',     color: 'text-slate-400',   icon: '📉' },
-  initial:     { label: 'Account Created', color: 'text-slate-300',   icon: '🌱' },
-  unknown:     { label: 'Score Update',    color: 'text-slate-400',   icon: '📊' },
+  decay:       { label: 'Score Decay',     color: 'text-zinc-400',   icon: '📉' },
+  initial:     { label: 'Account Created', color: 'text-zinc-300',   icon: '🌱' },
+  unknown:     { label: 'Score Update',    color: 'text-zinc-400',   icon: '📊' },
 };
 
 function ScoreSparkline({ events }: { events: ScoreEvent[] }) {
@@ -32,42 +32,42 @@ function ScoreSparkline({ events }: { events: ScoreEvent[] }) {
 
   return (
     <svg width={w} height={h} className="opacity-60">
-      <polyline points={pts} fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinejoin="round" />
+      <polyline points={pts} fill="none" stroke="#06b6d4" strokeWidth="2" strokeLinejoin="round" />
       {scores.map((s, i) => {
         const x = (i / (scores.length - 1)) * w;
         const y = h - ((s - min) / range) * h;
-        return <circle key={i} cx={x} cy={y} r="3" fill="#3b82f6" />;
+        return <circle key={i} cx={x} cy={y} r="3" fill="#06b6d4" />;
       })}
     </svg>
   );
 }
 
 function EventRow({ event }: { event: ScoreEvent }) {
-  const meta = KIND_META[event.kind] ?? KIND_META['unknown'] ?? { label: 'Score Update', color: 'text-slate-400', icon: '📊' };
+  const meta = KIND_META[event.kind] ?? KIND_META['unknown'] ?? { label: 'Score Update', color: 'text-zinc-400', icon: '📊' };
   const sign = event.delta >= 0 ? '+' : '';
-  const deltaColor = event.delta > 0 ? 'text-emerald-400' : event.delta < 0 ? 'text-red-400' : 'text-slate-400';
+  const deltaColor = event.delta > 0 ? 'text-emerald-400' : event.delta < 0 ? 'text-red-400' : 'text-zinc-400';
   const timeAgo = event.timestamp
     ? formatDistanceToNow(new Date(event.timestamp * 1000), { addSuffix: true })
     : 'Long ago';
 
   return (
-    <div className="flex items-center gap-3 py-2.5 border-b border-slate-700/50 last:border-0">
+    <div className="flex items-center gap-3 py-2.5 border-b border-white/5 last:border-0">
       <span className="text-2xl w-8 shrink-0">{meta.icon}</span>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className={`text-sm font-medium ${meta.color}`}>{meta.label}</span>
           <span className={`text-xs font-bold ${deltaColor}`}>{sign}{event.delta}</span>
         </div>
-        <div className="text-xs text-slate-500">{timeAgo}</div>
+        <div className="text-xs text-zinc-500">{timeAgo}</div>
       </div>
       <div className="text-right shrink-0">
-        <div className="text-sm font-mono text-slate-300">{event.newScore.toLocaleString()}</div>
+        <div className="text-sm font-mono text-zinc-300">{event.newScore.toLocaleString()}</div>
         {event.txHash && (
           <a
             href={`https://basescan.org/tx/${event.txHash}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-blue-400 hover:underline"
+            className="text-xs text-cyan-400 hover:underline"
           >
             tx ↗
           </a>
@@ -82,10 +82,10 @@ export function ScoreStoryFeed() {
   const { events, isLoading, isIllustrative, refetch } = useScoreHistory(address);
 
   return (
-    <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
+    <div className="analytics-card p-4">
       <div className="flex items-center justify-between mb-3">
         <div>
-          <h3 className="font-semibold text-slate-200">Score History</h3>
+          <h3 className="font-semibold text-zinc-200">Score History</h3>
           {isIllustrative && (
             <span className="text-xs text-amber-400">Illustrative — connect wallet for live data</span>
           )}
@@ -93,7 +93,7 @@ export function ScoreStoryFeed() {
         <button
           onClick={refetch}
           disabled={isLoading}
-          className="p-1.5 rounded-lg hover:bg-slate-700 text-slate-400 disabled:opacity-50"
+          className="p-1.5 rounded-lg hover:bg-white/5 text-zinc-400 disabled:opacity-50"
         >
           <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
         </button>
@@ -107,9 +107,9 @@ export function ScoreStoryFeed() {
 
       <div className="space-y-0">
         {isLoading ? (
-          <div className="text-center py-6 text-slate-500 text-sm">Loading history…</div>
+          <div className="text-center py-6 text-zinc-500 text-sm">Loading history…</div>
         ) : events.length === 0 ? (
-          <div className="text-center py-6 text-slate-500 text-sm">No score events found</div>
+          <div className="text-center py-6 text-zinc-500 text-sm">No score events found</div>
         ) : (
           events.map((e, i) => <EventRow key={i} event={e} />)
         )}
