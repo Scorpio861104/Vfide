@@ -19,6 +19,7 @@ import { RecommendedActions } from '@/components/civilization/RecommendedActions
 import { CivilizationRelationships } from '@/components/civilization/CivilizationRelationships';
 import { ContinuitySummaryCard } from '@/components/continuity/ContinuitySummaryCard';
 import { MerchantSummaryCard } from '@/components/merchant/MerchantSummaryCard';
+import { TrustSummaryCard } from '@/components/trust/TrustSummaryCard';
 import { OverviewTab } from './components/OverviewTab';
 import { BadgesTab } from './components/BadgesTab';
 import { ScoreSimulatorTab } from './components/ScoreSimulatorTab';
@@ -184,7 +185,8 @@ export default function DashboardPage() {
 
           <div className="mb-8 space-y-6">
             <RecommendedActions recommendations={civ.recommendations} />
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <TrustSummaryCard />
               <ContinuitySummaryCard />
               <MerchantSummaryCard />
             </div>
