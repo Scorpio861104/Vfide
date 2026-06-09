@@ -31,6 +31,7 @@ import {
 import { Footer } from '@/components/layout/Footer';
 import { HubSection, type HubLink } from '@/components/navigation/HubGrid';
 import { MerchantHQ } from '@/components/merchant/MerchantHQ';
+import { PowerReturnPanel } from '@/components/civilization/PowerReturnPanel';
 
 // Import merchant components
 import { MerchantDashboard } from '@/components/merchant/MerchantDashboard';
@@ -123,6 +124,9 @@ export default function MerchantPage() {
 
             {/* Merchant Headquarters: the command center (V27) */}
             <div className="mb-12">
+              <div className="mb-6">
+                <PowerReturnPanel institution="commerce" />
+              </div>
               <MerchantHQ />
             </div>
 

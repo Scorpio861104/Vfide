@@ -11,7 +11,7 @@
 import { useAccount } from 'wagmi';
 import { useProofScore } from '@/hooks/useProofScore';
 
-export type TrustHealth = 'Exemplary' | 'Strong' | 'Established' | 'Building' | 'Unknown';
+export type TrustHealth = 'Strong' | 'Established' | 'Building' | 'Unknown';
 
 export interface TrustOpportunity {
   id: string;
@@ -47,8 +47,7 @@ export function useTrustStatus(): TrustStatus {
 
   let health: TrustHealth;
   if (!isConnected || !hasHistory) health = 'Unknown';
-  else if (ps.isElite) health = 'Exemplary';
-  else if (ps.canCouncil) health = 'Strong';
+  else if (ps.isElite || ps.canCouncil) health = 'Strong';
   else if (ps.canMerchant || ps.canVote) health = 'Established';
   else health = 'Building';
 

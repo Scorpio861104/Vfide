@@ -17,6 +17,7 @@ import {
   TrustContinuityPanel,
   TrustAcademyEmbed,
 } from '@/components/trust/TrustBureauSections'
+import { PowerReturnPanel } from '@/components/civilization/PowerReturnPanel'
 import { useTrustStatus } from '@/hooks/useTrustStatus'
 import { useProofScore } from '@/hooks/useProofScore'
 
@@ -65,6 +66,7 @@ export default function TrustBureauPage() {
         </div>
 
         <div className="space-y-10">
+          <PowerReturnPanel institution="trust" />
           {/* ── Part 2: Trust Status ── */}
           <TrustStatusPanel t={t} />
 

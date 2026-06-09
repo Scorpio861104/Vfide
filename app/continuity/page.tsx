@@ -17,6 +17,7 @@ import { Footer } from '@/components/layout/Footer';
 import { Heart } from 'lucide-react';
 import { ContinuitySectionCard } from '@/components/continuity/ContinuitySectionCard';
 import { ContinuityTimeline } from '@/components/continuity/ContinuityTimeline';
+import { PowerReturnPanel } from '@/components/civilization/PowerReturnPanel';
 import {
   FamilyContinuityPanel,
   BusinessContinuityPanel,
@@ -93,6 +94,11 @@ export default function ContinuityPage() {
           subtitle="What is protected, what can be recovered, and what survives you - in one place."
           action={ReadinessHeader}
         />
+
+        {/* What continuity returns to you */}
+        <div className="mb-8">
+          <PowerReturnPanel institution="continuity" />
+        </div>
 
         {/* Pillars: guardians / recovery / inheritance / security / memorial */}
         <section aria-label="Continuity pillars" className="mb-8">

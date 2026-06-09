@@ -15,8 +15,8 @@ import { GetTestVfideBanner } from '@/components/testnet/GetTestVfideBanner';
 import { useProofScore } from '@/hooks/useProofScore';
 import { useCivilizationStatus } from '@/hooks/useCivilizationStatus';
 import { InstitutionStatusGrid } from '@/components/civilization/InstitutionStatusGrid';
+import { PowerReturnPanel } from '@/components/civilization/PowerReturnPanel';
 import { RecommendedActions } from '@/components/civilization/RecommendedActions';
-import { CivilizationRelationships } from '@/components/civilization/CivilizationRelationships';
 import { ContinuitySummaryCard } from '@/components/continuity/ContinuitySummaryCard';
 import { MerchantSummaryCard } from '@/components/merchant/MerchantSummaryCard';
 import { TrustSummaryCard } from '@/components/trust/TrustSummaryCard';
@@ -184,6 +184,7 @@ export default function DashboardPage() {
           <GetTestVfideBanner className="mb-6" />
 
           <div className="mb-8 space-y-6">
+            <PowerReturnPanel />
             <RecommendedActions recommendations={civ.recommendations} />
             <InstitutionStatusGrid institutions={civ.institutions} />
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -191,7 +192,6 @@ export default function DashboardPage() {
               <ContinuitySummaryCard />
               <MerchantSummaryCard />
             </div>
-            <CivilizationRelationships />
           </div>
 
           {/* Score + Fee row */}

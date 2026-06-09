@@ -16,7 +16,6 @@ import {
 import type { TrustStatus, TrustHealth } from '@/hooks/useTrustStatus';
 
 const HEALTH_PILL: Record<TrustHealth, { cls: string; dot: string }> = {
-  Exemplary: { cls: 'border-violet-400/30 bg-violet-400/10 text-violet-300', dot: 'bg-violet-400' },
   Strong: { cls: 'border-emerald-400/30 bg-emerald-400/10 text-emerald-300', dot: 'bg-emerald-400' },
   Established: { cls: 'border-accent/30 bg-accent/10 text-cyan-300', dot: 'bg-cyan-400' },
   Building: { cls: 'border-amber-400/30 bg-amber-400/10 text-amber-300', dot: 'bg-amber-400' },
