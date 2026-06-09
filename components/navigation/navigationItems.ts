@@ -124,6 +124,7 @@ export const navigationItems: NavItem[] = [
     children: [
       { id: 'vault',         label: 'My Vault',     href: '/vault',         icon: Shield,      color: '#8B5CF6', dataOnboarding: 'nav-vault' },
       { id: 'proofscore',    label: 'ProofScore',   href: '/proofscore',    icon: TrendingUp,  color: '#8B5CF6', tier: 1 },
+      { id: 'continuity',    label: 'Continuity',   href: '/continuity',    icon: Heart,       color: '#8B5CF6', tier: 1 },
       { id: 'guardians',     label: 'Guardians',    href: '/guardians',     icon: ShieldCheck, color: '#8B5CF6', tier: 1 },
       { id: 'recovery',      label: 'Recovery',     href: '/vault/recover', icon: KeyRound,    color: '#8B5CF6', tier: 1 },
       { id: 'inheritance',   label: 'Inheritance',  href: '/inheritance',   icon: Users,       color: '#8B5CF6', tier: 1 },
