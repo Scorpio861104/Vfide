@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 
 import Link from 'next/link';
 import { m as motion } from 'framer-motion';
-import { Sparkles, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Sparkles, ArrowRight, ShieldCheck, Lock, KeyRound, Users } from 'lucide-react';
 
 import { Footer } from '@/components/layout/Footer';
 import { useLocale } from '@/lib/locale/LocaleProvider';
@@ -57,15 +57,51 @@ export default function OnboardingPage() {
 
             <div className="space-y-5">
               <p className="text-sm text-zinc-400">
-                Start with a fast overview, then continue to the wallet-enabled setup page when you are ready to connect a wallet and configure your vault.
+                Before setup, know these three facts: what is yours stays yours, no one can seize it, and loss of a device does not have to mean loss of your value.
               </p>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                  <p className="mb-1 flex items-center gap-2 text-sm font-semibold text-white">
+                    <Lock size={14} className="text-cyan-400" aria-hidden /> Yours by default
+                  </p>
+                  <p className="text-xs leading-relaxed text-zinc-400">
+                    Your funds remain under your control. VFIDE is non-custodial.
+                  </p>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                  <p className="mb-1 flex items-center gap-2 text-sm font-semibold text-white">
+                    <ShieldCheck size={14} className="text-cyan-400" aria-hidden /> Unseizable
+                  </p>
+                  <p className="text-xs leading-relaxed text-zinc-400">
+                    No operator can freeze or seize your value through the frontend.
+                  </p>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                  <p className="mb-1 flex items-center gap-2 text-sm font-semibold text-white">
+                    <KeyRound size={14} className="text-cyan-400" aria-hidden /> Recoverable
+                  </p>
+                  <p className="text-xs leading-relaxed text-zinc-400">
+                    Guardians and recovery flows exist so loss can be survivable.
+                  </p>
+                </div>
+              </div>
 
               <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-4 text-sm text-cyan-100">
                 <p className="flex items-center gap-2 font-semibold text-white">
                   <ShieldCheck size={16} aria-hidden /> What setup covers
                 </p>
                 <p className="mt-1 text-zinc-400">
-                  Wallet connection, CardBound vault creation, spend protections, guardians, recovery, and payment readiness.
+                  Wallet connection, CardBound vault creation, spend protections, guardians, recovery, inheritance preparation, and payment readiness.
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-violet-500/20 bg-violet-500/5 p-4 text-xs text-zinc-300">
+                <p className="flex items-center gap-2 font-semibold text-white">
+                  <Users size={14} className="text-violet-300" aria-hidden /> Continuity matters
+                </p>
+                <p className="mt-1 text-zinc-400">
+                  Setup introduces guardians, recovery, and inheritance early so continuity is built in from day one.
                 </p>
               </div>
 
