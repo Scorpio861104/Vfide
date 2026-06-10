@@ -28,7 +28,7 @@ export function ContinuityTimeline({ current }: { current: TimelineStage }) {
         <h2 className="text-lg font-semibold text-white">Continuity timeline</h2>
         <span className="text-xs text-zinc-500">Where this vault is now</span>
       </div>
-      <p className="mb-5 text-sm text-zinc-400">The full path a vault can travel - most citizens stay at <span className="text-white">Life</span>.</p>
+      <p className="mb-5 text-sm text-zinc-400">The full path a vault can travel - most participants stay at <span className="text-white">Life</span>.</p>
 
       <ol className="flex flex-col gap-0 sm:flex-row sm:items-stretch sm:gap-0">
         {STAGES.map((s, i) => {

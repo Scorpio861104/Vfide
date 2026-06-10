@@ -17,6 +17,7 @@ import {
   TrustContinuityPanel,
   TrustAcademyEmbed,
 } from '@/components/trust/TrustBureauSections'
+import { TrustBureauArchitecture } from '@/components/trust/TrustBureauArchitecture'
 import { PowerReturnPanel } from '@/components/civilization/PowerReturnPanel'
 import { useTrustStatus } from '@/hooks/useTrustStatus'
 import { useProofScore } from '@/hooks/useProofScore'
@@ -153,6 +154,8 @@ export default function TrustBureauPage() {
           </div>
 
           <TrustAcademyEmbed />
+
+          <TrustBureauArchitecture />
 
           <CivilizationRelationships />
         </div>

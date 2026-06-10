@@ -106,7 +106,7 @@ export interface NavItem {
  * INSTITUTION NAVIGATION (Constitutional restructure).
  * Reorganized from feature-groups (Vault/Merchant/Social/Governance/Rewards/
  * Insights/Tools/Account) into the five institutions of Volume I §5.1 /
- * Volume III: Citizens, Merchants, Builders, Stewards, Academy. Curated to the
+ * Volume III: Individuals, Merchants, Builders, Stewards, Academy. Curated to the
  * key destinations per the "reduce cognitive load" directive — the long tail
  * (operational merchant tools, payment types, insights, recognition, etc.)
  * remains reachable via institution hubs and direct routes, not the top nav.
@@ -120,7 +120,7 @@ export const navigationItems: NavItem[] = [
 
   // Personal - your ownership, trust, and protection
   {
-    id: 'citizens', label: 'Personal', icon: Shield, color: '#8B5CF6',
+    id: 'individuals', label: 'Personal', icon: Shield, color: '#8B5CF6',
     children: [
       { id: 'vault',         label: 'My Vault',     href: '/vault',         icon: Shield,      color: '#8B5CF6', dataOnboarding: 'nav-vault' },
       { id: 'proofscore',    label: 'ProofScore',   href: '/proofscore',    icon: TrendingUp,  color: '#8B5CF6', tier: 1 },

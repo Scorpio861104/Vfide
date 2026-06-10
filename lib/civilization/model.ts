@@ -35,7 +35,7 @@ export interface Institution {
   whyItExists: string;
   homeHref: string;
   routes: string[];
-  navGroupId: 'citizens' | 'merchants' | 'builders' | 'stewards' | 'academy' | null;
+  navGroupId: 'individuals' | 'merchants' | 'builders' | 'stewards' | 'academy' | null;
   color: string;
   icon: LucideIcon;
   readiness: ReadinessSignal;
@@ -55,7 +55,7 @@ export const INSTITUTIONS: Record<InstitutionId, Institution> = {
     whyItExists: 'Self-custody is the ground everything else stands on.',
     homeHref: '/vault',
     routes: ['/vault', '/vault/settings', '/vault/lock', '/wallet', '/pay'],
-    navGroupId: 'citizens',
+    navGroupId: 'individuals',
     color: '#8B5CF6',
     icon: Shield,
     readiness: {
@@ -71,7 +71,7 @@ export const INSTITUTIONS: Record<InstitutionId, Institution> = {
     whyItExists: 'Trust lowers your costs and widens what you can do.',
     homeHref: '/proofscore',
     routes: ['/proofscore', '/endorsements'],
-    navGroupId: 'citizens',
+    navGroupId: 'individuals',
     color: '#06B6D4',
     icon: TrendingUp,
     readiness: {
@@ -131,7 +131,7 @@ export const INSTITUTIONS: Record<InstitutionId, Institution> = {
       '/inheritance/memorial',
       '/inheritance/override',
     ],
-    navGroupId: 'citizens',
+    navGroupId: 'individuals',
     color: '#EC4899',
     icon: Heart,
     readiness: {

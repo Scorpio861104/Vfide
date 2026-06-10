@@ -39,33 +39,33 @@ import { PaymentInterface } from '@/components/merchant/PaymentInterface';
 import { PaymentQR } from '@/components/merchant/PaymentQR';
 
 const SALES_MODULES: HubLink[] = [
-  { href: '/merchant/inventory',      icon: Package,     label: 'Inventory',      description: 'Products, stock levels, low-stock alerts.' },
+  { href: '/merchant/payment-links',  icon: Link2,       label: 'Payments',       description: 'Accept payments - share a link for any product or amount.' },
   { href: '/merchant/invoices',       icon: FileText,    label: 'Invoices',       description: 'Itemized bills with payment links.' },
-  { href: '/merchant/payment-links',  icon: Link2,       label: 'Payment links',  description: 'Share a URL for any product or amount.' },
+  { href: '/merchant/inventory',      icon: Package,     label: 'Inventory',      description: 'Products, stock levels, low-stock alerts.' },
   { href: '/merchant/bookings',       icon: CalendarDays,label: 'Bookings',       description: 'Appointments and availability slots.' },
   { href: '/merchant/subscriptions',  icon: Repeat,      label: 'Subscriptions',  description: 'Weekly, monthly, quarterly, yearly plans.', badge: 'Coming' },
 ];
 
 const CUSTOMER_MODULES: HubLink[] = [
-  { href: '/merchant/customers',      icon: Users,       label: 'Customers',      description: 'Your buyer list, with lifetime value.' },
   { href: '/merchant/loyalty',        icon: Award,       label: 'Loyalty',        description: 'Punch cards, point rewards, tiers.' },
-  { href: '/merchant/coupons',        icon: Tag,         label: 'Discounts',      description: 'Coupon codes and promotional campaigns.' },
+  { href: '/merchant/customers',      icon: Users,       label: 'Customers',      description: 'Your buyer list, with lifetime value.' },
   { href: '/merchant/gift-cards',     icon: Gift,        label: 'Gift cards',     description: 'Issue and redeem stored-value cards.' },
+  { href: '/merchant/coupons',        icon: Tag,         label: 'Discounts',      description: 'Coupon codes and promotional campaigns.' },
   { href: '/merchant/returns',        icon: RotateCcw,   label: 'Returns',        description: 'Refunds and dispute handling.' },
 ];
 
 const OPS_MODULES: HubLink[] = [
-  { href: '/merchant/expenses',       icon: Receipt,     label: 'Expenses',       description: 'Track outgoings against revenue.' },
-  { href: '/merchant/tax',            icon: Percent,     label: 'Sales tax',      description: 'Per-jurisdiction tax configuration.' },
-  { href: '/merchant/tips',           icon: DollarSign,  label: 'Tips',           description: 'Tip jar settings and history.' },
-  { href: '/merchant/installments',   icon: RotateCcw,   label: 'Installments',   description: 'Buy now, pay later plans.', badge: 'Coming' },
   { href: '/merchant/staff',          icon: UserCog,     label: 'Staff',          description: 'Team access roles and activity.' },
+  { href: '/merchant/suppliers',      icon: Truck,       label: 'Suppliers',      description: 'Supply chain and purchase orders.' },
+  { href: '/merchant/tax',            icon: Percent,     label: 'Sales tax',      description: 'Per-jurisdiction tax configuration.' },
+  { href: '/merchant/analytics',      icon: BarChart3,   label: 'Analytics',      description: 'Revenue, customers, and trends.' },
+  { href: '/merchant/locations',      icon: MapPin,      label: 'Locations',      description: 'Multi-store and franchise management.' },
 ];
 
 const BUSINESS_MODULES: HubLink[] = [
-  { href: '/merchant/analytics',      icon: BarChart3,   label: 'Analytics',      description: 'Revenue, customers, and trends.' },
-  { href: '/merchant/locations',      icon: MapPin,      label: 'Locations',      description: 'Multi-store and franchise management.' },
-  { href: '/merchant/suppliers',      icon: Truck,       label: 'Suppliers',      description: 'Supply chain and purchase orders.' },
+  { href: '/merchant/expenses',       icon: Receipt,     label: 'Expenses',       description: 'Track outgoings against revenue.' },
+  { href: '/merchant/tips',           icon: DollarSign,  label: 'Tips',           description: 'Tip jar settings and history.' },
+  { href: '/merchant/installments',   icon: RotateCcw,   label: 'Installments',   description: 'Buy now, pay later plans.', badge: 'Coming' },
   { href: '/merchant/wholesale',      icon: Boxes,       label: 'Wholesale',      description: 'B2B pricing and group buys.' },
 ];
 
@@ -134,7 +134,7 @@ export default function MerchantPage() {
             <h2 className="text-2xl font-bold text-white mb-6">Merchant Portal</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
               <div className="analytics-card p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Merchant Dashboard</h3>
+                <h3 className="text-lg font-semibold text-white mb-4">Merchant Headquarters</h3>
                 <MerchantDashboard />
               </div>
               <div className="analytics-card p-6">

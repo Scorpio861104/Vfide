@@ -21,7 +21,7 @@ const POWER_RETURNED: Record<InstitutionId, string> = {
   stewardship: 'You can help protect the system, as a participant — not a subject.',
 };
 
-const CITIZEN_FACING: InstitutionId[] = ['ownership', 'trust', 'commerce', 'continuity', 'capability', 'stewardship'];
+const INDIVIDUAL_FACING: InstitutionId[] = ['ownership', 'trust', 'commerce', 'continuity', 'capability', 'stewardship'];
 
 function PowerReturnBanner({ id }: { id: InstitutionId }) {
   const inst = INSTITUTIONS[id];
@@ -55,7 +55,7 @@ export function PowerReturnPanel({ institution, title = 'What VFIDE returns to y
       <h2 className="mb-1 text-xl font-bold text-white">{title}</h2>
       <p className="mb-6 text-sm text-zinc-400">VFIDE serves you. It does not rank you, approve you, or own you.</p>
       <div className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">
-        {CITIZEN_FACING.map((id) => {
+        {INDIVIDUAL_FACING.map((id) => {
           const inst = INSTITUTIONS[id];
           const Icon = inst.icon;
           return (

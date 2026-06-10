@@ -11,6 +11,7 @@ import { useLocale } from '@/lib/locale/LocaleProvider';
 import { HOME_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
 
 import { LiveProofScoreHero } from './components/LiveProofScoreHero';
+import { InstitutionalFlow } from '@/components/home/InstitutionalFlow';
 import { FeeFlowRiver } from './components/FeeFlowRiver';
 import { MonumentBackdrop } from './components/MonumentBackdrop';
 import { FeatureCard } from './components/FeatureCard';
@@ -211,6 +212,10 @@ export default function Home() {
                 {copy.whatTitlePrefix}{' '}
                 <span className="gradient-text-cyan-blue">{copy.whatTitleAccent}</span>
               </h2>
+              <p className="mx-auto mt-5 max-w-3xl text-base leading-relaxed text-zinc-400 sm:text-lg">
+                VFIDE is a self-sovereign ownership network combining payments, trust infrastructure,
+                asset protection, merchant commerce, and continuity systems into one platform.
+              </p>
             </motion.div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -240,6 +245,8 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        <InstitutionalFlow />
 
         {/* ════════════════════════════════════════
             PROTOCOL METRICS MARQUEE

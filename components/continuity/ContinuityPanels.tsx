@@ -78,7 +78,7 @@ export function ContinuityRelationships() {
     ownership: 'What you own is only truly yours if it can survive a lost wallet.',
     trust: 'The trust you build should not be erased by losing access.',
     commerce: 'A business needs to outlast a single device or a single owner.',
-    stewardship: 'The institutions you help steward must persist beyond any one citizen.',
+    stewardship: 'The institutions you help steward must persist beyond any one participant.',
   };
   return (
     <section aria-label="How continuity protects the other institutions" className="glass-card-premium p-5 sm:p-6">
