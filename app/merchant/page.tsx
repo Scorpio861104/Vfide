@@ -32,6 +32,7 @@ import {
   BusinessHealthCenter,
   MerchantContinuity,
 } from '@/components/merchant/MerchantOperatingModel';
+import { MerchantKnowledge } from '@/components/education/InstitutionKnowledge';
 
 const SETUP_MODULES: HubLink[] = [
   { href: '/merchant/setup', icon: Store, label: 'Merchant setup', description: 'Configure your storefront and payouts.' },
@@ -83,6 +84,9 @@ export default function MerchantPage() {
 
           {/* The differentiator — business continuity */}
           <MerchantContinuity m={m} />
+
+          {/* Embedded education — learn the business systems in place */}
+          <MerchantKnowledge />
 
           {/* ── Operational surfaces ───────────────────────────────────────── */}
           <section className="mb-16" aria-label="Operations">

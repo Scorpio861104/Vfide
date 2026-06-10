@@ -26,6 +26,7 @@ import {
   OpportunityAccess,
   TrustExplainer,
 } from '@/components/trust/TrustInfrastructure'
+import { TrustKnowledge } from '@/components/education/InstitutionKnowledge'
 import { useProofScore } from '@/hooks/useProofScore'
 
 // Canonical fee endpoints — existing protocol constants (ProofScoreBurnRouter:
@@ -56,6 +57,7 @@ export default function TrustBureauPage() {
         <VerificationSystems />
         <OpportunityAccess />
         <TrustExplainer />
+        <TrustKnowledge />
 
         {/* ── Supporting reference: the score + fee relationship (not the primary frame) ── */}
         <section className="mb-16" aria-label="Supporting reference">

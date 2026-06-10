@@ -24,6 +24,7 @@ import { ContinuityStatusGrid } from '@/components/continuity/ContinuityStatusGr
 import { LifeEventPlanning, RecoverySimulator } from '@/components/continuity/LifeEventPlanning';
 import { ContinuityTimeline } from '@/components/continuity/ContinuityTimeline';
 import { ContinuityRelationships } from '@/components/continuity/ContinuityPanels';
+import { ContinuityKnowledge } from '@/components/education/InstitutionKnowledge';
 import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export default function ContinuityPage() {
@@ -47,6 +48,9 @@ export default function ContinuityPage() {
         <ContinuityStatusGrid c={c} />
         <LifeEventPlanning />
         <RecoverySimulator />
+
+        {/* Embedded education — learn continuity in place */}
+        <ContinuityKnowledge />
 
         {/* Existing continuity surfaces — the lifecycle timeline + how continuity connects */}
         <section className="mb-16" aria-label="Continuity lifecycle">

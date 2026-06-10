@@ -12,6 +12,7 @@ import { HOME_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
 
 import { LiveProofScoreHero } from './components/LiveProofScoreHero';
 import { InstitutionalFlow } from '@/components/home/InstitutionalFlow';
+import { VFIDEExplained } from '@/components/education/VFIDEExplained';
 import { FeeFlowRiver } from './components/FeeFlowRiver';
 import { MonumentBackdrop } from './components/MonumentBackdrop';
 import { FeatureCard } from './components/FeatureCard';
@@ -247,6 +248,12 @@ export default function Home() {
         </section>
 
         <InstitutionalFlow />
+
+        <section className="py-8 sm:py-12">
+          <div className="container mx-auto max-w-6xl px-5 md:px-8">
+            <VFIDEExplained />
+          </div>
+        </section>
 
         {/* ════════════════════════════════════════
             PROTOCOL METRICS MARQUEE
