@@ -222,7 +222,7 @@ export function ProofScoreVisualizer({
                   transition={{ delay: 0.6 }}
                   whileHover={{ scale: 1.1 }}
                 >
-                  Elite
+                  Established record
                 </m.span>
               )}
             </div>
