@@ -13,6 +13,7 @@ import { HOME_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
 import { LiveProofScoreHero } from './components/LiveProofScoreHero';
 import { InstitutionalFlow } from '@/components/home/InstitutionalFlow';
 import { VFIDEExplained } from '@/components/education/VFIDEExplained';
+import { OwnershipNetworkSection } from '@/components/nexus/OwnershipNetworkSection';
 import { FeeFlowRiver } from './components/FeeFlowRiver';
 import { MonumentBackdrop } from './components/MonumentBackdrop';
 import { FeatureCard } from './components/FeatureCard';
@@ -193,6 +194,9 @@ export default function Home() {
           {/* Bottom glow */}
           <div className="hero-glow-bottom" aria-hidden="true" />
         </section>
+
+        {/* ── THE OWNERSHIP NEXUS — signature centerpiece ── */}
+        <OwnershipNetworkSection />
 
         {/*
             WHAT IS VFIDE — plain-language explainer (before any mechanism)
