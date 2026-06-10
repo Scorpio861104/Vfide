@@ -16,6 +16,7 @@ import { useProofScore } from '@/hooks/useProofScore';
 import { useCivilizationStatus } from '@/hooks/useCivilizationStatus';
 import { InstitutionStatusGrid } from '@/components/civilization/InstitutionStatusGrid';
 import { PowerReturnPanel } from '@/components/civilization/PowerReturnPanel';
+import { ParticipationPathways } from '@/components/capability/CapabilityComponents';
 import { RecommendedActions } from '@/components/civilization/RecommendedActions';
 import { ContinuitySummaryCard } from '@/components/continuity/ContinuitySummaryCard';
 import { MerchantSummaryCard } from '@/components/merchant/MerchantSummaryCard';
@@ -192,6 +193,7 @@ export default function DashboardPage() {
               <ContinuitySummaryCard />
               <MerchantSummaryCard />
             </div>
+            <ParticipationPathways />
           </div>
 
           {/* Score + Fee row */}

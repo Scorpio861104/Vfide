@@ -18,6 +18,7 @@ import { Heart } from 'lucide-react';
 import { ContinuitySectionCard } from '@/components/continuity/ContinuitySectionCard';
 import { ContinuityTimeline } from '@/components/continuity/ContinuityTimeline';
 import { PowerReturnPanel } from '@/components/civilization/PowerReturnPanel';
+import { ContextualGuidance, DecisionSupportCard } from '@/components/capability/CapabilityComponents';
 import {
   FamilyContinuityPanel,
   BusinessContinuityPanel,
@@ -100,6 +101,14 @@ export default function ContinuityPage() {
           <PowerReturnPanel institution="continuity" />
         </div>
 
+        {/* Contextual guidance — only when something is unconfigured */}
+        {(!c.guardianOk || !c.inheritanceConfigured) && (
+          <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <ContextualGuidance topic="guardians" show={!c.guardianOk} />
+            <ContextualGuidance topic="inheritance" show={!c.inheritanceConfigured} />
+          </div>
+        )}
+
         {/* Pillars: guardians / recovery / inheritance / security / memorial */}
         <section aria-label="Continuity pillars" className="mb-8">
           <h2 className="sr-only">Continuity pillars</h2>
@@ -112,6 +121,11 @@ export default function ContinuityPage() {
 
         <div className="mb-8">
           <ContinuityTimeline current={c.currentStage} />
+        </div>
+
+        {/* Decision support — help the participant weigh, not decide for them */}
+        <div className="mb-8">
+          <DecisionSupportCard decision="inheritance" />
         </div>
 
         <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">

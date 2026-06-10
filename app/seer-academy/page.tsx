@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { BookOpen, CandlestickChart, CheckCircle2, Compass, ExternalLink, Shield, Wallet } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
+import { CapabilityPanel } from '@/components/capability/CapabilityComponents';
 import { useLocale } from '@/lib/locale/LocaleProvider';
 
 type ChecklistKey =
@@ -88,13 +89,26 @@ export default function SeerAcademyPage() {
         <div className="max-w-6xl mx-auto px-4 md:px-8 space-y-8">
           <section className="rounded-2xl border border-accent/20 bg-gradient-to-br from-accent/10 via-zinc-900 to-emerald-500/10 p-8">
             <div className="badge-live mb-4">
-              <Compass className="w-4 h-4" /> Seer Academy
+              <Compass className="w-4 h-4" /> Knowledge Library
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-3">New to Crypto and Trading?</h1>
+            <h1 className="text-3xl md:text-4xl font-bold mb-3">Knowledge Library</h1>
             <p className="text-zinc-300 max-w-3xl">
-              This guided lane helps you build confidence before higher-risk actions. Seer works as a safety service:
-              it explains risky patterns, protects protocol actions, and gives you a recovery path when needed.
+              Most learning now lives inside the tools themselves - each part of VFIDE explains itself where you use it.
+              This library is for deeper reading, reference, and advanced study. Use it when you want to go further;
+              you never have to come here first.
             </p>
+          </section>
+
+          {/* Institution reference — the same explainers that appear inside the tools */}
+          <section aria-label="Understand the institutions" className="space-y-3">
+            <h2 className="text-xl font-bold text-white">Understand the institutions</h2>
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+              <CapabilityPanel institution="ownership" />
+              <CapabilityPanel institution="trust" />
+              <CapabilityPanel institution="commerce" />
+              <CapabilityPanel institution="continuity" />
+              <CapabilityPanel institution="stewardship" />
+            </div>
           </section>
 
           <section className="grid md:grid-cols-2 gap-4">

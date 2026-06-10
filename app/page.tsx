@@ -2,7 +2,7 @@
 
 import { Footer } from '@/components/layout/Footer';
 import { m as motion, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight, ChevronRight, CheckCircle2, Wallet, TrendingDown, Lock } from 'lucide-react';
+import { ArrowRight, ChevronRight, CheckCircle2, Wallet, TrendingDown, Lock, Shield, Heart, Scale } from 'lucide-react';
 import Link from 'next/link';
 import { FeeSavingsCalculator } from '@/components/fees';
 import { OnboardingPathChooser, useOnboarding } from '@/components/onboarding';
@@ -335,15 +335,17 @@ export default function Home() {
               className="mb-14 text-center"
             >
               <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-3">Why VFIDE exists</p>
-              <h2 className="text-3xl sm:text-4xl font-bold text-white">Four promises.</h2>
+              <h2 className="text-3xl sm:text-4xl font-bold text-white">What VFIDE helps you do.</h2>
             </motion.div>
 
             <div className="grid gap-5 sm:grid-cols-2">
               {[
-                { Icon: Lock,         title: 'Own what is yours.',      body: 'Your funds are yours. No bank, no middleman, and no one - not even VFIDE - who can freeze or seize them.' },
-                { Icon: ArrowRight,   title: 'Recover from loss.',      body: 'Lose your phone? Guardians, recovery, and inheritance mean losing access does not have to mean losing everything.' },
-                { Icon: CheckCircle2, title: 'Build trust.',            body: 'Trust is earned through honest dealing over time - and as it grows, your fees fall. It is responsibility, not status.' },
-                { Icon: Wallet,       title: 'Participate in commerce.', body: 'Get paid, sell, and grow a business. Zero merchant fees - the protocol takes nothing from sellers.' },
+                { Icon: Lock,         title: 'Own value.',                body: 'Your funds are yours. No bank, no middleman, and no one - not even VFIDE - who can freeze or seize them.' },
+                { Icon: CheckCircle2, title: 'Build trust.',               body: 'Trust is earned through honest dealing over time, and as it grows your fees fall. It is responsibility, not status.' },
+                { Icon: Wallet,       title: 'Create opportunity.',        body: 'Get paid, sell, and grow a business. Zero merchant fees - the protocol takes nothing from sellers.' },
+                { Icon: Shield,       title: 'Protect what you build.',    body: 'Lose your phone? Guardians and recovery mean losing access does not have to mean losing everything.' },
+                { Icon: Heart,        title: 'Preserve continuity.',       body: 'Inheritance lets what you build survive you, passing to the people you choose.' },
+                { Icon: Scale,        title: 'Participate in stewardship.', body: 'Help protect the parameters that affect everyone, through on-chain governance - as a participant, not a subject.' },
               ].map(({ Icon, title, body }, i) => (
                 <motion.div
                   key={title}
