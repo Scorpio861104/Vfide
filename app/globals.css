@@ -3013,3 +3013,20 @@ html::before {
     animation: none;
   }
 }
+
+/* Nexus living-infrastructure energy flow (Wave 41) — faint pulse along established spokes */
+@keyframes nexus-energy {
+  0% { stroke-dashoffset: 1; }
+  100% { stroke-dashoffset: 0; }
+}
+
+.nexus-energy {
+  animation: nexus-energy 3.5s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nexus-energy {
+    animation: none;
+    opacity: 0 !important;
+  }
+}
