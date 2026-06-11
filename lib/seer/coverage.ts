@@ -61,7 +61,7 @@ export const SEER_SUBSYSTEMS: SeerSubsystem[] = [
     inputs: ['ProofScore', 'Builder Record', 'refund/dispute rates', 'delivery success'],
     outputs: ['Visibility Score', 'search ranking', 'featured eligibility'],
     status: 'PARTIAL',
-    note: 'stabilityPolicy produces a visibilityMultiplier from Builder Record/extraction; refund/dispute/delivery inputs need a disputes backend (absent) to be complete.',
+    note: 'stabilityPolicy produces a visibilityMultiplier from Builder Record/extraction, and the disputes backend now feeds real dispute/refund signals into the scam-signal path. Delivery-success input still needs shipping data; otherwise inputs are largely real.',
   },
   {
     id: 'p2p-lending',
@@ -96,8 +96,8 @@ export const SEER_SUBSYSTEMS: SeerSubsystem[] = [
     purpose: 'Protect participants; fraud affects participation, never ownership.',
     inputs: ['fraud reports', 'disputes', 'merchant/buyer abuse'],
     outputs: ['risk adjustments', 'escrow adjustments', 'visibility changes'],
-    status: 'NOT_BUILT',
-    note: 'No dispute/escrow backend exists yet (FraudRegistry is in contracts but has thin UI). stabilityPolicy reads scam signals defensively but they are ~0 until a dispute backend lands.',
+    status: 'LIVE',
+    note: 'Disputes backend live: /api/disputes (open/respond/resolve/withdraw, non-custodial record mirroring the on-chain FraudRegistry — never holds funds) + useDisputes; upheld/refunded disputes feed the Seer scam signals (market-standing) and reduce marketplace visibility. On-chain confirmed-fraud punishment stays with FraudJury. Fraud affects participation, never ownership.',
   },
   {
     id: 'recovery-readiness',
