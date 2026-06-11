@@ -88,7 +88,7 @@ export const SEER_SUBSYSTEMS: SeerSubsystem[] = [
     inputs: ['Extraction Index', 'Builder Record', 'ProofScore', 'Market Impact'],
     outputs: ['discretionary lending/visibility/emergency outcomes'],
     status: 'LIVE',
-    note: 'lib/seer/marketStability/stabilityPolicy.ts. NOTE: token-level cooldowns/fees were deliberately NOT built — they contradict the non-custodial invariant (see Whale Protection architecture doc). The flat AntiWhale in VFIDEToken.sol is the token-level brake.',
+    note: 'lib/seer/marketStability/stabilityPolicy.ts. Voluntary Stability Bonding benefits engine added (stabilityBonding.ts): opt-in lock can improve fee, lending, visibility, and builder posture; enforced lock remains contract work behind audit gate. NOTE: token-level cooldowns/fees were deliberately NOT built as they contradict the non-custodial invariant. The flat AntiWhale in VFIDEToken.sol is the token-level brake.',
   },
   {
     id: 'fraud-abuse',
