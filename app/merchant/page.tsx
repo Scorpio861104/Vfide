@@ -28,6 +28,7 @@ import { PaymentQR } from '@/components/merchant/PaymentQR';
 import { useMerchantHealth } from '@/hooks/useMerchantHealth';
 import { MerchantHeadquartersHero } from '@/components/merchant/MerchantHeadquartersHero';
 import { PlainHelp } from '@/components/common/PlainHelp';
+import { PowerReturnPanel } from '@/components/civilization/PowerReturnPanel';
 import { MerchantVerificationCard } from '@/components/merchant/MerchantVerificationCard';
 import {
   MerchantOperatingModel,
@@ -72,6 +73,10 @@ export default function MerchantPage() {
         <div className="relative z-10 mx-auto w-full max-w-6xl px-5 py-16 md:px-8 md:py-20">
           {/* Executive hero + status band */}
           <MerchantHeadquartersHero m={m} />
+
+          <div className="mb-8">
+            <PowerReturnPanel institution="commerce" />
+          </div>
 
           <PlainHelp
             title="Your business, in one place"
