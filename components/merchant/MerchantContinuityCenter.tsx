@@ -10,6 +10,7 @@
 
 import { useState } from 'react';
 import { useMerchantContinuity } from '@/hooks/useMerchantContinuity';
+import { ProtectiveConfirm } from '@/components/safety/ProtectiveConfirm';
 import { CheckCircle2, Circle, ShieldAlert, UserPlus, Users, X, Loader2 } from 'lucide-react';
 
 const ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/;
@@ -21,6 +22,8 @@ export function MerchantContinuityCenter() {
   const [successorNote, setSuccessorNote] = useState('');
   const [operatorInput, setOperatorInput] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
+  const [confirmSuccessor, setConfirmSuccessor] = useState(false);
+  const [confirmOperator, setConfirmOperator] = useState(false);
 
   const successorValid = ADDRESS_RE.test(successorInput.trim());
   const operatorValid = ADDRESS_RE.test(operatorInput.trim());
@@ -95,7 +98,7 @@ export function MerchantContinuityCenter() {
             <button
               type="button"
               disabled={!successorValid || busy === 'succ'}
-              onClick={() => run('succ', () => c.setSuccessor(successorInput.trim(), successorNote.trim() || undefined))}
+              onClick={() => setConfirmSuccessor(true)}
               className="btn-premium btn-premium-primary text-sm disabled:opacity-40"
             >
               {busy === 'succ' ? 'Saving…' : 'Choose this successor'}
@@ -139,7 +142,7 @@ export function MerchantContinuityCenter() {
           <button
             type="button"
             disabled={!operatorValid || busy === 'op'}
-            onClick={() => run('op', () => c.grantOperator(operatorInput.trim()).then((ok) => { if (ok) setOperatorInput(''); return ok; }))}
+            onClick={() => setConfirmOperator(true)}
             className="btn-premium btn-premium-ghost flex items-center justify-center gap-1.5 text-sm disabled:opacity-40"
           >
             <UserPlus size={15} aria-hidden="true" /> {busy === 'op' ? 'Adding…' : 'Add helper'}
@@ -154,6 +157,43 @@ export function MerchantContinuityCenter() {
           </p>
         </div>
       </section>
+
+      <ProtectiveConfirm
+        open={confirmSuccessor}
+        risk="high"
+        title="Choose this successor?"
+        body="This person will be able to take over your business if you cannot continue. Make sure the address is exactly right."
+        address={successorInput.trim()}
+        addressLabel="Successor address"
+        reassurance="You can change or remove your successor at any time. Choosing now does not hand over anything today."
+        confirmText="Yes, choose them"
+        source="merchant-succession"
+        onCancel={() => setConfirmSuccessor(false)}
+        onConfirm={() => {
+          setConfirmSuccessor(false);
+          void run('succ', () => c.setSuccessor(successorInput.trim(), successorNote.trim() || undefined));
+        }}
+      />
+
+      <ProtectiveConfirm
+        open={confirmOperator}
+        risk="medium"
+        title="Add this emergency helper?"
+        body="This person will be recorded as someone who can help run your business in an emergency. They do not become the owner."
+        address={operatorInput.trim()}
+        addressLabel="Helper address"
+        reassurance="You stay the owner and can remove this helper at any time."
+        confirmText="Add helper"
+        source="merchant-operator"
+        onCancel={() => setConfirmOperator(false)}
+        onConfirm={() => {
+          setConfirmOperator(false);
+          void run('op', () => c.grantOperator(operatorInput.trim()).then((ok) => {
+            if (ok) setOperatorInput('');
+            return ok;
+          }));
+        }}
+      />
     </div>
   );
 }

@@ -114,6 +114,11 @@ async function postHandler(request: NextRequest, user: JWTPayload): Promise<Resp
     if (data.action === 'set_succession') {
       const successor = data.successor_address.toLowerCase();
       if (successor === merchant) return NextResponse.json({ error: 'You cannot be your own successor' }, { status: 400 });
+      const priorRes = await query<{ successor_address: string }>(
+        `SELECT successor_address FROM merchant_succession WHERE merchant_address = $1`,
+        [merchant],
+      );
+      const prior = priorRes.rows[0]?.successor_address ?? null;
       await query(
         `INSERT INTO merchant_succession (merchant_address, successor_address, note, updated_at)
          VALUES ($1, $2, $3, NOW())
@@ -122,6 +127,9 @@ async function postHandler(request: NextRequest, user: JWTPayload): Promise<Resp
         [merchant, successor, data.note ?? null],
       );
       await emitServerEvent(merchant, 'MERCHANT_SUCCESSION_CONFIGURED', { successor }, 'api/merchant/continuity');
+      if (prior && prior.toLowerCase() !== successor) {
+        await emitServerEvent(merchant, 'SUCCESSOR_CHANGED', { from: prior, to: successor }, 'api/merchant/continuity');
+      }
     } else if (data.action === 'clear_succession') {
       await query(`DELETE FROM merchant_succession WHERE merchant_address = $1`, [merchant]);
     } else if (data.action === 'grant_operator') {

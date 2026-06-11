@@ -68,6 +68,58 @@ export const EVENT_ROUTES = {
     timeline: 'You added a trusted person',
     notify: true,
   },
+  EMERGENCY_OPERATOR_ASSIGNED: {
+    layers: ['continuity', 'protection', 'preparedness', 'nexus', 'timeline', 'notifications'],
+    nexusNode: 'protection',
+    timeline: 'You assigned an emergency operator',
+    notify: true,
+  },
+  MERCHANT_SUCCESSION_CONFIGURED: {
+    layers: ['continuity', 'commerce', 'preparedness', 'nexus', 'timeline', 'notifications'],
+    nexusNode: 'continuity',
+    timeline: 'You set up business succession',
+    notify: true,
+  },
+  SUCCESSOR_CHANGED: {
+    layers: ['continuity', 'preparedness', 'trust', 'nexus', 'timeline', 'notifications'],
+    nexusNode: 'continuity',
+    timeline: 'You changed who takes over',
+    notify: true,
+  },
+  RISK_WARNING_DISPLAYED: {
+    layers: ['trust', 'timeline'],
+    nexusNode: 'trust',
+    timeline: 'You were warned before a risky action',
+  },
+  RECOVERY_UPDATED: {
+    layers: ['continuity', 'protection', 'preparedness', 'nexus', 'timeline', 'notifications'],
+    nexusNode: 'protection',
+    timeline: 'You updated your recovery settings',
+    notify: true,
+  },
+  OWNERSHIP_TRANSFER_INITIATED: {
+    layers: ['ownership', 'continuity', 'commerce', 'nexus', 'timeline', 'notifications'],
+    nexusNode: 'continuity',
+    timeline: 'An ownership transfer was started',
+    notify: true,
+  },
+  DISPUTE_OPENED: {
+    layers: ['commerce', 'trust', 'timeline', 'notifications'],
+    nexusNode: 'commerce',
+    timeline: 'A dispute was opened',
+    notify: true,
+  },
+  DISPUTE_RESOLVED: {
+    layers: ['commerce', 'trust', 'timeline', 'notifications'],
+    nexusNode: 'trust',
+    timeline: 'A dispute was resolved',
+    notify: true,
+  },
+  SHIPMENT_VERIFIED: {
+    layers: ['commerce', 'trust', 'timeline'],
+    nexusNode: 'commerce',
+    timeline: 'A delivery was verified',
+  },
   SUCCESSOR_ASSIGNED: {
     layers: ['continuity', 'preparedness', 'nexus', 'timeline', 'notifications'],
     nexusNode: 'continuity',
