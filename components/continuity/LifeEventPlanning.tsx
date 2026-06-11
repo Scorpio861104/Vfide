@@ -195,5 +195,5 @@ export function RecoverySimulator() {
       </div>
     </section>
   );
-}'use client';
+}
 

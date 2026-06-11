@@ -115,5 +115,5 @@ export function InstitutionalFlow() {
       </div>
     </section>
   );
-}'use client';
+}
 
