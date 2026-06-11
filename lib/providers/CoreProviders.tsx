@@ -10,6 +10,7 @@ import { ClientLayout } from '@/components/layout/ClientLayout';
 import { MotionProvider } from './MotionProvider';
 import { AppLockProvider } from '@/components/security/AppLockProvider';
 import { TransactionTrailProvider } from '@/components/payments/TransactionTrailProvider';
+import { EventProvider } from '@/lib/events/EventProvider';
 
 function AppInteractionProviders({ children }: { children: ReactNode }) {
   return (
@@ -29,7 +30,9 @@ export function CoreProviders({ children }: { children: ReactNode }) {
           <AdaptiveProvider>
             <OnboardingProvider>
               <ToastProvider>
-                <AppInteractionProviders>{children}</AppInteractionProviders>
+                <EventProvider>
+                  <AppInteractionProviders>{children}</AppInteractionProviders>
+                </EventProvider>
               </ToastProvider>
             </OnboardingProvider>
           </AdaptiveProvider>

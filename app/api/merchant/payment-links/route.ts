@@ -18,6 +18,7 @@ import { withAuth } from '@/lib/auth/middleware';
 import type { JWTPayload } from '@/lib/auth/jwt';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { emitServerEvent } from '@/lib/events/serverEmit';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{40}$/;
 const VALID_STATUSES = ['active', 'paused', 'archived', 'exhausted'] as const;
@@ -145,6 +146,7 @@ async function postHandler(request: NextRequest, user: JWTPayload) {
         body.expires_at ?? null,
       ],
     );
+    await emitServerEvent(authAddress, 'INVOICE_CREATED', { link_id: linkId }, 'api/merchant/payment-links');
     return NextResponse.json({ link: result.rows[0] }, { status: 201 });
   } catch (error) {
     logger.error('[PayLinks POST] Error:', error);
