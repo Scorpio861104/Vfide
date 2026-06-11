@@ -69,8 +69,8 @@ export const SEER_SUBSYSTEMS: SeerSubsystem[] = [
     purpose: 'Non-predatory growth capital, priced on contribution + behavior.',
     inputs: ['ProofScore', 'Builder Record', 'Extraction Index', 'repayment history'],
     outputs: ['borrowing eligibility', 'suggested limits/collateral/tier'],
-    status: 'PARTIAL',
-    note: 'stabilityPolicy emits lending collateral/limit multipliers + restriction; the live VFIDETermLoan already gates on ProofScore. Wiring the multipliers into the live loan terms is the remaining step.',
+    status: 'LIVE',
+    note: 'Seer Lending Engine (lendingPolicy.ts) computes advisory terms (eligibility, suggested limit, fair interest range, collateral guidance, risk tier) from ProofScore + Builder Record + Extraction Index, aligned to VFIDETermLoan tier ceilings. Surfaced via /api/seer/market-standing + SeerLendingTerms; on-chain enforcement remains unchanged.',
   },
   {
     id: 'merchant-success',

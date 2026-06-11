@@ -16,8 +16,9 @@ import { useMarketStanding } from '@/hooks/useMarketStanding';
 import { useMerchantHealth } from '@/hooks/useMerchantHealth';
 import { useContinuityStatus } from '@/hooks/useContinuityStatus';
 import { SEER_SUBSYSTEMS, coverageSummary, type SeerCoverageStatus } from '@/lib/seer/coverage';
+import { SeerLendingTerms } from '@/components/seer/SeerLendingTerms';
 import { useAccount } from 'wagmi';
-import { Activity, ShieldCheck, TrendingUp, Landmark, AlertTriangle, CheckCircle2, CircleDashed, Wrench } from 'lucide-react';
+import { Activity, TrendingUp, Landmark, AlertTriangle, CheckCircle2, CircleDashed, Wrench } from 'lucide-react';
 
 function Stat({ label, value, hint, tone = 'default' }: { label: string; value: string; hint?: string; tone?: 'default' | 'good' | 'warn' }) {
   const valueTone = tone === 'good' ? 'text-emerald-300' : tone === 'warn' ? 'text-amber-300' : 'text-white';
@@ -84,6 +85,10 @@ export function SeerCommandCenter() {
           </ul>
         </section>
       )}
+
+      <section>
+        <SeerLendingTerms />
+      </section>
 
       {/* Seer coverage map — honest status of every subsystem */}
       <section>
