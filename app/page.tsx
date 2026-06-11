@@ -14,6 +14,7 @@ import { LiveProofScoreHero } from './components/LiveProofScoreHero';
 import { InstitutionalFlow } from '@/components/home/InstitutionalFlow';
 import { VFIDEExplained } from '@/components/education/VFIDEExplained';
 import { OwnershipNexusHero } from '@/components/nexus/OwnershipNexusHero';
+import { PreservationNarrative } from '@/components/home/PreservationNarrative';
 import { FeeFlowRiver } from './components/FeeFlowRiver';
 import { MonumentBackdrop } from './components/MonumentBackdrop';
 import { FeatureCard } from './components/FeatureCard';
@@ -90,6 +91,9 @@ export default function Home() {
 
         {/* ── THE OWNERSHIP NEXUS — monumental hero (Wave 41) ── */}
         <OwnershipNexusHero />
+
+        {/* ── Preservation narrative — the emotional layer (Wave 42) ── */}
+        <PreservationNarrative />
 
         {/* ════════════════════════════════════════
             HERO SECTION — Cinematic
