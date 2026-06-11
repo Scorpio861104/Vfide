@@ -27,6 +27,7 @@ import { PaymentInterface } from '@/components/merchant/PaymentInterface';
 import { PaymentQR } from '@/components/merchant/PaymentQR';
 import { useMerchantHealth } from '@/hooks/useMerchantHealth';
 import { MerchantHeadquartersHero } from '@/components/merchant/MerchantHeadquartersHero';
+import { PlainHelp } from '@/components/common/PlainHelp';
 import {
   MerchantOperatingModel,
   BusinessHealthCenter,
@@ -70,6 +71,14 @@ export default function MerchantPage() {
         <div className="relative z-10 mx-auto w-full max-w-6xl px-5 py-16 md:px-8 md:py-20">
           {/* Executive hero + status band */}
           <MerchantHeadquartersHero m={m} />
+
+          <PlainHelp
+            title="Your business, in one place"
+            whatIsThis="This is where you run your shop — take payments, manage products, look after customers, and cash out."
+            whyYouNeedIt="Everything for your business is here, so you don't need separate apps or a card machine."
+            whatHappensNext="Pick what you'd like to do below. Most people start by setting up their shop and taking a first payment."
+            status={{ state: m.isMerchant ? 'done' : 'not-started', label: m.isMerchant ? 'Your shop is set up' : 'Set up your shop to begin' }}
+          />
 
           {/* What commerce returns to the merchant (existing trust/fee command center) */}
           <div className="mb-16">

@@ -19,7 +19,7 @@ import {
   Users, Award, Gift, RotateCcw, Tag,
   UserCog, MapPin, Truck, Percent, BarChart3, Receipt,
   LifeBuoy, ShieldAlert, ArrowRightLeft, Landmark, Vault, Activity,
-  ArrowRight, type LucideIcon,
+  ArrowRight, Banknote, ShieldCheck, type LucideIcon,
 } from 'lucide-react';
 
 interface Service {
@@ -36,47 +36,78 @@ interface Institution {
   services: Service[];
 }
 
+// Organized around what a merchant is trying to DO — not internal architecture.
+// Six plain-language goals a shop owner recognizes immediately.
 const INSTITUTIONS: Institution[] = [
   {
-    id: 'sales',
-    headline: 'Sales Infrastructure',
-    description: 'Everything required to generate and process revenue.',
-    accent: '#8b5cf6',
+    id: 'get-paid',
+    headline: 'Get Paid',
+    description: 'Take money from customers — in person, by link, or by invoice.',
+    accent: '#10b981',
     services: [
-      { label: 'Payments', href: '/merchant/payment-links', icon: CreditCard },
-      { label: 'Invoices', href: '/merchant/invoices', icon: FileText },
-      { label: 'Subscriptions', href: '/merchant/subscriptions', icon: Repeat },
-      { label: 'Bookings', href: '/merchant/bookings', icon: CalendarDays },
-      { label: 'Inventory', href: '/merchant/inventory', icon: Package },
-      { label: 'Payment Links', href: '/merchant/payment-links', icon: Link2 },
-      { label: 'Wholesale', href: '/merchant/wholesale', icon: Boxes },
+      { label: 'Payment links', href: '/merchant/payment-links', icon: Link2 },
+      { label: 'Send an invoice', href: '/merchant/invoices', icon: FileText },
+      { label: 'Take a payment', href: '/merchant/payment-links', icon: CreditCard },
+      { label: 'Tips', href: '/merchant/tips', icon: Award },
+      { label: 'Cash out', href: '/merchant/payouts', icon: Banknote },
     ],
   },
   {
-    id: 'customer',
-    headline: 'Customer Infrastructure',
-    description: 'Systems for building long-term customer relationships.',
+    id: 'run-store',
+    headline: 'Run Your Store',
+    description: 'Your products, bookings, and sales — all in one place.',
+    accent: '#8b5cf6',
+    services: [
+      { label: 'Products', href: '/merchant/inventory', icon: Package },
+      { label: 'Bookings', href: '/merchant/bookings', icon: CalendarDays },
+      { label: 'Subscriptions', href: '/merchant/subscriptions', icon: Repeat },
+      { label: 'Wholesale', href: '/merchant/wholesale', icon: Boxes },
+      { label: 'Returns', href: '/merchant/returns', icon: RotateCcw },
+    ],
+  },
+  {
+    id: 'customers',
+    headline: 'Look After Customers',
+    description: 'Keep people coming back, and reward the regulars.',
     accent: '#06b6d4',
     services: [
-      { label: 'Customers', href: '/merchant/customers', icon: Users },
-      { label: 'Loyalty', href: '/merchant/loyalty', icon: Award },
-      { label: 'Gift Cards', href: '/merchant/gift-cards', icon: Gift },
-      { label: 'Returns', href: '/merchant/returns', icon: RotateCcw },
+      { label: 'Your customers', href: '/merchant/customers', icon: Users },
+      { label: 'Loyalty rewards', href: '/merchant/loyalty', icon: Award },
+      { label: 'Gift cards', href: '/merchant/gift-cards', icon: Gift },
       { label: 'Discounts', href: '/merchant/coupons', icon: Tag },
     ],
   },
   {
-    id: 'operations',
-    headline: 'Operations Infrastructure',
-    description: 'The systems that keep a business running.',
+    id: 'staff',
+    headline: 'Manage Staff',
+    description: 'Give your team access — and see what they do.',
     accent: '#f59e0b',
     services: [
-      { label: 'Staff', href: '/merchant/staff', icon: UserCog },
+      { label: 'Staff & access', href: '/merchant/staff', icon: UserCog },
       { label: 'Locations', href: '/merchant/locations', icon: MapPin },
       { label: 'Suppliers', href: '/merchant/suppliers', icon: Truck },
-      { label: 'Tax', href: '/merchant/tax', icon: Percent },
-      { label: 'Analytics', href: '/merchant/analytics', icon: BarChart3 },
+    ],
+  },
+  {
+    id: 'money',
+    headline: 'Keep Track of Money',
+    description: 'See how the business is doing, and stay on top of tax.',
+    accent: '#6366f1',
+    services: [
+      { label: 'How sales are going', href: '/merchant/analytics', icon: BarChart3 },
       { label: 'Expenses', href: '/merchant/expenses', icon: Receipt },
+      { label: 'Sales tax', href: '/merchant/tax', icon: Percent },
+    ],
+  },
+  {
+    id: 'protect',
+    headline: 'Protect Your Business',
+    description: 'Be ready if you lose your phone — or if someone needs to take over.',
+    accent: '#ec4899',
+    services: [
+      { label: 'If you lose access', href: '/vault/recover', icon: LifeBuoy },
+      { label: 'Trusted people', href: '/guardians', icon: ShieldCheck },
+      { label: 'Who takes over', href: '/inheritance', icon: ArrowRightLeft },
     ],
   },
 ];
@@ -111,9 +142,9 @@ export function MerchantOperatingModel() {
   return (
     <section className="mb-16" aria-label="Merchant operating model">
       <div className="mb-10 max-w-2xl">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-500">Operating Model</h2>
-        <p className="mt-2 text-2xl font-semibold tracking-tight text-white">Three institutions, one headquarters</p>
-        <p className="mt-3 text-zinc-400">Every capability lives under one of these.</p>
+        <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-500">Everything in one place</h2>
+        <p className="mt-2 text-2xl font-semibold tracking-tight text-white">What would you like to do?</p>
+        <p className="mt-3 text-zinc-400">Pick what you need. You can always come back for the rest.</p>
       </div>
       <div className="space-y-14">
         {INSTITUTIONS.map((inst) => (
