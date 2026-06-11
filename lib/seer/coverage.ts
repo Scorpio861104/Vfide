@@ -51,8 +51,8 @@ export const SEER_SUBSYSTEMS: SeerSubsystem[] = [
     purpose: 'Monitor merchant health; flag struggling merchants early.',
     inputs: ['merchant revenue', 'customer growth', 'inventory', 'subscriptions', 'repeat rates'],
     outputs: ['Merchant Health Score', 'growth opportunities', 'risk warnings'],
-    status: 'PARTIAL',
-    note: 'useMerchantHealth gives a baseline health read; "predict failure before it happens" needs time-series trend data that is not modeled yet.',
+    status: 'LIVE',
+    note: 'Merchant Advisor (merchantAdvisor.ts) + /api/merchant/advisor derive real trends from timestamped data: revenue 30d-vs-prior, repeat-customer rate, refund rate, low stock, subscription opportunity, yielding a Commerce Health score plus grounded recommendations; reports insufficient data for new stores rather than faking trends.',
   },
   {
     id: 'marketplace-trust',
@@ -78,8 +78,8 @@ export const SEER_SUBSYSTEMS: SeerSubsystem[] = [
     purpose: 'Act as an autonomous business advisor.',
     inputs: ['inventory', 'revenue', 'products', 'store activity', 'customer growth'],
     outputs: ['growth opportunities', 'automation suggestions', 'expansion recommendations'],
-    status: 'NOT_BUILT',
-    note: 'Would need a recommendation layer over merchant time-series data. Building it now would mean fabricating advice; deferred until the data + a real heuristic exist.',
+    status: 'LIVE',
+    note: 'Merchant Advisor surfaces growth/retention/refund/inventory/subscription signals from real merchant data via /api/merchant/advisor + MerchantAdvisorCard. Advisory only — never changes prices, stock, or funds.',
   },
   {
     id: 'whale-protection',
