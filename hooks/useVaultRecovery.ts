@@ -4,6 +4,7 @@ import { isAddress } from 'viem';
 import { CARD_BOUND_VAULT_ABI, VAULT_HUB_ABI, ZERO_ADDRESS, isConfiguredContractAddress } from '@/lib/contracts'
 import { useContractAddresses } from './useContractAddresses';
 import { parseContractError, logError } from '@/lib/errorHandling';
+import { useEmitEvent } from '@/lib/events/EventProvider';
 import { CURRENT_CHAIN_ID } from '@/lib/testnet';
 const CARD_BOUND_ROTATION_DELAY_SECONDS = 7 * 24 * 60 * 60;
 
@@ -21,6 +22,7 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
   const { address: userAddress } = useAccount();
   const chainId = useChainId();
   const { writeContractAsync, isPending: isWritePending } = useWriteContract();
+  const emitEvent = useEmitEvent();
   const hasVaultAddress = !!vaultAddress && isAddress(vaultAddress) && vaultAddress !== ZERO_ADDRESS;
   const isVaultHubAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.VaultHub);
   const recoverySupported = true;
@@ -165,12 +167,20 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
     }
     
     try {
-      return await writeContractAsync({
+      const hash = await writeContractAsync({
         address: vaultAddress,
         abi: CARD_BOUND_VAULT_ABI,
         functionName: 'setGuardian',
         args: [guardianAddress, active],
       });
+      
+      if (active) {
+        emitEvent('GUARDIAN_ASSIGNED', { txHash: hash, guardianAddress }, 'useVaultRecovery', true);
+      } else {
+        emitEvent('GUARDIAN_REMOVED', { txHash: hash, guardianAddress }, 'useVaultRecovery', true);
+      }
+      
+      return hash;
     } catch (error) {
       logError('setGuardian', error);
       const parsed = parseContractError(error);

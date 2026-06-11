@@ -13,6 +13,7 @@ import { withAuth } from '@/lib/auth/middleware';
 import type { JWTPayload } from '@/lib/auth/jwt';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { emitServerEvent } from '@/lib/events/serverEmit';
 import { z } from 'zod4';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{40}$/;
@@ -480,6 +481,7 @@ async function postHandler(request: NextRequest, user: JWTPayload) {
 
       // payment.completed must only be emitted from the verified confirmation flow.
       // See app/api/merchant/payments/confirm/route.ts for on-chain event verification.
+      await emitServerEvent(authAddress, 'ORDER_CREATED', { order_id: order?.id }, 'api/merchant/orders');
 
       return NextResponse.json({ order }, { status: 201 });
     } catch (txError) {
@@ -572,6 +574,10 @@ async function patchHandler(request: NextRequest, user: JWTPayload) {
       `UPDATE merchant_orders SET ${updates.join(', ')} WHERE id = $${pi} RETURNING *`,
       params
     );
+
+    if (status === 'completed') {
+      await emitServerEvent(authAddress, 'ORDER_COMPLETED', { order_id: result.rows[0]?.id }, 'api/merchant/orders');
+    }
 
     return NextResponse.json({ order: result.rows[0] });
   } catch (error) {

@@ -125,7 +125,11 @@ export function ProtectiveConfirm({
             Cancel
           </button>
           <button type="button" disabled={!canConfirm}
-            onClick={() => { if (canConfirm) onConfirm(); }}
+            onClick={() => {
+              if (!canConfirm) return;
+              emitEvent('PROTECTIVE_CONFIRMATION_ACCEPTED', { risk, action: source }, source ?? 'protective-confirm');
+              onConfirm();
+            }}
             className="btn-premium btn-premium-primary flex-1 text-sm disabled:opacity-40">
             {confirmText}
           </button>

@@ -12,6 +12,7 @@ import { withAuth } from '@/lib/auth/middleware';
 import type { JWTPayload } from '@/lib/auth/jwt';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { emitServerEvent } from '@/lib/events/serverEmit';
 import { z } from 'zod4';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{40}$/;
@@ -274,6 +275,7 @@ async function postHandler(request: NextRequest, user: JWTPayload) {
       ]
     );
 
+    await emitServerEvent(authAddress, 'BOOKING_CREATED', { booking_id: result.rows[0]?.id }, 'api/merchant/bookings');
     return NextResponse.json({ booking: result.rows[0] }, { status: 201 });
   } catch (error) {
     logger.error('[Bookings POST] Error:', error);
@@ -315,6 +317,10 @@ async function patchHandler(request: NextRequest, user: JWTPayload) {
       'UPDATE merchant_bookings SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
       [status, id]
     );
+
+    if (status === 'completed') {
+      await emitServerEvent(authAddress, 'BOOKING_COMPLETED', { booking_id: id }, 'api/merchant/bookings');
+    }
 
     return NextResponse.json({ booking: result.rows[0] });
   } catch (error) {
