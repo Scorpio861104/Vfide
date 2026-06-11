@@ -99,7 +99,7 @@ export function EventProvider({ children }: { children: ReactNode }) {
         return [entry, ...prev].slice(0, 100);
       });
 
-      if (route.notify) {
+      if ('notify' in route && route.notify) {
         // Best-effort bridge to the existing toast system; never throw if it's not present.
         try {
           window.dispatchEvent(new CustomEvent('vfide:notify', { detail: { text: route.timeline, type: event.type } }));
