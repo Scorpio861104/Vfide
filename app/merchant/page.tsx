@@ -28,6 +28,7 @@ import { PaymentQR } from '@/components/merchant/PaymentQR';
 import { useMerchantHealth } from '@/hooks/useMerchantHealth';
 import { MerchantHeadquartersHero } from '@/components/merchant/MerchantHeadquartersHero';
 import { PlainHelp } from '@/components/common/PlainHelp';
+import { MerchantVerificationCard } from '@/components/merchant/MerchantVerificationCard';
 import {
   MerchantOperatingModel,
   BusinessHealthCenter,
@@ -79,6 +80,12 @@ export default function MerchantPage() {
             whatHappensNext="Pick what you'd like to do below. Most people start by setting up their shop and taking a first payment."
             status={{ state: m.isMerchant ? 'done' : 'not-started', label: m.isMerchant ? 'Your shop is set up' : 'Set up your shop to begin' }}
           />
+
+          {m.isMerchant && (
+            <div className="mb-10">
+              <MerchantVerificationCard />
+            </div>
+          )}
 
           {/* What commerce returns to the merchant (existing trust/fee command center) */}
           <div className="mb-16">

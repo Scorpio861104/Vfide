@@ -16,6 +16,7 @@ import Link from 'next/link';
 import { useProofScore } from '@/hooks/useProofScore';
 import { useContinuityStatus } from '@/hooks/useContinuityStatus';
 import { useMerchantHealth } from '@/hooks/useMerchantHealth';
+import { useMerchantVerification } from '@/hooks/useMerchantVerification';
 import {
   Landmark, Store, ShieldCheck, Heart, Users, BadgeCheck,
   Vote, LifeBuoy, FileCheck, UserPlus, Lock, CheckCircle2, Circle, Clock,
@@ -230,13 +231,20 @@ function VerifyIcon({ state }: { state: VerifyState }) {
 export function VerificationSystems() {
   const c = useContinuityStatus();
   const m = useMerchantHealth();
+  const mv = useMerchantVerification();
+
+  const merchantVerifyState: VerifyState = mv.verified
+    ? 'verified'
+    : m.isMerchant
+      ? 'pending'
+      : 'not-configured';
 
   const systems: { label: string; state: VerifyState }[] = [
     { label: 'Identity Verification', state: 'not-configured' },
-    { label: 'Merchant Verification', state: m.isMerchant ? 'verified' : 'not-configured' },
+    { label: 'Merchant Verification', state: merchantVerifyState },
     { label: 'Contact Verification', state: c.guardianCount > 0 ? 'configured' : 'not-configured' },
     { label: 'Recovery Verification', state: c.recoveryConfigured ? 'configured' : 'not-configured' },
-    { label: 'Operational Verification', state: m.isMerchant && !m.isSuspended ? 'verified' : 'not-configured' },
+    { label: 'Operational Verification', state: mv.verified && !m.isSuspended ? 'verified' : 'not-configured' },
   ];
 
   return (
