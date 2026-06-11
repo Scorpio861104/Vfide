@@ -226,8 +226,8 @@ interface ContinuityCard {
 const CONTINUITY_CARDS: ContinuityCard[] = [
   { title: 'Business Recovery', description: 'Restore access to your business if a device or key is lost.', icon: LifeBuoy, href: '/vault/recover' },
   { title: 'Emergency Operations', description: 'Keep operating through disruption with trusted contacts in place.', icon: ShieldAlert, href: '/security-center' },
-  { title: 'Ownership Transition', description: 'Hand the business to new ownership cleanly, on your terms.', icon: ArrowRightLeft, href: '/inheritance' },
-  { title: 'Merchant Succession', description: 'Pass stewardship of the business to chosen successors.', icon: Landmark, href: '/inheritance' },
+  { title: 'Ownership Transition', description: 'Hand the business to new ownership cleanly, on your terms.', icon: ArrowRightLeft, href: '/merchant/continuity' },
+  { title: 'Merchant Succession', description: 'Pass stewardship of the business to chosen successors.', icon: Landmark, href: '/merchant/continuity' },
   { title: 'Asset Preservation', description: 'Protect business funds and records so nothing is lost.', icon: Vault, href: '/vault' },
   { title: 'Operational Resilience', description: 'Continuity infrastructure built into the business, not bolted on.', icon: Activity, href: '/continuity' },
 ];
