@@ -4,7 +4,12 @@ import type { JWTPayload } from '@/lib/auth/jwt';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { query } from '@/lib/db';
 import { logger } from '@/lib/logger';
-import { suggestLoanTerms, type BuilderSummary } from '@/lib/seer/marketStability/lendingPolicy';
+import { deriveBuilderSignals, deriveExtractionSignals } from '@/lib/seer/marketStability/signals';
+import { computeDeliveryReliability, type DeliveryStats } from '@/lib/seer/deliveryReliability';
+import { computeBuilderRecord } from '@/lib/seer/marketStability/builderRecord';
+import { computeExtractionIndex, type ExtractionState } from '@/lib/seer/marketStability/extractionIndex';
+import { evaluateStabilityPolicy } from '@/lib/seer/marketStability/stabilityPolicy';
+import { suggestLoanTerms } from '@/lib/seer/marketStability/lendingPolicy';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,53 +38,75 @@ async function readProofScore(address: string): Promise<number> {
   }
 }
 
-async function readExtractionIndex(address: string): Promise<number> {
+async function readExtractionIndexState(address: string, now: number): Promise<ExtractionState> {
   try {
     const row = (
-      await query<{ idx: number }>(
-        `SELECT index AS idx FROM extraction_index_state WHERE address = $1`,
+      await query<{ idx: number; last_updated_at: string }>(
+        `SELECT index AS idx, last_updated_at FROM extraction_index_state WHERE address = $1`,
         [address],
       )
     ).rows[0];
     const idx = row?.idx;
-    return typeof idx === 'number' && Number.isFinite(idx) ? idx : 0;
+    return typeof idx === 'number' && Number.isFinite(idx)
+      ? { index: idx, lastUpdatedAt: new Date(row.last_updated_at).getTime() }
+      : { index: 0, lastUpdatedAt: now };
   } catch {
-    return 0;
+    return { index: 0, lastUpdatedAt: now };
   }
 }
 
-async function readBuilderCategory(address: string): Promise<BuilderSummary['category']> {
+async function readDeliverySignal(address: string) {
+  try {
+    const rows = (
+      await query<{ status: string; n: string }>(
+        `SELECT status, COUNT(*)::text AS n FROM shipments WHERE merchant_address = $1 GROUP BY status`,
+        [address.toLowerCase()],
+      )
+    ).rows;
+    const stats: DeliveryStats = {
+      shipped: 0,
+      deliveredConfirmed: 0,
+      deliveredUnconfirmed: 0,
+      notReceived: 0,
+      returned: 0,
+    };
+    for (const row of rows) {
+      const count = Number(row.n);
+      if (row.status === 'shipped') stats.shipped = count;
+      else if (row.status === 'delivered_confirmed') stats.deliveredConfirmed = count;
+      else if (row.status === 'delivered_unconfirmed') stats.deliveredUnconfirmed = count;
+      else if (row.status === 'not_received') stats.notReceived = count;
+      else if (row.status === 'returned') stats.returned = count;
+    }
+    return computeDeliveryReliability(stats);
+  } catch {
+    return computeDeliveryReliability({
+      shipped: 0,
+      deliveredConfirmed: 0,
+      deliveredUnconfirmed: 0,
+      notReceived: 0,
+      returned: 0,
+    });
+  }
+}
+
+async function readScamSignals(address: string): Promise<{ verifiedDisputes: number; fraudFlags: number }> {
   try {
     const row = (
-      await query<{ merchant_count: string; governance_count: string }>(
+      await query<{ upheld: string; refunded: string }>(
         `SELECT
-           COUNT(*) FILTER (WHERE event_type IN ('PAYMENT_RECEIVED','ORDER_COMPLETED','BOOKING_COMPLETED'))::text AS merchant_count,
-           COUNT(*) FILTER (WHERE event_type IN ('GOVERNANCE_PARTICIPATED','PROPOSAL_EXECUTED'))::text AS governance_count
-         FROM ecosystem_events
-         WHERE user_address = $1`,
+            COUNT(*) FILTER (WHERE status = 'resolved_upheld')::text AS upheld,
+            COUNT(*) FILTER (WHERE status = 'resolved_refunded')::text AS refunded
+           FROM disputes WHERE respondent_address = $1`,
         [address],
       )
     ).rows[0];
-
-    const merchantCount = Number(row?.merchant_count ?? 0);
-    const governanceCount = Number(row?.governance_count ?? 0);
-
-    if (merchantCount >= 25) return 'Institutional Merchant';
-    if (merchantCount >= 8) return 'Merchant';
-    if (governanceCount >= 5) return 'Community Steward';
-    if (merchantCount + governanceCount >= 5) return 'Established Builder';
-    if (merchantCount + governanceCount >= 1) return 'Builder';
-    return 'Newcomer';
+    const upheld = Number(row?.upheld ?? 0);
+    const refunded = Number(row?.refunded ?? 0);
+    return { verifiedDisputes: upheld + refunded, fraudFlags: upheld };
   } catch {
-    return 'Newcomer';
+    return { verifiedDisputes: 0, fraudFlags: 0 };
   }
-}
-
-function extractionBucket(index: number): string {
-  if (index >= 7000) return 'Severe';
-  if (index >= 5000) return 'High';
-  if (index >= 3000) return 'Elevated';
-  return 'Low';
 }
 
 async function getHandler(request: NextRequest, user: JWTPayload): Promise<Response> {
@@ -90,21 +117,52 @@ async function getHandler(request: NextRequest, user: JWTPayload): Promise<Respo
   if (!address) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
+    const now = Date.now();
     const proofScore = await readProofScore(address);
-    const extractionIndex = await readExtractionIndex(address);
-    const builder = { category: await readBuilderCategory(address) };
+    const builderSignals = await deriveBuilderSignals(address);
+    const builder = computeBuilderRecord(builderSignals);
+
+    const prior = await readExtractionIndexState(address, now);
+    const extractionSignals = await deriveExtractionSignals(address);
+    const extraction = computeExtractionIndex(prior, extractionSignals, now);
+
+    await query(
+      `INSERT INTO extraction_index_state (address, index, last_updated_at)
+       VALUES ($1, $2, to_timestamp($3 / 1000.0))
+       ON CONFLICT (address) DO UPDATE SET index = EXCLUDED.index, last_updated_at = EXCLUDED.last_updated_at`,
+      [address, extraction.state.index, now],
+    );
+
+    const { verifiedDisputes, fraudFlags } = await readScamSignals(address);
+    const delivery = await readDeliverySignal(address);
+    const deliveryConcern = delivery.reliability === 'concerning' ? 1 : 0;
+
+    const decision = evaluateStabilityPolicy({
+      impactTier: 0,
+      extractionIndex: extraction.index,
+      builder,
+      proofScore,
+      verifiedDisputes: verifiedDisputes + deliveryConcern,
+      fraudFlags,
+      monthsSinceLastRelief: null,
+    });
 
     const lendingTerms = suggestLoanTerms({
       proofScore,
       builder,
-      extractionIndex,
+      extractionIndex: extraction.index,
     });
 
     return NextResponse.json({
       builder,
-      extraction: { index: extractionIndex, category: extractionBucket(extractionIndex) },
-      decision: null,
+      extraction: {
+        index: extraction.index,
+        category: extraction.category,
+        contributingFactors: extraction.contributingFactors,
+      },
+      decision,
       lendingTerms,
+      delivery,
     });
   } catch (error) {
     logger.error('GET /api/seer/market-standing failed', {

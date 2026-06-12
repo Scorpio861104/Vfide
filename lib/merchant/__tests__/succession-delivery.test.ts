@@ -60,4 +60,16 @@ describe('Delivery reliability (Phase 3)', () => {
     const unconfirmed = computeDeliveryReliability({ ...base, deliveredUnconfirmed: 20 });
     expect((confirmed.score ?? 0)).toBeGreaterThan(unconfirmed.score ?? 0);
   });
+
+  it('only a concerning record trips the marketplace-trust scam signal', () => {
+    const concerning = computeDeliveryReliability({ ...base, deliveredConfirmed: 10, notReceived: 6 });
+    const clean = computeDeliveryReliability({ ...base, deliveredConfirmed: 40, shipped: 2 });
+    const unproven = computeDeliveryReliability({ ...base, shipped: 1 });
+    const tripsSignal = (result: ReturnType<typeof computeDeliveryReliability>) =>
+      result.reliability === 'concerning' ? 1 : 0;
+
+    expect(tripsSignal(concerning)).toBe(1);
+    expect(tripsSignal(clean)).toBe(0);
+    expect(tripsSignal(unproven)).toBe(0);
+  });
 });

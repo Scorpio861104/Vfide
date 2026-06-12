@@ -6,6 +6,7 @@ import { evaluateStabilityPolicy } from '@/lib/seer/marketStability/stabilityPol
 import { suggestLoanTerms } from '@/lib/seer/marketStability/lendingPolicy';
 import { computeBondBenefits } from '@/lib/seer/marketStability/stabilityBonding';
 import { computeMerchantAdvisor } from '@/lib/seer/merchantAdvisor';
+import { classifyTransfer } from '@/lib/seer/marketStability/swapClassification';
 
 const NOW = 1_700_000_000_000;
 
@@ -156,5 +157,38 @@ describe('Merchant Advisor — grounded signals, honest about thin data', () => 
   it('a brand-new store honestly reports insufficient data instead of faking a trend', () => {
     const r = computeMerchantAdvisor({ revenueLast30: 120, revenuePrev30: 0, ordersLast30: 2, ordersPrev30: 0, distinctCustomers90: 2, repeatCustomers90: 0, refundsGranted90: 0, orders90: 2, trackedProducts: 1, lowStockProducts: 0, hasSubscriptionPlans: false, lifetimeOrders: 2 });
     expect(r.insufficientData).toBe(true);
+  });
+});
+
+describe('Swap classification (Wave 60 wiring) — feeds the Extraction Index sell/buy detection', () => {
+  const pool = '0xpool000000000000000000000000000000000000';
+  const me = '0xme00000000000000000000000000000000000000';
+  const liquidity = new Set([pool]);
+
+  it('subject -> pool is a sell; pool -> subject is a buy', () => {
+    expect(classifyTransfer({ from: me, to: pool, subject: me, liquidityAddresses: liquidity })).toBe('sell');
+    expect(classifyTransfer({ from: pool, to: me, subject: me, liquidityAddresses: liquidity })).toBe('buy');
+  });
+
+  it('a transfer touching no pool is never a sell (ordinary p2p never counts as extraction)', () => {
+    expect(
+      classifyTransfer({
+        from: me,
+        to: '0xfriend00000000000000000000000000000000000',
+        subject: me,
+        liquidityAddresses: liquidity,
+      }),
+    ).toBe('transfer');
+  });
+
+  it('with no pools configured, nothing classifies as sell/buy (safe default -> flags no one)', () => {
+    expect(
+      classifyTransfer({
+        from: me,
+        to: pool,
+        subject: me,
+        liquidityAddresses: new Set<string>(),
+      }),
+    ).toBe('transfer');
   });
 });
