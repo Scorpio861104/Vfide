@@ -43,7 +43,7 @@ export const SEER_SUBSYSTEMS: SeerSubsystem[] = [
     inputs: ['indexed token transfers (sells/rebuys)', 'cycles'],
     outputs: ['Extraction Index (0–10,000)', 'Risk Category', 'whale-protocol input'],
     status: 'PARTIAL',
-    note: 'Engine + 90-day decay + persistence are LIVE; "sells" are approximated from transfers to configured liquidity addresses. Needs swap/price classification in the indexer to be authoritative.',
+    note: 'Engine + 90-day decay + persistence are LIVE; swapClassification.ts now provides explicit buy/sell/liquidity classification logic. Still PARTIAL until the indexer ingests real DEX Swap events + pools are configured (with no pools it safely classifies transfers and avoids false flags).',
   },
   {
     id: 'commerce-health',
@@ -61,7 +61,7 @@ export const SEER_SUBSYSTEMS: SeerSubsystem[] = [
     inputs: ['ProofScore', 'Builder Record', 'refund/dispute rates', 'delivery success'],
     outputs: ['Visibility Score', 'search ranking', 'featured eligibility'],
     status: 'PARTIAL',
-    note: 'stabilityPolicy produces a visibilityMultiplier from Builder Record/extraction, and the disputes backend now feeds real dispute/refund signals into the scam-signal path. Delivery-success input still needs shipping data; otherwise inputs are largely real.',
+    note: 'stabilityPolicy produces visibility from Builder Record/extraction; disputes backend feeds real dispute/refund signals; and shipments + deliveryReliability provide delivery-success signals. Still PARTIAL until live carrier auto-verification is wired (current model is merchant/buyer confirmation-based).',
   },
   {
     id: 'p2p-lending',

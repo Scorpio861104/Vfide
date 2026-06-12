@@ -41,7 +41,8 @@ async function readExtractionIndex(address: string): Promise<number> {
         [address],
       )
     ).rows[0];
-    return Number.isFinite(row?.idx) ? row.idx : 0;
+    const idx = row?.idx;
+    return typeof idx === 'number' && Number.isFinite(idx) ? idx : 0;
   } catch {
     return 0;
   }
