@@ -31,6 +31,12 @@ export interface MerchantDiscoverySignals {
   ageDays: number;
   /** True only if the merchant has passed verification. */
   verified: boolean;
+  /**
+   * Optional distance in km from the searcher (Local Commerce). Only set for explicitly local searches.
+   * Closer = a modest bounded boost; it never overrides relevance/trust and is absent for non-local
+   * search (so it can't quietly bias global discovery). null/undefined = not a local search.
+   */
+  distanceKm?: number | null;
 }
 
 export interface DiscoveryExplanation {
@@ -51,6 +57,7 @@ const HEALTH_MAX = 10;
 const BUILDER_MAX = 8;
 const NEW_MERCHANT_MAX = 12;
 const FRAUD_MAX_PENALTY = 60;
+const DISTANCE_MAX = 10;
 
 function newMerchantBoost(ageDays: number): number {
   if (ageDays <= 14) return NEW_MERCHANT_MAX;
@@ -90,10 +97,19 @@ export function scoreMerchantDiscovery(s: MerchantDiscoverySignals): DiscoverySc
   const verifiedPts = s.verified ? 5 : 0;
   if (verifiedPts) explanation.push({ signal: 'Verified merchant', contribution: verifiedPts, detail: 'Passed merchant verification.' });
 
+  // Local proximity — only for explicitly local searches; bounded so it never dominates relevance/trust.
+  let distancePts = 0;
+  if (s.distanceKm != null && s.distanceKm >= 0) {
+    // Full boost within 5km, decaying to zero by 50km.
+    const frac = s.distanceKm <= 5 ? 1 : s.distanceKm >= 50 ? 0 : 1 - (s.distanceKm - 5) / 45;
+    distancePts = Math.round(DISTANCE_MAX * frac * 10) / 10;
+    if (distancePts > 0) explanation.push({ signal: 'Local proximity', contribution: distancePts, detail: `~${Math.round(s.distanceKm)}km away (local-search boost only; bounded).` });
+  }
+
   const fraudPenalty = (Math.max(0, Math.min(100, s.fraudRisk)) / 100) * FRAUD_MAX_PENALTY;
   if (fraudPenalty > 0) explanation.push({ signal: 'Fraud risk', contribution: -round1(fraudPenalty), detail: 'Upheld disputes / scam patterns reduce discovery confidence. Ownership is never affected.' });
 
-  const meritPts = trustPts + deliveryPts + healthPts + builderPts + newPts + verifiedPts - fraudPenalty;
+  const meritPts = trustPts + deliveryPts + healthPts + builderPts + newPts + verifiedPts + distancePts - fraudPenalty;
   const score = Math.max(0, relevance * meritPts);
 
   return { score: round1(score), relevanceBucket, explanation };

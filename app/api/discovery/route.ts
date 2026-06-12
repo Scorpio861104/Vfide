@@ -12,6 +12,8 @@ import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { computeDeliveryReliability, type DeliveryStats } from '@/lib/seer/deliveryReliability';
 import { scoreMerchantDiscovery, rankByRelevanceThenMerit, type MerchantDiscoverySignals, type DiscoveryScore } from '@/lib/seer/discovery';
+import { deriveBuilderSignals } from '@/lib/seer/marketStability/signals';
+import { computeBuilderRecord } from '@/lib/seer/marketStability/builderRecord';
 
 export const dynamic = 'force-dynamic';
 
@@ -91,6 +93,7 @@ async function getHandler(request: NextRequest): Promise<Response> {
           displayName: m.display_name,
           productCount: Number(m.product_count),
           deliveryReliability: delivery.reliability,
+          signals,
           discovery: scoreMerchantDiscovery(signals),
         };
       }),
@@ -99,15 +102,39 @@ async function getHandler(request: NextRequest): Promise<Response> {
     const filtered = applyFilter(scored, filter);
     const ranked = rankByRelevanceThenMerit(filtered).slice(0, 50);
 
+    // Builder Record enrichment for the TOP results only. deriveBuilderSignals runs ~5 queries per
+    // merchant, so enriching all 200 candidates would mean 1000+ queries per search. Instead we rank by
+    // relevance + cheap signals first, then add the (modest, capped) Builder bonus to the top 20 and
+    // re-rank within their relevance tier. Builder only ever adds, so the pre-enrichment order is
+    // already honest; this just refines the top.
+    const enriched = await Promise.all(
+      ranked.map(async (r, idx) => {
+        if (idx >= 20) return r;
+        try {
+          const builderSignals = await deriveBuilderSignals(r.merchantAddress);
+          const builder = computeBuilderRecord(builderSignals);
+          if (builder.score > 0) {
+            const rescored = scoreMerchantDiscovery({ ...r.signals, builderScore: builder.score });
+            return { ...r, discovery: rescored, builderCategory: builder.category };
+          }
+        } catch {
+          // Enrichment is best-effort; discovery should never fail because a signal read fails.
+        }
+        return r;
+      }),
+    );
+    const finalRanked = rankByRelevanceThenMerit(enriched);
+
     return NextResponse.json({
       query: q,
       filter: filter ?? null,
-      count: ranked.length,
-      results: ranked.map((r) => ({
+      count: finalRanked.length,
+      results: finalRanked.map((r) => ({
         merchantAddress: r.merchantAddress,
         displayName: r.displayName,
         productCount: r.productCount,
         deliveryReliability: r.deliveryReliability,
+        builderCategory: 'builderCategory' in r ? r.builderCategory : undefined,
         score: r.discovery.score,
         relevanceBucket: r.discovery.relevanceBucket,
         whyRanked: r.discovery.explanation,
@@ -176,6 +203,7 @@ interface Scored {
   displayName: string;
   productCount: number;
   deliveryReliability: string;
+  signals: MerchantDiscoverySignals;
   discovery: DiscoveryScore;
 }
 

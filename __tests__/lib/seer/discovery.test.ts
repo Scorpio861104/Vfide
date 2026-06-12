@@ -117,3 +117,32 @@ describe('Merchant transparency panel — grandmother test', () => {
     expect(p.disputeSummary).toContain('2 of 5');
   });
 });
+
+describe('Discovery engine — Local Commerce (distance) bounded & opt-in', () => {
+  it('distance only applies when set (global search is unaffected by proximity)', () => {
+    const noDistance = scoreMerchantDiscovery({ ...base, relevance: 0.8 });
+    const sameButNullDistance = scoreMerchantDiscovery({ ...base, relevance: 0.8, distanceKm: null });
+    expect(noDistance.score).toBe(sameButNullDistance.score);
+    expect(noDistance.explanation.some((e) => e.signal === 'Local proximity')).toBe(false);
+  });
+
+  it('closer is a modest boost that DECAYS with distance and is bounded', () => {
+    const near = scoreMerchantDiscovery({ ...base, distanceKm: 2 });
+    const mid = scoreMerchantDiscovery({ ...base, distanceKm: 30 });
+    const far = scoreMerchantDiscovery({ ...base, distanceKm: 60 });
+    const boost = (d: typeof near) => d.explanation.find((e) => e.signal === 'Local proximity')?.contribution ?? 0;
+    expect(boost(near)).toBeGreaterThan(boost(mid));
+    expect(boost(far)).toBe(0);
+    expect(boost(near)).toBeLessThanOrEqual(10);
+  });
+
+  it('distance CANNOT override relevance: a near but irrelevant merchant still loses to a relevant far one', () => {
+    const nearIrrelevant = scoreMerchantDiscovery({ ...base, relevance: 0.3, distanceKm: 1 });
+    const farRelevant = scoreMerchantDiscovery({ ...base, relevance: 0.9, distanceKm: 45 });
+    const ranked = rankByRelevanceThenMerit([
+      { id: 'near', discovery: nearIrrelevant },
+      { id: 'far', discovery: farRelevant },
+    ]);
+    expect(ranked[0]?.id).toBe('far');
+  });
+});
