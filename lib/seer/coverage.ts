@@ -52,7 +52,16 @@ export const SEER_SUBSYSTEMS: SeerSubsystem[] = [
     inputs: ['merchant revenue', 'customer growth', 'inventory', 'subscriptions', 'repeat rates'],
     outputs: ['Merchant Health Score', 'growth opportunities', 'risk warnings'],
     status: 'LIVE',
-    note: 'Merchant Advisor (merchantAdvisor.ts) + /api/merchant/advisor derive real trends from timestamped data: revenue 30d-vs-prior, repeat-customer rate, refund rate, low stock, subscription opportunity, yielding a Commerce Health score plus grounded recommendations; reports insufficient data for new stores rather than faking trends.',
+    note: 'Merchant Advisor (merchantAdvisor.ts) + /api/merchant/advisor derive real trends from timestamped data: revenue 30d-vs-prior, repeat-customer rate, refund rate, low stock, subscription opportunity. /api/merchant/hq composes these with trust/delivery/continuity into one actionable Merchant HQ payload.',
+  },
+  {
+    id: 'merchant-health',
+    name: 'Merchant Health Engine',
+    purpose: 'Produce a first-class merchant operating score from trust, commerce, delivery, retention, and trend signals.',
+    inputs: ['commerce health', 'merchant trust', 'delivery reliability', 'retention rate', 'revenue trend', 'lifetime orders'],
+    outputs: ['health score/band', 'growth/risk signals', 'top recommendation', 'component contributions'],
+    status: 'LIVE',
+    note: 'lib/seer/merchantHealth.ts (pure deterministic composite) + /api/merchant/hq for server-side aggregation/action center output. Provisional mode is used for thin-data stores instead of fabricated scores.',
   },
   {
     id: 'marketplace-trust',
