@@ -13,6 +13,7 @@ import { withAuth } from '@/lib/auth/middleware';
 import type { JWTPayload } from '@/lib/auth/jwt';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { emitServerEvent } from '@/lib/events/serverEmit';
 import { z } from 'zod4';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{40}$/;
@@ -478,6 +479,7 @@ async function postHandler(request: NextRequest, user: JWTPayload) {
       ]
     );
 
+    await emitServerEvent(authAddress, 'PRODUCT_CREATED', { product_id: result.rows[0]?.id }, 'api/merchant/products');
     return NextResponse.json({ product: result.rows[0] }, { status: 201 });
   } catch (error) {
     logger.error('[Products POST] Error:', error);
@@ -581,6 +583,10 @@ async function patchHandler(request: NextRequest, user: JWTPayload) {
       `UPDATE merchant_products SET ${updates.join(', ')} WHERE id = $${pi} RETURNING *`,
       params as (string | number | boolean | Date | null | undefined)[]
     );
+
+    if (body.status === 'active') {
+      await emitServerEvent(authAddress, 'PRODUCT_PUBLISHED', { product_id: id }, 'api/merchant/products');
+    }
 
     return NextResponse.json({ product: result.rows[0] });
   } catch (error) {

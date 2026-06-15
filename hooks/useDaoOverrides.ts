@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * useDaoOverrides - reads the PUBLIC DAO override ledger (Phase 2 transparency).
+ * useDaoOverrides — reads the PUBLIC DAO override ledger (Phase 2 transparency).
  * Anyone can audit the DAO's overrides of Seer decisions.
  */
 
@@ -34,25 +34,18 @@ export function useDaoOverrides(filter?: { type?: string; subject?: string }) {
       if (filter?.type) qs.set('type', filter.type);
       if (filter?.subject) qs.set('subject', filter.subject);
       const res = await fetch(`/api/dao/overrides${qs.toString() ? `?${qs}` : ''}`, { credentials: 'include' });
-      if (!res.ok) {
-        setOverrides([]);
-        setSummary([]);
-        return;
-      }
+      if (!res.ok) { setOverrides([]); setSummary([]); return; }
       const data = await res.json();
       setOverrides(Array.isArray(data.overrides) ? data.overrides : []);
       setSummary(Array.isArray(data.summary) ? data.summary : []);
     } catch {
-      setOverrides([]);
-      setSummary([]);
+      setOverrides([]); setSummary([]);
     } finally {
       setLoading(false);
     }
   }, [filter?.type, filter?.subject]);
 
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
+  useEffect(() => { void refresh(); }, [refresh]);
 
   return { overrides, summary, loading, refresh };
 }

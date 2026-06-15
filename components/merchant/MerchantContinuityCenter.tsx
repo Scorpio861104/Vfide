@@ -11,7 +11,7 @@
 import { useState } from 'react';
 import { useMerchantContinuity } from '@/hooks/useMerchantContinuity';
 import { ProtectiveConfirm } from '@/components/safety/ProtectiveConfirm';
-import { CheckCircle2, Circle, ShieldAlert, UserPlus, Users, X, Loader2 } from 'lucide-react';
+import { CheckCircle2, Circle, ShieldAlert, UserPlus, Users, X, Loader2, HeartPulse } from 'lucide-react';
 
 const ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/;
 const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
@@ -21,12 +21,16 @@ export function MerchantContinuityCenter() {
   const [successorInput, setSuccessorInput] = useState('');
   const [successorNote, setSuccessorNote] = useState('');
   const [operatorInput, setOperatorInput] = useState('');
+  const [proofOfLifeInput, setProofOfLifeInput] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
+  // Protective friction (Wave 51): risky choices go through an explicit, address-verified confirm.
   const [confirmSuccessor, setConfirmSuccessor] = useState(false);
   const [confirmOperator, setConfirmOperator] = useState(false);
+  const [confirmProofOfLife, setConfirmProofOfLife] = useState(false);
 
   const successorValid = ADDRESS_RE.test(successorInput.trim());
   const operatorValid = ADDRESS_RE.test(operatorInput.trim());
+  const proofOfLifeValid = ADDRESS_RE.test(proofOfLifeInput.trim());
 
   const run = async (key: string, fn: () => Promise<boolean>) => {
     setBusy(key);
@@ -158,14 +162,67 @@ export function MerchantContinuityCenter() {
         </div>
       </section>
 
+      {/* Proof of Life (Wave 95 / CID-2) — the business alive-signal */}
+      <section className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 md:p-7">
+        <div className="flex items-center gap-2">
+          <HeartPulse size={18} className="text-cyan-300/80" aria-hidden="true" />
+          <h2 className="text-lg font-semibold text-white">Your &ldquo;I&rsquo;m still here&rdquo; wallet</h2>
+        </div>
+        <p className="mt-1 text-sm text-zinc-400">
+          A trusted second wallet that can <span className="text-zinc-300">stop an emergency takeover</span> of
+          your business while you&rsquo;re unreachable — proving you&rsquo;re still here, without your main key.
+          Optional, but it&rsquo;s your strongest protection if you go quiet for a while.
+        </p>
+
+        {c.proofOfLife ? (
+          <div className="mt-5 flex items-center justify-between gap-3 rounded-lg border border-emerald-400/15 bg-emerald-400/[0.04] px-3 py-2.5">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 size={15} className="text-emerald-300" aria-hidden="true" />
+              <span className="font-mono text-xs text-zinc-300">{short(c.proofOfLife.proof_of_life_address)}</span>
+            </div>
+            <button type="button" onClick={() => run('clear-pol', c.clearProofOfLife)}
+              disabled={busy === 'clear-pol'} className="flex items-center gap-1 text-xs text-zinc-400 hover:text-rose-300">
+              <X size={13} aria-hidden="true" /> {busy === 'clear-pol' ? 'Removing…' : 'Remove'}
+            </button>
+          </div>
+        ) : (
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+            <input
+              value={proofOfLifeInput}
+              onChange={(e) => setProofOfLifeInput(e.target.value)}
+              placeholder="Your proof-of-life wallet (0x…)"
+              className="flex-1 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5 font-mono text-sm text-zinc-200 placeholder:text-zinc-600 focus:border-cyan-400/40 focus:outline-none"
+            />
+            <button
+              type="button"
+              disabled={!proofOfLifeValid || busy === 'pol'}
+              onClick={() => setConfirmProofOfLife(true)}
+              className="btn-premium btn-premium-ghost flex items-center justify-center gap-1.5 text-sm disabled:opacity-40"
+            >
+              <HeartPulse size={15} aria-hidden="true" /> {busy === 'pol' ? 'Saving…' : 'Set proof-of-life'}
+            </button>
+          </div>
+        )}
+
+        <div className="mt-5 flex items-start gap-2.5 rounded-lg border border-cyan-400/15 bg-cyan-400/[0.04] p-3">
+          <ShieldAlert size={15} className="mt-0.5 shrink-0 text-cyan-300" aria-hidden="true" />
+          <p className="text-xs leading-relaxed text-cyan-100/90">
+            Use a wallet you can reach even if your phone is gone — and consider giving its key to someone you
+            trust who could act for you. This wallet can only <span className="text-cyan-200">cancel</span> an
+            emergency business takeover; it can never spend your money or move your business itself.
+          </p>
+        </div>
+      </section>
+
+      {/* Protective friction (Wave 51) — explicit, address-verified confirms */}
       <ProtectiveConfirm
         open={confirmSuccessor}
         risk="high"
         title="Choose this successor?"
-        body="This person will be able to take over your business if you cannot continue. Make sure the address is exactly right."
+        body="This person will be able to take over your business if you can't continue. Make sure the address is exactly right — this is who inherits your store."
         address={successorInput.trim()}
-        addressLabel="Successor address"
-        reassurance="You can change or remove your successor at any time. Choosing now does not hand over anything today."
+        addressLabel="Successor's address"
+        reassurance="You can change or remove your successor at any time. Choosing them now does not hand over anything today."
         confirmText="Yes, choose them"
         source="merchant-succession"
         onCancel={() => setConfirmSuccessor(false)}
@@ -174,24 +231,36 @@ export function MerchantContinuityCenter() {
           void run('succ', () => c.setSuccessor(successorInput.trim(), successorNote.trim() || undefined));
         }}
       />
-
       <ProtectiveConfirm
         open={confirmOperator}
         risk="medium"
         title="Add this emergency helper?"
         body="This person will be recorded as someone who can help run your business in an emergency. They do not become the owner."
         address={operatorInput.trim()}
-        addressLabel="Helper address"
+        addressLabel="Helper's address"
         reassurance="You stay the owner and can remove this helper at any time."
         confirmText="Add helper"
         source="merchant-operator"
         onCancel={() => setConfirmOperator(false)}
         onConfirm={() => {
           setConfirmOperator(false);
-          void run('op', () => c.grantOperator(operatorInput.trim()).then((ok) => {
-            if (ok) setOperatorInput('');
-            return ok;
-          }));
+          void run('op', () => c.grantOperator(operatorInput.trim()).then((ok) => { if (ok) setOperatorInput(''); return ok; }));
+        }}
+      />
+      <ProtectiveConfirm
+        open={confirmProofOfLife}
+        risk="medium"
+        title="Set this as your proof-of-life wallet?"
+        body="This wallet will be able to cancel an emergency takeover of your business on your behalf — proving you're still here. It cannot spend your money or move your business."
+        address={proofOfLifeInput.trim()}
+        addressLabel="Proof-of-life address"
+        reassurance="You can change or remove this at any time. It only gains the power to stop a takeover — nothing else."
+        confirmText="Set proof-of-life"
+        source="merchant-proof-of-life"
+        onCancel={() => setConfirmProofOfLife(false)}
+        onConfirm={() => {
+          setConfirmProofOfLife(false);
+          void run('pol', () => c.setProofOfLife(proofOfLifeInput.trim()).then((ok) => { if (ok) setProofOfLifeInput(''); return ok; }));
         }}
       />
     </div>

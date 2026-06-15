@@ -26,7 +26,11 @@
  *   7. done            — recap
  *
  * Rules:
- *   - Vault creation is the only required chapter; all others are skippable.
+ *   - Vault creation is the only hard-required chapter. Everything else is skippable EXCEPT the recovery step:
+ *     guardians/finalizeGuardians can be skipped only after the user explicitly acknowledges the permanent-loss
+ *     risk (a vault with no guardians is unrecoverable if the key is lost). This keeps the choice the user's —
+ *     non-custodial, never coerced — while ensuring it is informed rather than a silent skip. See `recoverySafe`
+ *     and `acknowledgeGuardianRisk`.
  *   - After each chapter the user is asked "continue or pause here?" — that's
  *     the "chapters" pattern the user asked for. Exceptions: welcome (we
  *     don't ask "do you want to start setup?" after the Start button), and
@@ -51,6 +55,7 @@ export type ChapterId =
   | 'spendLimits'
   | 'guardians'
   | 'finalizeGuardians'
+  | 'keySeparation'
   | 'merchantApproval'
   | 'proofScore'
   | 'done';
@@ -61,6 +66,7 @@ export const CHAPTER_ORDER: ChapterId[] = [
   'spendLimits',
   'guardians',
   'finalizeGuardians',
+  'keySeparation',
   'merchantApproval',
   'proofScore',
   'done',
@@ -81,6 +87,7 @@ export const CHAPTERS: ChapterMeta[] = [
   { id: 'spendLimits', title: 'Enable core protections', shortLabel: 'Protection', required: false },
   { id: 'guardians', title: 'Choose trusted guardians', shortLabel: 'Guardians', required: false },
   { id: 'finalizeGuardians', title: 'Activate recovery protection', shortLabel: 'Recovery', required: false },
+  { id: 'keySeparation', title: 'Separate your keys (optional)', shortLabel: 'Keys', required: false },
   { id: 'merchantApproval', title: 'Payments and commerce readiness', shortLabel: 'Payments', required: false },
   { id: 'proofScore', title: 'Trust and ProofScore', shortLabel: 'ProofScore', required: false },
   { id: 'done', title: 'You are protected', shortLabel: 'Complete', required: false },
@@ -92,6 +99,11 @@ interface WizardState {
   completedChapters: ChapterId[];
   skippedChapters: ChapterId[];
   pausedAfter: ChapterId | null; // user said "no, stop here" after this chapter
+  // Recovery-safety gate (audit Finding A): a vault with no guardians is permanently UNRECOVERABLE if the key
+  // is lost. We never *force* guardians (non-custodial ethos — the choice is the user's), but the wizard must
+  // not let someone silently skip recovery and then be told "you are protected". A user may finish without
+  // guardians ONLY by explicitly acknowledging the permanent-loss risk; that informed deferral is recorded here.
+  guardianRiskAcknowledged: boolean;
 }
 
 const STORAGE_KEY = 'vfide.wizard.v1';
@@ -103,6 +115,7 @@ function defaultState(): WizardState {
     completedChapters: [],
     skippedChapters: [],
     pausedAfter: null,
+    guardianRiskAcknowledged: false,
   };
 }
 
@@ -117,6 +130,7 @@ function loadState(): WizardState {
       ...parsed,
       completedChapters: Array.isArray(parsed.completedChapters) ? parsed.completedChapters : [],
       skippedChapters: Array.isArray(parsed.skippedChapters) ? parsed.skippedChapters : [],
+      guardianRiskAcknowledged: parsed.guardianRiskAcknowledged === true,
     };
   } catch {
     return defaultState();
@@ -137,10 +151,26 @@ export interface UseWizardStateValue {
   isComplete: boolean;
   currentIndex: number;
   totalChapters: number;
+  /**
+   * Whether the vault has recovery protection configured (guardians chosen AND recovery activated). This is the
+   * honest signal the recap uses — a guardian-less vault is NOT "protected" and must not be shown as such.
+   */
+  recoveryConfigured: boolean;
+  /**
+   * True once the user may safely leave the recovery step: either recovery is configured, or they explicitly
+   * acknowledged the permanent-loss risk. The guardians/finalizeGuardians skip buttons gate on this.
+   */
+  recoverySafe: boolean;
   /** Mark current chapter complete and advance. Pauses after (except welcome → next). */
   markComplete: (chapter: ChapterId) => void;
   /** Mark current chapter skipped and advance. Only allowed for non-required chapters. */
   skip: (chapter: ChapterId) => void;
+  /**
+   * Record the user's informed acknowledgment that, without guardians, a lost key means permanently
+   * unrecoverable funds. Required before the recovery chapters can be skipped. Non-custodial by design: this
+   * preserves the user's right to decline guardians — it only ensures the choice is informed, not silent.
+   */
+  acknowledgeGuardianRisk: () => void;
   /** Move directly to a specific chapter (used by Resume / step-clicks in nav). */
   goTo: (chapter: ChapterId) => void;
   /** "Pause here" — user said no when asked to continue after a chapter. */
@@ -186,6 +216,21 @@ export function WizardStateProvider({ children }: { children: ReactNode }) {
       && state.currentChapter === 'done';
   }, [state.completedChapters, state.currentChapter]);
 
+  // Recovery is "configured" only when BOTH guardian chapters were genuinely completed (not skipped). A vault
+  // with no guardians is operational but permanently unrecoverable if the key is lost (see Recovery audit), so
+  // this flag — not mere wizard completion — is what the recap must key its "protected" messaging on.
+  const recoveryConfigured = useMemo(
+    () => state.completedChapters.includes('guardians') && state.completedChapters.includes('finalizeGuardians'),
+    [state.completedChapters],
+  );
+
+  // The user may move past the recovery step only if recovery is configured OR they explicitly acknowledged the
+  // permanent-loss risk. This is the safeCompletionGate the audit recommended: informed choice, never a silent skip.
+  const recoverySafe = useMemo(
+    () => recoveryConfigured || state.guardianRiskAcknowledged,
+    [recoveryConfigured, state.guardianRiskAcknowledged],
+  );
+
   const advance = useCallback(
     (current: ChapterId, statusList: 'completedChapters' | 'skippedChapters') => {
       setState((prev) => {
@@ -226,10 +271,21 @@ export function WizardStateProvider({ children }: { children: ReactNode }) {
         // Required chapters cannot be skipped — caller should disable the skip button.
         return;
       }
+      // Recovery-safety gate (audit Finding A): skipping a recovery chapter is only allowed once the user has
+      // acknowledged that, without guardians, a lost key means permanently unrecoverable funds. The chapter UI
+      // surfaces the acknowledgment; if it hasn't been given, the skip is refused here as a defense-in-depth
+      // backstop so the path to an uninformed, unprotected "done" simply does not exist.
+      if ((chapter === 'guardians' || chapter === 'finalizeGuardians') && !recoverySafe) {
+        return;
+      }
       advance(chapter, 'skippedChapters');
     },
-    [advance],
+    [advance, recoverySafe],
   );
+
+  const acknowledgeGuardianRisk = useCallback(() => {
+    setState((prev) => ({ ...prev, guardianRiskAcknowledged: true }));
+  }, []);
 
   const goTo = useCallback((chapter: ChapterId) => {
     setState((prev) => ({ ...prev, currentChapter: chapter, pausedAfter: null }));
@@ -257,15 +313,18 @@ export function WizardStateProvider({ children }: { children: ReactNode }) {
       isComplete,
       currentIndex,
       totalChapters: CHAPTER_ORDER.length,
+      recoveryConfigured,
+      recoverySafe,
       markComplete,
       skip,
+      acknowledgeGuardianRisk,
       goTo,
       pause,
       resume,
       reset,
       setEnabled,
     }),
-    [state, isComplete, currentIndex, markComplete, skip, goTo, pause, resume, reset, setEnabled],
+    [state, isComplete, currentIndex, recoveryConfigured, recoverySafe, markComplete, skip, acknowledgeGuardianRisk, goTo, pause, resume, reset, setEnabled],
   );
 
   return <WizardStateContext.Provider value={value}>{children}</WizardStateContext.Provider>;

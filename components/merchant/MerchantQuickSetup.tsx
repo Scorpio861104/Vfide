@@ -5,6 +5,7 @@
  */
 'use client';
 
+import { useEmitEvent } from '@/lib/events/EventProvider';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAccount } from 'wagmi';
 import { AnimatePresence } from 'framer-motion';
@@ -21,6 +22,7 @@ import { SetupStepSuccess } from './SetupStepSuccess';
 export function MerchantQuickSetup({ onComplete }: { onComplete?: (slug: string) => void }) {
   const { address, isConnected } = useAccount();
   const { registerMerchant: registerOnChain } = useRegisterMerchant();
+  const emitEvent = useEmitEvent();
   // Pre-flight ProofScore gate — contract requires MIN_MERCHANT = 5600
   const { score, canMerchant, isLoading: scoreLoading } = useProofScore(address);
 
@@ -153,7 +155,7 @@ export function MerchantQuickSetup({ onComplete }: { onComplete?: (slug: string)
       setCompletedSlug(slug);
       setStep(3);
       toast.success('Your store is live!');
-      onComplete?.(slug);
+      emitEvent('MERCHANT_ACTIVATED', undefined, 'quick-setup', true); onComplete?.(slug);
     } catch { toast.error('Something went wrong. Please try again.'); }
     finally { setIsSubmitting(false); }
   };

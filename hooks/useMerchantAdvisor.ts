@@ -16,11 +16,8 @@ export function useMerchantAdvisor() {
     setLoading(true);
     try {
       const res = await fetch('/api/merchant/advisor', { credentials: 'include' });
-      if (!res.ok) {
-        setAdvisor(null);
-        return;
-      }
-      const data = (await res.json()) as { advisor?: MerchantAdvisorResult };
+      if (!res.ok) { setAdvisor(null); return; }
+      const data = await res.json();
       setAdvisor(data.advisor ?? null);
     } catch {
       setAdvisor(null);
@@ -29,9 +26,7 @@ export function useMerchantAdvisor() {
     }
   }, []);
 
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
+  useEffect(() => { void refresh(); }, [refresh]);
 
   return { advisor, loading, refresh };
 }

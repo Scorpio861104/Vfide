@@ -30,14 +30,41 @@ export function DoneChapter({
     return { ...c, status: 'pending' as const };
   });
 
+  // Honest protection signal (audit Finding A): a vault is only "protected" once recovery is actually
+  // configured (guardians chosen AND recovery activated). A guardian-less vault is permanently unrecoverable
+  // if the key is lost, so the recap must never tell that user they are protected.
+  const recoveryConfigured =
+    completedChapters.includes('guardians') && completedChapters.includes('finalizeGuardians');
+
+  const description = recoveryConfigured
+    ? 'You are protected. Your vault is active and recovery is set up, so trusted guardians can help you regain access if you ever lose your wallet.'
+    : 'Your vault is active — but recovery is not set up yet. Until you add guardians, no one can help you regain access if you lose your wallet, so this is the most important thing left to do.';
+
   return (
     <ChapterShell
       chapter="done"
-      description="You are now protected. Your wallet and vault setup are active, and you can continue strengthening trust, recovery readiness, and payment capability over time."
+      description={description}
       onPrimary={onClose}
       primaryLabel="Enter Dashboard"
     >
       <div className="space-y-4">
+        {!recoveryConfigured && (
+          <div className="rounded-xl border border-amber-400/40 bg-amber-500/[0.08] p-3 text-sm">
+            <p className="font-semibold text-amber-200">Recovery is not set up</p>
+            <p className="mt-1 text-white/80">
+              VFIDE never holds your funds and has no master key — so if you lose access to your wallet and have
+              no guardians, your funds cannot be recovered by anyone. Adding guardians is the single most
+              important step to protect what you hold.
+            </p>
+            <Link
+              href="/guardians"
+              className="mt-2 inline-flex items-center justify-center rounded-lg bg-amber-500/20 px-3 py-1.5 text-sm font-semibold text-amber-100 hover:bg-amber-500/30"
+            >
+              Set up recovery now
+            </Link>
+          </div>
+        )}
+
         <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3 text-sm text-cyan-100">
           <p className="font-semibold text-white">VFIDE principles</p>
           <p className="mt-1 text-white/80">Protect people. Build trust. Enable freedom while keeping users in control of their assets.</p>

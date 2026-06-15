@@ -10,6 +10,7 @@ import { useVaultRecovery } from '@/hooks/useVaultRecovery';
 import { ACTIVE_VAULT_ABI, CONTRACT_ADDRESSES, VAULT_HUB_ABI, ZERO_ADDRESS, isConfiguredContractAddress } from '@/lib/contracts';
 import { CardBoundVaultAdminManagerABI } from '@/lib/abis';
 import { buildGuardianAttestationMessage, type GuardianAttestationPayload } from '@/lib/recovery/guardianAttestation';
+import { assessGuardianResilience } from '@/lib/vault/guardianResilience';
 
 import { AddGuardianForm } from './AddGuardianForm';
 
@@ -138,6 +139,8 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
   const recoveryThreshold = guardianCount < 2 ? 2 : Math.floor(guardianCount / 2) + 1;
   const guardianCountOnChain = Number(vaultGuardianCountRaw || 0);
   const guardianThreshold = Number(guardianThresholdRaw || 0);
+  // Wave 87: assess whether the config survives losing a guardian (death/disappearance/refusal).
+  const resilience = assessGuardianResilience(guardianCountOnChain, guardianThreshold);
   const guardianSetupComplete = !!guardianSetupCompleteRaw;
   const guardianSetupExpired = !!guardianSetupExpiredRaw;
   // guardianSetupTimeRemaining returns (remaining_seconds, isExpired, isComplete)
@@ -472,6 +475,15 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
                   </p>
                 </div>
               </div>
+              {resilience.warning && resilience.level === 'fragile' && (
+                <div className="mb-4 flex items-start gap-2 rounded-xl border border-amber-400/30 bg-amber-400/10 p-3">
+                  <AlertTriangle size={16} className="mt-0.5 shrink-0 text-amber-300" aria-hidden="true" />
+                  <div>
+                    <p className="text-sm font-semibold text-amber-200">No backup if a guardian is lost</p>
+                    <p className="mt-0.5 text-xs leading-relaxed text-amber-100/80">{resilience.warning}</p>
+                  </div>
+                </div>
+              )}
               {!guardianSetupComplete && (
                 <button
                   onClick={() => void handleCompleteGuardianSetup()}

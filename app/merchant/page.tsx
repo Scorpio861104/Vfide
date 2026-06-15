@@ -22,13 +22,15 @@ import { Banknote, Store, UserCog, GraduationCap, ArrowRight } from 'lucide-reac
 import { Footer } from '@/components/layout/Footer';
 import { HubSection, type HubLink } from '@/components/navigation/HubGrid';
 import { MerchantHQ } from '@/components/merchant/MerchantHQ';
+import { MerchantOpportunityRisk } from '@/components/merchant/MerchantOpportunityRisk';
+import { MerchantDiscoveryStanding } from '@/components/merchant/MerchantDiscoveryStanding';
 import { MerchantDashboard } from '@/components/merchant/MerchantDashboard';
 import { PaymentInterface } from '@/components/merchant/PaymentInterface';
 import { PaymentQR } from '@/components/merchant/PaymentQR';
 import { useMerchantHealth } from '@/hooks/useMerchantHealth';
+import { useMerchantHQ } from '@/hooks/useMerchantHQ';
 import { MerchantHeadquartersHero } from '@/components/merchant/MerchantHeadquartersHero';
 import { PlainHelp } from '@/components/common/PlainHelp';
-import { PowerReturnPanel } from '@/components/civilization/PowerReturnPanel';
 import { MerchantVerificationCard } from '@/components/merchant/MerchantVerificationCard';
 import {
   MerchantOperatingModel,
@@ -58,6 +60,8 @@ export default function MerchantPage() {
   void locale;
   const { isConnected } = useAccount();
   const m = useMerchantHealth();
+  const hq = useMerchantHQ(isConnected); // composite Merchant Health for a consistent hero band
+  const compositeHealth = hq.health ? { score: hq.health.score, band: hq.health.band } : null;
 
   return (
     <>
@@ -72,11 +76,7 @@ export default function MerchantPage() {
 
         <div className="relative z-10 mx-auto w-full max-w-6xl px-5 py-16 md:px-8 md:py-20">
           {/* Executive hero + status band */}
-          <MerchantHeadquartersHero m={m} />
-
-          <div className="mb-8">
-            <PowerReturnPanel institution="commerce" />
-          </div>
+          <MerchantHeadquartersHero m={m} compositeHealth={compositeHealth} />
 
           <PlainHelp
             title="Your business, in one place"
@@ -95,6 +95,16 @@ export default function MerchantPage() {
           {/* What commerce returns to the merchant (existing trust/fee command center) */}
           <div className="mb-16">
             <MerchantHQ />
+          </div>
+
+          {/* Business intelligence — Opportunity + Risk Center (Wave 75: surface the HQ intelligence) */}
+          <div className="mb-16">
+            <MerchantOpportunityRisk enabled={isConnected} />
+          </div>
+
+          {/* Discovery explainability — why you rank + how to improve (Wave 76: surface whyRanked) */}
+          <div className="mb-16">
+            <MerchantDiscoveryStanding enabled={isConnected} />
           </div>
 
           {/* The operating model — three institutions */}

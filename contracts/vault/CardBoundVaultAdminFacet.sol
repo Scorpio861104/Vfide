@@ -94,7 +94,11 @@ error CBV_NotAdmin();
 error CBV_NotGuardian();
 error CBV_Zero();
 error CBV_InvalidThreshold();
+/// @notice Threshold would equal guardian count — zero redundancy (Wave 93 / W87, DRAFT).
+error CBV_ZeroRedundancy();
 error CBV_Paused();
+/// @notice A guardian-initiated (threshold-approved) pause cannot be lifted by admin alone (Wave 86).
+error CBV_GuardianPauseActive();
 error CBV_TransferLimit();
 error CBV_UseProposeApply();
 error CBV_TransferFailed();
@@ -113,9 +117,17 @@ struct WalletRotation_F {
 
 abstract contract CBVStorageLayout {
     // ── constants / immutables (no storage slots) ──
-    // slot 0
+    // Wave 96 STORAGE-ALIGNMENT FIX (DRAFT — audit-gate): CardBoundVault inherits `ReentrancyGuard`
+    // (SharedInterfaces.sol), whose `uint256 private _status` occupies SLOT 0. This facet is executed by the
+    // vault via delegatecall, so its storage layout must match the vault's EXACTLY. Without this reservation
+    // every variable here sat one slot too low (admin read slot 1 instead of slot 2), so `onlyAdmin`/
+    // `onlyGuardian` in the facet read the wrong slot and reverted CBV_NotAdmin for the real owner. This
+    // placeholder reserves slot 0 to mirror ReentrancyGuard._status, realigning the entire layout.
+    // slot 0 — mirrors ReentrancyGuard._status in CardBoundVault (delegatecall storage alignment)
+    uint256 private __reentrancyGuardStatusSlot;
+    // slot 1
     ISeerAutonomousVault_F public seerAutonomous;
-    // slot 1-2 (bool + uint64 packed)
+    // slot 2 (bool + uint64 packed)
     bool public recoveryAdminUnseparated;
     uint64 public recoveryUnseparatedSince;
     // slot 3
@@ -128,8 +140,9 @@ abstract contract CBVStorageLayout {
     uint64 public walletEpoch;
     // slot 7
     uint256 public nextNonce;
-    // slot 8 (bool + uint64 packed)
+    // slot 8 (bool + bool + uint64 packed)
     bool public paused;
+    bool public pausedByGuardian;
     uint64 public pauseUntil;
     // slot 9
     uint256 public pauseNonce;
@@ -137,6 +150,10 @@ abstract contract CBVStorageLayout {
     mapping(address => mapping(uint256 => bool)) public pauseApprovalByGuardian;
     // slot 11
     mapping(uint256 => uint8) public pauseApprovalCount;
+    // slot 11b (Wave 86)
+    mapping(address => mapping(uint256 => bool)) public unpauseApprovalByGuardian;
+    // slot 11c (Wave 86)
+    mapping(uint256 => uint8) public unpauseApprovalCount;
     // slot 12
     mapping(address => bool) public isGuardian;
     // slot 13
@@ -290,6 +307,14 @@ contract CardBoundVaultAdminFacet is CBVStorageLayout {
 
     function setGuardianThreshold(uint8 threshold) external onlyAdmin {
         if (threshold == 0 || threshold > guardianCount) revert CBV_InvalidThreshold();
+        // ── Wave 93 / W87 (DRAFT — UNCOMPILED, contract-audit gate) ──
+        // Reject a zero-redundancy threshold once a real guardian set exists. threshold == guardianCount
+        // (e.g. 3-of-3) means losing ONE guardian — death, lost device, refusal — permanently locks
+        // recovery. Require at least one guardian of redundancy for any multi-guardian set. The
+        // single-guardian bootstrap (guardianCount < 2) is preserved so initial setup isn't bricked.
+        if (_guardianSetupComplete() && guardianCount >= 2 && threshold == guardianCount) {
+            revert CBV_ZeroRedundancy();
+        }
         guardianThreshold = threshold;
         emit GuardianThresholdSet(threshold);
     }
@@ -297,6 +322,11 @@ contract CardBoundVaultAdminFacet is CBVStorageLayout {
     // ── Trustee management ────────────────────────────────────────────────────
 
     function setTrustee(address guardian, bool trustee) external onlyAdmin {
+        // R-8 / Wave 86: once guardian setup is complete, trustee changes MUST go through the timelocked
+        // propose/apply path (parity with setGuardian). Trustee status confers recovery-initiation power, so
+        // an instant flip after setup would let a compromised admin grant it with no veto window. The
+        // AdminManager's PendingTrusteeChange uses the same 24h GUARDIAN_CHANGE_DELAY for this reason.
+        if (_guardianSetupComplete()) revert CBV_UseProposeApply();
         _applyTrusteeChange(guardian, trustee);
     }
 
@@ -385,6 +415,12 @@ contract CardBoundVaultAdminFacet is CBVStorageLayout {
     // ── Unpause ───────────────────────────────────────────────────────────────
 
     function unpause() external onlyAdmin {
+        // Wave 86: admin can lift their OWN pause, but NOT a guardian-initiated (threshold-approved) pause.
+        // In the stolen-phone scenario the thief holds the admin key; if admin could unpause freely, the
+        // owner's guardians could pause to stop a drain and the thief would just unpause and continue. A
+        // guardian pause is lifted only by guardian threshold (via the pause-nonce flow), by 7-day expiry,
+        // or by a completed recovery rotation.
+        if (pausedByGuardian) revert CBV_GuardianPauseActive();
         paused    = false;
         pauseUntil = 0;
         emit PauseSet(false, msg.sender);

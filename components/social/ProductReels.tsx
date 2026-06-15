@@ -11,27 +11,23 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { m, AnimatePresence } from 'framer-motion';
-import { Heart, MessageCircle, Share2, ShoppingCart, Shield, Music2, Bookmark, Volume2, VolumeX, Play } from 'lucide-react';
+import { m } from 'framer-motion';
+import { MessageCircle, Share2, ShoppingCart, Shield, Music2, Bookmark, Volume2, VolumeX, Play } from 'lucide-react';
 
 export interface ReelData {
   id: string;
   videoUrl: string;
   thumbnailUrl?: string;
-  creator: { address: string; name: string; avatar?: string; proofScore: number; followers: number };
+  creator: { address: string; name: string; avatar?: string; proofScore: number };
   product?: { id: string; name: string; price: number; currency: string; inStock: boolean };
   caption: string;
   soundName?: string;
-  likes: number;
-  comments: number;
-  shares: number;
   saved: boolean;
 }
 
 interface ProductReelProps {
   reel: ReelData;
   isActive: boolean;
-  onLike?: (id: string) => void;
   onBuy?: (productId: string) => void;
   onComment?: (id: string) => void;
   onShare?: (id: string) => void;
@@ -39,20 +35,11 @@ interface ProductReelProps {
   onSave?: (id: string) => void;
 }
 
-function formatCount(n: number): string {
-  if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
-  if (n >= 1000) return `${(n / 1000).toFixed(1)}K`;
-  return n.toString();
-}
-
-export function ProductReel({ reel, isActive, onLike, onBuy, onComment, onShare, onFollow, onSave }: ProductReelProps) {
+export function ProductReel({ reel, isActive, onBuy, onComment, onShare, onFollow, onSave }: ProductReelProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [liked, setLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(reel.likes);
   const [muted, setMuted] = useState(true);
   const [playing, setPlaying] = useState(false);
   const [saved, setSaved] = useState(reel.saved);
-  const [showHeart, setShowHeart] = useState(false);
 
   // Auto-play/pause based on visibility
   useEffect(() => {
@@ -66,16 +53,6 @@ export function ProductReel({ reel, isActive, onLike, onBuy, onComment, onShare,
       setPlaying(false);
     }
   }, [isActive]);
-
-  const handleDoubleTap = useCallback(() => {
-    if (!liked) {
-      setLiked(true);
-      setLikeCount(prev => prev + 1);
-      setShowHeart(true);
-      setTimeout(() => setShowHeart(false), 800);
-      onLike?.(reel.id);
-    }
-  }, [liked, reel.id, onLike]);
 
   const handleTap = useCallback(() => {
     if (!videoRef.current) return;
@@ -95,26 +72,10 @@ export function ProductReel({ reel, isActive, onLike, onBuy, onComment, onShare,
         loop muted={muted} playsInline
         className="absolute inset-0 w-full h-full object-cover"
         onClick={handleTap}
-        onDoubleClick={handleDoubleTap}
       />
 
       {/* Gradient overlays */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30 pointer-events-none" />
-
-      {/* Double-tap heart */}
-      <AnimatePresence>
-        {showHeart && (
-          <m.div
-            initial={{ scale: 0, opacity: 1 }}
-            animate={{ scale: 1.5, opacity: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.8 }}
-            className="absolute inset-0 flex items-center justify-center pointer-events-none"
-          >
-            <Heart size={80} fill="#EC4899" stroke="#EC4899" />
-          </m.div>
-        )}
-      </AnimatePresence>
 
       {/* Pause icon */}
       {!playing && (
@@ -134,23 +95,14 @@ export function ProductReel({ reel, isActive, onLike, onBuy, onComment, onShare,
           <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-accent flex items-center justify-center text-white text-[10px] font-bold border-2 border-black">+</div>
         </button>
 
-        {/* Like */}
-        <button onClick={() => { setLiked(!liked); setLikeCount(p => liked ? p - 1 : p + 1); onLike?.(reel.id); }}
-          className="flex flex-col items-center gap-0.5">
-          <Heart size={28} fill={liked ? '#EC4899' : 'none'} stroke={liked ? '#EC4899' : 'white'} strokeWidth={2} />
-          <span className="text-white text-[10px] font-bold">{formatCount(likeCount)}</span>
-        </button>
-
         {/* Comment */}
-        <button onClick={() => onComment?.(reel.id)} className="flex flex-col items-center gap-0.5">
+        <button onClick={() => onComment?.(reel.id)} className="flex flex-col items-center gap-0.5" aria-label="Comment">
           <MessageCircle size={28} stroke="white" strokeWidth={2} />
-          <span className="text-white text-[10px] font-bold">{formatCount(reel.comments)}</span>
         </button>
 
         {/* Share */}
-        <button onClick={() => onShare?.(reel.id)} className="flex flex-col items-center gap-0.5">
+        <button onClick={() => onShare?.(reel.id)} className="flex flex-col items-center gap-0.5" aria-label="Share">
           <Share2 size={24} stroke="white" strokeWidth={2} />
-          <span className="text-white text-[10px] font-bold">{formatCount(reel.shares)}</span>
         </button>
 
         {/* Save */}

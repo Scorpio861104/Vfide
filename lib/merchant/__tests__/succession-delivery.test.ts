@@ -12,7 +12,7 @@ describe('Merchant business transfer — record reassignment (Phase 1)', () => {
 
     const results = await reassignBusinessRecords(client, '0xFROM', '0xTO');
     expect(results).toHaveLength(TRANSFERABLE_MERCHANT_TABLES.length);
-    // Every call moves from->to (lowercased) and targets an allow-listed table.
+    // Every call moves from→to (lowercased) and targets an allow-listed table.
     for (const c of calls) {
       expect(c.params).toEqual(['0xto', '0xfrom']);
       expect(TRANSFERABLE_MERCHANT_TABLES.some((t) => c.sql.includes(`UPDATE ${t} `))).toBe(true);
@@ -37,19 +37,19 @@ describe('Merchant business transfer — record reassignment (Phase 1)', () => {
 describe('Delivery reliability (Phase 3)', () => {
   const base: DeliveryStats = { shipped: 0, deliveredConfirmed: 0, deliveredUnconfirmed: 0, notReceived: 0, returned: 0 };
 
-  it('too little history -> unproven, no score', () => {
+  it('too little history → unproven, no score', () => {
     const r = computeDeliveryReliability({ ...base, shipped: 1 });
     expect(r.reliability).toBe('unproven');
     expect(r.score).toBeNull();
   });
 
-  it('strong confirmed-delivery record -> reliable, high score', () => {
+  it('strong confirmed-delivery record → reliable, high score', () => {
     const r = computeDeliveryReliability({ ...base, deliveredConfirmed: 40, shipped: 2 });
     expect(r.reliability).toBe('reliable');
     expect(r.score).toBeGreaterThanOrEqual(80);
   });
 
-  it('high not-received rate -> concerning', () => {
+  it('high not-received rate → concerning', () => {
     const r = computeDeliveryReliability({ ...base, deliveredConfirmed: 10, notReceived: 6 });
     expect(r.reliability).toBe('concerning');
     expect(r.notReceivedRate).toBeGreaterThanOrEqual(0.15);
@@ -61,13 +61,14 @@ describe('Delivery reliability (Phase 3)', () => {
     expect((confirmed.score ?? 0)).toBeGreaterThan(unconfirmed.score ?? 0);
   });
 
+  // Wiring proof (Wave 60): a 'concerning' delivery record is the exact condition market-standing
+  // converts into an extra scam signal. This locks in that the delivery→marketplace-trust edge fires
+  // only when it should (concerning), and never for a clean or unproven record.
   it('only a concerning record trips the marketplace-trust scam signal', () => {
     const concerning = computeDeliveryReliability({ ...base, deliveredConfirmed: 10, notReceived: 6 });
     const clean = computeDeliveryReliability({ ...base, deliveredConfirmed: 40, shipped: 2 });
     const unproven = computeDeliveryReliability({ ...base, shipped: 1 });
-    const tripsSignal = (result: ReturnType<typeof computeDeliveryReliability>) =>
-      result.reliability === 'concerning' ? 1 : 0;
-
+    const tripsSignal = (r: ReturnType<typeof computeDeliveryReliability>) => (r.reliability === 'concerning' ? 1 : 0);
     expect(tripsSignal(concerning)).toBe(1);
     expect(tripsSignal(clean)).toBe(0);
     expect(tripsSignal(unproven)).toBe(0);

@@ -33,6 +33,8 @@
  * happen when individual pieces change. No mass refetch needed.
  */
 
+import { useEmitEvent } from '@/lib/events/EventProvider';
+import type { VfideEventType } from '@/lib/events/eventTypes';
 import { useCallback, useMemo } from 'react';
 import {
   useAccount,
@@ -171,6 +173,7 @@ export function useInheritance(): InheritanceState & {
   const { isConnected } = useAccount();
   const publicClient = usePublicClient();
   const { writeContractAsync, isPending: isWritePending } = useWriteContract();
+  const emitEvent = useEmitEvent();
 
   // ── 1. Get the manager address from the vault. ────────────────────
   const { data: managerAddressRaw } = useReadContract({
@@ -343,6 +346,7 @@ export function useInheritance(): InheritanceState & {
     async <T extends readonly unknown[]>(
       functionName: string,
       args?: T,
+      event?: VfideEventType,
     ): Promise<Hex> => {
       if (!vault) throw new Error('Vault not deployed');
       const hash = await writeContractAsync({
@@ -354,9 +358,12 @@ export function useInheritance(): InheritanceState & {
       if (publicClient) {
         await publicClient.waitForTransactionReceipt({ hash });
       }
+      // Coordination event (Wave 49) — emitted only after the tx confirms. Durable so it reaches the
+      // timeline/Nexus across refresh; the on-chain tx remains the authoritative record.
+      if (event) emitEvent(event, { txHash: hash }, 'useInheritance', true);
       return hash;
     },
-    [vault, writeContractAsync, publicClient],
+    [vault, writeContractAsync, publicClient, emitEvent],
   );
 
   return {
@@ -376,11 +383,11 @@ export function useInheritance(): InheritanceState & {
 
     proposeConfig: (guardians, commitments) =>
       withVault('proposeInheritanceConfig', [guardians, commitments]),
-    confirmConfig: () => withVault('confirmInheritanceConfig'),
+    confirmConfig: () => withVault('confirmInheritanceConfig', undefined, 'CONTINUITY_PLAN_CREATED'),
     cancelConfigChange: () => withVault('cancelInheritanceConfigChange'),
     clearAllHeirs: () => withVault('clearAllHeirs'),
     setProofOfLife: (polWallet) => withVault('setProofOfLifeWallet', [polWallet]),
-    initiateClaim: (reasonH) => withVault('initiateInheritanceClaim', [reasonH]),
+    initiateClaim: (reasonH) => withVault('initiateInheritanceClaim', [reasonH], 'BUSINESS_TRANSFER_INITIATED'),
     vetoClaim: () => withVault('vetoInheritanceClaim'),
     ownerOverride: () => withVault('ownerOverrideClaim'),
     claimShare: (secret, basisPoints) => withVault('claimHeirShare', [secret, basisPoints]),

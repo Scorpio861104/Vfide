@@ -49,6 +49,7 @@ import { usePublicClient, useReadContract, useReadContracts, useWriteContract } 
 import { type Address } from 'viem';
 import { ACTIVE_VAULT_ABI, ZERO_ADDRESS } from '@/lib/contracts';
 import { CardBoundVaultAdminManagerABI, CardBoundVaultPaymentQueueManagerABI } from '@/lib/abis';
+import CardBoundVaultInheritanceManagerABI from '@/lib/abis/CardBoundVaultInheritanceManager.json';
 
 /**
  * Identifier for each pipeline. The UI uses this to decide which apply/
@@ -62,6 +63,7 @@ export type PendingChangeId =
   | 'nativeRescue'
   | 'erc20Rescue'
   | 'tokenApproval'
+  | 'inheritance'
   | 'largePaymentThreshold';
 
 export interface PendingChange {
@@ -115,6 +117,16 @@ export function usePendingChanges(vaultAddress: Address | undefined) {
   });
   const paymentQueueManager = (pqmRaw as Address | undefined) ?? undefined;
 
+  // Wave 87: also read the inheritance manager so a pending heir/successor change (a slow-takeover vector)
+  // shows up in the SAME aggregate view as guardian/trustee/limit changes — not only on inheritance pages.
+  const { data: imRaw } = useReadContract({
+    address: vaultAddress,
+    abi: ACTIVE_VAULT_ABI,
+    functionName: 'inheritanceManager',
+    query: { enabled: !!vaultAddress },
+  });
+  const inheritanceManager = (imRaw as Address | undefined) ?? undefined;
+
   // ─────────────────────────────────────────────────────────────────
   // Step 2: Batch-read all pending state across both sub-managers.
   // useReadContracts fans out parallel calls and returns an array of
@@ -138,6 +150,13 @@ export function usePendingChanges(vaultAddress: Address | undefined) {
       ]
     : [];
 
+  const imCalls = inheritanceManager
+    ? [
+        { address: inheritanceManager, abi: CardBoundVaultInheritanceManagerABI as any, functionName: 'pendingHeirConfigEffectiveAt' },
+        { address: inheritanceManager, abi: CardBoundVaultInheritanceManagerABI as any, functionName: 'pendingConfigVersion' },
+      ]
+    : [];
+
   const { data: adminReads, refetch: refetchAdmin } = useReadContracts({
     contracts: adminCalls,
     query: { enabled: !!adminManager && adminManager !== ZERO_ADDRESS },
@@ -145,6 +164,10 @@ export function usePendingChanges(vaultAddress: Address | undefined) {
   const { data: pqmReads, refetch: refetchPqm } = useReadContracts({
     contracts: pqmCalls,
     query: { enabled: !!paymentQueueManager && paymentQueueManager !== ZERO_ADDRESS },
+  });
+  const { data: imReads, refetch: refetchIm } = useReadContracts({
+    contracts: imCalls,
+    query: { enabled: !!inheritanceManager && inheritanceManager !== ZERO_ADDRESS },
   });
 
   const now = Math.floor(Date.now() / 1000);
@@ -265,11 +288,29 @@ export function usePendingChanges(vaultAddress: Address | undefined) {
     };
   });
 
-  // ─────────────────────────────────────────────────────────────────
-  // Step 4: Apply/cancel actions per pipeline id.
-  //
-  // The write targets the VAULT, not the sub-manager directly. The vault
-  // enforces onlyAdmin and delegates to the appropriate sub-manager.
+  // Wave 87: pending heir/successor (inheritance) change — surfaced here so a slow-takeover heir swap is
+  // visible in the owner's aggregate pending view, not only buried on the inheritance pages. The reads are
+  // scalars (effectiveAt, version), so this is decoded directly rather than via pushIfQueued (array shape).
+  {
+    const effRaw = imReads?.[0]?.result;
+    const verRaw = imReads?.[1]?.result;
+    const effectiveAt = typeof effRaw === 'bigint' ? Number(effRaw) : 0;
+    if (effectiveAt > 0) {
+      const version = typeof verRaw === 'bigint' ? verRaw.toString() : '?';
+      changes.push({
+        id: 'inheritance',
+        label: 'Inheritance / successor change',
+        summary: 'A change to who inherits your vault is pending',
+        details: [
+          `Pending config version: ${version}`,
+          'If you did not request this, cancel it on the inheritance page before it takes effect.',
+        ],
+        effectiveAt,
+        canApply: effectiveAt > 0 && now >= effectiveAt,
+        canCancel: true,
+      });
+    }
+  }
   // This is the contract's design pattern; we mirror it.
   // ─────────────────────────────────────────────────────────────────
   const apply = useCallback(
@@ -285,6 +326,10 @@ export function usePendingChanges(vaultAddress: Address | undefined) {
           case 'erc20Rescue': return 'applyRescueERC20';
           case 'tokenApproval': return 'applyTokenApproval';
           case 'largePaymentThreshold': return 'applyLargePaymentThreshold';
+          // Inheritance changes are applied/cancelled on the dedicated inheritance page (different manager
+          // + commitment flow); this aggregate view surfaces them but defers management there.
+          case 'inheritance': throw new Error('Manage inheritance changes on the inheritance page.');
+          default: throw new Error('Unknown pending change');
         }
       })();
       const hash = await writeContractAsync({
@@ -307,6 +352,9 @@ export function usePendingChanges(vaultAddress: Address | undefined) {
       if (!vaultAddress) throw new Error('No vault');
       if (id === 'largePaymentThreshold') {
         throw new Error('Large payment threshold change does not support cancellation.');
+      }
+      if (id === 'inheritance') {
+        throw new Error('Cancel a pending inheritance change on the inheritance page.');
       }
       const fnName = (() => {
         switch (id) {
@@ -341,6 +389,6 @@ export function usePendingChanges(vaultAddress: Address | undefined) {
     cancel,
     isWritePending,
     writeError,
-    refetch: () => Promise.all([refetchAdmin(), refetchPqm()]),
+    refetch: () => Promise.all([refetchAdmin(), refetchPqm(), refetchIm()]),
   };
 }

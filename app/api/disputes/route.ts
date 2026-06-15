@@ -30,19 +30,10 @@ function authAddr(user: JWTPayload): string | null {
 }
 
 interface DisputeRow {
-  id: string;
-  opener_address: string;
-  respondent_address: string;
-  tx_hash: string | null;
-  order_id: string | null;
-  reason: string;
-  detail: string | null;
-  status: string;
-  merchant_response: string | null;
-  resolution_note: string | null;
-  created_at: string;
-  updated_at: string;
-  resolved_at: string | null;
+  id: string; opener_address: string; respondent_address: string; tx_hash: string | null;
+  order_id: string | null; reason: string; detail: string | null; status: string;
+  merchant_response: string | null; resolution_note: string | null;
+  created_at: string; updated_at: string; resolved_at: string | null;
 }
 
 async function getHandler(request: NextRequest, user: JWTPayload): Promise<Response> {
@@ -77,11 +68,7 @@ const OpenSchema = z.object({
   tx_hash: z.string().max(66).optional(),
   order_id: z.string().max(120).optional(),
 });
-const RespondSchema = z.object({
-  action: z.literal('respond'),
-  id: z.string().uuid(),
-  merchant_response: z.string().min(1).max(2000),
-});
+const RespondSchema = z.object({ action: z.literal('respond'), id: z.string().uuid(), merchant_response: z.string().min(1).max(2000) });
 const ResolveSchema = z.object({
   action: z.literal('resolve'),
   id: z.string().uuid(),
@@ -107,9 +94,7 @@ async function postHandler(request: NextRequest, user: JWTPayload): Promise<Resp
   try {
     if (body.action === 'open') {
       const respondent = body.respondent_address.toLowerCase();
-      if (respondent === addr) {
-        return NextResponse.json({ error: 'You cannot open a dispute against yourself' }, { status: 400 });
-      }
+      if (respondent === addr) return NextResponse.json({ error: 'You cannot open a dispute against yourself' }, { status: 400 });
       const row = (
         await query<DisputeRow>(
           `INSERT INTO disputes (opener_address, respondent_address, tx_hash, order_id, reason, detail, status)
@@ -118,10 +103,8 @@ async function postHandler(request: NextRequest, user: JWTPayload): Promise<Resp
         )
       ).rows[0];
       // Notify both parties' ecosystem feeds.
-      if (row) {
-        await emitServerEvent(addr, 'DISPUTE_OPENED', { id: row.id, role: 'opener' }, 'api/disputes');
-        await emitServerEvent(respondent, 'DISPUTE_OPENED', { id: row.id, role: 'respondent' }, 'api/disputes');
-      }
+      await emitServerEvent(addr, 'DISPUTE_OPENED', { id: row?.id, role: 'opener' }, 'api/disputes');
+      await emitServerEvent(respondent, 'DISPUTE_OPENED', { id: row?.id, role: 'respondent' }, 'api/disputes');
       return NextResponse.json({ dispute: row }, { status: 201 });
     }
 
@@ -149,15 +132,10 @@ async function postHandler(request: NextRequest, user: JWTPayload): Promise<Resp
     if (body.action === 'withdraw') {
       if (!isOpener) return NextResponse.json({ error: 'Only the opener can withdraw' }, { status: 403 });
       const row = (
-        await query<DisputeRow>(
-          `UPDATE disputes SET status = 'withdrawn', updated_at = NOW(), resolved_at = NOW() WHERE id = $1 RETURNING *`,
-          [body.id],
-        )
+        await query<DisputeRow>(`UPDATE disputes SET status = 'withdrawn', updated_at = NOW(), resolved_at = NOW() WHERE id = $1 RETURNING *`, [body.id])
       ).rows[0];
-      if (row) {
-        await emitServerEvent(addr, 'DISPUTE_RESOLVED', { id: body.id, outcome: 'withdrawn' }, 'api/disputes');
-        await emitServerEvent(existing.respondent_address, 'DISPUTE_RESOLVED', { id: body.id, outcome: 'withdrawn' }, 'api/disputes');
-      }
+      await emitServerEvent(addr, 'DISPUTE_RESOLVED', { id: body.id, outcome: 'withdrawn' }, 'api/disputes');
+      await emitServerEvent(existing.respondent_address, 'DISPUTE_RESOLVED', { id: body.id, outcome: 'withdrawn' }, 'api/disputes');
       return NextResponse.json({ dispute: row });
     }
 
@@ -169,10 +147,8 @@ async function postHandler(request: NextRequest, user: JWTPayload): Promise<Resp
         [body.id, statusMap[body.outcome], body.resolution_note ?? null],
       )
     ).rows[0];
-    if (row) {
-      await emitServerEvent(existing.opener_address, 'DISPUTE_RESOLVED', { id: body.id, outcome: body.outcome }, 'api/disputes');
-      await emitServerEvent(existing.respondent_address, 'DISPUTE_RESOLVED', { id: body.id, outcome: body.outcome }, 'api/disputes');
-    }
+    await emitServerEvent(existing.opener_address, 'DISPUTE_RESOLVED', { id: body.id, outcome: body.outcome }, 'api/disputes');
+    await emitServerEvent(existing.respondent_address, 'DISPUTE_RESOLVED', { id: body.id, outcome: body.outcome }, 'api/disputes');
     return NextResponse.json({ dispute: row });
   } catch (err) {
     logger.error('POST /api/disputes failed', { error: err instanceof Error ? err.message : String(err) });

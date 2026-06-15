@@ -11,6 +11,7 @@ import { FilterContent } from './components/FilterContent';
 import { ProductGridCard } from './components/ProductGridCard';
 import { ProductListCard } from './components/ProductListCard';
 import { useLocale } from '@/lib/locale/LocaleProvider';
+import { buildMerchantRank, orderProductsByMerchantRank } from '@/lib/marketplace/discoveryOrdering';
 
 export default function MarketplacePage() {
   const { locale } = useLocale();
@@ -25,6 +26,11 @@ export default function MarketplacePage() {
   const [degraded, setDegraded] = useState(false);
   const [filters, setFilters] = useState({ category: '', minPrice: '', maxPrice: '', sort: 'relevance' });
   const [wishlist, setWishlist] = useState<Set<string>>(new Set());
+  // Fair-ranking signal from the certified discovery engine (/api/discovery): a merchantAddress → rank map,
+  // where a lower rank index = higher fair standing. Discovery ranks RELEVANCE-FIRST with NO wealth/holdings/
+  // paid input (audited in Commerce Phase 5). We use it to order the product grid by merchant standing when the
+  // user sorts by relevance — activating the fair ranking buyers should see, instead of an arbitrary product order.
+  const [merchantRank, setMerchantRank] = useState<Map<string, number>>(new Map());
 
   useEffect(() => {
     const controller = new AbortController();
@@ -55,6 +61,20 @@ export default function MarketplacePage() {
       })
       .finally(() => setLoading(false));
 
+    // In parallel, fetch the fair discovery ranking (merchant standing). Best-effort: if it fails or is
+    // unavailable, the grid simply falls back to its default order — discovery only ever *re-orders*, never
+    // gates, so a discovery outage can never hide products.
+    const discoveryParams = new URLSearchParams();
+    if (query.trim()) discoveryParams.set('q', query.trim());
+    fetch(`/api/discovery?${discoveryParams.toString()}`, { signal: controller.signal })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        setMerchantRank(buildMerchantRank(d?.results));
+      })
+      .catch(() => {
+        /* discovery is advisory ordering only — ignore failures, keep default order */
+      });
+
     return () => controller.abort();
   }, [query]);
 
@@ -77,8 +97,15 @@ export default function MarketplacePage() {
     if (filters.maxPrice) result = result.filter((p: any) => parseFloat(p.price) <= parseFloat(filters.maxPrice));
     if (filters.sort === 'price-asc') result = [...result].sort((a: any, b: any) => parseFloat(a.price) - parseFloat(b.price));
     if (filters.sort === 'price-desc') result = [...result].sort((a: any, b: any) => parseFloat(b.price) - parseFloat(a.price));
+    // Relevance (the default): order by the certified fair discovery ranking of each product's merchant. Lower
+    // rank index = higher fair standing; products whose merchant isn't ranked fall to the end. Stable sort keeps
+    // the server's within-merchant order. If discovery returned nothing (outage/empty), this is a no-op and the
+    // grid keeps its default order — discovery re-orders, never hides.
+    if (filters.sort === 'relevance') {
+      result = orderProductsByMerchantRank(result, merchantRank);
+    }
     return result;
-  }, [products, filters]);
+  }, [products, filters, merchantRank]);
 
   return (
     <>

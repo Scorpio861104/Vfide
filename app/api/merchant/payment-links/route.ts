@@ -146,6 +146,7 @@ async function postHandler(request: NextRequest, user: JWTPayload) {
         body.expires_at ?? null,
       ],
     );
+    // Durable ecosystem event — coordinates timeline/Nexus across refresh & devices (Wave 47).
     await emitServerEvent(authAddress, 'INVOICE_CREATED', { link_id: linkId }, 'api/merchant/payment-links');
     return NextResponse.json({ link: result.rows[0] }, { status: 201 });
   } catch (error) {

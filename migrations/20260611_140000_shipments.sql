@@ -1,4 +1,16 @@
 -- Migration: 20260611_140000_shipments.sql
+--
+-- Purpose:
+--   DELIVERY VERIFICATION (Phase 3) — the largest remaining marketplace-fraud surface. A shipment
+--   RECORD + CONFIRMATION system: the merchant marks an order shipped (with carrier + tracking), and
+--   delivery is confirmed (by the buyer, or marked delivered by the merchant and confirmable/disputable
+--   by the buyer). Feeds Marketplace Trust, the Fraud engine, and merchant delivery reliability.
+--
+--   HONEST SCOPE: this is a delivery-record/confirmation layer, NOT a live carrier (FedEx/UPS) API
+--   integration — that needs external credentials this system doesn't have. The carrier + tracking are
+--   recorded for evidence; a carrier-adapter can later verify tracking automatically. Until then,
+--   "delivered" is a buyer/merchant confirmation, and disputes capture the disagreement (feeding the
+--   existing disputes engine). Non-custodial: this never moves funds.
 
 CREATE TABLE IF NOT EXISTS shipments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -8,10 +20,10 @@ CREATE TABLE IF NOT EXISTS shipments (
   carrier TEXT CHECK (carrier IS NULL OR char_length(carrier) <= 60),
   tracking_number TEXT CHECK (tracking_number IS NULL OR char_length(tracking_number) <= 120),
   status TEXT NOT NULL DEFAULT 'shipped' CHECK (status IN (
-    'shipped',
-    'delivered_confirmed',
-    'delivered_unconfirmed',
-    'not_received',
+    'shipped',              -- merchant marked shipped
+    'delivered_confirmed',  -- buyer confirmed receipt (strongest signal)
+    'delivered_unconfirmed',-- merchant marked delivered, buyer hasn't confirmed
+    'not_received',         -- buyer reports non-delivery (feeds disputes)
     'returned'
   )),
   shipped_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -39,6 +51,7 @@ ALTER TABLE shipments ENABLE ROW LEVEL SECURITY;
 
 DO $$
 BEGIN
+  -- Both parties to a shipment can read it.
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'shipments' AND policyname = 'shipments_party_select') THEN
     EXECUTE $p$
       CREATE POLICY shipments_party_select ON shipments
@@ -48,7 +61,6 @@ BEGIN
       )
     $p$;
   END IF;
-
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'shipments' AND policyname = 'shipments_party_write') THEN
     EXECUTE $p$
       CREATE POLICY shipments_party_write ON shipments

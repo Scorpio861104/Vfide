@@ -42,6 +42,14 @@ export interface MerchantHealth {
   volume: number;
   volumeLabel: string;
   health: MerchantHealthState;
+  /**
+   * De-collided display label (Wave 84 civilization audit). The crude on-chain state measures account
+   * ACTIVITY (has the merchant transacted?), which is a different thing from the composite Merchant Health
+   * score. To avoid two "health" vocabularies contradicting each other across surfaces, this label reads as
+   * account status ("Active" / "Getting started") rather than reusing the composite's words
+   * ("healthy" / "thriving"). Surfaces that show a single health figure should prefer the composite.
+   */
+  healthLabel: string;
   /** Part 1 - activity rows. */
   activity: HealthRow[];
   /** Part 2 - readiness chips. */
@@ -82,6 +90,17 @@ export function useMerchantHealth(): MerchantHealth {
   else if (isSuspended) health = 'At Risk';
   else if (txCount > 0) health = 'Healthy';
   else health = 'Growing';
+
+  // De-collided account-status label (Wave 84) — distinct from the composite Merchant Health vocabulary
+  // so the two never appear to contradict each other on different surfaces.
+  const HEALTH_LABELS: Record<MerchantHealthState, string> = {
+    Unknown: '—',
+    Inactive: 'Not active',
+    'At Risk': 'Attention needed',
+    Healthy: 'Active',
+    Growing: 'Getting started',
+  };
+  const healthLabel = HEALTH_LABELS[health];
 
   const continuityProtected = c.readiness === 'protected';
 
@@ -137,6 +156,7 @@ export function useMerchantHealth(): MerchantHealth {
     volume,
     volumeLabel,
     health,
+    healthLabel,
     activity,
     readiness,
     trust,

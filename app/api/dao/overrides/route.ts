@@ -1,11 +1,11 @@
 /**
- * DAO Override Ledger API (Phase 2 - "the DAO governs the Seer; both must be auditable").
+ * DAO Override Ledger API (Phase 2 — "the DAO governs the Seer; both must be auditable").
  *
- * GET  - PUBLIC. The full override ledger, newest first, optionally filtered by type/subject. Anyone
+ * GET  — PUBLIC. The full override ledger, newest first, optionally filtered by type/subject. Anyone
  *        can audit the DAO. This is the transparency requirement made literal.
- * POST - ADMIN/GOVERNANCE ONLY (requireAdmin, on-chain verified, fail-closed). Records that the DAO
+ * POST — ADMIN/GOVERNANCE ONLY (requireAdmin, on-chain verified, fail-closed). Records that the DAO
  *        overrode a Seer decision, with the original decision, the override, the reason, and the
- *        governing proposal. Append-only - there is no edit/delete path.
+ *        governing proposal. Append-only — there is no edit/delete path.
  *
  * This ledger does NOT grant override authority (that comes from on-chain governance). It records and
  * surfaces those decisions. Every override also lands in the central audit_events log for
@@ -28,18 +28,10 @@ const OVERRIDE_TYPES = [
 ] as const;
 
 interface LedgerRow {
-  id: string;
-  override_type: string;
-  subject_identity: string | null;
-  original_decision: string;
-  override_decision: string;
-  reason: string;
-  proposal_ref: string | null;
-  votes_for: number | null;
-  votes_against: number | null;
-  recorded_by: string;
-  impact: string | null;
-  created_at: string;
+  id: string; override_type: string; subject_identity: string | null;
+  original_decision: string; override_decision: string; reason: string;
+  proposal_ref: string | null; votes_for: number | null; votes_against: number | null;
+  recorded_by: string; impact: string | null; created_at: string;
 }
 
 async function getHandler(request: NextRequest): Promise<Response> {
@@ -50,16 +42,8 @@ async function getHandler(request: NextRequest): Promise<Response> {
     const subject = request.nextUrl.searchParams.get('subject')?.trim().toLowerCase();
     const where: string[] = [];
     const params: (string | number)[] = [];
-
-    if (type && (OVERRIDE_TYPES as readonly string[]).includes(type)) {
-      params.push(type);
-      where.push(`override_type = $${params.length}`);
-    }
-    if (subject) {
-      params.push(subject);
-      where.push(`lower(subject_identity) = $${params.length}`);
-    }
-
+    if (type && (OVERRIDE_TYPES as readonly string[]).includes(type)) { params.push(type); where.push(`override_type = $${params.length}`); }
+    if (subject) { params.push(subject); where.push(`lower(subject_identity) = $${params.length}`); }
     const rows = (
       await query<LedgerRow>(
         `SELECT * FROM dao_override_ledger
@@ -99,7 +83,7 @@ async function postHandler(request: NextRequest): Promise<Response> {
   const rl = await withRateLimit(request, 'write');
   if (rl) return rl;
 
-  // Admin/governance only - on-chain verified, fail-closed.
+  // Admin/governance only — on-chain verified, fail-closed.
   const admin = await requireAdmin(request);
   if (admin instanceof NextResponse) return admin;
   const recordedBy = admin.user.address.toLowerCase();
@@ -119,16 +103,10 @@ async function postHandler(request: NextRequest): Promise<Response> {
             proposal_ref, votes_for, votes_against, recorded_by, impact)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
         [
-          body.override_type,
-          body.subject_identity?.toLowerCase() ?? null,
-          body.original_decision,
-          body.override_decision,
-          body.reason,
-          body.proposal_ref ?? null,
-          body.votes_for ?? null,
-          body.votes_against ?? null,
-          recordedBy,
-          body.impact ?? null,
+          body.override_type, body.subject_identity?.toLowerCase() ?? null,
+          body.original_decision, body.override_decision, body.reason,
+          body.proposal_ref ?? null, body.votes_for ?? null, body.votes_against ?? null,
+          recordedBy, body.impact ?? null,
         ],
       )
     ).rows[0];

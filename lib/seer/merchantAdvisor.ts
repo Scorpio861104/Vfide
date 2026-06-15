@@ -61,88 +61,33 @@ export function computeMerchantAdvisor(d: MerchantAdvisorInput): MerchantAdvisor
   // ── Revenue trend (only with enough prior history) ──
   const revChange = pctChange(d.revenueLast30, d.revenuePrev30);
   if (!insufficientData && revChange !== null) {
-    if (revChange >= 15) {
-      signals.push({
-        id: 'revenue-up',
-        severity: 'good',
-        title: 'Sales are growing',
-        detail: `Revenue is up ${Math.round(revChange)}% vs the previous 30 days. Keep doing what's working.`,
-      });
-    } else if (revChange <= -25) {
-      signals.push({
-        id: 'revenue-down',
-        severity: 'concern',
-        title: 'Sales are slowing',
-        detail: `Revenue is down ${Math.round(Math.abs(revChange))}% vs the previous 30 days. Consider a promotion or reaching out to past customers.`,
-      });
-    } else if (revChange <= -10) {
-      signals.push({
-        id: 'revenue-soft',
-        severity: 'watch',
-        title: 'Sales dipped a little',
-        detail: `Revenue is down ${Math.round(Math.abs(revChange))}% vs the previous 30 days — worth keeping an eye on.`,
-      });
-    }
+    if (revChange >= 15) signals.push({ id: 'revenue-up', severity: 'good', title: 'Sales are growing', detail: `Revenue is up ${Math.round(revChange)}% vs the previous 30 days. Keep doing what's working.` });
+    else if (revChange <= -25) signals.push({ id: 'revenue-down', severity: 'concern', title: 'Sales are slowing', detail: `Revenue is down ${Math.round(Math.abs(revChange))}% vs the previous 30 days. Consider a promotion or reaching out to past customers.` });
+    else if (revChange <= -10) signals.push({ id: 'revenue-soft', severity: 'watch', title: 'Sales dipped a little', detail: `Revenue is down ${Math.round(Math.abs(revChange))}% vs the previous 30 days — worth keeping an eye on.` });
   }
 
   // ── Customer retention ──
   if (!insufficientData && d.distinctCustomers90 >= 5) {
     const repeatRate = (d.repeatCustomers90 / d.distinctCustomers90) * 100;
-    if (repeatRate >= 40) {
-      signals.push({
-        id: 'retention-strong',
-        severity: 'good',
-        title: 'Customers come back',
-        detail: `${Math.round(repeatRate)}% of your customers have bought more than once — a strong sign.`,
-      });
-    } else if (repeatRate < 15) {
-      signals.push({
-        id: 'retention-low',
-        severity: 'watch',
-        title: 'Few repeat customers',
-        detail: `Only ${Math.round(repeatRate)}% of customers buy again. A loyalty reward or follow-up could help bring them back.`,
-      });
-    }
+    if (repeatRate >= 40) signals.push({ id: 'retention-strong', severity: 'good', title: 'Customers come back', detail: `${Math.round(repeatRate)}% of your customers have bought more than once — a strong sign.` });
+    else if (repeatRate < 15) signals.push({ id: 'retention-low', severity: 'watch', title: 'Few repeat customers', detail: `Only ${Math.round(repeatRate)}% of customers buy again. A loyalty reward or follow-up could help bring them back.` });
   }
 
   // ── Refund concern ──
   if (d.orders90 >= 10) {
     const refundRate = (d.refundsGranted90 / d.orders90) * 100;
-    if (refundRate >= 15) {
-      signals.push({
-        id: 'refunds-high',
-        severity: 'concern',
-        title: 'Refunds are high',
-        detail: `${Math.round(refundRate)}% of recent orders were refunded. It's worth checking product descriptions, quality, or delivery.`,
-      });
-    } else if (refundRate >= 8) {
-      signals.push({
-        id: 'refunds-watch',
-        severity: 'watch',
-        title: 'Refunds worth watching',
-        detail: `${Math.round(refundRate)}% of recent orders were refunded.`,
-      });
-    }
+    if (refundRate >= 15) signals.push({ id: 'refunds-high', severity: 'concern', title: 'Refunds are high', detail: `${Math.round(refundRate)}% of recent orders were refunded. It's worth checking product descriptions, quality, or delivery.` });
+    else if (refundRate >= 8) signals.push({ id: 'refunds-watch', severity: 'watch', title: 'Refunds worth watching', detail: `${Math.round(refundRate)}% of recent orders were refunded.` });
   }
 
   // ── Low inventory ──
   if (d.lowStockProducts > 0) {
-    signals.push({
-      id: 'low-stock',
-      severity: 'watch',
-      title: 'Low on stock',
-      detail: `${d.lowStockProducts} product${d.lowStockProducts === 1 ? ' is' : 's are'} running low. Restock soon to avoid missing sales.`,
-    });
+    signals.push({ id: 'low-stock', severity: 'watch', title: 'Low on stock', detail: `${d.lowStockProducts} product${d.lowStockProducts === 1 ? ' is' : 's are'} running low. Restock soon to avoid missing sales.` });
   }
 
   // ── Subscription opportunity ──
   if (!d.hasSubscriptionPlans && d.repeatCustomers90 >= 5) {
-    signals.push({
-      id: 'subscription-opp',
-      severity: 'info',
-      title: 'Subscriptions could fit',
-      detail: `You have repeat customers but no subscription plans. Recurring plans could turn repeat buyers into steady income.`,
-    });
+    signals.push({ id: 'subscription-opp', severity: 'info', title: 'Subscriptions could fit', detail: `You have repeat customers but no subscription plans. Recurring plans could turn repeat buyers into steady income.` });
   }
 
   // ── Health score (only meaningful with history) ──
@@ -156,19 +101,9 @@ export function computeMerchantAdvisor(d: MerchantAdvisorInput): MerchantAdvisor
   }
 
   if (insufficientData) {
-    signals.unshift({
-      id: 'new-store',
-      severity: 'info',
-      title: 'Your store is just getting started',
-      detail: `Once you've made a few more sales, the advisor can spot trends and opportunities for you.`,
-    });
+    signals.unshift({ id: 'new-store', severity: 'info', title: 'Your store is just getting started', detail: `Once you've made a few more sales, the advisor can spot trends and opportunities for you.` });
   } else if (signals.length === 0) {
-    signals.push({
-      id: 'all-clear',
-      severity: 'good',
-      title: 'Everything looks steady',
-      detail: `No concerns right now. Your store is running smoothly.`,
-    });
+    signals.push({ id: 'all-clear', severity: 'good', title: 'Everything looks steady', detail: `No concerns right now. Your store is running smoothly.` });
   }
 
   return { healthScore, insufficientData, signals };

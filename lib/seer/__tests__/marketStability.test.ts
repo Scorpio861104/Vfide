@@ -72,6 +72,45 @@ describe('Builder Record — contribution, not wealth', () => {
   });
 });
 
+// Stage 7 (Wave 78) — edge-case hardening: the score must not break or be gamed by bad inputs,
+// and the top of the scale must still discriminate (caps sum to exactly MAX, no early saturation).
+describe('Builder Record — edge cases (Wave 78 Stage 7 audit)', () => {
+  const base = {
+    isMerchant: false, merchantVerified: false, storeOperations: 0, successfulDeliveries: 0,
+    productListings: 0, governanceParticipations: 0, recoveryConfigured: false,
+    continuityConfigured: false, yearsActive: 0, lendingParticipation: 0,
+  };
+  it('negative counts contribute nothing (never a negative score)', () => {
+    const r = computeBuilderRecord({ ...base, storeOperations: -5, governanceParticipations: -10 });
+    expect(r.score).toBe(0);
+  });
+  it('NaN / Infinity inputs are safe (no NaN score, capped not exploded)', () => {
+    expect(computeBuilderRecord({ ...base, governanceParticipations: NaN }).score).toBe(0);
+    const inf = computeBuilderRecord({ ...base, storeOperations: Infinity });
+    expect(Number.isFinite(inf.score)).toBe(true);
+    expect(inf.score).toBeLessThanOrEqual(10000);
+  });
+  it('fractional counts are floored (2.7 years earns 2 years of points, not 2.7)', () => {
+    expect(computeBuilderRecord({ ...base, yearsActive: 2.7 }).score).toBe(1000); // floor(2.7)=2 * 500
+  });
+  it('never exceeds MAX and the top of the scale discriminates (caps sum to exactly 10000)', () => {
+    const maxed = computeBuilderRecord({
+      isMerchant: true, merchantVerified: true, storeOperations: 1000, successfulDeliveries: 1000,
+      productListings: 1000, governanceParticipations: 100, recoveryConfigured: true,
+      continuityConfigured: true, yearsActive: 100, lendingParticipation: 100,
+    });
+    expect(maxed.score).toBe(10000);
+    // Dropping whole contribution categories must MEANINGFULLY lower the score (no early saturation).
+    const partial = computeBuilderRecord({
+      isMerchant: true, merchantVerified: true, storeOperations: 1000, successfulDeliveries: 1000,
+      productListings: 0, governanceParticipations: 0, recoveryConfigured: true,
+      continuityConfigured: true, yearsActive: 100, lendingParticipation: 0,
+    });
+    expect(partial.score).toBeLessThan(maxed.score);
+    expect(maxed.score - partial.score).toBeGreaterThanOrEqual(1500);
+  });
+});
+
 // PHASE 4 — Whale Protection validation matrix, as executable assertions.
 describe('Whale Protection validation matrix (Phase 4) — token effect is ALWAYS none', () => {
   it('Long-term merchant expansion → better lending, eligible, token untouched', () => {
@@ -123,6 +162,21 @@ describe('Seer Lending Engine — advisory, aligned to on-chain tiers', () => {
     expect(t.collateralGuidance).toContain('guarantor');
     expect(t.suggestedInterestBps.max).toBeLessThanOrEqual(1200); // never exceeds the 12% cap
   });
+  // Wave 80 — Merchant Health is now a REAL lending consumer (was display-only): a healthy business
+  // earns a small, bounded interest break; absent/low health never penalizes.
+  it('a healthy merchant earns a small bounded interest break; absent health does not penalize', () => {
+    const baseInput = { proofScore: 7000, builder: institutionalMerchant, extractionIndex: 100, loansRepaidOnTime: 2 };
+    const noHealth = suggestLoanTerms(baseInput);
+    const healthy = suggestLoanTerms({ ...baseInput, merchantHealth: 95 });
+    const lowHealth = suggestLoanTerms({ ...baseInput, merchantHealth: 40 });
+    // Healthy → lower interest than no-health; the break is bounded (≤100 bps off the midpoint).
+    expect(healthy.suggestedInterestBps.max).toBeLessThan(noHealth.suggestedInterestBps.max);
+    expect(noHealth.suggestedInterestBps.max - healthy.suggestedInterestBps.max).toBeLessThanOrEqual(100);
+    // Low health (<65) is treated like no health — never a penalty.
+    expect(lowHealth.suggestedInterestBps.max).toBe(noHealth.suggestedInterestBps.max);
+    // Still respects the cap and floor.
+    expect(healthy.suggestedInterestBps.min).toBeGreaterThanOrEqual(200);
+  });
 });
 
 describe('Stability Bonding — rewards commitment not wealth, verification required', () => {
@@ -161,34 +215,36 @@ describe('Merchant Advisor — grounded signals, honest about thin data', () => 
 });
 
 describe('Swap classification (Wave 60 wiring) — feeds the Extraction Index sell/buy detection', () => {
-  const pool = '0xpool000000000000000000000000000000000000';
-  const me = '0xme00000000000000000000000000000000000000';
-  const liquidity = new Set([pool]);
-
-  it('subject -> pool is a sell; pool -> subject is a buy', () => {
-    expect(classifyTransfer({ from: me, to: pool, subject: me, liquidityAddresses: liquidity })).toBe('sell');
-    expect(classifyTransfer({ from: pool, to: me, subject: me, liquidityAddresses: liquidity })).toBe('buy');
+  const POOL = '0xpool000000000000000000000000000000000000';
+  const ME = '0xme00000000000000000000000000000000000000';
+  const liq = new Set([POOL]);
+  it('subject → pool is a sell; pool → subject is a buy', () => {
+    expect(classifyTransfer({ from: ME, to: POOL, subject: ME, liquidityAddresses: liq })).toBe('sell');
+    expect(classifyTransfer({ from: POOL, to: ME, subject: ME, liquidityAddresses: liq })).toBe('buy');
   });
-
   it('a transfer touching no pool is never a sell (ordinary p2p never counts as extraction)', () => {
-    expect(
-      classifyTransfer({
-        from: me,
-        to: '0xfriend00000000000000000000000000000000000',
-        subject: me,
-        liquidityAddresses: liquidity,
-      }),
-    ).toBe('transfer');
+    expect(classifyTransfer({ from: ME, to: '0xfriend00000000000000000000000000000000000', subject: ME, liquidityAddresses: liq })).toBe('transfer');
+  });
+  it('with no pools configured, nothing classifies as sell/buy (safe default → flags no one)', () => {
+    const noLiq = new Set<string>();
+    expect(classifyTransfer({ from: ME, to: POOL, subject: ME, liquidityAddresses: noLiq })).toBe('transfer');
+  });
+});
+
+describe('Seer coverage — Market Impact orphan status is honestly tracked (Wave 72)', () => {
+  it('Market Impact is a tracked subsystem, flagged PARTIAL, not silently omitted', async () => {
+    const { SEER_SUBSYSTEMS } = await import('@/lib/seer/coverage');
+    const mi = SEER_SUBSYSTEMS.find((s) => s.id === 'market-impact');
+    expect(mi).toBeDefined();
+    expect(mi!.status).toBe('PARTIAL'); // not LIVE — it has no live consumer yet
+    // The note must be honest about WHY (missing pool liquidity feed), not hand-wave it as done.
+    expect(mi!.note.toLowerCase()).toMatch(/liquidity|pool|reserve/);
+    expect(mi!.note.toLowerCase()).toMatch(/not wired|placeholder|pending|does not exist|no live consumer/);
   });
 
-  it('with no pools configured, nothing classifies as sell/buy (safe default -> flags no one)', () => {
-    expect(
-      classifyTransfer({
-        from: me,
-        to: pool,
-        subject: me,
-        liquidityAddresses: new Set<string>(),
-      }),
-    ).toBe('transfer');
+  it('coverage summary counts Market Impact among PARTIAL (gap is visible)', async () => {
+    const { coverageSummary } = await import('@/lib/seer/coverage');
+    const c = coverageSummary();
+    expect(c.partial).toBeGreaterThanOrEqual(3); // extraction-index, marketplace-trust, market-impact
   });
 });

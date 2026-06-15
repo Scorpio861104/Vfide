@@ -793,8 +793,14 @@ export function VaultInheritancePanel({ vaultAddress, userAddress }: VaultInheri
                   )}
                 </h3>
                 <p className="text-white/40 text-xs mb-3">
-                  An alternative wallet that can call ownerOverrideClaim (to prove you are alive without
-                  using your primary admin key). Optional but recommended.
+                  This is your protection if you ever <span className="text-white/70">can&apos;t respond</span> —
+                  hospitalized, traveling somewhere unreachable, or your phone is gone. If an <span className="text-white/70">inheritance
+                  claim</span> on your vault starts while you&apos;re away, this second wallet can cancel it and prove
+                  you&apos;re still here, without your main key. (It covers inheritance claims specifically — wallet
+                  recovery has its own owner-challenge protection.) Set it up <span className="text-white/70">before</span>
+                  you need it, and consider giving its key to someone you trust who could act for you. Important: it can
+                  only cancel a claim during the first <span className="text-white/70">30 days</span> (the veto window) —
+                  after that, the inheritance process continues. Optional, but it is the main safeguard if you go quiet.
                 </p>
                 <div className="flex gap-2">
                   <input

@@ -26,7 +26,6 @@ export interface ShoppablePostProps {
   };
   timestamp: number;
   caption?: string;
-  likes?: number;
   comments?: number;
   className?: string;
 }

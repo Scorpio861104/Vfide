@@ -6,8 +6,7 @@ import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { m, AnimatePresence , LazyMotion, domAnimation } from 'framer-motion';
 import {
-  Target, Award, Star, Crown, Medal, Tag, Search, Info,
-} from 'lucide-react';
+  Target, Award, Star, Crown, Medal, Tag, Search, Info, ShieldCheck } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 import { TabTrigger } from '@/components/ui/TabTrigger';
 import DailyQuestsPanel from '@/components/gamification/DailyQuestsPanel';
@@ -64,7 +63,7 @@ const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
   { id: 'quests',       label: 'Quests',        icon: Target  },
   { id: 'achievements', label: 'Achievements',  icon: Award   },
   { id: 'badges',       label: 'Badges',        icon: Star    },
-  { id: 'leaderboard',  label: 'Leaderboard',   icon: Crown   },
+  { id: 'leaderboard',  label: 'Your ProofScore', icon: ShieldCheck },
   { id: 'endorsements', label: 'Endorsements',  icon: Medal   },
   { id: 'benefits',     label: 'Benefits',      icon: Tag     },
   { id: 'referrals',    label: 'Referrals',     icon: Search  },

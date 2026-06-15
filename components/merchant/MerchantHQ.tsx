@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { INSTITUTIONS } from '@/lib/civilization/model';
 import { useMerchantHealth, type MerchantHealth, type MerchantHealthState } from '@/hooks/useMerchantHealth';
+import { useMerchantHQ } from '@/hooks/useMerchantHQ';
 
 const HEALTH_PILL: Record<MerchantHealthState, { cls: string; dot: string }> = {
   Healthy: { cls: 'border-emerald-400/30 bg-emerald-400/10 text-emerald-300', dot: 'bg-emerald-400' },
@@ -42,8 +43,14 @@ function ReadinessStrip({ chips }: { chips: { label: string; ok: boolean }[] }) 
   );
 }
 
-function HealthPanel({ m }: { m: MerchantHealth }) {
+function HealthPanel({ m, composite }: { m: MerchantHealth; composite: { score: number | null; band: string } | null }) {
   const pill = HEALTH_PILL[m.health];
+  // Wave 81: the headline reflects the COMPOSITE Merchant Health (the audited institution) when available,
+  // so this panel can't contradict the composite score shown elsewhere on the page. The crude on-chain
+  // state is only a fallback while the composite is loading.
+  const compositeLabel = composite && composite.score != null
+    ? `${composite.score}/100 ${composite.band.replace('_', ' ')}`
+    : null;
   return (
     <section aria-label="Merchant health" className="glass-card-premium p-5 sm:p-6">
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -54,10 +61,17 @@ function HealthPanel({ m }: { m: MerchantHealth }) {
           </div>
           <p className="text-sm text-zinc-500">{m.businessName ? m.businessName : 'Your business at a glance'}</p>
         </div>
-        <span className={`inline-flex w-fit items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-semibold ${pill.cls}`}>
-          <span className={`h-1.5 w-1.5 rounded-full ${pill.dot}`} aria-hidden="true" />
-          {m.health}
-        </span>
+        {compositeLabel ? (
+          <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-sm font-semibold capitalize text-cyan-200">
+            <span className="h-1.5 w-1.5 rounded-full bg-cyan-300" aria-hidden="true" />
+            {compositeLabel}
+          </span>
+        ) : (
+          <span className={`inline-flex w-fit items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-semibold ${pill.cls}`}>
+            <span className={`h-1.5 w-1.5 rounded-full ${pill.dot}`} aria-hidden="true" />
+            {m.healthLabel}
+          </span>
+        )}
       </div>
 
       <dl className="mb-5 grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -304,9 +318,11 @@ function AcademyEmbed() {
 
 export function MerchantHQ() {
   const m = useMerchantHealth();
+  const hq = useMerchantHQ(true); // composite Merchant Health (the audited institution) for a consistent headline
+  const composite = hq.health ? { score: hq.health.score, band: hq.health.band } : null;
   return (
     <div className="space-y-6">
-      <HealthPanel m={m} />
+      <HealthPanel m={m} composite={composite} />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <TrustImpactPanel m={m} />
         <CustomerHealthPanel m={m} />

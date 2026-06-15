@@ -1,17 +1,23 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import type { BuilderSummary, SuggestedLoanTerms } from '@/lib/seer/marketStability/lendingPolicy';
+/**
+ * useMarketStanding (Whale Protection — real-data wiring).
+ *
+ * Reads GET /api/seer/market-standing, which computes the participant's Builder Record, Extraction
+ * Index (from real indexed Transfer history, persisted with decay), and the discretionary Stability
+ * Policy decision. Feeds MarketStandingPanel. Read-only — reflects behavior, controls nothing.
+ */
 
-export interface ExtractionSummary {
-  index: number;
-  category: string;
-}
+import { useCallback, useEffect, useState } from 'react';
+import type { BuilderResult } from '@/lib/seer/marketStability/builderRecord';
+import type { ExtractionResult } from '@/lib/seer/marketStability/extractionIndex';
+import type { StabilityDecision } from '@/lib/seer/marketStability/stabilityPolicy';
+import type { SuggestedLoanTerms } from '@/lib/seer/marketStability/lendingPolicy';
 
 export interface MarketStanding {
-  builder: BuilderSummary | null;
-  extraction: ExtractionSummary | null;
-  decision: Record<string, unknown> | null;
+  builder: BuilderResult | null;
+  extraction: ExtractionResult | null;
+  decision: StabilityDecision | null;
   lendingTerms: SuggestedLoanTerms | null;
   loading: boolean;
   error: string | null;
@@ -19,9 +25,9 @@ export interface MarketStanding {
 }
 
 export function useMarketStanding(): MarketStanding {
-  const [builder, setBuilder] = useState<BuilderSummary | null>(null);
-  const [extraction, setExtraction] = useState<ExtractionSummary | null>(null);
-  const [decision, setDecision] = useState<Record<string, unknown> | null>(null);
+  const [builder, setBuilder] = useState<BuilderResult | null>(null);
+  const [extraction, setExtraction] = useState<ExtractionResult | null>(null);
+  const [decision, setDecision] = useState<StabilityDecision | null>(null);
   const [lendingTerms, setLendingTerms] = useState<SuggestedLoanTerms | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -38,14 +44,7 @@ export function useMarketStanding(): MarketStanding {
         setLendingTerms(null);
         return;
       }
-
-      const data = (await res.json()) as {
-        builder?: BuilderSummary;
-        extraction?: ExtractionSummary;
-        decision?: Record<string, unknown>;
-        lendingTerms?: SuggestedLoanTerms;
-      };
-
+      const data = await res.json();
       setBuilder(data.builder ?? null);
       setExtraction(data.extraction ?? null);
       setDecision(data.decision ?? null);

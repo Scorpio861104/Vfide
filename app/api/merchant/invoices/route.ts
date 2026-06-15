@@ -14,6 +14,7 @@ import type { JWTPayload } from '@/lib/auth/jwt';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { dispatchWebhook } from '@/lib/webhooks/merchantWebhookDispatcher';
 import { logger } from '@/lib/logger';
+import { emitServerEvent } from '@/lib/events/serverEmit';
 import { z } from 'zod4';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{40}$/;
@@ -252,6 +253,7 @@ async function postHandler(request: NextRequest, user: JWTPayload) {
       payment_link: `/checkout/${paymentLinkId}`,
     });
 
+    await emitServerEvent(authAddress, 'INVOICE_CREATED', { invoice_id: invoice?.id }, 'api/merchant/invoices');
     return NextResponse.json({
       invoice: { ...invoice, items: itemsRows },
       payment_url: `/checkout/${paymentLinkId}`,
@@ -339,6 +341,7 @@ async function patchHandler(request: NextRequest, user: JWTPayload) {
         total: invoice.total,
         tx_hash,
       });
+      await emitServerEvent(authAddress, 'INVOICE_PAID', { invoice_id: result.rows[0]?.id, total: invoice.total }, 'api/merchant/invoices');
     }
 
     return NextResponse.json({ invoice: result.rows[0] });

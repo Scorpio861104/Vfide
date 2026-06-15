@@ -13,6 +13,7 @@ import { withAuth } from '@/lib/auth/middleware';
 import type { JWTPayload } from '@/lib/auth/jwt';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { assignLicenseKey } from '@/lib/commerce/digitalDelivery';
 import { z } from 'zod4';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{40}$/;
@@ -66,6 +67,11 @@ const getHandler = async (request: NextRequest, user: JWTPayload) => {
       }
 
       const delivery = deliveryResult.rows[0]!;
+
+      // Phase 1B: refund/chargeback revokes download access.
+      if (delivery.revoked) {
+        return NextResponse.json({ error: 'Access to this download has been revoked' }, { status: 410 });
+      }
 
       // Check expiry
       if (delivery.expires_at && new Date(delivery.expires_at as string) < new Date()) {
@@ -226,11 +232,26 @@ const patchHandler = async (request: NextRequest, user: JWTPayload) => {
       return NextResponse.json({ error: 'Already delivered' }, { status: 409 });
     }
 
-    // Pop license key from pool if available
-    let licenseKey: string | null = null;
-    const keyPool = asset.license_key_pool as string[] | null;
-    if (keyPool && keyPool.length > 0) {
-      licenseKey = keyPool[0]!;
+    // Phase 1B: assign a license key via the pure policy. For license-REQUIRED products, an empty pool is a
+    // tracked failure (merchant must top up keys) rather than a silent no-key delivery.
+    const assignment = assignLicenseKey({
+      id: Number(asset.id),
+      download_limit: asset.download_limit as number | null,
+      expires_hours: asset.expires_hours as number | null,
+      license_key_pool: (asset.license_key_pool as string[] | null) ?? [],
+      requires_license: Boolean(asset.requires_license),
+    });
+    if (!assignment.ok) {
+      // Record the failure so the merchant can be alerted; do NOT create a keyless delivery.
+      await query(
+        `INSERT INTO merchant_digital_delivery_failures (asset_id, order_id, customer_address, reason)
+         VALUES ($1,$2,$3,$4)`,
+        [asset.id, order_id, order.customer_address, assignment.reason],
+      );
+      return NextResponse.json({ error: 'License keys exhausted — merchant must add more keys', reason: assignment.reason }, { status: 409 });
+    }
+    let licenseKey: string | null = assignment.key;
+    if (assignment.key !== null) {
       await query(
         'UPDATE merchant_digital_assets SET license_key_pool = license_key_pool[2:] WHERE id = $1',
         [asset.id]

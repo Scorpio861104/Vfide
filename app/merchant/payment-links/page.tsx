@@ -2,6 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
+import { useEmitEvent } from '@/lib/events/EventProvider';
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAccount } from 'wagmi';
@@ -56,6 +57,7 @@ export default function MerchantPaymentLinksPage() {
   void locale;
 
   const { address } = useAccount();
+  const emitEvent = useEmitEvent();
   const [links, setLinks] = useState<PaymentLink[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -196,7 +198,7 @@ export default function MerchantPaymentLinksPage() {
       {showCreate && address && (
         <CreateLinkModal
           onClose={() => setShowCreate(false)}
-          onCreated={async () => { setShowCreate(false); await load(); }}
+          onCreated={async () => { setShowCreate(false); emitEvent('INVOICE_CREATED', undefined, 'payment-links'); await load(); }}
           onError={setError}
         />
       )}

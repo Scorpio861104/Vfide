@@ -3,7 +3,20 @@
 /**
  * ProtectiveConfirm (Wave 51) — reusable protective friction for risky actions.
  *
- * Product Law #4: protection without control. This adds awareness, not prevention.
+ * Product Law #4: protection without control. This adds AWARENESS, not prevention — the user can
+ * always proceed. It makes risky actions (sending money, choosing a successor, changing recovery,
+ * transferring ownership) deliberate instead of accidental, which is what the Grandmother Safety Test
+ * needs: she should not be able to send money to a scammer or assign the wrong successor *by mistake*.
+ *
+ * Features:
+ *   • Plain-language statement of what's about to happen and why it matters.
+ *   • Optional address verification — shows the address in a chunked, readable form and (for high
+ *     risk) requires the user to confirm they checked it. Money and control can't be recovered if an
+ *     address is wrong, so this is the key anti-(address-poisoning / sleight) step.
+ *   • Risk-scaled friction: low = one confirm; medium = acknowledge checkbox; high = type-to-confirm.
+ *   • Emits RISK_WARNING_DISPLAYED when shown, so the trust record/timeline has evidence a warning
+ *     was given (useful if a user is later coerced — there's a record they were warned).
+ *   • Always offers a clear way out. Never blocks; the user stays in charge.
  */
 
 import { useEffect, useMemo, useState } from 'react';
@@ -16,17 +29,24 @@ export interface ProtectiveConfirmProps {
   open: boolean;
   onCancel: () => void;
   onConfirm: () => void;
+  /** Plain title, e.g. "Choose this successor?" */
   title: string;
+  /** What's happening + why it matters, in plain words. */
   body: string;
   risk?: RiskLevel;
+  /** If set, the address is shown chunked and (high risk) must be confirmed. */
   address?: string;
+  /** Label for the address ("Successor", "Send to"). */
   addressLabel?: string;
   confirmText?: string;
+  /** A reassurance — what makes this safe / recoverable (surfaces invisible protection). */
   reassurance?: string;
+  /** Provenance for the RISK_WARNING_DISPLAYED event. */
   source?: string;
 }
 
 function chunk(addr: string): string {
+  // 0x1234abcd…  → groups of 4 for verifiability
   const body = addr.startsWith('0x') ? addr.slice(2) : addr;
   const groups = body.match(/.{1,4}/g) ?? [body];
   return `0x ${groups.join(' ')}`;
@@ -35,26 +55,18 @@ function chunk(addr: string): string {
 const RISK_TONE: Record<RiskLevel, { ring: string; chip: string; label: string }> = {
   low: { ring: 'border-cyan-400/20', chip: 'bg-cyan-400/10 text-cyan-200', label: 'Please confirm' },
   medium: { ring: 'border-amber-400/25', chip: 'bg-amber-400/10 text-amber-200', label: 'Double-check this' },
-  high: { ring: 'border-rose-400/30', chip: 'bg-rose-400/10 text-rose-200', label: 'Important - read carefully' },
+  high: { ring: 'border-rose-400/30', chip: 'bg-rose-400/10 text-rose-200', label: 'Important — read carefully' },
 };
 
 export function ProtectiveConfirm({
-  open,
-  onCancel,
-  onConfirm,
-  title,
-  body,
-  risk = 'medium',
-  address,
-  addressLabel = 'Address',
-  confirmText = 'Confirm',
-  reassurance,
-  source,
+  open, onCancel, onConfirm, title, body, risk = 'medium', address, addressLabel = 'Address',
+  confirmText = 'Confirm', reassurance, source,
 }: ProtectiveConfirmProps) {
   const emitEvent = useEmitEvent();
   const [acknowledged, setAcknowledged] = useState(false);
   const [typed, setTyped] = useState('');
 
+  // Record that a warning was shown (evidence). Reset friction state each time it opens.
   useEffect(() => {
     if (open) {
       setAcknowledged(false);
@@ -125,11 +137,7 @@ export function ProtectiveConfirm({
             Cancel
           </button>
           <button type="button" disabled={!canConfirm}
-            onClick={() => {
-              if (!canConfirm) return;
-              emitEvent('PROTECTIVE_CONFIRMATION_ACCEPTED', { risk, action: source }, source ?? 'protective-confirm');
-              onConfirm();
-            }}
+            onClick={() => { if (canConfirm) { emitEvent('PROTECTIVE_CONFIRMATION_ACCEPTED', { risk, action: source }, source ?? 'protective-confirm'); onConfirm(); } }}
             className="btn-premium btn-premium-primary flex-1 text-sm disabled:opacity-40">
             {confirmText}
           </button>

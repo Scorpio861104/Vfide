@@ -40,7 +40,7 @@ const CONTINUITY_LABEL: Record<MerchantHealth['continuity']['readiness'], { v: s
   unknown: { v: 'Connect wallet', t: 'neutral' },
 };
 
-export function MerchantHeadquartersHero({ m }: { m: MerchantHealth }) {
+export function MerchantHeadquartersHero({ m, compositeHealth }: { m: MerchantHealth; compositeHealth?: { score: number | null; band: string } | null }) {
   const hasRevenue = m.volume > 0;
   const cont = CONTINUITY_LABEL[m.continuity.readiness];
 
@@ -72,8 +72,14 @@ export function MerchantHeadquartersHero({ m }: { m: MerchantHealth }) {
     },
     {
       label: 'Business Health',
-      value: m.health,
-      tone: HEALTH_TONE[m.health],
+      // Wave 81: prefer the composite Merchant Health (audited institution) so the hero band agrees with
+      // the score shown lower on the page; fall back to the crude state only until the composite loads.
+      value: compositeHealth && compositeHealth.score != null
+        ? `${compositeHealth.score}/100`
+        : m.healthLabel,
+      tone: compositeHealth && compositeHealth.score != null
+        ? (compositeHealth.score >= 65 ? 'strong' : compositeHealth.score >= 45 ? 'neutral' : 'weak')
+        : HEALTH_TONE[m.health],
     },
   ];
 

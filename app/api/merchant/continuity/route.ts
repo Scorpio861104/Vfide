@@ -57,10 +57,16 @@ async function loadState(merchant: string) {
     `SELECT display_name FROM merchant_profiles WHERE merchant_address = $1`,
     [merchant],
   );
+  // Wave 95 / CID-2 UI: surface the business proof-of-life designation so the owner can see + manage it.
+  const polRes = await query<{ proof_of_life_address: string; note: string | null; updated_at: string }>(
+    `SELECT proof_of_life_address, note, updated_at FROM merchant_proof_of_life WHERE merchant_address = $1`,
+    [merchant],
+  );
 
   const succession = succRes.rows[0] ?? null;
   const operators = opsRes.rows;
   const hasProfile = !!profileRes.rows[0]?.display_name;
+  const proofOfLife = polRes.rows[0] ?? null;
 
   const readiness: ReadinessItem[] = [
     { id: 'has_store', label: 'Your business exists', met: hasProfile, detail: hasProfile ? 'Store set up' : 'Set up your store first' },
@@ -69,7 +75,7 @@ async function loadState(merchant: string) {
   ];
   const ready = readiness.filter((r) => r.id !== 'has_operator').every((r) => r.met); // operators optional
 
-  return { succession, operators, readiness, ready };
+  return { succession, operators, readiness, ready, proofOfLife };
 }
 
 async function getHandler(request: NextRequest, user: JWTPayload): Promise<Response> {
@@ -92,6 +98,9 @@ const postSchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('clear_succession') }),
   z.object({ action: z.literal('grant_operator'), operator_address: z.string().regex(ADDRESS_RE), role: z.string().max(40).optional(), note: z.string().max(400).optional() }),
   z.object({ action: z.literal('revoke_operator'), operator_address: z.string().regex(ADDRESS_RE) }),
+  // Wave 93 / CID-2 (off-chain): designate / clear a business proof-of-life address (alive-signal).
+  z.object({ action: z.literal('set_proof_of_life'), proof_of_life_address: z.string().regex(ADDRESS_RE), note: z.string().max(400).optional() }),
+  z.object({ action: z.literal('clear_proof_of_life') }),
 ]);
 
 async function postHandler(request: NextRequest, user: JWTPayload): Promise<Response> {
@@ -114,6 +123,7 @@ async function postHandler(request: NextRequest, user: JWTPayload): Promise<Resp
     if (data.action === 'set_succession') {
       const successor = data.successor_address.toLowerCase();
       if (successor === merchant) return NextResponse.json({ error: 'You cannot be your own successor' }, { status: 400 });
+      // Detect first-set vs change, so we can emit the more specific safety event.
       const priorRes = await query<{ successor_address: string }>(
         `SELECT successor_address FROM merchant_succession WHERE merchant_address = $1`,
         [merchant],
@@ -127,6 +137,12 @@ async function postHandler(request: NextRequest, user: JWTPayload): Promise<Resp
         [merchant, successor, data.note ?? null],
       );
       await emitServerEvent(merchant, 'MERCHANT_SUCCESSION_CONFIGURED', { successor }, 'api/merchant/continuity');
+      // Wiring (Wave 61): close the catalog's CONTINUITY_PLAN_CREATED / SUCCESSOR_ASSIGNED orphans —
+      // configuring succession IS creating a continuity plan and assigning a successor. Emitting these
+      // lets continuity-readiness/Builder consumers (mapped in EVENT_ROUTES) refresh on the same action.
+      await emitServerEvent(merchant, 'CONTINUITY_PLAN_CREATED', { successor }, 'api/merchant/continuity');
+      await emitServerEvent(merchant, 'SUCCESSOR_ASSIGNED', { successor }, 'api/merchant/continuity');
+      // A change of an already-set successor is a safety-relevant event (possible account takeover).
       if (prior && prior.toLowerCase() !== successor) {
         await emitServerEvent(merchant, 'SUCCESSOR_CHANGED', { from: prior, to: successor }, 'api/merchant/continuity');
       }
@@ -150,6 +166,19 @@ async function postHandler(request: NextRequest, user: JWTPayload): Promise<Resp
           WHERE merchant_address = $1 AND operator_address = $2 AND revoked_at IS NULL`,
         [merchant, data.operator_address.toLowerCase()],
       );
+    } else if (data.action === 'set_proof_of_life') {
+      const pol = data.proof_of_life_address.toLowerCase();
+      if (pol === merchant) return NextResponse.json({ error: 'Your proof-of-life address should be a different, trusted wallet' }, { status: 400 });
+      await query(
+        `INSERT INTO merchant_proof_of_life (merchant_address, proof_of_life_address, note, updated_at)
+         VALUES ($1, $2, $3, NOW())
+         ON CONFLICT (merchant_address)
+         DO UPDATE SET proof_of_life_address = EXCLUDED.proof_of_life_address, note = EXCLUDED.note, updated_at = NOW()`,
+        [merchant, pol, data.note ?? null],
+      );
+      await emitServerEvent(merchant, 'EMERGENCY_OPERATOR_ASSIGNED', { proofOfLife: pol }, 'api/merchant/continuity');
+    } else if (data.action === 'clear_proof_of_life') {
+      await query(`DELETE FROM merchant_proof_of_life WHERE merchant_address = $1`, [merchant]);
     }
 
     const state = await loadState(merchant);

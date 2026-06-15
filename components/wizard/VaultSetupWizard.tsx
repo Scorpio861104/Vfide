@@ -40,6 +40,7 @@ import { CreateVaultChapter } from './chapters/CreateVaultChapter';
 import { SpendLimitsChapter } from './chapters/SpendLimitsChapter';
 import { GuardiansChapter } from './chapters/GuardiansChapter';
 import { FinalizeGuardiansChapter } from './chapters/FinalizeGuardiansChapter';
+import { KeySeparationChapter } from './chapters/KeySeparationChapter';
 import { MerchantApprovalChapter } from './chapters/MerchantApprovalChapter';
 import { ProofScoreChapter } from './chapters/ProofScoreChapter';
 import { DoneChapter } from './chapters/DoneChapter';
@@ -116,6 +117,7 @@ export function VaultSetupWizard({ forceOpen = false, onClose }: VaultSetupWizar
           <GuardiansChapter
             onComplete={() => wizard.markComplete('guardians')}
             onSkip={() => wizard.skip('guardians')}
+            onAcknowledgeRisk={wizard.acknowledgeGuardianRisk}
           />
         );
       case 'finalizeGuardians':
@@ -123,6 +125,14 @@ export function VaultSetupWizard({ forceOpen = false, onClose }: VaultSetupWizar
           <FinalizeGuardiansChapter
             onComplete={() => wizard.markComplete('finalizeGuardians')}
             onSkip={() => wizard.skip('finalizeGuardians')}
+            onAcknowledgeRisk={wizard.acknowledgeGuardianRisk}
+          />
+        );
+      case 'keySeparation':
+        return (
+          <KeySeparationChapter
+            onComplete={() => wizard.markComplete('keySeparation')}
+            onSkip={() => wizard.skip('keySeparation')}
           />
         );
       case 'merchantApproval':

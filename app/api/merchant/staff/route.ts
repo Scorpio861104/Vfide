@@ -7,6 +7,7 @@ import type { JWTPayload } from '@/lib/auth/jwt';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { normalizeStaffPermissions, type StaffRole } from '@/lib/merchantStaff';
+import { authorizeStaffAction, type StaffActionKind, type StaffPermissions } from '@/lib/commerce/staffAuthEngine';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{40}$/;
 const STAFF_ROLES = ['admin', 'manager', 'cashier'] as const;
@@ -42,6 +43,17 @@ const activitySchema = z.object({
   staffToken: z.string().trim().min(12),
   action: z.enum(STAFF_ACTIONS),
   details: z.record(z.string(), z.unknown()).optional(),
+});
+
+// Phase 3: server-side authorization gate. Decides whether a staff action is allowed BEFORE it happens,
+// enforcing role permissions + per-transaction cap + cumulative daily limit. On an allowed sale it records the
+// sale so the daily tally stays accurate (single round-trip from the POS).
+const authorizeSchema = z.object({
+  mode: z.literal('authorize'),
+  staffToken: z.string().trim().min(12),
+  kind: z.enum(['sale', 'refund', 'product_edit', 'view_analytics']),
+  amount: z.coerce.number().min(0).optional(),
+  record: z.boolean().optional(), // if true and allowed, log the action (maintains daily total)
 });
 
 function hashStaffToken(token: string): string {
@@ -158,6 +170,47 @@ async function postHandler(request: NextRequest, user: JWTPayload) {
 
   try {
     const rawBody = await request.json();
+
+    // Phase 3: authorization gate (server-side enforcement of staff limits).
+    const authBody = authorizeSchema.safeParse(rawBody);
+    if (authBody.success) {
+      const { staffToken, kind, amount, record } = authBody.data;
+      const staff = (await query<{ id: string; role: StaffRole; permissions: Record<string, unknown>; active: boolean; expires_at: string | null }>(
+        `SELECT id, role, permissions, active, expires_at FROM merchant_staff
+          WHERE session_token_hash = $1 AND revoked_at IS NULL`,
+        [hashStaffToken(staffToken)],
+      )).rows[0];
+      if (!staff) return NextResponse.json({ error: 'Staff session not found' }, { status: 404 });
+
+      const permissions = normalizeStaffPermissions(staff.permissions ?? {}, staff.role) as StaffPermissions;
+      // today's cumulative sale total for this staff (UTC day) from the activity log
+      const totalRow = (await query<{ total: string | null }>(
+        `SELECT COALESCE(SUM((details->>'amount')::numeric), 0) AS total
+           FROM staff_activity_log
+          WHERE staff_id = $1 AND action = 'sale' AND created_at >= date_trunc('day', NOW())`,
+        [staff.id],
+      )).rows[0];
+      const todaysSaleTotal = Number(totalRow?.total ?? 0);
+
+      const decision = authorizeStaffAction(
+        { active: staff.active, expiresAtMs: staff.expires_at ? new Date(staff.expires_at).getTime() : null, nowMs: Date.now(), permissions, todaysSaleTotal },
+        kind as StaffActionKind,
+        amount ?? 0,
+      );
+
+      if (!decision.ok) {
+        return NextResponse.json({ allowed: false, reason: decision.reason, todaysSaleTotal }, { status: 403 });
+      }
+      // record an allowed sale/refund so the daily tally + audit trail stay accurate
+      if (record && (kind === 'sale' || kind === 'refund')) {
+        await query(
+          `INSERT INTO staff_activity_log (staff_id, action, details) VALUES ($1, $2, $3::jsonb)`,
+          [staff.id, kind, JSON.stringify({ amount: amount ?? 0 })],
+        );
+      }
+      return NextResponse.json({ allowed: true, newDailyTotal: decision.newDailyTotal ?? todaysSaleTotal });
+    }
+
     const activityBody = activitySchema.safeParse(rawBody);
 
     if (activityBody.success) {

@@ -1,23 +1,14 @@
 'use client';
 
-import { useState } from 'react';
 import Image from 'next/image';
 import { m } from 'framer-motion';
-import { ArrowRight, Heart, MessageCircle, Share2, Shield, ShoppingCart, Store, Zap } from 'lucide-react';
+import { ArrowRight, MessageCircle, Share2, Shield, ShoppingCart, Store, Zap } from 'lucide-react';
 import Link from 'next/link';
 import { type ShoppablePostProps, formatTimeAgo } from './social-commerce-types';
 import { copyToClipboardSafe } from '@/lib/clipboardSafe';
 import { toast } from '@/lib/toast';
 
-export function ShoppablePost({ product, postedBy, timestamp, caption, likes = 0, comments = 0, className = '' }: ShoppablePostProps) {
-  const [isLiked, setIsLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(likes);
-
-  const handleLike = () => {
-    setIsLiked(!isLiked);
-    setLikeCount(prev => isLiked ? prev - 1 : prev + 1);
-  };
-
+export function ShoppablePost({ product, postedBy, timestamp, caption, comments = 0, className = '' }: ShoppablePostProps) {
   // Share: surface the product page (the same destination the post navigates to).
   // Web Share API on supporting devices, clipboard fallback elsewhere.
   const handleShare = async () => {
@@ -123,10 +114,6 @@ export function ShoppablePost({ product, postedBy, timestamp, caption, likes = 0
 
       {/* Social actions */}
       <div className="px-4 py-3 border-t border-white/5 flex items-center gap-6">
-        <button onClick={handleLike} className="flex items-center gap-1.5 text-sm transition-colors group">
-          <Heart size={16} className={isLiked ? 'text-red-400 fill-red-400' : 'text-gray-500 group-hover:text-red-400'} />
-          <span className={isLiked ? 'text-red-400' : 'text-gray-500'}>{likeCount}</span>
-        </button>
         <button
           disabled
           title="Comments on shoppable posts require a /api/social/posts/:id/comments endpoint that isn't built yet."

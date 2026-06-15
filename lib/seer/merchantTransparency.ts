@@ -2,35 +2,38 @@
  * Merchant Transparency Panel (Wave 63 — the grandmother test).
  *
  * Assembles the operational-transparency fields a buyer needs to answer, immediately:
- *   - Who is this merchant?
- *   - Can I trust them?
- *   - Will they deliver?
- *   - How long have they been active?
- *   - What if something goes wrong?
+ *   • Who is this merchant?            → displayName, yearsActive
+ *   • Can I trust them?                → merchantTrust, verified, disputeSummary
+ *   • Will they deliver?               → deliveryReliability
+ *   • How long have they been active?  → yearsActive
+ *   • What if something goes wrong?    → continuityReady, recoveryReady, disputeSummary
+ *
+ * Pure/deterministic. This is transparency, NOT gamification — no points, no badges-for-engagement,
+ * just the operational facts in plain language.
  */
 
 export interface TransparencyInputs {
   displayName: string;
   verified: boolean;
   ageDays: number;
-  merchantTrust: number;
-  deliveryReliability: number | null;
-  deliveryReliabilityLabel: string;
+  merchantTrust: number; // 0..100
+  deliveryReliability: number | null; // 0..100 or null (unproven)
+  deliveryReliabilityLabel: string; // 'unproven' | 'developing' | 'reliable' | 'concerning'
   disputesTotal: number;
   disputesUpheld: number;
-  continuityReady: boolean;
-  recoveryReady: boolean;
+  continuityReady: boolean; // has a successor / emergency operators configured
+  recoveryReady: boolean; // has guardians / recovery configured
 }
 
 export interface TransparencyPanel {
   displayName: string;
   verified: boolean;
-  yearsActive: string;
+  yearsActive: string; // human ("3 years", "4 months", "new")
   trustLabel: 'building' | 'established' | 'strong';
   deliveryLabel: string;
   disputeSummary: string;
-  protections: string[];
-  plainSummary: string;
+  protections: string[]; // what happens if something goes wrong
+  plainSummary: string; // one-line grandmother answer
 }
 
 function humanAge(ageDays: number): string {

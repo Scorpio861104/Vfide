@@ -7,10 +7,12 @@ import { TransactionHistory } from '@/components/vault/TransactionHistory';
 import { VaultGuardianSetupBanner } from '@/components/vault/VaultGuardianSetupBanner';
 import { VaultPendingChangesBanner } from '@/components/vault/VaultPendingChangesBanner';
 import { IncomingRefunds } from '@/components/vault/IncomingRefunds';
+import { VaultHealthScore } from '@/components/vault/VaultHealthScore';
 import { TrendingUp } from 'lucide-react';
 
 import { useVaultOperations } from './useVaultOperations';
 import { useVaultTransactions } from '@/hooks/useVaultTransactions';
+import { useProofScore } from '@/hooks/useProofScore';
 import { VaultHeader } from './VaultHeader';
 import { VaultOverviewStats } from './VaultOverviewStats';
 import { VaultSecuritySection } from './VaultSecuritySection';
@@ -24,6 +26,7 @@ const VaultQueueSection = dynamic(() => import('./VaultQueueSection').then(m => 
 export function VaultContent() {
   const ops = useVaultOperations();
   const { transactions, isLoading: txLoading } = useVaultTransactions(ops.vaultAddress as `0x${string}` | undefined);
+  const { score: proofScore } = useProofScore();
 
   return (
     <>
@@ -64,6 +67,12 @@ export function VaultContent() {
             <VaultPendingChangesBanner vaultAddress={ops.vaultAddress} />
 
             <VaultGuardianSetupBanner vaultAddress={ops.vaultAddress as `0x${string}` | undefined} />
+
+            {/* Wave 85: surface the vault safety score the owner could never see (was rendered nowhere). */}
+            <VaultHealthScore
+              vaultAddress={ops.vaultAddress as `0x${string}` | undefined}
+              proofScore={typeof proofScore === 'number' ? proofScore : 0}
+            />
 
             <VaultQuickActions
               onTransfer={() => { ops.setWithdrawRecipient(''); ops.setShowWithdrawModal(true); }}

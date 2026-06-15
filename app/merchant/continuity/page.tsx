@@ -5,6 +5,7 @@ import { ArrowLeft } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 import { PlainHelp } from '@/components/common/PlainHelp';
 import { MerchantContinuityCenter } from '@/components/merchant/MerchantContinuityCenter';
+import { BusinessTransferPanel } from '@/components/merchant/BusinessTransferPanel';
 import { useMerchantContinuity } from '@/hooks/useMerchantContinuity';
 
 function PageInner() {
@@ -21,6 +22,10 @@ function PageInner() {
           label: c.loading ? 'Checking…' : c.ready ? 'Your business is protected' : 'Choose a successor to protect your business',
         }}
       />
+      {/* Urgent: a takeover in progress surfaces at the top so the owner can stop/reclaim it. */}
+      <div className="mt-6">
+        <BusinessTransferPanel />
+      </div>
       <MerchantContinuityCenter />
     </>
   );

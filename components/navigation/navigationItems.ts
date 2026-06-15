@@ -81,6 +81,11 @@ import {
   FlaskConical,
   GraduationCap,
   Map,
+  Truck,
+  Package,
+  BadgePercent,
+  Undo2,
+  Briefcase,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -143,6 +148,13 @@ export const navigationItems: NavItem[] = [
       { id: 'payment-links', label: 'Payment Links', href: '/merchant/payment-links', icon: QrCode,     color: '#10B981', tier: 1 },
       { id: 'invoices',      label: 'Invoices',      href: '/merchant/invoices',      icon: FileText,   color: '#10B981', tier: 1 },
       { id: 'inventory',     label: 'Inventory',     href: '/merchant/inventory',     icon: Tag,        color: '#10B981', tier: 1 },
+      { id: 'shipping',      label: 'Shipping',      href: '/merchant/shipping',      icon: Truck,      color: '#10B981', tier: 1 },
+      { id: 'bundles',       label: 'Bundles',       href: '/merchant/bundles',       icon: Package,    color: '#10B981', tier: 1 },
+      { id: 'discounts',     label: 'Discounts',     href: '/merchant/coupons',       icon: BadgePercent, color: '#10B981', tier: 1 },
+      { id: 'returns',       label: 'Returns',       href: '/merchant/returns',       icon: Undo2,      color: '#10B981', tier: 1 },
+      { id: 'engagements',   label: 'Engagements',   href: '/merchant/engagements',   icon: Briefcase,  color: '#10B981', tier: 1 },
+      { id: 'pos',           label: 'Point of Sale', href: '/merchant/pos',           icon: Store,      color: '#10B981', tier: 1 },
+      { id: 'staff',         label: 'Staff',         href: '/merchant/staff',         icon: Users,      color: '#10B981', tier: 1 },
       { id: 'customers',     label: 'Customers',     href: '/merchant/customers',     icon: User,       color: '#10B981', tier: 1 },
       { id: 'payouts',       label: 'Payouts',       href: '/merchant/payouts',       icon: Banknote,   color: '#10B981', tier: 1 },
       { id: 'marketplace',   label: 'Marketplace',   href: '/marketplace',            icon: Globe,      color: '#10B981', tier: 1 },

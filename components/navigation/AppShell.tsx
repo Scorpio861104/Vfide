@@ -10,6 +10,7 @@ import { BottomTabBar } from './BottomTabBar';
 const MonumentCorner = dynamic(() => import('./MonumentCorner').then((mod) => mod.MonumentCorner), { ssr: false });
 const RecoveryBeacon = dynamic(() => import('@/components/security/RecoveryBeacon').then((mod) => mod.RecoveryBeacon), { ssr: false });
 const OwnerChallengeBanner = dynamic(() => import('@/components/security/OwnerChallengeBanner').then((mod) => mod.OwnerChallengeBanner), { ssr: false });
+const OwnerInheritanceClaimBanner = dynamic(() => import('@/components/security/OwnerInheritanceClaimBanner').then((mod) => mod.OwnerInheritanceClaimBanner), { ssr: false });
 const TierAurora = dynamic(() => import('@/components/identity/TierAurora').then((mod) => mod.TierAurora), { ssr: false });
 const TimeLattice = dynamic(() => import('@/components/identity/TimeLattice').then((mod) => mod.TimeLattice), { ssr: false });
 const TransactionTrailLayer = dynamic(() => import('@/components/payments/TransactionTrailLayer').then((mod) => mod.TransactionTrailLayer), { ssr: false });
@@ -66,6 +67,7 @@ export function AppShell({ children, walletEnabled = true, isConnected = false }
           footers and page-bottom content aren't hidden under it. */}
       <TierAurora />
       {walletEnabled && <OwnerChallengeBanner />}
+      {walletEnabled && <OwnerInheritanceClaimBanner />}
       <TopNav walletEnabled={walletEnabled} isConnected={isConnected} />
       <ProtocolTicker />
       {walletEnabled && <TimeLattice />}

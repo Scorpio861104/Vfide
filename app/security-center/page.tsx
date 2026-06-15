@@ -8,6 +8,7 @@ import { m as motion, AnimatePresence } from 'framer-motion';
 import { BiometricSetup } from '@/components/security/BiometricSetup';
 import { SecurityLogsDashboard } from '@/components/security/SecurityLogsDashboard';
 import { ThreatDetectionPanel } from '@/components/security/ThreatDetectionPanel';
+import { KeyPostureCard } from '@/components/security/KeyPostureCard';
 import { useBiometricAuth } from '@/hooks/useBiometricAuth';
 import { useSecurityLogs } from '@/hooks/useSecurityLogs';
 import { useThreatDetection } from '@/hooks/useThreatDetection';
@@ -188,6 +189,9 @@ export default function SecurityCenterPage() {
                       </button>
                     </div>
                   </div>
+
+                  {/* Key Posture — Campaign B remediation: surface the separation posture + re-separation action */}
+                  <KeyPostureCard />
 
                   {/* Quick Actions */}
                   <div className="glass-card-premium p-5">

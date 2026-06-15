@@ -34,11 +34,8 @@ export function useDisputes() {
     setError(null);
     try {
       const res = await fetch('/api/disputes', { credentials: 'include' });
-      if (!res.ok) {
-        setDisputes([]);
-        return;
-      }
-      const data = (await res.json()) as { disputes?: Dispute[] };
+      if (!res.ok) { setDisputes([]); return; }
+      const data = await res.json();
       setDisputes(Array.isArray(data.disputes) ? data.disputes : []);
     } catch {
       setError('Could not load disputes');
@@ -47,26 +44,20 @@ export function useDisputes() {
     }
   }, []);
 
-  const act = useCallback(
-    async (payload: Record<string, unknown>): Promise<boolean> => {
-      try {
-        const res = await fetch('/api/disputes', {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        if (res.ok) {
-          await refresh();
-          return true;
-        }
-        return false;
-      } catch {
-        return false;
-      }
-    },
-    [refresh],
-  );
+  const act = useCallback(async (payload: Record<string, unknown>): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/disputes', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) { await refresh(); return true; }
+      return false;
+    } catch {
+      return false;
+    }
+  }, [refresh]);
 
   const openDispute = useCallback(
     (respondent_address: string, reason: string, opts?: { detail?: string; tx_hash?: string; order_id?: string }) =>
@@ -74,16 +65,10 @@ export function useDisputes() {
     [act],
   );
   const respond = useCallback((id: string, merchant_response: string) => act({ action: 'respond', id, merchant_response }), [act]);
-  const resolve = useCallback(
-    (id: string, outcome: 'refunded' | 'settled' | 'upheld', resolution_note?: string) =>
-      act({ action: 'resolve', id, outcome, resolution_note }),
-    [act],
-  );
+  const resolve = useCallback((id: string, outcome: 'refunded' | 'settled' | 'upheld', resolution_note?: string) => act({ action: 'resolve', id, outcome, resolution_note }), [act]);
   const withdraw = useCallback((id: string) => act({ action: 'withdraw', id }), [act]);
 
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
+  useEffect(() => { void refresh(); }, [refresh]);
 
   return { disputes, loading, error, refresh, openDispute, respond, resolve, withdraw };
 }

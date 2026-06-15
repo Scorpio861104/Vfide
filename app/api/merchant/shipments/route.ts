@@ -5,9 +5,9 @@
  *   GET  — shipments the caller is party to, + (for a merchant) their delivery-reliability score.
  *   POST action:
  *     • 'ship'           — MERCHANT marks an order shipped (carrier + tracking).
- *     • 'mark_delivered' — MERCHANT marks delivered (-> delivered_unconfirmed until buyer confirms).
- *     • 'confirm'        — BUYER confirms receipt (-> delivered_confirmed; strongest trust signal).
- *     • 'not_received'   — BUYER reports non-delivery (-> feeds the disputes/fraud path).
+ *     • 'mark_delivered' — MERCHANT marks delivered (→ delivered_unconfirmed until buyer confirms).
+ *     • 'confirm'        — BUYER confirms receipt (→ delivered_confirmed; strongest trust signal).
+ *     • 'not_received'   — BUYER reports non-delivery (→ feeds the disputes/fraud path).
  *
  * HONEST: this records and confirms; it is not a live carrier API. Tracking is stored for evidence; a
  * carrier adapter can later auto-verify. Funds are never touched here.
@@ -134,7 +134,7 @@ async function postHandler(request: NextRequest, user: JWTPayload): Promise<Resp
       return NextResponse.json({ shipment: row });
     }
 
-    // not_received -> buyer reports non-delivery; feeds disputes/fraud signals.
+    // not_received → buyer reports non-delivery; feeds disputes/fraud signals.
     if (!isBuyer) return NextResponse.json({ error: 'Only the buyer reports non-delivery' }, { status: 403 });
     const row = (await query<ShipmentRow>(
       `UPDATE shipments SET status = 'not_received', updated_at = NOW() WHERE id = $1 RETURNING *`, [body.id],

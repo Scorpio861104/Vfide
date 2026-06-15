@@ -12,9 +12,11 @@ import { createPublicClient, decodeEventLog, getAddress, http, parseAbiItem, par
 
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { CONTRACT_ADDRESSES, StablecoinRegistryABI, isConfiguredContractAddress } from '@/lib/contracts';
-import { query } from '@/lib/db';
+import { query, getClient } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { emitServerEvent } from '@/lib/events/serverEmit';
 import { dispatchWebhook } from '@/lib/webhooks/merchantWebhookDispatcher';
+import { fulfillDigitalForOrder } from '@/lib/commerce/fulfillDigitalForOrder';
 import { z } from 'zod4';
 
 const TX_HASH_REGEX = /^0x[a-fA-F0-9]{64}$/;
@@ -381,6 +383,37 @@ export const POST = withAuth(async (request: NextRequest, user: JWTPayload, _con
     tx_hash,
     confirmed_at: new Date().toISOString(),
   });
+
+  // Ecosystem event (Wave 49) — a confirmed payment is the real PAYMENT_RECEIVED. Server-emitted,
+  // so it's trustworthy (the route just verified the payment).
+  await emitServerEvent(authAddress, 'PAYMENT_RECEIVED', { amount: amountUnits.toString(), token, tx_hash }, 'api/merchant/payments/confirm');
+
+  // Phase 1B: settle the referenced order and auto-deliver any digital goods. This is the trustworthy point —
+  // the on-chain payment is verified and idempotency is claimed. Best-effort: a settlement/fulfillment hiccup
+  // must not fail the (already-verified) payment confirmation. order_id may be the numeric id or order_number.
+  if (typeof order_id === 'string' && order_id.length > 0) {
+    try {
+      const numericId = /^\d+$/.test(order_id) ? Number(order_id) : null;
+      const settled = (await query<{ id: number; customer_address: string | null }>(
+        `UPDATE merchant_orders
+            SET payment_status = 'paid', paid_at = NOW(),
+                status = CASE WHEN status = 'pending' THEN 'confirmed' ELSE status END
+          WHERE merchant_address = $1
+            AND (($2::int IS NOT NULL AND id = $2::int) OR order_number = $3)
+            AND payment_status = 'unpaid'
+          RETURNING id, customer_address`,
+        [authAddress, numericId, order_id],
+      )).rows[0];
+
+      if (settled) {
+        await fulfillDigitalForOrder(query as unknown as Parameters<typeof fulfillDigitalForOrder>[0], getClient as unknown as Parameters<typeof fulfillDigitalForOrder>[1], settled.id, settled.customer_address ?? customer_address.toLowerCase());
+      }
+    } catch (e) {
+      logger.warn('[Payments confirm] order settlement / digital auto-fulfill failed (non-fatal)', {
+        order_id, error: e instanceof Error ? e.message : String(e),
+      });
+    }
+  }
 
   return NextResponse.json({ success: true });
 });

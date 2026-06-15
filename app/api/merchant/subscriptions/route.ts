@@ -14,6 +14,7 @@ import type { JWTPayload } from '@/lib/auth/jwt';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { dispatchWebhook } from '@/lib/webhooks/merchantWebhookDispatcher';
 import { logger } from '@/lib/logger';
+import { emitServerEvent } from '@/lib/events/serverEmit';
 import { z } from 'zod4';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{40}$/;
@@ -153,6 +154,7 @@ const postHandler = async (request: NextRequest, user: JWTPayload) => {
       ]
     );
 
+    await emitServerEvent(authAddress, 'SUBSCRIPTION_STARTED', { plan_id: result.rows[0]?.id }, 'api/merchant/subscriptions');
     return NextResponse.json({ plan: result.rows[0] }, { status: 201 });
   } catch (error) {
     logger.error('[Subscriptions POST] Error:', error);
@@ -219,6 +221,12 @@ const patchHandler = async (request: NextRequest, user: JWTPayload) => {
       `UPDATE merchant_subscription_plans SET ${updates.join(', ')} WHERE id = $${paramIndex} RETURNING *`,
       params as (string | number | boolean | Date | null | undefined)[]
     );
+
+    // Wiring (Wave 61): archiving a plan is a cancellation — emit the catalog event so the Seer/UI
+    // refresh (previously SUBSCRIPTION_CANCELLED was defined but never produced).
+    if (status === 'archived' && result.rows[0]) {
+      await emitServerEvent(authAddress, 'SUBSCRIPTION_CANCELLED', { plan_id: id }, 'api/merchant/subscriptions');
+    }
 
     return NextResponse.json({ plan: result.rows[0] });
   } catch (error) {

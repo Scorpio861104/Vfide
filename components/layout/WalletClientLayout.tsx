@@ -1,5 +1,6 @@
 'use client';
 
+import { DashboardSync } from '@/lib/events/useDashboardSync';
 import { ReactNode, Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { useAccount } from 'wagmi';
@@ -24,6 +25,7 @@ function WalletLayoutInner({ children, pathname }: WalletClientLayoutProps) {
     <UserProvider address={address}>
       <LiveProofScoreProvider>
         <WizardStateProvider>
+          <DashboardSync />
           <LayoutFrame pathname={pathname} walletEnabled isConnected={isConnected}>{children}</LayoutFrame>
           <Suspense fallback={null}><WizardMount /></Suspense>
         </WizardStateProvider>

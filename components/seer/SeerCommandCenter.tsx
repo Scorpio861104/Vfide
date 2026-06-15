@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 /**
  * SeerCommandCenter (Full Seer Integration wave).
  *
@@ -16,9 +18,8 @@ import { useMarketStanding } from '@/hooks/useMarketStanding';
 import { useMerchantHealth } from '@/hooks/useMerchantHealth';
 import { useContinuityStatus } from '@/hooks/useContinuityStatus';
 import { SEER_SUBSYSTEMS, coverageSummary, type SeerCoverageStatus } from '@/lib/seer/coverage';
-import { SeerLendingTerms } from '@/components/seer/SeerLendingTerms';
 import { useAccount } from 'wagmi';
-import { Activity, TrendingUp, Landmark, AlertTriangle, CheckCircle2, CircleDashed, Wrench } from 'lucide-react';
+import { Activity, ShieldCheck, TrendingUp, Landmark, AlertTriangle, CheckCircle2, CircleDashed, Wrench } from 'lucide-react';
 
 function Stat({ label, value, hint, tone = 'default' }: { label: string; value: string; hint?: string; tone?: 'default' | 'good' | 'warn' }) {
   const valueTone = tone === 'good' ? 'text-emerald-300' : tone === 'warn' ? 'text-amber-300' : 'text-white';
@@ -49,12 +50,13 @@ export function SeerCommandCenter() {
   const builder = standing.builder;
   const extraction = standing.extraction;
 
-  // Honest "recommended actions" — derived only from real, known state.
-  const actions: string[] = [];
-  if (!continuity.recoveryConfigured) actions.push('Set up account recovery so you can never be locked out.');
-  if (continuity.guardianCount === 0) actions.push('Add a trusted guardian for protection.');
-  if (merchant.isMerchant && builder && builder.category === 'Newcomer') actions.push('Take your first payments to start building your Builder Record.');
-  if (extraction && extraction.index >= 3000) actions.push('Your market behavior is affecting your standing — steady activity restores it over time.');
+  // Honest "recommended actions" — derived only from real, known state. Each links to where it's done
+  // (Wave 83: recommendations were dead text; now every one has a reachable destination).
+  const actions: Array<{ text: string; href: string }> = [];
+  if (!continuity.recoveryConfigured) actions.push({ text: 'Set up account recovery so you can never be locked out.', href: '/recovery' });
+  if (continuity.guardianCount === 0) actions.push({ text: 'Add a trusted guardian for protection.', href: '/guardians' });
+  if (merchant.isMerchant && builder && builder.category === 'Newcomer') actions.push({ text: 'Take your first payments to start building your Builder Record.', href: '/merchant' });
+  if (extraction && extraction.index >= 3000) actions.push({ text: 'Frequent large sell/rebuy trading is affecting your standing — this is separate from sales to customers, and it recovers on its own as trading steadies.', href: '/seer' });
 
   return (
     <div className="space-y-8">
@@ -78,17 +80,15 @@ export function SeerCommandCenter() {
           <h2 className="text-sm font-semibold text-cyan-200">Recommended for you</h2>
           <ul className="mt-3 space-y-2">
             {actions.map((a, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm text-zinc-200">
-                <TrendingUp size={15} className="mt-0.5 shrink-0 text-cyan-300/80" aria-hidden="true" />{a}
+              <li key={i}>
+                <Link href={a.href} className="flex items-start gap-2 text-sm text-zinc-200 transition-colors hover:text-cyan-200">
+                  <TrendingUp size={15} className="mt-0.5 shrink-0 text-cyan-300/80" aria-hidden="true" />{a.text}
+                </Link>
               </li>
             ))}
           </ul>
         </section>
       )}
-
-      <section>
-        <SeerLendingTerms />
-      </section>
 
       {/* Seer coverage map — honest status of every subsystem */}
       <section>

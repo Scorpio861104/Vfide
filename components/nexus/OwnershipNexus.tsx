@@ -25,6 +25,8 @@ import {
 import { useProofScore } from '@/hooks/useProofScore';
 import { useContinuityStatus } from '@/hooks/useContinuityStatus';
 import { useMerchantHealth } from '@/hooks/useMerchantHealth';
+import { useEcosystemSignal } from '@/lib/events/EventProvider';
+import { EVENT_ROUTES } from '@/lib/events/eventTypes';
 
 type NodeState = 'established' | 'forming' | 'open';
 interface SubSystem { label: string; href: string; established: boolean; }
@@ -52,6 +54,17 @@ export function OwnershipNexus({ variant = 'inline' }: { variant?: 'inline' | 'm
   const mh = useMerchantHealth();
   const [selected, setSelected] = useState<string | null>(null);
   const [hovered, setHovered] = useState<string | null>(null);
+  // Live ecosystem signal — the node whose layer just saw activity this session (Wave 47).
+  const [pulsingNode, setPulsingNode] = useState<string | null>(null);
+
+  useEcosystemSignal((event) => {
+    const node = EVENT_ROUTES[event.type]?.nexusNode;
+    if (!node) return;
+    setPulsingNode(node);
+    // The pulse is a brief acknowledgement; it fades and the node returns to its real-state look.
+    const t = setTimeout(() => setPulsingNode((n) => (n === node ? null : n)), 2600);
+    return () => clearTimeout(t);
+  });
 
   const monumental = variant === 'monumental';
   const NODE_R = monumental ? 64 : 58;
@@ -213,6 +226,7 @@ export function OwnershipNexus({ variant = 'inline' }: { variant?: 'inline' | 'm
               const Icon = node.icon;
               const isSel = selected === node.id;
               const isHover = hovered === node.id;
+              const isPulsing = pulsingNode === node.id;
               const established = node.state === 'established';
               const forming = node.state === 'forming';
               const d = delayFor(node.introOrder);
@@ -227,7 +241,10 @@ export function OwnershipNexus({ variant = 'inline' }: { variant?: 'inline' | 'm
                   onFocus={() => setHovered(node.id)}
                   onBlur={() => setHovered((h) => (h === node.id ? null : h))}>
                   <circle cx={x} cy={y} r={NODE_R + 26} fill={`url(#g-${node.id})`}
-                    style={{ opacity: isHover || isSel ? 1.6 : 1, transition: 'opacity 0.3s' }} />
+                    style={{ opacity: isHover || isSel || isPulsing ? 1.6 : 1, transition: 'opacity 0.3s' }} />
+                  {isPulsing && (
+                    <circle cx={x} cy={y} r={NODE_R} fill="none" stroke={node.color} strokeWidth={2.5} className="nexus-live-pulse" />
+                  )}
                   <circle cx={x} cy={y} r={NODE_R} fill="#0c0c0e"
                     stroke={established ? node.color : forming ? `${node.color}99` : 'rgba(255,255,255,0.12)'}
                     strokeWidth={isSel || isHover ? 3.5 : established ? 2.5 : 1.5}

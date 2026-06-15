@@ -14,6 +14,10 @@ import type { JWTPayload } from '@/lib/auth/jwt';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { emitServerEvent } from '@/lib/events/serverEmit';
+import { authoritativeShipping, type ShippingZone, type ShippingRate } from '@/lib/commerce/shippingRates';
+import { computeTax, type TaxRate, type TaxLine, type ProductType } from '@/lib/commerce/taxEngine';
+import { validateCoupon, bundleSavings, composePrice, type BundleDefinition, type CartLineForBundle } from '@/lib/commerce/discountEngine';
+import { serializeCouponRow } from '@/lib/coupons';
 import { z } from 'zod4';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{40}$/;
@@ -34,6 +38,8 @@ interface CatalogProductRow {
   name: string;
   sku: string | null;
   price: string | number;
+  weight_grams: number | null;
+  product_type: string | null;
 }
 
 interface CatalogVariantRow {
@@ -76,8 +82,11 @@ const createOrderSchema = z.object({
   shipping_address: z.record(z.string(), z.unknown()).optional(),
   shipping_method: z.string().trim().max(100).optional(),
   tax_amount: z.coerce.number().min(0).optional(),
+  tax_exempt: z.boolean().optional(),
   shipping_amount: z.coerce.number().min(0).optional(),
+  shipping_rate_id: z.coerce.number().int().positive().optional(),
   discount_amount: z.coerce.number().min(0).optional(),
+  coupon_code: z.string().trim().max(40).optional(),
   customer_notes: z.string().trim().max(1000).optional(),
 });
 
@@ -243,7 +252,7 @@ async function postHandler(request: NextRequest, user: JWTPayload) {
     );
 
     const productResult = await query<CatalogProductRow>(
-      `SELECT id, name, sku, price
+      `SELECT id, name, sku, price, weight_grams, product_type
          FROM merchant_products
         WHERE merchant_address = $1
           AND id = ANY($2::int[])
@@ -281,6 +290,25 @@ async function postHandler(request: NextRequest, user: JWTPayload) {
 
       for (const variant of variantResult.rows) {
         variantsById.set(variant.id, variant);
+      }
+    }
+
+    // Phase 1A variant-required rule: if a product has ≥1 ACTIVE variant, a purchase line for it MUST name a
+    // variant (the variant is the stock-keeping unit). Prevents ambiguous variant-less purchases.
+    const productsWithActiveVariants = new Set<number>(
+      (await query<{ product_id: number }>(
+        `SELECT DISTINCT product_id FROM merchant_product_variants
+          WHERE product_id = ANY($1::int[]) AND status = 'active'`,
+        [productIds],
+      )).rows.map((r) => r.product_id),
+    );
+    for (const item of items) {
+      const pid = item.product_id as number;
+      if (productsWithActiveVariants.has(pid) && !item.variant_id) {
+        return NextResponse.json(
+          { error: `Product ${pid} requires a variant selection` },
+          { status: 400 },
+        );
       }
     }
 
@@ -331,15 +359,165 @@ async function postHandler(request: NextRequest, user: JWTPayload) {
         sku: authoritativeSku ?? undefined,
         quantity: qty,
         unit_price: price,
-        product_type: item.product_type ?? 'physical',
+        product_type: (product.product_type as 'physical' | 'digital' | 'service' | null) ?? item.product_type ?? 'physical',
       });
     }
 
     subtotal = Math.round(subtotal * 100) / 100;
-    const tax = typeof tax_amount === 'number' ? Math.round(tax_amount * 100) / 100 : 0;
-    const shipping = typeof shipping_amount === 'number' ? Math.round(shipping_amount * 100) / 100 : 0;
-    const discount = typeof discount_amount === 'number' ? Math.round(discount_amount * 100) / 100 : 0;
-    const total = Math.round((subtotal + tax + shipping - discount) * 100) / 100;
+
+    // Phase 1E: discounts (coupon + bundles) are SERVER-AUTHORITATIVE and computed BEFORE tax, so tax applies
+    // to the discounted base. Non-breaking: with no coupon code and no bundles, the client discount_amount is
+    // honored (legacy). Coupon redemption limits are enforced; the redemption row is written in the order tx.
+    let discount = typeof discount_amount === 'number' ? Math.round(discount_amount * 100) / 100 : 0;
+    let appliedCouponCode: string | null = null;
+    let appliedCouponId: string | null = null;
+    let couponDiscount = 0;
+    let bundleDiscount = 0;
+    try {
+      // Bundles: savings for the whole cart (no code needed).
+      const bundleRows = (await query<{ id: number; name: string; pricing_type: 'fixed' | 'percent'; amount: number; active: boolean }>(
+        `SELECT id, name, pricing_type, amount::float8 AS amount, active FROM merchant_bundles WHERE merchant_address = $1 AND active = true`,
+        [merchant_address],
+      )).rows;
+      if (bundleRows.length > 0) {
+        const compRows = (await query<{ bundle_id: number; product_id: number; quantity: number }>(
+          `SELECT bundle_id, product_id, quantity FROM merchant_bundle_components WHERE bundle_id = ANY($1::int[])`,
+          [bundleRows.map((b) => b.id)],
+        )).rows;
+        const cartLines: CartLineForBundle[] = validatedItems
+          .filter((it) => typeof it.product_id === 'number')
+          .map((it) => ({ product_id: it.product_id as number, quantity: it.quantity, unit_price: it.unit_price }));
+        for (const b of bundleRows) {
+          const def: BundleDefinition = {
+            id: b.id, name: b.name, pricing_type: b.pricing_type, amount: Number(b.amount), active: b.active,
+            components: compRows.filter((c) => c.bundle_id === b.id).map((c) => ({ product_id: c.product_id, quantity: c.quantity })),
+          };
+          bundleDiscount += bundleSavings(def, cartLines);
+        }
+        bundleDiscount = Math.round(bundleDiscount * 100) / 100;
+      }
+
+      // Coupon: validated against this customer's prior redemptions + the eligible (product-scoped) subtotal.
+      if (typeof body.coupon_code === 'string' && body.coupon_code.trim().length > 0) {
+        const code = body.coupon_code.trim().toUpperCase();
+        const couponRow = (await query<Record<string, unknown>>(
+          `SELECT id, merchant_address, code, discount_type, discount_value, min_order_amount, max_discount,
+                  max_uses, uses, per_customer_limit, valid_from, valid_until, active, product_ids
+             FROM merchant_coupons WHERE merchant_address = $1 AND UPPER(code) = $2`,
+          [merchant_address, code],
+        )).rows[0];
+        if (couponRow) {
+          const coupon = serializeCouponRow(couponRow);
+          const redemptions = (await query<{ n: string }>(
+            `SELECT COUNT(*)::text AS n FROM coupon_redemptions WHERE coupon_id = $1 AND customer_address = $2`,
+            [coupon.id, authAddress],
+          )).rows[0];
+          const customerRedemptions = Number(redemptions?.n ?? 0);
+          // eligible subtotal: items whose product_id is in the coupon's productIds (or full subtotal if unscoped)
+          const scoped = Array.isArray(coupon.productIds) && coupon.productIds.length > 0;
+          const eligibleSubtotal = scoped
+            ? Math.round(validatedItems
+                .filter((it) => it.product_id != null && coupon.productIds!.includes(String(it.product_id)))
+                .reduce((s, it) => s + it.unit_price * it.quantity, 0) * 100) / 100
+            : subtotal;
+          const decision = validateCoupon(coupon, { nowMs: Date.now(), customerRedemptions, eligibleSubtotal, fullSubtotal: subtotal });
+          if (!decision.ok) {
+            return NextResponse.json({ error: `Coupon not applied: ${decision.reason}` }, { status: 400 });
+          }
+          couponDiscount = decision.discount;
+          appliedCouponCode = coupon.code;
+          appliedCouponId = coupon.id;
+        } else {
+          return NextResponse.json({ error: 'Coupon not found' }, { status: 400 });
+        }
+      }
+
+      if (bundleRows.length > 0 || appliedCouponId) {
+        discount = Math.round((couponDiscount + bundleDiscount) * 100) / 100;
+      }
+    } catch (e) {
+      logger.warn('[Orders POST] authoritative discount failed; falling back to provided amount', { error: e instanceof Error ? e.message : String(e) });
+    }
+    // discounted taxable base — tax is computed on this, not the gross subtotal
+    const discountedBase = Math.round(Math.max(0, subtotal - discount) * 100) / 100;
+    const discountRatio = subtotal > 0 ? discountedBase / subtotal : 1;
+
+    // Phase 1D: tax is SERVER-AUTHORITATIVE when the merchant has configured tax rates. Lines are bucketed by
+    // the CATALOG product_type (not the client's), the most-specific matching jurisdiction rate is applied per
+    // type, and a tax-exempt order yields zero. Non-breaking: with no configured rates, fall back to the
+    // client-supplied tax_amount (legacy). This is in-house rate application, NOT legally-authoritative tax
+    // determination (see lib/commerce/taxProvider.ts).
+    let tax = typeof tax_amount === 'number' ? Math.round(tax_amount * 100) / 100 : 0;
+    let taxBreakdown: ReturnType<typeof computeTax>['breakdown'] | null = null;
+    try {
+      const taxRates = (await query<TaxRate>(
+        `SELECT id, name, rate_bps, jurisdiction_country, jurisdiction_state, jurisdiction_city,
+                postal_code_pattern, is_default, enabled, applies_to
+           FROM merchant_tax_rates WHERE merchant_address = $1 AND enabled = true`,
+        [merchant_address],
+      )).rows;
+      if (taxRates.length > 0) {
+        const addr = (shipping_address ?? {}) as { country?: string; state?: string; city?: string; postal?: string };
+        // Phase 1E: tax is computed on the DISCOUNTED base — scale each line by the overall discount ratio so a
+        // coupon/bundle reduces taxable value proportionally across product-type buckets.
+        const taxLines: TaxLine[] = validatedItems.map((it) => ({
+          type: ((it.product_type as ProductType) ?? 'physical'),
+          amount: Math.round(it.unit_price * it.quantity * discountRatio * 100) / 100,
+        }));
+        const result = computeTax(taxRates, taxLines, addr, body.tax_exempt === true);
+        tax = result.taxAmount;
+        taxBreakdown = result.breakdown;
+      }
+    } catch (e) {
+      logger.warn('[Orders POST] authoritative tax failed; falling back to provided amount', { error: e instanceof Error ? e.message : String(e) });
+    }
+
+    // Phase 1C: shipping is SERVER-AUTHORITATIVE when the merchant has configured shipping zones. If they have
+    // no zones (haven't adopted the rate engine), fall back to the client-supplied amount (legacy behavior),
+    // so existing physical merchants are not broken. Digital-only orders skip shipping entirely.
+    let shipping = typeof shipping_amount === 'number' ? Math.round(shipping_amount * 100) / 100 : 0;
+    let resolvedShippingRateId: number | null = null;
+    try {
+      const zones = (await query<ShippingZone>(
+        `SELECT id, name, countries, sort_order FROM merchant_shipping_zones WHERE merchant_address = $1 ORDER BY sort_order, id`,
+        [merchant_address],
+      )).rows;
+      if (zones.length > 0) {
+        // Total parcel weight from catalog weights (grams). Missing weight treated as 0.
+        let totalWeight = 0;
+        for (const item of items) {
+          const p = item.product_id ? productsById.get(item.product_id) : undefined;
+          const w = p?.weight_grams ?? 0;
+          totalWeight += (Number(w) || 0) * Math.max(1, Math.floor(item.quantity));
+        }
+        const rates = (await query<ShippingRate>(
+          `SELECT id, zone_id, name, rate_type, base_amount::float8 AS base_amount, per_kg::float8 AS per_kg,
+                  pct::float8 AS pct, free_over::float8 AS free_over, min_weight_g, max_weight_g, active
+             FROM merchant_shipping_rates WHERE merchant_address = $1 AND active = true ORDER BY id`,
+          [merchant_address],
+        )).rows;
+        const addr = (shipping_address ?? {}) as { country?: string };
+        const country = typeof addr.country === 'string' ? addr.country : '';
+        const chosenRateId = typeof body.shipping_rate_id === 'number' ? body.shipping_rate_id : null;
+        const result = authoritativeShipping(zones, rates, { country, totalWeightGrams: totalWeight, subtotal }, chosenRateId);
+        if (!result.ok) {
+          return NextResponse.json(
+            { error: result.reason === 'NO_SERVICE' ? 'This merchant does not ship to the destination' : 'Selected shipping rate is unavailable' },
+            { status: 400 },
+          );
+        }
+        shipping = result.amount;
+        resolvedShippingRateId = result.rate_id;
+      }
+    } catch (e) {
+      logger.warn('[Orders POST] authoritative shipping failed; falling back to provided amount', { error: e instanceof Error ? e.message : String(e) });
+    }
+
+    // Phase 1E: canonical composition — discount reduces subtotal, tax is on the discounted base (already
+    // computed above), shipping added last. composePrice clamps the discount so the total never goes negative.
+    const composed = composePrice(subtotal, discount, tax, shipping);
+    discount = composed.discount;
+    const total = composed.total;
 
     if (total < 0) {
       return NextResponse.json({ error: 'Order total cannot be negative' }, { status: 400 });
@@ -367,6 +545,17 @@ async function postHandler(request: NextRequest, user: JWTPayload) {
         requestedInventory.set(
           item.product_id,
           (requestedInventory.get(item.product_id) ?? 0) + item.quantity
+        );
+      }
+
+      // Phase 1A: when a line names a variant, the VARIANT is the stock-keeping unit. Track requested qty
+      // per variant so we enforce + decrement variant inventory (not just product-level).
+      const requestedVariantInventory = new Map<number, number>();
+      for (const item of validatedItems) {
+        if (!item.variant_id) continue;
+        requestedVariantInventory.set(
+          item.variant_id,
+          (requestedVariantInventory.get(item.variant_id) ?? 0) + item.quantity,
         );
       }
 
@@ -401,12 +590,29 @@ async function postHandler(request: NextRequest, user: JWTPayload) {
         }
       }
 
+      // Phase 1A: variant inventory check (variant is the SKU when chosen). NULL count = untracked.
+      for (const [variantId, requestedQty] of requestedVariantInventory.entries()) {
+        const vRes = await client.query<{ inventory_count: number | null }>(
+          `SELECT inventory_count FROM merchant_product_variants WHERE id = $1 FOR UPDATE`,
+          [variantId],
+        );
+        const vRow = vRes.rows[0];
+        if (vRow && vRow.inventory_count !== null && vRow.inventory_count < requestedQty) {
+          await client.query('ROLLBACK');
+          return NextResponse.json(
+            { error: `Insufficient inventory for variant ${variantId}` },
+            { status: 409 }
+          );
+        }
+      }
+
       const orderResult = await client.query(
         `INSERT INTO merchant_orders
          (order_number, merchant_address, customer_address, customer_email, customer_name,
           status, payment_status, tx_hash, token, subtotal, tax_amount,
-          shipping_amount, discount_amount, total, shipping_address, shipping_method, customer_notes)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
+          shipping_amount, discount_amount, total, shipping_address, shipping_method, customer_notes, shipping_rate_id,
+          tax_exempt, tax_breakdown, coupon_code, bundle_discount)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22)
          RETURNING *`,
         [
           orderNumber,
@@ -426,6 +632,11 @@ async function postHandler(request: NextRequest, user: JWTPayload) {
           shipping_address ? JSON.stringify(shipping_address) : null,
           shipping_method ?? null,
           customer_notes ?? null,
+          resolvedShippingRateId,
+          body.tax_exempt === true,
+          taxBreakdown ? JSON.stringify(taxBreakdown) : null,
+          appliedCouponCode,
+          bundleDiscount,
         ]
       );
 
@@ -433,6 +644,17 @@ async function postHandler(request: NextRequest, user: JWTPayload) {
       if (!order) {
         await client.query('ROLLBACK');
         return NextResponse.json({ error: 'Failed to create order' }, { status: 500 });
+      }
+
+      // Phase 1E: record the coupon redemption and increment usage atomically with the order, so usage caps and
+      // per-customer limits are enforced against real redemptions.
+      if (appliedCouponId && couponDiscount > 0) {
+        await client.query(
+          `INSERT INTO coupon_redemptions (coupon_id, customer_address, order_id, discount_applied)
+           VALUES ($1,$2,$3,$4)`,
+          [appliedCouponId, authAddress, order.id, couponDiscount],
+        );
+        await client.query(`UPDATE merchant_coupons SET uses = uses + 1 WHERE id = $1`, [appliedCouponId]);
       }
 
       // Insert line items
@@ -474,6 +696,16 @@ async function postHandler(request: NextRequest, user: JWTPayload) {
              SET inventory_count = GREATEST(0, inventory_count - $1)
              WHERE id = $2 AND inventory_tracking = true AND inventory_count IS NOT NULL`,
             [requestedQty, productId]
+          );
+      }
+
+      // Phase 1A: decrement variant inventory for variant lines (NULL count = untracked, left untouched).
+      for (const [variantId, requestedQty] of requestedVariantInventory.entries()) {
+          await client.query(
+            `UPDATE merchant_product_variants
+             SET inventory_count = GREATEST(0, inventory_count - $1)
+             WHERE id = $2 AND inventory_count IS NOT NULL`,
+            [requestedQty, variantId]
           );
       }
 
@@ -577,6 +809,20 @@ async function patchHandler(request: NextRequest, user: JWTPayload) {
 
     if (status === 'completed') {
       await emitServerEvent(authAddress, 'ORDER_COMPLETED', { order_id: result.rows[0]?.id }, 'api/merchant/orders');
+    }
+
+    // Phase 1B: refunding an order revokes any digital downloads issued for it (chargeback protection).
+    // Best-effort — a revocation hiccup must not fail the refund itself.
+    if (status === 'refunded') {
+      try {
+        await query(
+          `UPDATE merchant_digital_deliveries SET revoked = true, revoked_at = NOW(), revoke_reason = 'order_refunded'
+            WHERE order_id = $1 AND revoked = false`,
+          [id],
+        );
+      } catch (e) {
+        logger.warn('[Orders PATCH] digital revoke-on-refund failed (non-fatal)', { order_id: id, error: e instanceof Error ? e.message : String(e) });
+      }
     }
 
     return NextResponse.json({ order: result.rows[0] });

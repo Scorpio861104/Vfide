@@ -1,10 +1,10 @@
+import { useEmitEvent } from '@/lib/events/EventProvider';
 import { useAccount, useWriteContract, useReadContract, useWatchContractEvent, useChainId } from 'wagmi';
 import { useMemo, useEffect, useState } from 'react';
 import { isAddress } from 'viem';
 import { CARD_BOUND_VAULT_ABI, VAULT_HUB_ABI, ZERO_ADDRESS, isConfiguredContractAddress } from '@/lib/contracts'
 import { useContractAddresses } from './useContractAddresses';
 import { parseContractError, logError } from '@/lib/errorHandling';
-import { useEmitEvent } from '@/lib/events/EventProvider';
 import { CURRENT_CHAIN_ID } from '@/lib/testnet';
 const CARD_BOUND_ROTATION_DELAY_SECONDS = 7 * 24 * 60 * 60;
 
@@ -173,16 +173,11 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
         functionName: 'setGuardian',
         args: [guardianAddress, active],
       });
-      
-      if (active) {
-        emitEvent('GUARDIAN_ASSIGNED', { txHash: hash, guardianAddress }, 'useVaultRecovery', true);
-      } else {
-        emitEvent('GUARDIAN_REMOVED', { txHash: hash, guardianAddress }, 'useVaultRecovery', true);
-      }
-      
+      // Coordination event (Wave 49) — only on add, after the write is accepted. Durable.
+      if (active) emitEvent('GUARDIAN_ASSIGNED', { txHash: hash }, 'useVaultRecovery', true);
+      else emitEvent('GUARDIAN_REMOVED', { txHash: hash }, 'useVaultRecovery', true);
       return hash;
     } catch (error) {
-      logError('setGuardian', error);
       const parsed = parseContractError(error);
       throw new Error(`Failed to ${active ? 'add' : 'remove'} guardian: ${parsed.userMessage}`);
     }
@@ -216,12 +211,14 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
     assertNonZeroAddress(candidateAddress, 'Recovery target wallet');
     
     try {
-      return await writeContractAsync({
+      const hash = await writeContractAsync({
         address: vaultAddress,
         abi: CARD_BOUND_VAULT_ABI,
         functionName: 'proposeWalletRotation',
         args: [candidateAddress, BigInt(CARD_BOUND_ROTATION_DELAY_SECONDS)],
       });
+      emitEvent('RECOVERY_CONFIGURED', { txHash: hash }, 'useVaultRecovery', true);
+      return hash;
     } catch (error) {
       logError('requestRecovery', error);
       const parsed = parseContractError(error);
@@ -257,11 +254,13 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
     if (!vaultAddress) throw new Error('Vault address not provided');
     
     try {
-      return await writeContractAsync({
+      const hash = await writeContractAsync({
         address: vaultAddress,
         abi: CARD_BOUND_VAULT_ABI,
         functionName: 'finalizeWalletRotation',
       });
+      emitEvent('RECOVERY_COMPLETED', { txHash: hash }, 'useVaultRecovery', true);
+      return hash;
     } catch (error) {
       logError('finalizeRecovery', error);
       const parsed = parseContractError(error);

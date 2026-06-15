@@ -21,7 +21,6 @@ import { useContinuityStatus } from '@/hooks/useContinuityStatus';
 import { Footer } from '@/components/layout/Footer';
 import { ContinuityCommandHero } from '@/components/continuity/ContinuityCommandHero';
 import { ContinuityStatusGrid } from '@/components/continuity/ContinuityStatusGrid';
-import { PowerReturnPanel } from '@/components/civilization/PowerReturnPanel';
 import { LifeEventPlanning, RecoverySimulator } from '@/components/continuity/LifeEventPlanning';
 import { ContinuityTimeline } from '@/components/continuity/ContinuityTimeline';
 import { ContinuityRelationships } from '@/components/continuity/ContinuityPanels';
@@ -47,11 +46,6 @@ export default function ContinuityPage() {
       <div className="relative z-10 mx-auto w-full max-w-6xl px-5 py-16 md:px-8 md:py-20">
         <ContinuityCommandHero c={c} />
         <ContinuityStatusGrid c={c} />
-
-        <div className="mb-8">
-          <PowerReturnPanel institution="continuity" />
-        </div>
-
         <LifeEventPlanning />
         <RecoverySimulator />
 

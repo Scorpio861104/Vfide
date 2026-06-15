@@ -2,7 +2,7 @@
  * Merchant business-records transfer (Phase 1 — Succession Execution).
  *
  * Executes the off-chain half of "a business survives the owner": reassigns ownership of the merchant's
- * business records (catalog, subscriptions, payment config, staff, customers, ...) from the owner to the
+ * business records (catalog, subscriptions, payment config, staff, customers, …) from the owner to the
  * successor, in a single transaction. The on-chain FUNDS/vault are a SEPARATE handover via the existing
  * inheritance flow (useInheritance / CardBoundVault) — this never touches funds.
  *
@@ -56,12 +56,12 @@ export interface TransferResult {
 }
 
 /**
- * Reassign ownership of all business records from fromAddr to toAddr within an existing
+ * Reassign ownership of all business records from `fromAddr` to `toAddr` within an existing
  * transaction (pass a client already inside BEGIN). Caller is responsible for authorization and for
  * COMMIT/ROLLBACK. Returns per-table counts for the audit summary.
  *
  * Safety:
- *  - Runs inside the caller's transaction -> all-or-nothing.
+ *  - Runs inside the caller's transaction → all-or-nothing.
  *  - Skips rows that would collide (e.g. a successor who already has a merchant_profiles row) by
  *    leaving them to the caller's conflict policy; here we transfer only where the successor does not
  *    already own a conflicting unique row, to avoid PK/unique violations aborting the whole transfer.
@@ -77,7 +77,7 @@ export async function reassignBusinessRecords(
 
   const results: TransferResult[] = [];
   for (const table of TRANSFERABLE_MERCHANT_TABLES) {
-    // Identifier is from our own constant allow-list, never user input -> safe to interpolate.
+    // Identifier is from our own constant allow-list, never user input → safe to interpolate.
     const res = await client.query(
       `UPDATE ${table} SET merchant_address = $1 WHERE merchant_address = $2`,
       [to, from],

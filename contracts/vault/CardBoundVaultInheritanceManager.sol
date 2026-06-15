@@ -36,6 +36,9 @@ contract CardBoundVaultInheritanceManager {
     uint64 public constant INHERITANCE_VETO_PERIOD = 30 days;
     /// @notice INHERITANCE_CLAIM_WINDOW
     uint64 public constant INHERITANCE_CLAIM_WINDOW = 90 days;
+    /// @notice Minimum time into the claim window before distribution may be finalized, even if all heirs
+    /// have revealed (Wave 93 / W88, DRAFT). Guarantees a returning owner a floor reclaim period.
+    uint64 public constant CLAIM_FINALIZE_FLOOR = 14 days;
     /// @notice INHERITANCE_MEMORIAL_PERIOD
     uint64 public constant INHERITANCE_MEMORIAL_PERIOD = 365 days;
     /// @notice INHERITANCE_CONFIG_COOLDOWN
@@ -88,6 +91,10 @@ contract CardBoundVaultInheritanceManager {
     uint8 public inheritanceStateValue;
     /// @notice inheritanceStateWindowEnd
     uint64 public inheritanceStateWindowEnd;
+    /// @notice Timestamp at which inheritance timers were frozen because a recovery began while a claim was
+    /// active (Wave 95 / CID-1 timer-freeze, DRAFT). 0 when not suspended. On resume, the elapsed suspension
+    /// is added back to inheritanceStateWindowEnd so the owner's clock did not run during recovery.
+    uint64 public recoverySuspendedAt;
     /// @notice inheritanceInitiator
     address public inheritanceInitiator;
     /// @notice inheritanceReasonHash
@@ -125,13 +132,20 @@ contract CardBoundVaultInheritanceManager {
     address public daoGuardian;
 
     // ── R-1 — Guardian-quorum cancel of pending config ──────────────────
-    /// @notice Per-version tally of guardian votes to cancel a pending config.
-    /// @dev Keyed by `pendingConfigVersion`. When the count reaches the
-    ///      current guardian threshold, the pending state is cleared. Each
-    ///      guardian can vote at most once per pending version.
-    mapping(uint64 => uint256) public cancelVotesByPendingVersion;
-    /// @notice hasVotedToCancelByPendingVersion
-    mapping(uint64 => mapping(address => bool)) public hasVotedToCancelByPendingVersion;
+    /// @notice Monotonic proposal counter. Increments on EVERY config proposal (proposeInheritanceConfig /
+    ///         clearAllHeirs) and is never reused, so guardian cancel-vote tallies are scoped to a UNIQUE
+    ///         proposal. Without this, a cancelled-then-reproposed config reuses its version number (the live
+    ///         inheritanceConfigVersion only advances on confirm), letting stale cancel votes from the prior
+    ///         proposal carry into the new one — allowing fewer-than-threshold guardians to cancel it.
+    uint64 public configProposalNonce;
+    /// @notice The proposal nonce of the currently-pending config — the key for the cancel votes below.
+    uint64 public pendingConfigProposalNonce;
+    /// @notice Per-PROPOSAL tally of guardian votes to cancel a pending config.
+    /// @dev Keyed by `pendingConfigProposalNonce` (unique per proposal). When the count reaches the current
+    ///      guardian threshold, the pending state is cleared. Each guardian can vote at most once per proposal.
+    mapping(uint64 => uint256) public cancelVotesByProposalNonce;
+    /// @notice hasVotedToCancelByProposalNonce
+    mapping(uint64 => mapping(address => bool)) public hasVotedToCancelByProposalNonce;
 
     /// @notice guardianVetoedAtNonce
     mapping(address => uint256) private guardianVetoedAtNonce;
@@ -182,6 +196,10 @@ contract CardBoundVaultInheritanceManager {
     /// @notice InheritanceClaimEnteredClaimWindow
     /// @param claimWindowEnd claimWindowEnd
     event InheritanceClaimEnteredClaimWindow(uint64 claimWindowEnd);
+    /// @notice Inheritance timers frozen for an active recovery (Wave 95 / CID-1 timer-freeze, DRAFT).
+    event InheritanceTimersPaused(uint64 suspendedAt);
+    /// @notice Inheritance timers resumed after a recovery cleared without completing (Wave 95, DRAFT).
+    event InheritanceTimersResumed(uint64 frozenDuration, uint64 newWindowEnd);
     /// @notice HeirClaimRevealed
     /// @param heir heir
     /// @param basisPoints basisPoints
@@ -324,6 +342,7 @@ contract CardBoundVaultInheritanceManager {
 
         uint64 newVersion = inheritanceConfigVersion + 1;
         pendingConfigVersion = newVersion;
+        pendingConfigProposalNonce = ++configProposalNonce;
         pendingHeirConfigEffectiveAt = uint64(block.timestamp + INHERITANCE_CONFIG_COOLDOWN);
         pendingConfigHash = keccak256(abi.encode(newVersion, heirGuardians, heirCommitments));
 
@@ -410,6 +429,7 @@ contract CardBoundVaultInheritanceManager {
         }
         pendingHeirCount = 0;
         pendingConfigVersion = inheritanceConfigVersion + 1;
+        pendingConfigProposalNonce = ++configProposalNonce;
         pendingHeirConfigEffectiveAt = uint64(block.timestamp + INHERITANCE_CONFIG_COOLDOWN);
         pendingConfigHash = keccak256(abi.encode(pendingConfigVersion, noHeirs, noCommitments));
         emit InheritanceConfigProposed(pendingConfigVersion, noHeirs, noCommitments, pendingHeirConfigEffectiveAt);
@@ -456,18 +476,24 @@ contract CardBoundVaultInheritanceManager {
     function cancelInheritanceConfigChangeByGuardians(address actor) external onlyVault {
         if (pendingHeirConfigEffectiveAt == 0) revert INH_NoPendingConfig();
         if (!_isGuardian(actor)) revert INH_NotGuardian();
-        uint64 version = pendingConfigVersion;
-        if (hasVotedToCancelByPendingVersion[version][actor]) revert INH_AlreadyVotedToCancel();
+        // FINDING (Continuity Audit 4 — Heir Configuration): key cancel votes by the UNIQUE proposal nonce, not
+        // the config version. The live inheritanceConfigVersion only advances on confirm, so a cancelled-then-
+        // reproposed config reuses its version number; keying votes by version let stale votes from the prior
+        // (cancelled) proposal carry into the new one, allowing fewer-than-threshold guardians to cancel a fresh,
+        // legitimate proposal. The monotonic nonce is never reused, so every proposal starts with a zero tally.
+        uint64 proposalNonce = pendingConfigProposalNonce;
+        uint64 version = pendingConfigVersion; // informational (event payload)
+        if (hasVotedToCancelByProposalNonce[proposalNonce][actor]) revert INH_AlreadyVotedToCancel();
 
-        hasVotedToCancelByPendingVersion[version][actor] = true;
-        uint256 newCount = cancelVotesByPendingVersion[version] + 1;
-        cancelVotesByPendingVersion[version] = newCount;
+        hasVotedToCancelByProposalNonce[proposalNonce][actor] = true;
+        uint256 newCount = cancelVotesByProposalNonce[proposalNonce] + 1;
+        cancelVotesByProposalNonce[proposalNonce] = newCount;
         emit PendingConfigCancellationVoted(version, actor, newCount);
 
         uint256 threshold = _guardianThreshold();
         if (newCount >= threshold) {
-            // Clear the pending state. Vote tally itself is left in storage
-            // (version is monotonic so it can never be reused).
+            // Clear the pending state. The tally is keyed by the unique proposal nonce, so it can never collide
+            // with a future proposal even if the version number is reused after this cancellation.
             for (uint256 i = 0; i < MAX_HEIRS; ++i) {
                 delete pendingHeirGuardianByIndex[i];
                 delete pendingHeirCommitmentByIndex[i];
@@ -475,21 +501,6 @@ contract CardBoundVaultInheritanceManager {
             pendingHeirCount = 0;
             pendingConfigHash = bytes32(0);
             pendingHeirConfigEffectiveAt = 0;
-            // Note: we do NOT roll back pendingConfigVersion — a future proposal
-            // will still bump it from inheritanceConfigVersion + 1, which may
-            // equal `version` again. That's fine because the new proposal will
-            // see hasVotedToCancelByPendingVersion[version][actor] == true for
-            // guardians who voted on the cancelled one, which is the desired
-            // behavior — they don't have to vote again on a brand-new proposal
-            // because their cancel-vote was scoped to the prior content. To
-            // address this, we explicitly bump pendingConfigVersion in the next
-            // propose() call as a fresh-version-on-new-proposal property.
-            //
-            // Actually: pendingConfigVersion is recomputed from
-            // inheritanceConfigVersion + 1 each time propose() runs, so it
-            // doesn't accumulate. The vote-flag persistence across cancellations
-            // of the SAME logical version number is the design intent.
-
             emit PendingConfigCancelledByGuardians(version, newCount, threshold);
             emit InheritanceConfigCancelled();
         }
@@ -558,7 +569,17 @@ contract CardBoundVaultInheritanceManager {
     /// @param actor actor
     function ownerOverrideClaim(address actor) external onlyVault {
         _rolloverToClaimWindowIfNeeded();
-        if (inheritanceStateValue != STATE_VETO_PERIOD) {
+        // ── Wave 93 / W88 (DRAFT — UNCOMPILED, contract-audit gate) ──
+        // The owner / proof-of-life wallet can now cancel the claim until assets IRREVERSIBLY leave — i.e.
+        // through the claim window too, gated on !distributionFinalized — not just the 30-day veto cliff.
+        // Rationale: claimHeirShare only REGISTERS commitments; funds have not actually moved until
+        // finalizeInheritanceDistribution computes the shares. Moving the reclaim boundary to the true point
+        // of no return gives an owner returning from a long coma/deployment a real remedy while preserving
+        // heir certainty at finalization. (Paired with the finalize-floor below so "until finalized" can't be
+        // collapsed to near-zero by heirs all revealing immediately.)
+        bool inVeto = inheritanceStateValue == STATE_VETO_PERIOD;
+        bool inReclaimableClaim = inheritanceStateValue == STATE_CLAIM_WINDOW && !distributionFinalized;
+        if (!inVeto && !inReclaimableClaim) {
             revert INH_OwnerOverrideExpired();
         }
         if (actor != snapshotOwnerAdmin && actor != snapshotProofOfLifeWallet) {
@@ -575,6 +596,16 @@ contract CardBoundVaultInheritanceManager {
     /// @param basisPoints basisPoints
     function claimHeirShare(address actor, bytes32 heirSecret, uint256 basisPoints) external onlyVault {
         _rolloverToClaimWindowIfNeeded();
+        // ── Wave 93 / CID-1 (DRAFT — UNCOMPILED, contract-audit gate): recovery precedence ──
+        // Recovery is EVIDENCE the owner is alive/recoverable; it must outrank inheritance's PRESUMPTION of
+        // death. While a recovery rotation is pending, inheritance is SUSPENDED (cannot advance) — state is
+        // preserved, and because this check is dynamic, the claim RESUMES if the recovery expires/cancels,
+        // or is mooted if the recovery completes (executeRecoveryRotation resets inheritance — see vault).
+        // RESOLVED (Wave 95 / CID-1 timer-freeze): the W92 question — whether to pause the inheritance window
+        // timers during suspension — is settled YES. pauseTimersForRecovery() freezes the clock on suspend and
+        // resumeTimersAfterRecovery() adds the frozen duration back on resume, so the owner's veto/claim clock
+        // does NOT run during a recovery. The timers do not tick during suspension.
+        if (_pendingRecoveryRotation()) revert INH_RecoveryInProgress();
         if (inheritanceStateValue != STATE_CLAIM_WINDOW) {
             revert INH_WrongState(inheritanceStateValue, STATE_CLAIM_WINDOW);
         }
@@ -620,6 +651,9 @@ contract CardBoundVaultInheritanceManager {
     /// @notice finalizeInheritanceDistribution
     function finalizeInheritanceDistribution() external onlyVault {
         _rolloverToClaimWindowIfNeeded();
+        // Wave 93 / CID-1 (DRAFT — audit-gate): recovery precedence — a pending recovery rotation suspends
+        // finalization too, so assets cannot be distributed to heirs while the owner is being recovered.
+        if (_pendingRecoveryRotation()) revert INH_RecoveryInProgress();
         if (inheritanceStateValue != STATE_CLAIM_WINDOW) {
             revert INH_WrongState(inheritanceStateValue, STATE_CLAIM_WINDOW);
         }
@@ -628,7 +662,16 @@ contract CardBoundVaultInheritanceManager {
         uint256 nonce = inheritanceClaimNonce;
         uint256 revealedCount = revealersByNonce[nonce].length;
         bool claimWindowElapsed = block.timestamp >= inheritanceStateWindowEnd;
-        if (!claimWindowElapsed && revealedCount != heirCount) {
+        // ── Wave 93 / W88 (DRAFT — UNCOMPILED, audit-gate): minimum claim-window floor ──
+        // Without this, finalize runs the instant ALL heirs reveal (revealedCount == heirCount), which a
+        // coordinated heir set could do on day 1 of the claim window — collapsing the returning owner's
+        // reclaim window (above) to near zero. Require a guaranteed floor into the claim window before
+        // finalize is permitted, so the owner/proof-of-life always has a minimum reclaim period regardless
+        // of heir coordination. The full claim window still applies if heirs DON'T all reveal. Floor value
+        // is an audit risk-appetite decision.
+        uint64 claimWindowStart = inheritanceStateWindowEnd - INHERITANCE_CLAIM_WINDOW;
+        bool floorElapsed = block.timestamp >= uint256(claimWindowStart) + CLAIM_FINALIZE_FLOOR;
+        if (!claimWindowElapsed && (revealedCount != heirCount || !floorElapsed)) {
             revert INH_CooldownActive(inheritanceStateWindowEnd - uint64(block.timestamp));
         }
 
@@ -644,6 +687,18 @@ contract CardBoundVaultInheritanceManager {
         }
 
         uint256 totalRevealed = totalRevealedBasisPoints;
+        // FINDING (Continuity Audit 3 — Inheritance Claims): degenerate-config guard. basisPoints is bound in the
+        // heir commitment (hidden at config time), and reveal does NOT reject a 0-basis-point share. If every
+        // revealing heir committed 0 bps, totalRevealed == 0 and the proportional split below would divide by
+        // zero — permanently bricking finalization (cannot distribute, and revealedCount != 0 so the memorial
+        // path above is unreachable). Treat a zero-weight reveal set like an empty one: finalize with no
+        // distribution so funds remain and the vault enters memorial. Owner-misconfiguration safety, not an
+        // attacker vector (only the owner sets commitments).
+        if (totalRevealed == 0) {
+            distributionFinalized = true;
+            _enterMemorialState();
+            return;
+        }
         uint256 runningPaid = 0;
         uint256 runningBps = 0;
 
@@ -784,6 +839,44 @@ contract CardBoundVaultInheritanceManager {
         emit VaultEnteredMemorial(inheritanceStateWindowEnd);
     }
 
+    /// @notice Cancel any active inheritance claim because the owner is being RECOVERED (Wave 93 / CID-1,
+    /// DRAFT — UNCOMPILED, audit-gate). Called by the vault from executeRecoveryRotation: a completed
+    /// recovery installs a (recovered) owner, which supersedes the death presumption, so any in-flight
+    /// inheritance claim is cancelled. Idempotent — safe to call when no claim is active (resets to NORMAL).
+    function cancelClaimForRecovery() external onlyVault {
+        if (inheritanceStateValue != STATE_NORMAL) {
+            emit InheritanceClaimOverridden(address(0));
+            _cancelActiveInheritanceClaim();
+        }
+        recoverySuspendedAt = 0; // recovery resolved (succeeded) → clear any suspension marker
+    }
+
+    /// @notice Freeze inheritance timers because a recovery has begun while a claim is active (Wave 95 /
+    /// CID-1 timer-freeze, DRAFT — UNCOMPILED, audit-gate). Called by the vault from stageRecoveryRotation.
+    /// Only meaningful while an inheritance claim is in flight; no-op otherwise. Idempotent (first freeze
+    /// wins — overlapping recoveries don't double-count, see resume).
+    function pauseTimersForRecovery() external onlyVault {
+        if (inheritanceStateValue == STATE_NORMAL) return;     // nothing to freeze
+        if (recoverySuspendedAt != 0) return;                  // already frozen
+        recoverySuspendedAt = uint64(block.timestamp);
+        emit InheritanceTimersPaused(recoverySuspendedAt);
+    }
+
+    /// @notice Resume inheritance timers after a recovery clears WITHOUT completing (expired/challenged) —
+    /// Wave 95 / CID-1 timer-freeze, DRAFT. Adds the elapsed suspension back onto the window end so the
+    /// owner's clock did not run during recovery, then unfreezes. (Recovery that SUCCEEDS calls
+    /// cancelClaimForRecovery instead, which cancels the claim outright.)
+    function resumeTimersAfterRecovery() external onlyVault {
+        if (recoverySuspendedAt == 0) return;                  // not suspended
+        uint64 elapsed = uint64(block.timestamp) - recoverySuspendedAt;
+        // Extend the active window by the frozen duration (veto or claim — both use inheritanceStateWindowEnd).
+        if (inheritanceStateValue != STATE_NORMAL && inheritanceStateWindowEnd != 0) {
+            inheritanceStateWindowEnd += elapsed;
+        }
+        recoverySuspendedAt = 0;
+        emit InheritanceTimersResumed(elapsed, inheritanceStateWindowEnd);
+    }
+
     /// @notice _cancelActiveInheritanceClaim
     function _cancelActiveInheritanceClaim() internal {
         inheritanceStateValue = STATE_NORMAL;
@@ -805,6 +898,10 @@ contract CardBoundVaultInheritanceManager {
     /// @notice _rolloverToClaimWindowIfNeeded
     function _rolloverToClaimWindowIfNeeded() internal {
         if (inheritanceStateValue != STATE_VETO_PERIOD) return;
+        // Wave 95 / CID-1 timer-freeze (DRAFT — UNCOMPILED, audit-gate): do not advance the state machine
+        // while inheritance is suspended for an active recovery. The owner's veto clock is frozen, so the
+        // veto window must not roll into the claim window during the suspension.
+        if (recoverySuspendedAt != 0) return;
         if (block.timestamp < inheritanceStateWindowEnd) return;
         inheritanceStateValue = STATE_CLAIM_WINDOW;
         inheritanceStateWindowEnd = uint64(block.timestamp + INHERITANCE_CLAIM_WINDOW);

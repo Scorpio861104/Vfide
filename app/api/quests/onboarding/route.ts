@@ -5,6 +5,8 @@ import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
 import type { JWTPayload } from '@/lib/auth/jwt';
+import { verifyOnboardingStep, type OnboardingStep } from '@/lib/quests/onboardingVerification';
+import { attestOnchainStep, isAttestedStep } from '@/lib/quests/onchainAttestation';
 
 const VALID_ONBOARDING_STEPS = new Set([
   'connectWallet',
@@ -263,6 +265,50 @@ export const PATCH = withAuth(async (request: NextRequest, user: JWTPayload) => 
       if (!updateStepSql) {
         await client.query('ROLLBACK');
         return NextResponse.json({ error: 'Invalid onboarding step' }, { status: 400 });
+      }
+
+      // ── FINDING B FIX: verify the step actually happened before crediting it ─────────────────
+      // Previously any step could be self-asserted, making the 500-XP completion reward farmable. We now
+      // require server-side evidence: DB-backed steps are checked against real activity; on-chain-truth steps
+      // (vault deposit, governance vote) are not self-assertable and must come from a trusted/admin path.
+      // Admins/system attestation bypass (the trusted path for on-chain steps).
+      const verification = await verifyOnboardingStep(
+        step as OnboardingStep,
+        isAdmin(user),
+        async (sql: string) => {
+          const r = await client.query(sql, [userId]);
+          return r.rows[0]?.ok === true;
+        },
+      );
+      if (!verification.verified) {
+        // ── ATTESTATION PATH: for on-chain-truth steps, before refusing, READ THE CHAIN to confirm the
+        // user genuinely did it. This gives a legitimate depositor/voter automatic credit without an admin,
+        // while keeping the farm closed (a user who didn't act gets 'not-found'). A transient RPC failure
+        // yields 'unavailable' → a retryable 503, never a false "you didn't do this".
+        if (!verification.selfAssertable && isAttestedStep(step)) {
+          const attestation = await attestOnchainStep(step, targetAddress);
+          if (attestation.outcome === 'unavailable') {
+            await client.query('ROLLBACK');
+            return NextResponse.json(
+              { error: 'On-chain verification temporarily unavailable', step, reason: attestation.reason, retryable: true },
+              { status: 503 },
+            );
+          }
+          if (attestation.outcome !== 'confirmed') {
+            await client.query('ROLLBACK');
+            return NextResponse.json(
+              { error: 'Step not yet completed', step, reason: attestation.reason },
+              { status: 422 },
+            );
+          }
+          // confirmed on-chain — fall through to credit the step.
+        } else {
+          await client.query('ROLLBACK');
+          return NextResponse.json(
+            { error: 'Step not yet completed', step, reason: verification.reason },
+            { status: 422 },
+          );
+        }
       }
 
       // Update the specific step using a fixed SQL template (no dynamic column interpolation).

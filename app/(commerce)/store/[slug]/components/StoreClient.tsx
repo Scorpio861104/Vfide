@@ -10,6 +10,7 @@ import { useState, useMemo } from 'react';
 import { m, AnimatePresence } from 'framer-motion';
 import { Search, Share2, Grid, List, Package } from 'lucide-react';
 import { MerchantTrustBadge } from '@/components/merchant/MerchantTrustBadge';
+import { MerchantTrustPanel } from '@/components/merchant/MerchantTrustPanel';
 import { Footer } from '@/components/layout/Footer';
 import { CheckoutPanel } from '@/components/checkout/CheckoutPanel';
 import { useCart } from '@/providers/CartProvider';
@@ -84,6 +85,10 @@ export function StoreClient({ merchant, initialProducts, slug }: StoreClientProp
             merchantAddress={merchant.merchant_address as `0x${string}`}
             variant="compact"
           />
+          {/* Full customer-facing trust panel (Wave 76: surface the transparency engine) */}
+          <div className="mt-4">
+            <MerchantTrustPanel merchantAddress={merchant.merchant_address} />
+          </div>
         </div>
       </section>
 

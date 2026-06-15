@@ -90,6 +90,18 @@ function RecoveryStatusInner() {
     <div className="min-h-screen bg-zinc-900 p-6">
       <div className="max-w-xl mx-auto space-y-5" data-testid="recovery-status-root">
 
+        {/* Veritas-Law: this sample-status route ships gated only by a query param; label it unmistakably so a
+            crafted link cannot pass it off as a live recovery status. Real users (no param) are redirected above. */}
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-200/90 leading-relaxed">
+          Preview view — this is a sample recovery status for demonstration, not your live recovery.{' '}
+          <a
+            href={`/vault/recover/status${vault !== '0x0' ? `?vault=${vault}` : ''}`}
+            className="underline hover:text-amber-100"
+          >
+            View your real recovery status
+          </a>.
+        </div>
+
         {/* ── Status overview card ─────────────────────────────────────────── */}
         <GlassCard hover={false} className="p-6">
           <div className="flex items-start gap-4 mb-5">

@@ -233,6 +233,8 @@ export function VerificationSystems() {
   const m = useMerchantHealth();
   const mv = useMerchantVerification();
 
+  // Real merchant verification (Wave 49-B): verified only when actually earned; registered-but-not-
+  // yet-verified shows as pending; not a merchant shows not-configured. No longer "verified == registered".
   const merchantVerifyState: VerifyState = mv.verified
     ? 'verified'
     : m.isMerchant

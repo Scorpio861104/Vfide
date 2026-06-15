@@ -16,8 +16,12 @@ import {
   CheckCircle2,
   Archive,
   Trash2,
+  Tag,
+  FileDown,
 } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
+import { VariantManager } from '@/components/merchant/VariantManager';
+import { DigitalAssetManager } from '@/components/merchant/DigitalAssetManager';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -61,6 +65,8 @@ export default function MerchantInventoryPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | ProductStatus>('active');
   const [showCreate, setShowCreate] = useState(false);
+  const [variantsFor, setVariantsFor] = useState<Product | null>(null);
+  const [digitalFor, setDigitalFor] = useState<Product | null>(null);
 
   const load = useCallback(async () => {
     if (!address) return;
@@ -225,6 +231,8 @@ export default function MerchantInventoryPage() {
                           onArchive={() => updateProduct(p.id, { status: 'archived' })}
                           onActivate={() => updateProduct(p.id, { status: 'active' })}
                           onDelete={() => deleteProduct(p.id)}
+                          onVariants={() => setVariantsFor(p)}
+                          onDigital={() => setDigitalFor(p)}
                         />
                       ))}
                     </div>
@@ -241,6 +249,21 @@ export default function MerchantInventoryPage() {
           onClose={() => setShowCreate(false)}
           onCreated={async () => { setShowCreate(false); await load(); }}
           onError={setError}
+        />
+      )}
+
+      {variantsFor && (
+        <VariantManager
+          productId={variantsFor.id}
+          productPrice={Number(variantsFor.price)}
+          onClose={() => setVariantsFor(null)}
+        />
+      )}
+
+      {digitalFor && (
+        <DigitalAssetManager
+          productId={digitalFor.id}
+          onClose={() => setDigitalFor(null)}
         />
       )}
 
@@ -262,7 +285,7 @@ function StatCard({ label, value, accent }: { label: string; value: string | num
   );
 }
 
-function ProductRow({ product, onArchive, onActivate, onDelete }: { product: Product; onArchive: () => void; onActivate: () => void; onDelete: () => void }) {
+function ProductRow({ product, onArchive, onActivate, onDelete, onVariants, onDigital }: { product: Product; onArchive: () => void; onActivate: () => void; onDelete: () => void; onVariants: () => void; onDigital: () => void }) {
   const stock = Number(product.inventory_count ?? 0);
   const tracked = product.inventory_tracking;
   const stockStatus = tracked
@@ -309,6 +332,14 @@ function ProductRow({ product, onArchive, onActivate, onDelete }: { product: Pro
         )}
       </div>
       <div className="flex gap-2">
+        <button onClick={onVariants} className="text-xs px-3 py-1.5 border border-accent/30 bg-accent/10 text-accent rounded hover:bg-accent/20 inline-flex items-center gap-1">
+          <Tag size={12} /> Variants
+        </button>
+        {product.product_type === 'digital' && (
+          <button onClick={onDigital} className="text-xs px-3 py-1.5 border border-accent/30 bg-accent/10 text-accent rounded hover:bg-accent/20 inline-flex items-center gap-1">
+            <FileDown size={12} /> Digital
+          </button>
+        )}
         {product.status === 'active' ? (
           <button onClick={onArchive} className="text-xs px-3 py-1.5 border border-white/10 text-zinc-300 rounded hover:bg-white/5 inline-flex items-center gap-1">
             <Archive size={12} /> Archive

@@ -12,6 +12,8 @@ import { ChapterShell } from '../ChapterShell';
 interface FinalizeGuardiansChapterProps {
   onComplete: () => void;
   onSkip: () => void;
+  /** Record informed acknowledgment of the permanent-loss risk when leaving recovery unfinished. */
+  onAcknowledgeRisk: () => void;
 }
 
 /**
@@ -27,6 +29,7 @@ interface FinalizeGuardiansChapterProps {
 export function FinalizeGuardiansChapter({
   onComplete,
   onSkip,
+  onAcknowledgeRisk,
 }: FinalizeGuardiansChapterProps) {
   const { vaultAddress, hasVault } = useVaultHub();
   const CONTRACT_ADDRESSES = useContractAddresses();
@@ -134,13 +137,20 @@ export function FinalizeGuardiansChapter({
     onComplete,
   ]);
 
+  // Leaving recovery unfinished is an informed choice, never a silent one (audit Finding A): record the
+  // acknowledgment, then skip. The wizard's skip backstop also refuses to advance until this is given.
+  const handleSkip = useCallback(() => {
+    onAcknowledgeRisk();
+    onSkip();
+  }, [onAcknowledgeRisk, onSkip]);
+
   if (!hasVault) {
     return (
       <ChapterShell
         chapter="finalizeGuardians"
         description="Finalize-guardians runs on your vault. Create your vault first."
-        onPrimary={onSkip}
-        onSkip={onSkip}
+        onPrimary={handleSkip}
+        onSkip={handleSkip}
         primaryLabel="Continue"
         notice={{ tone: 'info', text: 'Create your vault first, then return to finalize.' }}
       >
@@ -175,7 +185,7 @@ export function FinalizeGuardiansChapter({
       chapter="finalizeGuardians"
       description="Activate recovery protection. Planning ahead now reduces the risk of permanent loss if your wallet is compromised or access is lost."
       onPrimary={handleFinalize}
-      onSkip={onSkip}
+      onSkip={handleSkip}
       isWorking={isWorking}
       primaryDisabled={!canFinalize}
       primaryLabel="Enable Recovery Features"

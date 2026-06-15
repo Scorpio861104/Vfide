@@ -30,9 +30,7 @@ export function MerchantAdvisorCard() {
           <h2 className="text-lg font-semibold text-white">Your business advisor</h2>
         </div>
         {!advisor.insufficientData && (
-          <span className="text-sm text-zinc-400">
-            Health <span className="font-semibold text-white">{advisor.healthScore}</span>/100
-          </span>
+          <span className="text-sm text-zinc-400">Health <span className="font-semibold text-white">{advisor.healthScore}</span>/100</span>
         )}
       </div>
       <ul className="mt-4 space-y-3">
@@ -50,9 +48,7 @@ export function MerchantAdvisorCard() {
           );
         })}
       </ul>
-      <p className="mt-4 text-[11px] text-zinc-600">
-        These are suggestions based on your real sales, customers, and stock. The Seer advises — you decide. Nothing here changes your prices, stock, or money automatically.
-      </p>
+      <p className="mt-4 text-[11px] text-zinc-600">These are suggestions based on your real sales, customers, and stock. The Seer advises — you decide. Nothing here changes your prices, stock, or money automatically.</p>
     </div>
   );
 }

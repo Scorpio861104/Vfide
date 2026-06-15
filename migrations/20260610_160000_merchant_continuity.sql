@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS merchant_succession (
   CONSTRAINT merchant_succession_not_self CHECK (lower(successor_address) <> lower(merchant_address))
 );
 
--- ── Merchant operators: emergency operational access (no ownership) ─────────
+-- ── Merchant operators: emergency operational access (no ownership) ──────────
 CREATE TABLE IF NOT EXISTS merchant_operators (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   merchant_address TEXT NOT NULL,
@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS merchant_operators (
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_merchant_operators_merchant
   ON merchant_operators (merchant_address, revoked_at);
 
--- ── Grants (idempotent) ──────────────────────────────────────────────────────
+-- ── Grants (idempotent) ─────────────────────────────────────────────────────
 DO $$
 BEGIN
   PERFORM 1 FROM pg_roles WHERE rolname = 'vfide_app';

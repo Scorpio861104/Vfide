@@ -73,6 +73,9 @@ interface IUserVaultRecovery {
     /// @notice trusteeCountView
     /// @return _uint8 _uint8
     function trusteeCountView() external view returns (uint8);
+    /// @notice Proof-of-life wallet — the owner's designated "I'm alive" key (Wave 93 / CID-2, DRAFT).
+    /// Returns address(0) if none set. Lets the alive-signal challenge a recovery, not just inheritance.
+    function proofOfLifeWalletView() external view returns (address);
     /// @notice challengePeriodPreferenceView
     /// @return _uint64 _uint64
     function challengePeriodPreferenceView() external view returns (uint64);
@@ -103,7 +106,12 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════════════
     
     /// @notice CHALLENGE_PERIOD
-    uint64 public constant CHALLENGE_PERIOD = 7 days;      // Time for original owner to cancel (guardian path)
+    // Wave 93 / window-alignment (DRAFT — UNCOMPILED, audit-gated): raised 7→14 days so the owner's window
+    // to catch a MALICIOUS recovery (which reassigns vault control — as consequential as inheritance) is
+    // closer to the 30-day inheritance veto. Recovery stays fast when uncontested + strongly guardian-
+    // approved; this is the challenge ceiling, not a mandatory wait. Final day-count is an audit risk-
+    // appetite decision; the direction (no wild gap between the two ownership-transition windows) is fixed.
+    uint64 public constant CHALLENGE_PERIOD = 14 days;     // Time for original owner to cancel (guardian path)
     /// @notice FINALIZATION_GRACE_PERIOD
     uint64 public constant FINALIZATION_GRACE_PERIOD = 1 days;
     /// @notice GUARDIAN_VOTE_WINDOW
@@ -211,7 +219,11 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     /// @notice vaultLastActivity
     mapping(address => uint64) public vaultLastActivity;
     /// @notice ACTIVE_VAULT_CHALLENGE_PERIOD
-    uint64 public constant ACTIVE_VAULT_CHALLENGE_PERIOD = 14 days;
+    // Wave 93 / window-alignment (DRAFT — audit-gated): an ACTIVE vault (recent activity) is the strongest
+    // signal the owner may still be present, so its challenge window is aligned to the 30-day inheritance
+    // veto — a recovery against a recently-active vault deserves the same owner-defense window as a death
+    // presumption. (Combined with CID-2: proof-of-life can also challenge, giving a durable second channel.)
+    uint64 public constant ACTIVE_VAULT_CHALLENGE_PERIOD = 30 days;
     /// @notice VAULT_ACTIVITY_WINDOW
     uint64 public constant VAULT_ACTIVITY_WINDOW = 30 days;
 
@@ -694,8 +706,16 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
             revert NoActiveClaim();
         }
 
-        // Only original owner can challenge
-        if (msg.sender != claim.originalOwner) revert NotOriginalOwner();
+        // Only original owner can challenge — OR the owner's designated proof-of-life wallet.
+        // ── Wave 93 / CID-2 (DRAFT — UNCOMPILED, contract-audit gate): one alive-signal everywhere ──
+        // Proof-of-life already cancels a false INHERITANCE claim; here it also challenges a false RECOVERY,
+        // so the single "I'm alive" wallet protects across institutions (the unified mental model). The
+        // target vault IS known here (resolved from the claim), so this read is reliable — unlike the
+        // recovery-INITIATION path, where the vault isn't yet known and a guard would be unsound.
+        if (msg.sender != claim.originalOwner) {
+            address pol = IUserVaultRecovery(claim.vault).proofOfLifeWalletView();
+            if (pol == address(0) || msg.sender != pol) revert NotOriginalOwner();
+        }
 
         if (claim.challengeEndsAt != 0 && block.timestamp > claim.challengeEndsAt + FINALIZATION_GRACE_PERIOD) {
             revert ChallengePeriodEnded();

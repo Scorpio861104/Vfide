@@ -30,10 +30,14 @@ jest.mock('@/lib/auth/middleware', () => ({
 const dbState = {
   successor: SUCCESSOR as string | null,
   operators: [] as string[],
+  proofOfLife: null as string | null,
   transfer: null as Record<string, unknown> | null,
 };
 const queryMock = jest.fn(async (sql: string, params: unknown[]) => {
   const s = sql.replace(/\s+/g, ' ');
+  if (s.includes('FROM merchant_proof_of_life')) {
+    return { rows: dbState.proofOfLife ? [{ proof_of_life_address: dbState.proofOfLife }] : [] };
+  }
   if (s.includes('FROM merchant_succession')) {
     return { rows: dbState.successor ? [{ successor_address: dbState.successor }] : [] };
   }
@@ -60,14 +64,24 @@ const queryMock = jest.fn(async (sql: string, params: unknown[]) => {
     if (dbState.transfer) {
       const m = s.match(/SET status = '([a-z_]+)'/);
       if (m) dbState.transfer.status = m[1];
+      // Wave 89: capture reclaim_until from the execute UPDATE so the reclaim-window check is exercised.
+      if (s.includes('reclaim_until = $2')) dbState.transfer.reclaim_until = params[1] ?? null;
     }
     return { rows: dbState.transfer ? [dbState.transfer] : [] };
   }
   return { rows: [] };
 });
 const clientMock = {
-  query: jest.fn(async (sql: string) => {
+  query: jest.fn(async (sql: string, params?: unknown[]) => {
     if (sql === 'BEGIN' || sql === 'COMMIT' || sql === 'ROLLBACK') return { rowCount: 0 };
+    const s = sql.replace(/\s+/g, ' ');
+    // The execute/reclaim status UPDATE runs inside the transaction (via client.query), so mirror it onto
+    // dbState here too — otherwise the test can't observe the executed/reclaimed transition or reclaim_until.
+    if (s.startsWith('UPDATE merchant_business_transfers') && dbState.transfer) {
+      const m = s.match(/SET status = '([a-z_]+)'/);
+      if (m) dbState.transfer.status = m[1];
+      if (s.includes('reclaim_until = $2') && params) dbState.transfer.reclaim_until = params[1] ?? null;
+    }
     return { rowCount: 1 };
   }),
   release: jest.fn(),
@@ -90,6 +104,7 @@ beforeEach(() => {
   CURRENT_USER = OWNER;
   dbState.successor = SUCCESSOR;
   dbState.operators = [];
+  dbState.proofOfLife = null;
   dbState.transfer = null;
   queryMock.mockClear();
 });
@@ -167,5 +182,86 @@ describe('business-transfer route — emergency flow with owner veto', () => {
     // veto_until is 7 days out → execute should be blocked.
     const exec = await POST(post({ action: 'execute', id: '11111111-1111-4111-8111-111111111111' }));
     expect(exec.status).toBe(409);
+  });
+
+  it('the designated proof-of-life address can veto an emergency transfer (Wave 93 / CID-2)', async () => {
+    const POL = '0xaaaa0000000000000000000000000000000000aa';
+    dbState.operators = [OPERATOR];
+    dbState.proofOfLife = POL;
+    CURRENT_USER = OPERATOR;
+    const req = await POST(post({ action: 'emergency_request', merchant_address: OWNER }));
+    expect(req.status).toBe(201);
+    // The proof-of-life wallet (neither owner nor successor) vetoes on the owner's behalf.
+    CURRENT_USER = POL;
+    const veto = await POST(post({ action: 'veto', id: '11111111-1111-4111-8111-111111111111' }));
+    expect(veto.status).toBe(200);
+    expect(dbState.transfer?.status).toBe('vetoed');
+  });
+
+  it('a random stranger still cannot veto (proof-of-life gate is specific)', async () => {
+    dbState.operators = [OPERATOR];
+    dbState.proofOfLife = '0xaaaa0000000000000000000000000000000000aa';
+    CURRENT_USER = OPERATOR;
+    await POST(post({ action: 'emergency_request', merchant_address: OWNER }));
+    CURRENT_USER = '0xdddd0000000000000000000000000000000000dd'; // not owner, successor, or PoL
+    const veto = await POST(post({ action: 'veto', id: '11111111-1111-4111-8111-111111111111' }));
+    expect(veto.status).toBe(403);
+  });
+});
+
+describe('business-transfer route — owner-returns reclaim (Wave 89)', () => {
+  // Drive an emergency transfer all the way to executed, with the veto window already elapsed, so the
+  // reclaim window opens — then test the returning owner's remedy.
+  async function executeEmergency() {
+    dbState.operators = [OPERATOR];
+    CURRENT_USER = OPERATOR;
+    await POST(post({ action: 'emergency_request', merchant_address: OWNER }));
+    // Force the veto window into the past so execute is allowed.
+    if (dbState.transfer) dbState.transfer.veto_until = new Date(Date.now() - 1000).toISOString();
+    CURRENT_USER = SUCCESSOR;
+    const exec = await POST(post({ action: 'execute', id: '11111111-1111-4111-8111-111111111111' }));
+    expect(exec.status).toBe(200);
+    expect(dbState.transfer?.status).toBe('executed');
+    // reclaim_until should now be set (in the future).
+    expect(dbState.transfer?.reclaim_until).toBeTruthy();
+  }
+
+  it('a returning owner CAN reclaim an executed emergency transfer within the window', async () => {
+    await executeEmergency();
+    CURRENT_USER = OWNER;
+    const res = await POST(post({ action: 'reclaim', id: '11111111-1111-4111-8111-111111111111' }));
+    expect(res.status).toBe(200);
+    expect(dbState.transfer?.status).toBe('reclaimed');
+  });
+
+  it('the successor CANNOT reclaim (only the original owner can)', async () => {
+    await executeEmergency();
+    CURRENT_USER = SUCCESSOR;
+    const res = await POST(post({ action: 'reclaim', id: '11111111-1111-4111-8111-111111111111' }));
+    expect(res.status).toBe(403);
+  });
+
+  it('reclaim is rejected once the window has closed', async () => {
+    await executeEmergency();
+    // Push the reclaim deadline into the past.
+    if (dbState.transfer) dbState.transfer.reclaim_until = new Date(Date.now() - 1000).toISOString();
+    CURRENT_USER = OWNER;
+    const res = await POST(post({ action: 'reclaim', id: '11111111-1111-4111-8111-111111111111' }));
+    expect(res.status).toBe(409);
+  });
+
+  it('a VOLUNTARY transfer cannot be reclaimed (owner consented)', async () => {
+    // voluntary path: owner initiates, successor accepts, execute.
+    dbState.successor = SUCCESSOR;
+    CURRENT_USER = OWNER;
+    await POST(post({ action: 'initiate' }));
+    CURRENT_USER = SUCCESSOR;
+    await POST(post({ action: 'accept', id: '11111111-1111-4111-8111-111111111111' }));
+    const exec = await POST(post({ action: 'execute', id: '11111111-1111-4111-8111-111111111111' }));
+    expect(exec.status).toBe(200);
+    // No reclaim_until was set for a voluntary transfer.
+    CURRENT_USER = OWNER;
+    const res = await POST(post({ action: 'reclaim', id: '11111111-1111-4111-8111-111111111111' }));
+    expect(res.status).toBe(409);
   });
 });

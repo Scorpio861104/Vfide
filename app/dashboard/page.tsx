@@ -3,6 +3,7 @@
 export const dynamic = 'force-dynamic';
 
 import { Footer } from '@/components/layout/Footer';
+import { EcosystemActivity } from '@/components/activity/EcosystemActivity';
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { m as motion, AnimatePresence } from 'framer-motion';
@@ -275,6 +276,11 @@ export default function DashboardPage() {
               {activeTab === 'activity'  && <RecentActivity />}
             </motion.div>
           </AnimatePresence>
+
+          {/* Live unified ecosystem activity (Wave 47) */}
+          <div className="mx-auto mt-6 w-full max-w-5xl px-4 sm:px-6">
+            <EcosystemActivity title="Recent activity" emptyHint="What you do across VFIDE — payments, setup, protection — shows up here." />
+          </div>
 
         </div>
       </div>

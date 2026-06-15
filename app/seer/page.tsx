@@ -5,6 +5,8 @@ import { ArrowLeft } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 import { PlainHelp } from '@/components/common/PlainHelp';
 import { SeerCommandCenter } from '@/components/seer/SeerCommandCenter';
+import { SeerStandingExplainer } from '@/components/seer/SeerStandingExplainer';
+import { SeerLendingTerms } from '@/components/seer/SeerLendingTerms';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,6 +25,11 @@ export default function SeerPage() {
             whatHappensNext="Review your standing below. The Seer only ever adjusts VFIDE's own services — it never touches your tokens."
           />
           <SeerCommandCenter />
+          <SeerStandingExplainer />
+          {/* Wave 83: surface the personalized lending advice the Seer already computes (was invisible). */}
+          <div className="mt-8">
+            <SeerLendingTerms />
+          </div>
         </div>
       </div>
       <Footer />

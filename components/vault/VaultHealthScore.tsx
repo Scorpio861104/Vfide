@@ -3,13 +3,7 @@
 import { useAccount, useReadContract } from 'wagmi';
 import { Shield, Info } from 'lucide-react';
 import { CardBoundVaultABI as CARD_BOUND_VAULT_ABI } from '@/lib/abis';
-
-interface Dimension {
-  label: string;
-  score: number;
-  maxScore: number;
-  recommendations: string[];
-}
+import { computeVaultHealth, type VaultHealthDimension as Dimension } from '@/lib/vault/vaultHealth';
 
 function DimensionBar({ dim }: { dim: Dimension }) {
   const pct = (dim.score / dim.maxScore) * 100;
@@ -75,53 +69,14 @@ export function VaultHealthScore({
     query: { enabled: !!vaultAddress },
   });
 
-  const gc = Number(guardianCount ?? 0n);
-  const transferLimit = Number(maxPerTransfer ?? dailyTransferLimit ?? 0n);
-  const isOperational = !Boolean(paused);
-  const hasVault = !!vaultAddress;
-
-  // Security dimension (0-25)
-  const securityRecs: string[] = [];
-  let securityScore = 0;
-  if (gc >= 3) securityScore += 15;
-  else if (gc >= 1) { securityScore += 8; securityRecs.push('Add more guardians (3+ recommended)'); }
-  else securityRecs.push('Add guardians to protect your vault');
-  if (transferLimit > 0) securityScore += 10;
-  else securityRecs.push('Set transfer limits to reduce large unauthorized transaction risk');
-
-  // Recovery dimension (0-25)
-  const recoveryRecs: string[] = [];
-  let recoveryScore = 0;
-  if (gc >= 2) recoveryScore += 20;
-  else if (gc >= 1) { recoveryScore += 10; recoveryRecs.push('Add a second guardian for recovery redundancy'); }
-  else recoveryRecs.push('Guardians are required for vault recovery');
-  if (gc >= 3) recoveryScore += 5;
-
-  // Trust dimension (0-25)
-  const trustRecs: string[] = [];
-  let trustScore = 0;
-  if (proofScore >= 7000) trustScore = 25;
-  else if (proofScore >= 5000) { trustScore = 18; trustRecs.push('Reach 7,000 for Elite trust benefits'); }
-  else if (proofScore >= 3000) { trustScore = 12; trustRecs.push('Grow your ProofScore for better rates'); }
-  else { trustScore = 5; trustRecs.push('Build your ProofScore to unlock benefits'); }
-
-  // Setup dimension (0-25)
-  const setupRecs: string[] = [];
-  let setupScore = 0;
-  if (hasVault) setupScore += 15;
-  else setupRecs.push('Create a vault to get started');
-  if (transferLimit > 0) setupScore += 5;
-  if (isOperational) setupScore += 5;
-
-  const dimensions: Dimension[] = [
-    { label: 'Security', score: securityScore, maxScore: 25, recommendations: securityRecs },
-    { label: 'Recovery', score: recoveryScore, maxScore: 25, recommendations: recoveryRecs },
-    { label: 'Trust', score: trustScore, maxScore: 25, recommendations: trustRecs },
-    { label: 'Setup', score: setupScore, maxScore: 25, recommendations: setupRecs },
-  ];
-
-  const total = securityScore + recoveryScore + trustScore + setupScore;
-  const grade = total >= 85 ? 'Excellent' : total >= 70 ? 'Good' : total >= 50 ? 'Fair' : total >= 30 ? 'Needs Work' : 'At Risk';
+  // Wave 85: scoring moved to the tested lib/vault/vaultHealth engine (parity with commerce institutions).
+  const { total, grade, dimensions } = computeVaultHealth({
+    guardianCount: Number(guardianCount ?? 0n),
+    transferLimit: Number(maxPerTransfer ?? dailyTransferLimit ?? 0n),
+    isOperational: !Boolean(paused),
+    hasVault: !!vaultAddress,
+    proofScore,
+  });
   const gradeColor = total >= 85 ? 'text-emerald-400' : total >= 70 ? 'text-blue-400' : total >= 50 ? 'text-yellow-400' : 'text-red-400';
 
   return (

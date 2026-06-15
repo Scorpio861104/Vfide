@@ -74,12 +74,10 @@ async function getHandler(request: NextRequest, user: JWTPayload): Promise<Respo
       )
     ).rows[0];
     const orders90 = Number(
-      (
-        await query<{ c: string }>(
-          `SELECT COUNT(*)::text AS c FROM merchant_payment_confirmations WHERE merchant_address = $1 AND created_at > NOW() - INTERVAL '90 days'`,
-          [m],
-        )
-      ).rows[0]?.c ?? 0,
+      (await query<{ c: string }>(
+        `SELECT COUNT(*)::text AS c FROM merchant_payment_confirmations WHERE merchant_address = $1 AND created_at > NOW() - INTERVAL '90 days'`,
+        [m],
+      )).rows[0]?.c ?? 0,
     );
 
     // Low inventory from tracked products.
@@ -97,9 +95,7 @@ async function getHandler(request: NextRequest, user: JWTPayload): Promise<Respo
     try {
       const subs = (await query<{ c: string }>(`SELECT COUNT(*)::text AS c FROM merchant_subscriptions WHERE merchant_address = $1`, [m])).rows[0];
       hasSubscriptionPlans = Number(subs?.c ?? 0) > 0;
-    } catch {
-      hasSubscriptionPlans = false;
-    }
+    } catch { hasSubscriptionPlans = false; }
 
     const input: MerchantAdvisorInput = {
       revenueLast30: Number(rev?.rev_last ?? 0),

@@ -18,12 +18,18 @@ import { useEmitEvent } from '@/lib/events/EventProvider';
 export interface ReadinessItem { id: string; label: string; met: boolean; detail: string }
 export interface SuccessionInfo { successor_address: string; note: string | null; configured_at: string }
 export interface OperatorInfo { id: string; operator_address: string; role: string; note: string | null; granted_at: string }
+export interface ProofOfLifeInfo { proof_of_life_address: string; note: string | null; updated_at: string }
+export interface TransferInfo {
+  id: string; kind: string; status: string; from_address: string; to_address: string;
+  veto_until: string | null; reclaim_until: string | null; note: string | null; created_at: string;
+}
 
 interface ContinuityState {
   succession: SuccessionInfo | null;
   operators: OperatorInfo[];
   readiness: ReadinessItem[];
   ready: boolean;
+  proofOfLife: ProofOfLifeInfo | null;
 }
 
 export interface MerchantContinuity extends ContinuityState {
@@ -33,10 +39,12 @@ export interface MerchantContinuity extends ContinuityState {
   clearSuccessor: () => Promise<boolean>;
   grantOperator: (address: string, role?: string, note?: string) => Promise<boolean>;
   revokeOperator: (address: string) => Promise<boolean>;
+  setProofOfLife: (address: string, note?: string) => Promise<boolean>;
+  clearProofOfLife: () => Promise<boolean>;
   refresh: () => Promise<void>;
 }
 
-const EMPTY: ContinuityState = { succession: null, operators: [], readiness: [], ready: false };
+const EMPTY: ContinuityState = { succession: null, operators: [], readiness: [], ready: false, proofOfLife: null };
 
 export function useMerchantContinuity(): MerchantContinuity {
   const emitEvent = useEmitEvent();
@@ -99,5 +107,14 @@ export function useMerchantContinuity(): MerchantContinuity {
 
   const revokeOperator = useCallback(async (address: string) => !!(await post({ action: 'revoke_operator', operator_address: address })), [post]);
 
-  return { ...state, loading, error, setSuccessor, clearSuccessor, grantOperator, revokeOperator, refresh };
+  // Wave 95 / CID-2 UI: designate / clear the business proof-of-life address (the alive-signal).
+  const setProofOfLife = useCallback(async (address: string, note?: string) => {
+    const data = await post({ action: 'set_proof_of_life', proof_of_life_address: address, note });
+    if (data) { emitEvent('EMERGENCY_OPERATOR_ASSIGNED', undefined, 'merchant-continuity'); return true; }
+    return false;
+  }, [post, emitEvent]);
+
+  const clearProofOfLife = useCallback(async () => !!(await post({ action: 'clear_proof_of_life' })), [post]);
+
+  return { ...state, loading, error, setSuccessor, clearSuccessor, grantOperator, revokeOperator, setProofOfLife, clearProofOfLife, refresh };
 }

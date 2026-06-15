@@ -4,6 +4,7 @@ import { requireOwnership, withAuth } from '@/lib/auth/middleware';
 import type { JWTPayload } from '@/lib/auth/jwt';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { computeRefund } from '@/lib/commerce/returnsEngine';
 
 const ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
 
@@ -222,8 +223,8 @@ async function patchHandler(request: NextRequest) {
     //   3. record whether items have already been restocked (in items JSON
     //      using a `__restocked: true` marker on the row's items column,
     //      stored back at the time of the FIRST completed transition).
-    const current = await query<{ status: string | null; items: unknown }>(
-      `SELECT status, items FROM merchant_returns WHERE id = $1 AND merchant_address = $2 LIMIT 1`,
+    const current = await query<{ status: string | null; items: unknown; order_id: string | null; type: string | null }>(
+      `SELECT status, items, order_id, type FROM merchant_returns WHERE id = $1 AND merchant_address = $2 LIMIT 1`,
       [returnId, merchantAddress],
     );
     if (current.rows.length === 0) {
@@ -270,6 +271,43 @@ async function patchHandler(request: NextRequest) {
           : [];
     const alreadyRestocked = !!(itemsRootObj && itemsRootObj.__restocked === true);
 
+    // Phase 1F: compute the AUTHORITATIVE refund from what was actually paid (the 1E-composed total), rather
+    // than trusting the client-passed refundAmount. For refund-type returns, this reverses the returned lines'
+    // net value (after their proportional discount) + proportional tax + shipping (full return only).
+    let effectiveRefund = refundAmount;
+    const returnType = (current.rows[0]?.type || 'refund').trim().toLowerCase();
+    const orderRef = current.rows[0]?.order_id ? String(current.rows[0]!.order_id) : '';
+    if (returnType === 'refund' && orderRef && (status === 'approved' || status === 'completed')) {
+      try {
+        const numericId = /^\d+$/.test(orderRef) ? Number(orderRef) : null;
+        const orderRow = (await query<{ id: number; subtotal: string; discount_amount: string; tax_amount: string; shipping_amount: string }>(
+          `SELECT id, subtotal, discount_amount, tax_amount, shipping_amount FROM merchant_orders
+            WHERE merchant_address = $1 AND (($2::int IS NOT NULL AND id = $2::int) OR order_number = $3) LIMIT 1`,
+          [merchantAddress, numericId, orderRef],
+        )).rows[0];
+        if (orderRow) {
+          const orderLines = (await query<{ product_id: number | null; quantity: number; unit_price: string }>(
+            `SELECT product_id, quantity, unit_price FROM merchant_order_items WHERE order_id = $1`,
+            [orderRow.id],
+          )).rows;
+          const returnLines = itemsArray
+            .filter((it): it is Record<string, unknown> => typeof it === 'object' && it !== null && 'product_id' in it && 'quantity' in it)
+            .map((it) => ({ product_id: Number(it.product_id), quantity: Number(it.quantity) }))
+            .filter((it) => Number.isFinite(it.product_id) && Number.isFinite(it.quantity) && it.quantity > 0);
+          if (returnLines.length > 0) {
+            const computed = computeRefund(
+              orderLines.map((l) => ({ product_id: l.product_id, quantity: Number(l.quantity), unit_price: Number(l.unit_price) })),
+              { subtotal: Number(orderRow.subtotal), discount: Number(orderRow.discount_amount), tax: Number(orderRow.tax_amount), shipping: Number(orderRow.shipping_amount) },
+              returnLines,
+            );
+            effectiveRefund = computed.refundAmount;
+          }
+        }
+      } catch (e) {
+        logger.warn('[Merchant Returns PATCH] authoritative refund computation failed; using provided amount', { error: e instanceof Error ? e.message : String(e) });
+      }
+    }
+
     await query(
       `UPDATE merchant_returns
           SET status = $3,
@@ -278,7 +316,7 @@ async function patchHandler(request: NextRequest) {
               resolved_at = NOW(),
               resolved_by = $6
         WHERE id = $1 AND merchant_address = $2`,
-      [returnId, merchantAddress, status, refundAmount, creditAmount, merchantAddress],
+      [returnId, merchantAddress, status, effectiveRefund, creditAmount, merchantAddress],
     );
 
     // Restock branch: only restock the FIRST time the return reaches
@@ -311,6 +349,32 @@ async function patchHandler(request: NextRequest) {
         `UPDATE merchant_returns SET items = $3 WHERE id = $1 AND merchant_address = $2`,
         [returnId, merchantAddress, JSON.stringify(newItemsValue)],
       );
+    }
+
+    // Phase 1F: a COMPLETED refund-type return settles the order — mark it refunded and revoke any digital
+    // downloads issued for it (1B). Best-effort; a linkage hiccup must not fail the return update. (A full
+    // return refunds everything; a partial return still flags the order as refunded for status visibility —
+    // the refund_amount on the return row records the actual partial sum.)
+    if (status === 'completed' && returnType === 'refund' && orderRef) {
+      try {
+        const numericId = /^\d+$/.test(orderRef) ? Number(orderRef) : null;
+        const settled = (await query<{ id: number }>(
+          `UPDATE merchant_orders SET status = 'refunded', payment_status = 'refunded', refunded_at = NOW()
+            WHERE merchant_address = $1 AND (($2::int IS NOT NULL AND id = $2::int) OR order_number = $3)
+              AND status <> 'refunded'
+            RETURNING id`,
+          [merchantAddress, numericId, orderRef],
+        )).rows[0];
+        if (settled) {
+          await query(
+            `UPDATE merchant_digital_deliveries SET revoked = true, revoked_at = NOW(), revoke_reason = 'return_completed'
+              WHERE order_id = $1 AND revoked = false`,
+            [settled.id],
+          );
+        }
+      } catch (e) {
+        logger.warn('[Merchant Returns PATCH] order settlement on return completion failed (non-fatal)', { error: e instanceof Error ? e.message : String(e) });
+      }
     }
 
     return NextResponse.json({ success: true });

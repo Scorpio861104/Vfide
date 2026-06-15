@@ -26,6 +26,7 @@
  * Defeated(3) → Queued(4) → Executed(5) / Expired(6) / Withdrawn(7).
  */
 
+import { useEmitEvent } from '@/lib/events/EventProvider';
 import { useCallback } from 'react';
 import {
   useAccount,
@@ -272,6 +273,7 @@ export function useDAO() {
   // ─────────────────────────────────────────────────────────────────────────
 
   const { writeContractAsync, isPending: isWritePending } = useWriteContract();
+  const emitEvent = useEmitEvent();
 
   const assertReady = () => {
     if (!daoConfigured) throw new Error('DAO is not configured for this environment');
@@ -294,6 +296,8 @@ export function useDAO() {
         functionName: 'propose',
         args: [ptype, target, value, data, description],
       });
+      // Coordination event (Wave 49) — creating a proposal is governance participation. Durable.
+      emitEvent('GOVERNANCE_PARTICIPATED', { action: 'propose', txHash: hash }, 'useDAO.propose', true);
       // Wait for the receipt and pull the id out of the ProposalCreated event
       if (!publicClient) return undefined;
       const receipt = await publicClient.waitForTransactionReceipt({ hash });
@@ -312,21 +316,24 @@ export function useDAO() {
       await Promise.all([refetchProposalCount(), refetchActiveCount(), refetchLastProposal()]);
       return undefined;
     },
-    [writeContractAsync, daoAddress, publicClient, refetchProposalCount, refetchActiveCount, refetchLastProposal]
+    [writeContractAsync, daoAddress, publicClient, refetchProposalCount, refetchActiveCount, refetchLastProposal, emitEvent]
   );
 
   /** Cast a vote on an active proposal. support=true is FOR, support=false is AGAINST. */
   const vote = useCallback(
     async (proposalId: bigint, support: boolean) => {
       assertReady();
-      return writeContractAsync({
+      const hash = await writeContractAsync({
         address: daoAddress as Address,
         abi: DAOABI,
         functionName: 'vote',
         args: [proposalId, support],
       });
+      // Coordination event (Wave 49) — durable; on-chain vote is the authoritative record.
+      emitEvent('GOVERNANCE_PARTICIPATED', { proposalId: proposalId.toString(), support, txHash: hash }, 'useDAO.vote', true);
+      return hash;
     },
-    [writeContractAsync, daoAddress]
+    [writeContractAsync, daoAddress, emitEvent]
   );
 
   /** Finalize a proposal once voting has ended. Anyone can call. */
@@ -389,14 +396,16 @@ export function useDAO() {
   const executeTimelockTx = useCallback(
     async (proposalId: bigint) => {
       assertReady();
-      return writeContractAsync({
+      const hash = await writeContractAsync({
         address: daoAddress as Address,
         abi: DAOABI,
         functionName: 'executeTimelockTx',
         args: [proposalId],
       });
+      emitEvent('PROPOSAL_EXECUTED', { proposalId: proposalId.toString(), txHash: hash }, 'useDAO.execute', true);
+      return hash;
     },
-    [writeContractAsync, daoAddress]
+    [writeContractAsync, daoAddress, emitEvent]
   );
 
   /**

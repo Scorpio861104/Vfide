@@ -6,6 +6,7 @@ import { withAuth } from '@/lib/auth/middleware';
 import type { JWTPayload } from '@/lib/auth/jwt';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { emitServerEvent } from '@/lib/events/serverEmit';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{40}$/;
 
@@ -322,6 +323,7 @@ async function postHandler(request: NextRequest, user: JWTPayload) {
       ]
     );
 
+    await emitServerEvent(authAddress, 'PAYMENT_SENT', { amount: amountText, token, provider }, 'api/merchant/withdraw');
     return NextResponse.json({
       success: true,
       request: insertResult.rows[0],

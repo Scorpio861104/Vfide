@@ -3030,3 +3030,17 @@ html::before {
     opacity: 0 !important;
   }
 }
+
+/* Nexus live event acknowledgement (Wave 47) — brief expanding ring when a layer sees activity */
+@keyframes nexus-live-pulse {
+  0% { transform: scale(1); opacity: 0.9; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+.nexus-live-pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: nexus-live-pulse 1.3s ease-out 2;
+}
+@media (prefers-reduced-motion: reduce) {
+  .nexus-live-pulse { animation: none; }
+}

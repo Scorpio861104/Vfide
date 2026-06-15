@@ -30,13 +30,31 @@ export interface TimelineEntry {
 }
 
 interface EventContextValue {
-  emit: (type: VfideEventType, payload?: Record<string, unknown>, source?: string) => void;
+  emit: (type: VfideEventType, payload?: Record<string, unknown>, source?: string, durable?: boolean) => void;
   timeline: TimelineEntry[];
 }
 
 const EventContext = createContext<EventContextValue | null>(null);
 
 let _seq = 0;
+
+/**
+ * Persist an event durably (best-effort). Used when `emit(..., durable=true)` — chiefly for on-chain
+ * actions that don't flow through an API route. Failure is swallowed; live coordination already
+ * happened via the bus.
+ */
+function persistEvent(type: VfideEventType, payload?: Record<string, unknown>, source?: string) {
+  try {
+    void fetch('/api/events', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ type, payload, source }),
+    }).catch(() => {});
+  } catch {
+    /* no-op */
+  }
+}
 
 export function EventProvider({ children }: { children: ReactNode }) {
   const [timeline, setTimeline] = useState<TimelineEntry[]>([]);
@@ -99,7 +117,7 @@ export function EventProvider({ children }: { children: ReactNode }) {
         return [entry, ...prev].slice(0, 100);
       });
 
-      if ('notify' in route && route.notify) {
+      if (route.notify) {
         // Best-effort bridge to the existing toast system; never throw if it's not present.
         try {
           window.dispatchEvent(new CustomEvent('vfide:notify', { detail: { text: route.timeline, type: event.type } }));
@@ -111,8 +129,9 @@ export function EventProvider({ children }: { children: ReactNode }) {
     return off;
   }, []);
 
-  const emit = useCallback((type: VfideEventType, payload?: Record<string, unknown>, source?: string) => {
+  const emit = useCallback((type: VfideEventType, payload?: Record<string, unknown>, source?: string, durable?: boolean) => {
     eventBus.emit(type, payload, source);
+    if (durable) persistEvent(type, payload, source);
   }, []);
 
   const value = useMemo<EventContextValue>(() => ({ emit, timeline }), [emit, timeline]);
@@ -124,9 +143,12 @@ export function EventProvider({ children }: { children: ReactNode }) {
 export function useEmitEvent() {
   const ctx = useContext(EventContext);
   return useCallback(
-    (type: VfideEventType, payload?: Record<string, unknown>, source?: string) => {
-      if (ctx) ctx.emit(type, payload, source);
-      else eventBus.emit(type, payload, source);
+    (type: VfideEventType, payload?: Record<string, unknown>, source?: string, durable?: boolean) => {
+      if (ctx) ctx.emit(type, payload, source, durable);
+      else {
+        eventBus.emit(type, payload, source);
+        if (durable) persistEvent(type, payload, source);
+      }
     },
     [ctx],
   );

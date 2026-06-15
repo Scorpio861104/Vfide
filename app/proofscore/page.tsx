@@ -18,7 +18,6 @@ export const dynamic = 'force-dynamic'
 import { useAccount } from 'wagmi'
 import { ProofScoreVisualizer } from '@/components/trust/ProofScoreVisualizer'
 import { CivilizationRelationships } from '@/components/civilization/CivilizationRelationships'
-import { PowerReturnPanel } from '@/components/civilization/PowerReturnPanel'
 import {
   TrustInfrastructureHero,
   TrustRecord,
@@ -53,11 +52,6 @@ export default function TrustBureauPage() {
       <div className="relative z-10 mx-auto w-full max-w-6xl px-5 py-16 md:px-8 md:py-20">
         {/* Records-first: lead with infrastructure, not the score */}
         <TrustInfrastructureHero />
-
-        <div className="mb-8">
-          <PowerReturnPanel institution="trust" />
-        </div>
-
         <TrustRecord />
         <ParticipationHistory />
         <VerificationSystems />

@@ -210,6 +210,13 @@ interface ICardBoundVaultInheritanceManager {
     function claimHeirShare(address actor, bytes32 heirSecret, uint256 basisPoints) external;
     /// @notice finalizeInheritanceDistribution
     function finalizeInheritanceDistribution() external;
+    /// @notice Cancel an active inheritance claim on recovery (Wave 93 / CID-1, DRAFT).
+    function cancelClaimForRecovery() external;
+    /// @notice Timer-freeze hooks (Wave 95 / CID-1 timer-freeze, DRAFT).
+    function pauseTimersForRecovery() external;
+    function resumeTimersAfterRecovery() external;
+    /// @notice proofOfLifeWallet getter (public var auto-getter on the manager) — Wave 93 / CID-2, DRAFT.
+    function proofOfLifeWallet() external view returns (address);
     /// @notice consumeHeirPayout
     /// @param actor actor
     /// @return amount amount
@@ -462,6 +469,11 @@ contract CardBoundVault is ReentrancyGuard {
     uint64 public constant MIN_ROTATION_DELAY = 10 minutes;
     /// @notice MAX_ROTATION_DELAY
     uint64 public constant MAX_ROTATION_DELAY = 7 days;
+    /// @notice RECOVERY_ROTATION_EXPIRY — Wave 95 (DRAFT, audit-gate): a staged recovery rotation that is
+    /// neither executed nor cancelled within this window after it becomes executable (activateAt) expires
+    /// and can be cleared by anyone, which also resumes any frozen inheritance timers. Closes the
+    /// resume-on-expire gap (the rotation lifecycle previously had stage + execute but no expire/cancel).
+    uint64 public constant RECOVERY_ROTATION_EXPIRY = 30 days;
     /// @notice SENSITIVE_ADMIN_DELAY
     uint64 public constant SENSITIVE_ADMIN_DELAY = 7 days;
     /// @notice MAX_GUARDIANS
@@ -503,6 +515,10 @@ contract CardBoundVault is ReentrancyGuard {
 
     /// @notice paused
     bool public paused;
+    /// @notice Whether the current pause was initiated by guardians (threshold-approved). When true, the
+    /// admin alone cannot unpause — a guardian-protective pause must not be revocable by a single admin who
+    /// may be a thief holding the phone (Wave 86). Cleared on admin pause, expiry, and recovery rotation.
+    bool public pausedByGuardian;
     /// @notice pauseUntil
     uint64 public pauseUntil;
     /// @notice MAX_PAUSE_WINDOW
@@ -513,6 +529,10 @@ contract CardBoundVault is ReentrancyGuard {
     mapping(address => mapping(uint256 => bool)) public pauseApprovalByGuardian;
     /// @notice pauseApprovalCount
     mapping(uint256 => uint8) public pauseApprovalCount;
+    /// @notice unpauseApprovalByGuardian (Wave 86 — guardian-threshold lift of a guardian pause)
+    mapping(address => mapping(uint256 => bool)) public unpauseApprovalByGuardian;
+    /// @notice unpauseApprovalCount (Wave 86)
+    mapping(uint256 => uint8) public unpauseApprovalCount;
 
     /// @notice isGuardian
     mapping(address => bool) public isGuardian;
@@ -806,6 +826,8 @@ contract CardBoundVault is ReentrancyGuard {
     /// @param pauseNonce pauseNonce
     /// @param approvals approvals
     event GuardianPauseApproved(address indexed guardian, uint256 indexed pauseNonce, uint8 approvals);
+    /// @notice GuardianUnpauseApproved (Wave 86 — guardian-threshold lift of a guardian pause)
+    event GuardianUnpauseApproved(address indexed guardian, uint256 indexed pauseNonce, uint8 approvals);
     /// @notice WalletRotated
     /// @param oldWallet oldWallet
     /// @param newWallet newWallet
@@ -907,8 +929,10 @@ contract CardBoundVault is ReentrancyGuard {
     /// vault has completed multi-guardian setup. The vault is operationally unprotected
     /// against key compromise during this window. Frontends MUST surface a persistent
     /// banner to the user until guardian setup is complete and indexers MUST track this
-    /// event for monitoring/alerting. The MAX_VFIDE_WITHOUT_GUARDIAN cap on incoming
-    /// transfers (50K VFIDE) limits peak loss exposure during this window.
+    /// event for monitoring/alerting. The MAX_VFIDE_WITHOUT_GUARDIAN cap (50K VFIDE) is enforced on
+    /// incoming VAULT-TO-VAULT transfers via canReceiveTransfer to limit at-risk balance during this
+    /// window; note it canNOT gate raw ERC20 transfers (plain token transfers are not interceptable),
+    /// so the binding loss bound during this window is the daily/per-tx spend limit, not the 50K cap.
     /// @param merchant merchant
     /// @param token token
     /// @param amount amount
@@ -922,6 +946,8 @@ contract CardBoundVault is ReentrancyGuard {
     error CBV_NotAdmin();
     /// @notice CBV_NotGuardian
     error CBV_NotGuardian();
+    /// @notice CBV_GuardianImmature — a guardian must satisfy GUARDIAN_MATURITY_PERIOD before trustee promotion
+    error CBV_GuardianImmature();
     /// @notice CBV_ChallengePeriodTooShort
     error CBV_ChallengePeriodTooShort();
     /// @notice CBV_ChallengePeriodTooLong
@@ -964,6 +990,8 @@ contract CardBoundVault is ReentrancyGuard {
     error CBV_GuardianSetupRequired();
     /// @notice CBV_PauseAlreadyApproved
     error CBV_PauseAlreadyApproved();
+    /// @notice CBV_NotPaused (Wave 86)
+    error CBV_NotPaused();
     /// @notice CBV_SeerBlocked
     error CBV_SeerBlocked();
     /// @notice CBV_NotMerchantPortal
@@ -1013,6 +1041,7 @@ contract CardBoundVault is ReentrancyGuard {
         // VAULT-EXT-01: Emergency pause expires automatically after 7 days.
         if (paused && pauseUntil != 0 && block.timestamp >= pauseUntil) {
             paused = false;
+            pausedByGuardian = false;
             pauseUntil = 0;
             emit PauseSet(false, address(0));
         }
@@ -1281,6 +1310,21 @@ contract CardBoundVault is ReentrancyGuard {
         // been removed as a guardian since the proposal, refuse the role change
         // — re-add as guardian first, then re-propose trustee.
         if (trustee && !isGuardian[guardian]) revert CBV_NotGuardian();
+        // FINDING (Continuity Audit 2 — Guardian Management): enforce the maturity requirement that setTrustee's
+        // doc-comment PROMISES ("require the address to already be a mature guardian … prevents an instantly-added
+        // attacker guardian from being instantly promoted to trustee") but which the code did not actually check.
+        // Post-setup, a guardian must be MATURE (GUARDIAN_MATURITY_PERIOD = 7 days) before being granted trustee
+        // (recovery-initiation) power — so a compromised admin cannot fast-track a freshly-added guardian into a
+        // recovery initiator. Bootstrap (pre-setupComplete) is exempt so the initial guardian/trustee set can be
+        // configured together. Mirrors isGuardianMature().
+        if (
+            trustee &&
+            _guardianSetupComplete() &&
+            !(guardianAddedAt[guardian] != 0 &&
+              block.timestamp >= guardianAddedAt[guardian] + GUARDIAN_MATURITY_PERIOD)
+        ) {
+            revert CBV_GuardianImmature();
+        }
         isTrustee[guardian] = trustee;
         if (trustee) {
             ++trusteeCount;
@@ -1403,6 +1447,7 @@ contract CardBoundVault is ReentrancyGuard {
 
         if (msg.sender == admin) {
             paused = true;
+            pausedByGuardian = false;
             pauseUntil = uint64(block.timestamp + MAX_PAUSE_WINDOW);
             emit PauseSet(true, msg.sender);
             return;
@@ -1420,9 +1465,37 @@ contract CardBoundVault is ReentrancyGuard {
         }
 
         paused = true;
+        pausedByGuardian = true;
         pauseUntil = uint64(block.timestamp + MAX_PAUSE_WINDOW);
         pauseNonce = currentPauseNonce + 1;
         emit PauseSet(true, msg.sender);
+    }
+
+    /// @notice Lift a guardian-initiated pause by guardian threshold (Wave 86).
+    /// @dev Symmetric with pause(): a guardian-protective pause is lifted only by guardian threshold (or by
+    ///      7-day expiry / recovery). The admin cannot lift it alone (see CardBoundVaultAdminFacet.unpause),
+    ///      so a thief holding the phone can't undo the protection — but legitimate guardians can clear a
+    ///      false alarm without waiting out the full window. Admin-initiated pauses use admin unpause.
+    function guardianUnpause() external {
+        if (!isGuardian[msg.sender]) revert CBV_NotGuardian();
+        if (!paused || !pausedByGuardian) revert CBV_NotPaused();
+
+        uint256 currentNonce = pauseNonce;
+        if (unpauseApprovalByGuardian[msg.sender][currentNonce]) revert CBV_PauseAlreadyApproved();
+        unpauseApprovalByGuardian[msg.sender][currentNonce] = true;
+        uint8 approvals = unpauseApprovalCount[currentNonce] + 1;
+        unpauseApprovalCount[currentNonce] = approvals;
+        emit GuardianUnpauseApproved(msg.sender, currentNonce, approvals);
+
+        if (approvals < guardianThreshold) {
+            return;
+        }
+
+        paused = false;
+        pausedByGuardian = false;
+        pauseUntil = 0;
+        pauseNonce = currentNonce + 1;
+        emit PauseSet(false, msg.sender);
     }
 
     /// @notice Unpause vault operations (admin only).
@@ -2083,13 +2156,24 @@ contract CardBoundVault is ReentrancyGuard {
     /// @param oldAdmin oldAdmin
     /// @param newAdmin newAdmin
     event RecoveryRotationExecuted(address indexed oldWallet, address indexed newWallet, address indexed oldAdmin, address newAdmin);
+    /// @notice A staged recovery rotation was cancelled by the owner / proof-of-life wallet (Wave 95, DRAFT).
+    event RecoveryRotationCancelled(address indexed canceller);
+    /// @notice A stale staged recovery rotation expired and was cleared (Wave 95, DRAFT).
+    event RecoveryRotationExpired(address indexed clearer, address indexed staleNewWallet);
 
     /// @notice executeRecoveryRotation
     /// @param newWallet newWallet
     function executeRecoveryRotation(address newWallet) external {
         if (msg.sender != hub) revert CBV_OnlyHub();
         if (newWallet == address(0)) revert CBV_Zero();
-        _requireOperationalForOutboundTransfers();
+        // Wave 96 INTEGRATION FIX (DRAFT — audit-gate): do NOT call _requireOperationalForOutboundTransfers()
+        // here. That guard reverts CBV_InheritanceActive whenever an inheritance claim is in progress — but
+        // recovery execution is exactly the operation that SUPERSEDES a death-presumption claim (CID-1
+        // recovery precedence). Blocking on active inheritance made the "recovery succeeds while inheritance
+        // active" path a deadlock: execute reverted before it could reach cancelClaimForRecovery() below, so a
+        // recovered (alive) owner could never reclaim a vault that had an in-flight inheritance claim. Recovery
+        // is hub-gated + guardian-approved + challenge-survived, and it cancels the claim a few lines down, so
+        // inheritance must not block it. (The check still applies to ordinary outbound transfers elsewhere.)
 
         // VAULT-EXT-02: Hub-triggered recovery must be pre-approved by vault guardians.
         WalletRotation memory staged = pendingRotation;
@@ -2105,13 +2189,23 @@ contract CardBoundVault is ReentrancyGuard {
         admin = newWallet;
         pendingAdmin = address(0);
         paused = true;
-
+        // Wave 86: the post-recovery pause belongs to the NEW (recovered) owner, not the guardians — so it
+        // is admin-liftable. Clearing this lets the legitimate recovered owner resume once they regain access.
+        pausedByGuardian = false;
         recoveryAdminUnseparated = true;
         recoveryUnseparatedSince = uint64(block.timestamp);
 
         // N-H6/N-H10 FIX: Recovery rotation must clear ALL sensitive queued state so the
         // new admin cannot accidentally apply stale operations approved under the old wallet.
         delete pendingRotation;
+
+        // ── Wave 93 / CID-1 (DRAFT — UNCOMPILED, audit-gate): recovery cancels inheritance ──
+        // A completed recovery installs the (recovered) owner, superseding any death presumption. Cancel any
+        // in-flight inheritance claim so the two ownership-transition processes can never both resolve.
+        // Guarded by address(0) check + try/catch-free direct call (manager is trusted, set at init).
+        if (inheritanceManager != address(0)) {
+            ICardBoundVaultInheritanceManager(inheritanceManager).cancelClaimForRecovery();
+        }
         IAdminManager(adminManager).clearOnRecovery();
         ICardBoundVaultWithdrawalQueueManager(withdrawalQueueManager).clearOnRecovery();
         ICardBoundVaultPaymentQueueManager(paymentQueueManager).clearOnRecovery();
@@ -2131,6 +2225,54 @@ contract CardBoundVault is ReentrancyGuard {
         emit AdminTransferred(oldAdmin, newWallet);
         emit RecoveryAdminUnseparated(newWallet, uint64(block.timestamp));
         emit PauseSet(true, msg.sender);
+    }
+
+    // ── Wave 95 / Integration Closure (DRAFT — UNCOMPILED here under 0.8.30; compiled clean under solc-js;
+    //    audit-gate): recovery CANCEL and EXPIRE — the lifecycle that gives resumeTimersAfterRecovery() a
+    //    caller and completes the timer-freeze.
+    //
+    // OVERLAPPING-RECOVERY POLICY (explicit, no ambiguity): a vault holds AT MOST ONE staged rotation at a
+    // time. stageRecoveryRotation OVERWRITES pendingRotation (single-slot WalletRotation), so a second
+    // recovery cannot run concurrently with a first — it simply replaces it, re-using the existing freeze
+    // (pauseTimersForRecovery is idempotent: the first freeze's suspendedAt stands, so no double-counting and
+    // no lost time across a replace). There is therefore no queue and no merge: the latest guardian-approved
+    // rotation is the live one. A stale prior rotation that is never executed is cleared by EXPIRE below.
+
+    /// @notice Cancel a staged recovery rotation. The owner is alive and acting, so recovery is moot.
+    /// Callable by the current admin/active wallet (the owner) OR the designated proof-of-life wallet (the
+    /// cross-institution alive-signal, CID-2). Clears the staged rotation and RESUMES any frozen inheritance
+    /// timers (the owner's clock did not run during the recovery).
+    function cancelRecoveryRotation() external {
+        if (pendingRotation.newWallet == address(0)) revert CBV_NoRotation();
+        bool isOwner = msg.sender == admin || msg.sender == activeWallet;
+        bool isProofOfLife = false;
+        if (!isOwner && inheritanceManager != address(0)) {
+            address pol = ICardBoundVaultInheritanceManager(inheritanceManager).proofOfLifeWallet();
+            isProofOfLife = pol != address(0) && msg.sender == pol;
+        }
+        if (!isOwner && !isProofOfLife) revert CBV_NotAdmin();
+        delete pendingRotation;
+        emit RecoveryRotationCancelled(msg.sender);
+        if (inheritanceManager != address(0)) {
+            ICardBoundVaultInheritanceManager(inheritanceManager).resumeTimersAfterRecovery();
+        }
+    }
+
+    /// @notice Expire a stale staged recovery rotation that was neither executed nor cancelled within
+    /// RECOVERY_ROTATION_EXPIRY after it became executable. Permissionless (anyone may clean up a stale
+    /// rotation — there is nothing sensitive to gate, and a stale rotation should never linger blocking
+    /// inheritance). Clears the rotation and RESUMES any frozen inheritance timers.
+    function expireRecoveryRotation() external {
+        WalletRotation memory staged = pendingRotation;
+        if (staged.newWallet == address(0)) revert CBV_NoRotation();
+        if (staged.activateAt == 0 || block.timestamp < uint256(staged.activateAt) + RECOVERY_ROTATION_EXPIRY) {
+            revert CBV_RotationNotReady();
+        }
+        delete pendingRotation;
+        emit RecoveryRotationExpired(msg.sender, staged.newWallet);
+        if (inheritanceManager != address(0)) {
+            ICardBoundVaultInheritanceManager(inheritanceManager).resumeTimersAfterRecovery();
+        }
     }
 
     // slither-disable-next-line reentrancy-events
@@ -2161,6 +2303,11 @@ contract CardBoundVault is ReentrancyGuard {
             proposalNonce: rotationNonce
         });
         emit WalletRotationProposed(activeWallet, newWallet, pendingRotation.activateAt, rotationNonce);
+        // Wave 95 / CID-1 timer-freeze (DRAFT — UNCOMPILED, audit-gate): a recovery has begun, so freeze any
+        // active inheritance claim's timers — the owner's clock must not run while recovery is unresolved.
+        if (inheritanceManager != address(0)) {
+            ICardBoundVaultInheritanceManager(inheritanceManager).pauseTimersForRecovery();
+        }
     }
 
     // slither-disable-next-line missing-zero-check  // address(0) is a valid value to detach inheritance manager
@@ -2289,6 +2436,14 @@ contract CardBoundVault is ReentrancyGuard {
     function inheritanceState() external view returns (uint8 state, uint64 windowEnd) {
         // slither-disable-next-line unused-return  // forwarding tuple return; values are returned to caller
         return ICardBoundVaultInheritanceManager(inheritanceManager).inheritanceState();
+    }
+
+    /// @notice proofOfLifeWalletView — the owner's designated proof-of-life wallet, proxied from the
+    /// inheritance manager so the recovery contract (and others) can honor it as a cross-institution alive
+    /// signal (Wave 93 / CID-2, DRAFT — UNCOMPILED, audit-gate). Returns address(0) if none set.
+    function proofOfLifeWalletView() external view returns (address) {
+        if (inheritanceManager == address(0)) return address(0);
+        return ICardBoundVaultInheritanceManager(inheritanceManager).proofOfLifeWallet();
     }
 
     /// @notice inheritanceConfigVersion

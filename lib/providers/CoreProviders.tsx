@@ -6,17 +6,19 @@ import { LocaleProvider } from '@/lib/locale/LocaleProvider';
 import { AdaptiveProvider } from '@/lib/adaptive';
 import { OnboardingProvider } from '@/components/onboarding/OnboardingContext';
 import { ToastProvider } from '@/components/ui/toast';
+import { EventProvider } from '@/lib/events/EventProvider';
 import { ClientLayout } from '@/components/layout/ClientLayout';
 import { MotionProvider } from './MotionProvider';
 import { AppLockProvider } from '@/components/security/AppLockProvider';
 import { TransactionTrailProvider } from '@/components/payments/TransactionTrailProvider';
-import { EventProvider } from '@/lib/events/EventProvider';
 
 function AppInteractionProviders({ children }: { children: ReactNode }) {
   return (
     <AppLockProvider>
       <TransactionTrailProvider>
-        <ClientLayout>{children}</ClientLayout>
+        <EventProvider>
+          <ClientLayout>{children}</ClientLayout>
+        </EventProvider>
       </TransactionTrailProvider>
     </AppLockProvider>
   );
@@ -30,9 +32,7 @@ export function CoreProviders({ children }: { children: ReactNode }) {
           <AdaptiveProvider>
             <OnboardingProvider>
               <ToastProvider>
-                <EventProvider>
-                  <AppInteractionProviders>{children}</AppInteractionProviders>
-                </EventProvider>
+                <AppInteractionProviders>{children}</AppInteractionProviders>
               </ToastProvider>
             </OnboardingProvider>
           </AdaptiveProvider>
