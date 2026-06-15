@@ -156,5 +156,5 @@ export function ContinuityStatusGrid({ c }: { c: ContinuityStatus }) {
       </div>
     </section>
   );
-}'use client';
+}
 

@@ -92,5 +92,5 @@ export function ContinuityCommandHero({ c }: { c: ContinuityStatus }) {
       </div>
     </section>
   );
-}'use client';
+}
 
